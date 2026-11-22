@@ -87,7 +87,7 @@ P.pages.home=function(root){
   $("#home-tools",root).innerHTML=tools.map(function(t){return '<a class="tool" href="'+t[0]+'">'+P.ico(t[1])+'<span><b>'+t[2]+'</b><small>'+t[3]+"</small></span></a>"}).join("");
   $("#b-exp",root).onclick=function(){$("#exp",root).value=P.exportState();$("#exp-msg",root).textContent="Copy the text above."};
   $("#b-imp",root).onclick=function(){try{P.importState($("#exp",root).value);P.toast("Progress restored");P.route()}catch(e){$("#exp-msg",root).textContent="That text is not a valid export."}};
-  $("#b-reset",root).onclick=function(){if(this.dataset.s){try{localStorage.removeItem("pdsa-q2-v1")}catch(e){}location.reload()}else{this.dataset.s=1;this.textContent="Click again to erase everything"}};
+  $("#b-reset",root).onclick=function(){if(this.dataset.s){try{localStorage.removeItem("pdsa-q2-v1")}catch(e){}(window.PDSA_SYNC?PDSA_SYNC.wipe():Promise.resolve()).then(function(){location.reload()})}else{this.dataset.s=1;this.textContent="Click again to erase everything"}};
 };
 
 /* ---------- mind map ---------- */
