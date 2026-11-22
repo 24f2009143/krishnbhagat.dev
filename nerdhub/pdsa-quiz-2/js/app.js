@@ -57,7 +57,7 @@ function buildTop(){
   $("#b-large").onclick=function(){setLarge(document.documentElement.getAttribute("data-large")!=="on")};
   $("#b-tags").onclick=function(){setTags(!document.body.classList.contains("showtags"))};
   var S0=P.load();$("#b-exam").value=S0.prefs.exam||"";$("#b-exam").onchange=function(){var S=P.load();S.prefs.exam=this.value;P.save();if(document.body.dataset.page==="home")P.route()};
-  $("#b-reset2").onclick=function(){if(this.dataset.s){try{localStorage.removeItem("pdsa-q2-v1")}catch(e){}location.hash="#home";location.reload()}else{this.dataset.s=1;this.textContent="Click again to erase everything"}};
+  $("#b-reset2").onclick=function(){if(this.dataset.s){try{localStorage.removeItem("pdsa-q2-v1")}catch(e){}location.hash="#home";(window.PDSA_SYNC?PDSA_SYNC.wipe():Promise.resolve()).then(function(){location.reload()})}else{this.dataset.s=1;this.textContent="Click again to erase everything"}};
   $("#rmore").open=!!S0.prefs.moreOpen;$("#rmore").ontoggle=function(){var S=P.load();S.prefs.moreOpen=this.open;P.save()};
   $("#b-rail").onclick=function(){setRail(!document.body.classList.contains("railmin"))};
   $("#b-search").onclick=openSearch;$("#b-f").onclick=function(e){e.preventDefault();openFormulas()};

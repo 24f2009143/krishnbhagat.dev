@@ -57,7 +57,7 @@
       if (!user) return;
       let body = JSON.stringify(Store.s);
       if (body.length > 850000) { Store.s.events = Store.s.events.slice(-2000); body = JSON.stringify(Store.s); }
-      await adapter.save(user.uid, { state: body, updatedAt: Date.now(), epoch: Store.s.epoch || 0 });
+      await adapter.save(user.uid, { state: body, updatedAt: Date.now(), epoch: Store.s.epoch || 0, email: user.email });
       lastOk = Date.now(); paint();
     }
     async function pull() {
@@ -79,7 +79,7 @@
     window.addEventListener('mltq-saved', schedulePush);
     document.addEventListener('visibilitychange', () => { if (!document.hidden && user && Date.now() - lastPull > 60000) pull(); });
     chip.addEventListener('click', async () => {
-      if (!user) { try { await adapter.signIn(); } catch (e) { say('Sign-in was cancelled or failed.'); } return; }
+      if (!user) { if (!window.confirm('Sign in with your IITM student Google account to sync your progress.\n\nYour study progress and quiz answers are stored in a database run by the site owner (Krishn Bhagat) and are visible to him. Nothing else is collected. Continue?')) return; try { await adapter.signIn(); } catch (e) { say('Sign-in was cancelled or failed.'); } return; }
       if (window.confirm('Sign out? Your progress stays on this device and in your cloud copy.')) await adapter.signOut();
     });
 
