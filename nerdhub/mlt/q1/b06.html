@@ -1,0 +1,715 @@
+<section data-track="intro">
+<p class="muted mono" style="margin:0">B6 · T2 PCA</p>
+<h1>2.1 Covariance, eigenvalues, variance along PCs — part B + 🧩 Checkpoint 1</h1>
+<p class="lead">B5 ne chain banayi thi: <b>centre → $C$ → eigenvalues → $\lambda_k$ / $\operatorname{tr}C$</b>. Is build mein wahi chain un jagahon par lagti hai jahan exam trap lagata hai: raw data se $C$ banana (centring bhoolna), "sum of all entries of $C$", $A^TA$ vs $AA^T$, linear constraints se zero eigenvalues, aur eigenvalue formula se $\lambda_1$ padhna. Phir T1 + T2-ab-tak ka mixed checkpoint.</p>
+<div class="box">
+<p><b>Is build ke PYQs <span class="tag t-src">[SRC]</span></b> — subtopic 2.1 ke 13 mein se baaki 6 (file order), total 16 marks:</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>#</th><th>Paper · Q</th><th>ID</th><th>Type · marks</th><th>Kya poochha</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td>P8</td><td>2025 July 13 · Q13</td><td class="mono">6406531302396</td><td>MCQ · 2</td><td>3 raw points ka covariance matrix</td><td>Key option 2 ✓</td></tr>
+<tr><td>P9</td><td>2025 July 13 · Q14</td><td class="mono">6406531302397</td><td>SA · 2</td><td>Same data, variance along PC1</td><td>Key 1 ✓</td></tr>
+<tr><td>P10</td><td>15 March 2026 · Q8</td><td class="mono">6406531951440</td><td>SA · 3</td><td>Cube corners: sum of all entries of $C$</td><td>Key 3 ✓</td></tr>
+<tr><td>P11</td><td>15 March 2026 · Q15</td><td class="mono">6406531951447</td><td>MCQ · 2</td><td>$A^TA$ aur $AA^T$ ke eigenvectors same?</td><td>Key False ✓</td></tr>
+<tr><td>P12</td><td>16 July 2026 · Q1</td><td class="mono">6406532158934</td><td>MCQ · 4</td><td>Constraints ⇒ kitne zero eigenvalues, PC1</td><td><span class="tag t-q">[?]</span> constraints missing; PC1 as transcribed not unit</td></tr>
+<tr><td>P13</td><td>16 July 2026 · Q11</td><td class="mono">6406532158944</td><td>SA · 3</td><td>$\lambda_i=100\cdot2^{-i}$, max-variance value</td><td><span class="tag t-flag">[FLAG]</span> key 100; derived 50</td></tr>
+</tbody></table></div>
+<p><b>Context blocks bhi padhe</b> (sirf zaroorat ke liye): P8/P9 ka parent Q12 <code>6406531302395</code> (subtopic 2.5 mein file kiya gaya; uska Q15 residue wala PYQ B11 mein aayega) aur P10 ka parent Q7 <code>6406531951439</code> (subtopic 2.2 mein; uska Q9 B7 mein).</p>
+<p><b>Tags:</b> <span class="tag t-src">[SRC]</span> PYQ file se · <span class="tag t-add">[ADDED]</span> meri explanation / naya question · <span class="tag t-flag">[FLAG]</span> source error, proof ke saath · <span class="tag t-q">[?]</span> unreadable / missing. <b>PACER:</b> Procedural · Analogous · Conceptual · Evidence · Reference. Convention: $C=\tfrac1n\sum_i\tilde x_i\tilde x_i^T$ (B5 mein confirmed) — P8 ka key bhi isi se aata hai (neeche proof).</p>
+</div>
+</section>
+
+<section data-track="warmup">
+<h2>🔁 Recall warm-up — B3 + B4 + B5 <span class="tag t-add">[ADDED]</span></h2>
+<p>3 chhote sawaal, notes dekhe bina. (Kal 2026-11-11 ko T1, B4 aur B5 teeno ka spaced review due hai.)</p>
+<ol>
+<li><p><b>(B3 · 1.2)</b> $x=(2,3)$, line through origin along $w=(3,4)$. Reconstruction error ka norm?</p>
+<details class="reveal"><summary>Show answer</summary><p>$x^Tw=6+12=18$, $\|w\|=5$ ⇒ scalar projection $=3.6$. $\|x\|^2=13$. Residual² $=13-3.6^2=13-12.96=0.04$ ⇒ norm $=\mathbf{0.2}$. (Pythagoras: $\|x\|^2=(\text{proj})^2+\|r\|^2$.)</p></details></li>
+<li><p><b>(B4 · eigen)</b> $\begin{bmatrix}3&amp;1\\1&amp;3\end{bmatrix}$ ke eigenvalues?</p>
+<details class="reveal"><summary>Show answer</summary><p>Pattern $\begin{bmatrix}a&amp;b\\b&amp;a\end{bmatrix}$ ⇒ $a\pm b$ ⇒ $\mathbf{4,\ 2}$ (directions $(1,1)$ aur $(1,-1)$). Check: trace $6=4+2$ ✓, det $8=4\cdot2$ ✓.</p></details></li>
+<li><p><b>(B5 · P4/P5 style)</b> $C=\begin{bmatrix}4&amp;2\\2&amp;1\end{bmatrix}$. Variance along PC1, aur variance along y-axis?</p>
+<details class="reveal"><summary>Show answer</summary><p>$\operatorname{tr}=5$, $\det=4-4=0$ ⇒ $\lambda=5,0$ ⇒ along PC1 $=\mathbf 5$. Along y-axis $=C_{22}=\mathbf 1$. (det 0 ⇒ data ek line par; PC1 saara variance le leta hai.)</p></details></li>
+</ol>
+</section>
+
+<!-- =========================================================== -->
+<h2>📐 2.1 (part B) — raw data se $C$, special structures, eigenvalue reading</h2>
+
+<section data-track="pretest">
+<h3>❓ Pretest — cold attempt (solution neeche 🎯 P10 mein)</h3>
+<div class="try">
+<p class="mono" style="margin:0 0 6px">15 March 2026 · Original Q7 (context) → Q8 · ID <code>6406531951440</code> · SA · 3 marks · <span class="tag t-src">[SRC]</span></p>
+<p>Consider a cube of <b>edge length 2</b>, centered at the origin, with corners represented by $(\pm1,\pm1,\pm1)$. These eight points form dataset $D$.</p>
+<p>Find the covariance matrix $C$ of the dataset. Enter the <b>sum of all entries</b> of $C$.</p>
+<p class="note">2 minute, bina neeche padhe. Answer + Confidence S / U / G note karo.</p>
+</div>
+</section>
+
+<section data-track="position">
+<h3>🧭 Position — yeh kahan baitha hai</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Peeche (prerequisites)</th><th>Yeh subtopic (part B)</th><th>Aage (kya unlock hota hai)</th></tr></thead>
+<tbody><tr>
+<td>B4 mean / centring / covariance / eigen / spectral theorem · B5 $u^TCu$, $\lambda_k$, $\operatorname{tr}C$, centred vs uncentred (P7)</td>
+<td>(1) Raw data → $C$ (do tareeke) · (2) $\mathbf 1^TC\mathbf 1$ = sum of entries · (3) $A^TA$ vs $AA^T$ · (4) Linear constraint ⇒ zero eigenvalue · (5) Eigenvalue formula se $\lambda_1$</td>
+<td>B7 PC directions (cube ka "har direction variance 1", constraint plane ke andar directions) · B10 explained variance · B11 residues (P8 ke parent ka Q15) · B12 dual PCA ($X^TX$, $d&gt;n$) · B16 kernel PCA ($K=X^TX$)</td>
+</tr></tbody></table></div>
+</section>
+
+<section data-track="intuition">
+<h3>🧠 Intuition — plain language</h3>
+<ul>
+<li><b>Centring = origin ko badal ke beech mein le jaana.</b> Covariance "spread" naapta hai, "kahan baitha hai" nahi. Agar mean ghatana bhool gaye, to $\tfrac1n\sum x_ix_i^T$ mein spread ke saath $\mu\mu^T$ (location) bhi ghus jaata hai: $\tfrac1n\sum x_ix_i^T=C+\mu\mu^T$.</li>
+<li><b>Sum of all entries of $C$</b> = ek naya feature banao "saare features ka jod" $s=x_1+\cdots+x_d$; uska variance hi $\mathbf 1^TC\mathbf 1$ hai. Matrix ke 9 entries jodne ki jagah 8 numbers ka variance — kaafi aasaan.</li>
+<li><b>$AA^T$ aur $A^TA$</b> — ek hi data, do nazariye. $AA^T$ ($d\times d$) features ke beech ka rishta, $A^TA$ ($n\times n$) points ke beech ka rishta (Gram matrix). Non-zero eigenvalues same, par eigenvectors alag duniya mein rehte hain ($\mathbb R^d$ vs $\mathbb R^n$).</li>
+<li><b>Linear constraint = chapti (flat) direction.</b> Agar har centred point $a^T\tilde x=0$ satisfy kare, to direction $a$ mein koi spread nahi ⇒ variance along $a$ $=0$ ⇒ $a$ ek eigenvector, eigenvalue 0. Har independent constraint ek zero eigenvalue.</li>
+<li><b>Eigenvalue formula diya ho</b> (jaise $100\cdot2^{-i}$) to "direction of maximum variance ka variance" = sabse bada eigenvalue — formula mein smallest allowed $i$ daalo (yahan $i=1$), total variance ke saath confuse mat karo.</li>
+</ul>
+<div class="box em">
+<p><b>Analogy <span class="tag t-add">[ADDED]</span> — class ki photo.</b> $AA^T$ = "subjects ka table" (Maths aur Physics marks saath-saath kitne badhte hain); $A^TA$ = "students ka table" (do students ke marks kitne milte-julte hain). Dono ek hi marksheet $A$ se bane, isliye unki "taaqat" (non-zero eigenvalues) same hai — par ek ka answer subjects ki combination hai, doosre ka students ki combination. Dono ko $A$ hi jodta hai: student-combination $v$ ko $A$ se guna karo to subject-combination $u\propto Av$ milta hai.</p>
+<p><b>Analogy kahan tootti hai:</b> PCA ke covariance ke liye data <b>centred</b> chahiye aur $\tfrac1n$ factor lagta hai — marksheet analogy yeh nahi batati. Aur jab koi eigenvalue repeat ho (tie), to "the eigenvector" unique hi nahi — analogy wahan chup hai.</p>
+</div>
+<div class="box red">
+<p><b>Yeh kya NAHI hai:</b></p>
+<ul>
+<li>$\tfrac1n\sum x_ix_i^T$ (uncentred second-moment matrix) covariance nahi — jab tak $\mu=0$ na ho. (P8 ka option 1 yahi trap hai.)</li>
+<li>"Sum of all entries" trace nahi. Trace = sirf diagonal; sum of entries mein off-diagonals bhi judte hain. (Cube mein off-diagonals 0 hain isliye dono 3 — coincidence, rule nahi.)</li>
+<li>$A^TA$ aur $AA^T$ ke eigenvectors same nahi — $d\neq n$ ho to size hi alag; $d=n$ par bhi aam taur par alag.</li>
+<li>$\sum_i\lambda_i$ "variance along max-variance direction" nahi — woh total variance hai. (P13 ka key yahi galti lagta hai.)</li>
+</ul>
+</div>
+</section>
+
+<section data-track="visual">
+<h3>📊 Visual intuition</h3>
+<figure class="viz">
+  <p class="vt">Interactive 1: P8/P9 ka dataset — $(0,0),(2,1),(1,2)$ <span class="tag t-src">[SRC]</span></p>
+  <p class="vs">Widget pehle mean $(1,1)$ ghatata hai (origin = mean), phir $\tfrac1n$ se variance along $u(\theta)$ dikhata hai. Curve ka max = $\lambda_1$, min = $\lambda_2$.</p>
+  <div data-widget="vardir" data-points="0,0;2,1;1,2" data-theta="0"></div>
+  <figcaption><b>Interpretation:</b> θ = 45° par variance 1 (= λ₁, P9 ka answer), 135° par 1/3 (= λ₂); har angle par variance + residual² = 4/3 = tr C. θ = 0° par 2/3 = C₁₁. Agar mean na ghatate to "λ₁" 3 aata — woh P8 ka galat option 1 hai.</figcaption>
+  <details class="table-view"><summary>Table view (har 15°)</summary><div class="tbl-wrap"><table><thead><tr><th class="num">θ</th><th class="num">variance along u (= ⅓(2 + sin 2θ))</th><th class="num">avg residual²</th></tr></thead><tbody>
+<tr><td class="num">0°</td><td class="num">0.667</td><td class="num">0.667</td></tr>
+<tr><td class="num">15°</td><td class="num">0.833</td><td class="num">0.5</td></tr>
+<tr><td class="num">30°</td><td class="num">0.955</td><td class="num">0.378</td></tr>
+<tr><td class="num">45° (PC1)</td><td class="num">1</td><td class="num">0.333</td></tr>
+<tr><td class="num">60°</td><td class="num">0.955</td><td class="num">0.378</td></tr>
+<tr><td class="num">90°</td><td class="num">0.667</td><td class="num">0.667</td></tr>
+<tr><td class="num">120°</td><td class="num">0.378</td><td class="num">0.955</td></tr>
+<tr><td class="num">135° (PC2)</td><td class="num">0.333</td><td class="num">1</td></tr>
+<tr><td class="num">165°</td><td class="num">0.5</td><td class="num">0.833</td></tr>
+</tbody></table></div></details>
+</figure>
+
+<figure class="viz">
+  <p class="vt">Interactive 2: Cube ki "top view" — corners $(\pm1,\pm1)$ <span class="tag t-add">[ADDED]</span></p>
+  <p class="vs">Cube ke 8 corners ko $(x_1,x_2)$ plane par dekho: har $(\pm1,\pm1)$ do baar aata hai (ek $x_3=+1$, ek $x_3=-1$). Duplicates variance nahi badalte, isliye yahan 4 points kaafi hain. Schematic 2-D slice — poora 3-D cube nahi.</p>
+  <div data-widget="vardir" data-points="1,1;1,-1;-1,1;-1,-1" data-theta="30"></div>
+  <figcaption><b>Interpretation:</b> curve bilkul flat hai — har direction mein variance 1, λ₁ = λ₂ = 1, yaani C = I. Isliye "PC1" yahan unique nahi (koi bhi direction chalegi) — "θ → max" button jo angle de, woh bas ek choice hai. 3-D cube mein bhi yahi hota hai: C = I₃, sum of entries = 3 (P10).</figcaption>
+  <details class="table-view"><summary>Table view</summary><div class="tbl-wrap"><table><thead><tr><th class="num">θ</th><th class="num">variance along u</th><th class="num">avg residual²</th></tr></thead><tbody>
+<tr><td class="num">any θ (0° … 180°)</td><td class="num">1</td><td class="num">1</td></tr>
+</tbody></table></div></details>
+</figure>
+
+<figure class="viz">
+  <p class="vt">P13 ke eigenvalues: $\lambda_i=100\cdot2^{-i}$ — pehle 8 (100 mein se) <span class="tag t-src">[SRC]</span></p>
+  <p class="vs">Har bar = us PC ke along variance. Har agla bar pichhle ka aadha. Total (sab 100) = 100(1 − 2⁻¹⁰⁰) ≈ 100.</p>
+  <div class="chart" data-chart='{"type":"vbar","labels":["PC1","PC2","PC3","PC4","PC5","PC6","PC7","PC8"],"values":[50,25,12.5,6.25,3.125,1.5625,0.78125,0.390625],"sub":["50%","25%","12.5%","6.25%","3.1%","1.6%","0.8%","0.4%"],"tips":["λ₁ = 100·2⁻¹ = 50 → yahi P13 ka answer","λ₂ = 25; cumulative 75%","λ₃ = 12.5; cumulative 87.5%","λ₄ = 6.25; cumulative 93.75%","λ₅ = 3.125; cumulative 96.875%","λ₆ = 1.5625","λ₇ = 0.78125","λ₈ = 0.390625; baaki 92 bars aur bhi chhote"],"aria":"First eight covariance eigenvalues of P13"}'></div>
+  <figcaption><b>Interpretation:</b> sabse lamba bar 50 hai — "direction of maximum variance" ka variance. 100 poore bars ka jod (total variance) hai, kisi ek direction ka nahi. PC1 akela total ka exactly ~50% leta hai.</figcaption>
+  <details class="table-view"><summary>Table view</summary><div class="tbl-wrap"><table><thead><tr><th>PC</th><th class="num">λ</th><th class="num">% of total (≈100)</th><th class="num">Cumulative %</th></tr></thead><tbody>
+<tr><td>PC1</td><td class="num">50</td><td class="num">50</td><td class="num">50</td></tr>
+<tr><td>PC2</td><td class="num">25</td><td class="num">25</td><td class="num">75</td></tr>
+<tr><td>PC3</td><td class="num">12.5</td><td class="num">12.5</td><td class="num">87.5</td></tr>
+<tr><td>PC4</td><td class="num">6.25</td><td class="num">6.25</td><td class="num">93.75</td></tr>
+<tr><td>PC5</td><td class="num">3.125</td><td class="num">3.125</td><td class="num">96.875</td></tr>
+<tr><td>PC6</td><td class="num">1.5625</td><td class="num">1.5625</td><td class="num">98.4375</td></tr>
+<tr><td>PC7</td><td class="num">0.78125</td><td class="num">0.78125</td><td class="num">99.21875</td></tr>
+<tr><td>PC8</td><td class="num">0.390625</td><td class="num">0.390625</td><td class="num">99.609375</td></tr>
+<tr><td>PC9–PC100</td><td class="num">sum ≈ 0.390625</td><td class="num">≈ 0.39</td><td class="num">≈ 100</td></tr>
+</tbody></table></div></details>
+</figure>
+
+<figure class="viz diagram">
+  <p class="vt">Diagram: ek matrix A, do Gram-type matrices <span class="tag t-add">[ADDED]</span></p>
+  <p class="vs">A ka shape d × n (columns = data points). Schematic — sirf rishte dikhata hai, numbers nahi.</p>
+  <svg viewBox="0 0 720 250" role="img" aria-label="A A transpose and A transpose A share non-zero eigenvalues; eigenvectors are linked by A and A transpose">
+    <rect x="20" y="95" width="130" height="60" rx="8" fill="#1e1e1e" stroke="#60A5FA"/>
+    <text x="85" y="120" text-anchor="middle" fill="#fff" font-size="15" font-weight="600">A</text>
+    <text x="85" y="142" text-anchor="middle" fill="#a3a3a3" font-size="12">d × n</text>
+    <rect x="240" y="20" width="230" height="70" rx="8" fill="#1e1e1e" stroke="#34D399"/>
+    <text x="355" y="46" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">AAᵀ  (d × d)</text>
+    <text x="355" y="68" text-anchor="middle" fill="#a3a3a3" font-size="12">eigenvectors uₖ ∈ ℝᵈ (features)</text>
+    <rect x="240" y="160" width="230" height="70" rx="8" fill="#1e1e1e" stroke="#FBBF24"/>
+    <text x="355" y="186" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">AᵀA  (n × n)</text>
+    <text x="355" y="208" text-anchor="middle" fill="#a3a3a3" font-size="12">eigenvectors vₖ ∈ ℝⁿ (points)</text>
+    <line x1="150" y1="115" x2="238" y2="60" stroke="#525252" stroke-width="1.5"/>
+    <line x1="150" y1="135" x2="238" y2="190" stroke="#525252" stroke-width="1.5"/>
+    <line x1="395" y1="158" x2="395" y2="94" stroke="#60A5FA" stroke-width="2"/><path d="M395,92 l-5,9 h10 z" fill="#60A5FA"/>
+    <text x="403" y="130" fill="#60A5FA" font-size="12.5">uₖ = A vₖ / √λₖ</text>
+    <line x1="315" y1="92" x2="315" y2="156" stroke="#60A5FA" stroke-width="2"/><path d="M315,158 l-5,-9 h10 z" fill="#60A5FA"/>
+    <text x="307" y="130" fill="#60A5FA" font-size="12.5" text-anchor="end">vₖ = Aᵀ uₖ / √λₖ</text>
+    <rect x="520" y="70" width="185" height="110" rx="8" fill="#101a14" stroke="#1f4d36"/>
+    <text x="612" y="96" text-anchor="middle" fill="#34D399" font-size="13" font-weight="600">Same non-zero λₖ</text>
+    <text x="612" y="118" text-anchor="middle" fill="#d4d4d4" font-size="12">bade matrix mein</text>
+    <text x="612" y="136" text-anchor="middle" fill="#d4d4d4" font-size="12">|d − n| extra zeros</text>
+    <text x="612" y="160" text-anchor="middle" fill="#F87171" font-size="12">eigenvectors: alag</text>
+    <line x1="470" y1="55" x2="518" y2="100" stroke="#525252"/><line x1="470" y1="195" x2="518" y2="150" stroke="#525252"/>
+  </svg>
+  <figcaption><b>Interpretation:</b> AAᵀ aur AᵀA ke non-zero eigenvalues ek hi hain, par eigenvectors alag spaces (ℝᵈ vs ℝⁿ) mein hain — isliye P11 ka answer "False". Dono ko A / Aᵀ se guna karke (aur √λ se normalise karke) ek-doosre mein badla ja sakta hai — yahi B12 ka dual PCA hai. Condition: λₖ &gt; 0.</figcaption>
+</figure>
+</section>
+
+<section data-track="formal">
+<h3>📖 Formal version — Formula Protocol</h3>
+$$\text{(F1)}\ \ C=\frac1n\sum_{i=1}^n(x_i-\mu)(x_i-\mu)^T=\underbrace{\frac1n\sum_{i=1}^nx_ix_i^T}_{S\ (\text{uncentred})}-\mu\mu^T\qquad\text{(F2)}\ \ \sum_{j,k}C_{jk}=\mathbf 1^TC\mathbf 1=\operatorname{Var}\!\Big(\sum_{j=1}^dx_j\Big)$$
+$$\text{(F3)}\ \ A^TAv=\lambda v,\ \lambda&gt;0\ \Rightarrow\ AA^T(Av)=\lambda(Av)\qquad\text{(F4)}\ \ a^T\tilde x_i=0\ \ \forall i\ \Rightarrow\ Ca=0\cdot a$$
+<p><b>Symbols aur assumptions:</b></p>
+<ul>
+<li>$x_i\in\mathbb R^d$ raw points, $\mu=\tfrac1n\sum x_i$, $\tilde x_i=x_i-\mu$. $S=\tfrac1n\sum x_ix_i^T$ ko "uncentred second-moment matrix" bolenge — yeh covariance <b>nahi</b> hai jab tak $\mu=0$.</li>
+<li>$\mathbf 1=(1,\dots,1)^T\in\mathbb R^d$. $\mathbf 1^TC\mathbf 1$ unit vector nahi hai — isliye yeh "variance along $\mathbf 1$" ka $d$ guna hai: $\mathbf 1^TC\mathbf 1=d\cdot\big(\tfrac{\mathbf 1}{\sqrt d}\big)^TC\big(\tfrac{\mathbf 1}{\sqrt d}\big)$.</li>
+<li>$A\in\mathbb R^{d\times n}$ koi bhi matrix (PCA mein data matrix $X$, points as columns). $AA^T$ $d\times d$, $A^TA$ $n\times n$; dono symmetric PSD.</li>
+<li>$a\in\mathbb R^d$, $a\neq0$ — constraint vector. "Every point satisfies $a^Tx=0$" aur data centred ⇒ $a^T\tilde x_i=0$.</li>
+<li>Convention $\tfrac1n$ (P8 ka key isi se aata hai: $\tfrac1{n-1}$ se $\tfrac12\begin{bmatrix}2&amp;1\\1&amp;2\end{bmatrix}$ banta, jo kisi option mein nahi).</li>
+</ul>
+<p><b>Meaning in words:</b> (F1) "covariance = uncentred average outer product minus mean ka outer product." (F2) "$C$ ki saari entries ka jod = 'sum-feature' ka variance." (F3) "$A^TA$ ka eigenvector $v$ ho, to $Av$ $AA^T$ ka eigenvector hai, same $\lambda$." (F4) "Jis direction mein data hilta hi nahi, woh zero-eigenvalue eigenvector hai."</p>
+<p><b>Notice that</b> yeh paanch numbers aksar mix hote hain:</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Quantity</th><th>Formula</th><th>P8 data $(0,0),(2,1),(1,2)$</th><th>Cube $(\pm1,\pm1,\pm1)$</th></tr></thead>
+<tbody>
+<tr><td>Variance along PC1</td><td>$\lambda_1$</td><td>$1$</td><td>$1$ (tie: $1,1,1$)</td></tr>
+<tr><td>Total variance</td><td>$\operatorname{tr}C=\sum\lambda$</td><td>$4/3$</td><td>$3$</td></tr>
+<tr><td>Sum of all entries</td><td>$\mathbf 1^TC\mathbf 1$</td><td>$\tfrac13(2+1+1+2)=2$</td><td>$3$</td></tr>
+<tr><td>Uncentred top eigenvalue</td><td>$\lambda_1(S)$</td><td>$3$ ✗ (trap)</td><td>$1$ (mean 0 ⇒ same)</td></tr>
+<tr><td>$\tfrac1{n-1}$ version of $\lambda_1$</td><td>$\tfrac{n}{n-1}\lambda_1$</td><td>$1.5$ ✗</td><td>$8/7\approx1.143$ ✗</td></tr>
+</tbody></table></div>
+<div class="box em"><p><b>Small worked example (F1).</b> Points $(1,0),(3,2),(2,4)$: $\mu=(2,2)$. Uncentred: $S=\tfrac13\begin{bmatrix}1+9+4&amp;0+6+8\\14&amp;0+4+16\end{bmatrix}=\tfrac13\begin{bmatrix}14&amp;14\\14&amp;20\end{bmatrix}$. $\mu\mu^T=\begin{bmatrix}4&amp;4\\4&amp;4\end{bmatrix}=\tfrac13\begin{bmatrix}12&amp;12\\12&amp;12\end{bmatrix}$. $C=S-\mu\mu^T=\tfrac13\begin{bmatrix}2&amp;2\\2&amp;8\end{bmatrix}$. Direct centring se check: $\tilde x=(-1,-2),(1,0),(0,2)$ ⇒ $\tfrac13\begin{bmatrix}1+1+0&amp;2+0+0\\2&amp;4+0+4\end{bmatrix}$ ✓ (code-verified).</p></div>
+<p><b>Important insight:</b> (F4) ka ulta bhi sach hai: agar $Ca=0$ to $a^TCa=\tfrac1n\sum(a^T\tilde x_i)^2=0$ ⇒ har $a^T\tilde x_i=0$. Yaani <b>zero eigenvalues ki ginti = centred data par lagne wale independent linear constraints ki ginti</b> $=d-\operatorname{rank}(C)$. Aur PC1 hamesha constraint-free subspace (null space ka orthogonal complement) ke andar hota hai.</p>
+<p><b>This is why</b> exam "points lie in a $k$-dim subspace" ya "feature $x_4=2x_1-x_2$" jaisa kuch de to turant "$d-k$ zero eigenvalues" likh sakte ho (B11 ke residue/storage PYQs isi par), aur dual PCA (B12) $X^TX$ ka chhota eigen-problem solve karke $XX^T$ ke PCs nikaal leta hai (F3).</p>
+</section>
+
+<section data-track="how">
+<h3>⚙️ How it works — mechanism</h3>
+<p><b>A. Raw points → $C$ → $\lambda_1$ (P8/P9 type)</b></p>
+<ol>
+<li>Mean nikalo: $\mu=\tfrac1n\sum x_i$. Agar $\mu\neq0$, centring zaroori hai — yeh pehla aur sabse important step hai.</li>
+<li>Route 1: har point se $\mu$ ghatao; $C_{jk}=\tfrac1n\sum_i\tilde x_{ij}\tilde x_{ik}$. Route 2 (F1): $S=\tfrac1n\sum x_ix_i^T$ banao, phir $C=S-\mu\mu^T$.</li>
+<li>$2\times2$: $\lambda=\tfrac{\operatorname{tr}}2\pm\sqrt{\big(\tfrac{C_{11}-C_{22}}2\big)^2+C_{12}^2}$, ya pattern $\begin{bmatrix}a&amp;b\\b&amp;a\end{bmatrix}\Rightarrow a\pm b$.</li>
+<li>Check: $\lambda_1+\lambda_2=\operatorname{tr}C=\tfrac1n\sum\|\tilde x_i\|^2$.</li>
+</ol>
+<p><b>B. "Sum of all entries of $C$" (P10 type)</b></p>
+<ol>
+<li>Har point ke liye $s_i=\sum_j x_{ij}$ (features ka jod) likho.</li>
+<li>$s_i$ ka 1-D variance ($\tfrac1n$, mean ghatake) = $\mathbf 1^TC\mathbf 1$ = answer. Matrix banane ki zaroorat hi nahi.</li>
+</ol>
+<p><b>C. Constraints → zero eigenvalues → PC1 (P12 type)</b></p>
+<ol>
+<li>Har constraint ko $a_k^Tx=0$ form mein likho (e.g. "$x_2=x_1$" ⇒ $a=(1,-1,0,\dots)$).</li>
+<li>Independent constraints gino ($a_k$ linearly independent) ⇒ utne zero eigenvalues (baaki features mein koi aur hidden dependence na ho to exactly utne).</li>
+<li>PC1: dependent features ko base feature ke multiple ke roop mein likho, $x_j=c_jx_b$. Tab block covariance $=\sigma_b^2\,cc^T$ ⇒ us block ka eigenvalue $\sigma_b^2\|c\|^2$, direction $c/\|c\|$. Baaki uncorrelated features apne variance ko eigenvalue banate hain. Sabse bada = $\lambda_1$.</li>
+<li>Check: PC1 unit length hai? Har constraint vector $a_k$ ke perpendicular hai?</li>
+</ol>
+</section>
+
+<section data-track="examples">
+<h3>🧪 Worked examples <span class="tag t-add">[ADDED]</span></h3>
+<p><b>Ex 1 (simple) — F2 shortcut.</b> Points $(1,3),(3,1),(2,2)$. Sum of all entries of $C$?<br>
+$s_i=4,4,4$ ⇒ variance $0$ ⇒ $\mathbf 1^TC\mathbf 1=\mathbf 0$. Check by matrix: $\mu=(2,2)$, $\tilde x=(-1,1),(1,-1),(0,0)$ ⇒ $C=\tfrac13\begin{bmatrix}2&amp;-2\\-2&amp;2\end{bmatrix}$, sum $=\tfrac13(2-2-2+2)=0$ ✓. Meaning: har point $x_1+x_2=4$ satisfy karta hai ⇒ $(1,1)$ constraint direction ⇒ zero eigenvalue (F4) — dono ideas ek saath.</p>
+<p><b>Ex 2 (exam-level) — box corners.</b> 8 points $(\pm1,\pm2,\pm3)$. $C$, sum of entries, aur variance along $\tfrac1{\sqrt3}(1,1,1)$?<br>
+Har coordinate ke dono signs barabar aur sign patterns independent ⇒ off-diagonals 0; $C=\operatorname{diag}(1,4,9)$. Sum of entries $=14$. Variance along $\tfrac1{\sqrt3}\mathbf 1$ $=\tfrac{14}{3}\approx4.667$ — dhyan: yeh sum of entries ÷ $d$ hai, kyunki $\mathbf 1$ unit nahi (code-verified).</p>
+<p><b>Ex 3 (tricky / counterexample) — square matrix par bhi eigenvectors alag.</b> $B=\begin{bmatrix}1&amp;1\\0&amp;1\end{bmatrix}$ ($d=n=2$). $B^TB=\begin{bmatrix}1&amp;1\\1&amp;2\end{bmatrix}$, $BB^T=\begin{bmatrix}2&amp;1\\1&amp;1\end{bmatrix}$. Dono ke eigenvalues $\tfrac{3\pm\sqrt5}2\approx2.618,\ 0.382$ (same!), par top eigenvector $B^TB$ ka $\approx(0.526,0.851)$ aur $BB^T$ ka $\approx(0.851,0.526)$ — alag (code-verified). To "same size ho to same eigenvectors" bhi galat hai.</p>
+<p><b>Non-example.</b> "Points $(1,2),(2,4),(3,6)$ ek line par hain, isliye $C$ ki saari entries ka sum 0 hoga." ✗ — sum 0 tab hota hai jab constraint ki direction $\mathbf 1$ ho ($x_1+x_2=$ const). Yahan constraint $2x_1-x_2=0$ hai (direction $(2,-1)$), aur sum-feature $s=3x_1$ ka variance $9\cdot\tfrac23=6\neq0$.</p>
+</section>
+
+<section data-track="deeper">
+<details class="deep"><summary>🔬 Deeper insight (D3) — proofs, edge cases, connections</summary>
+<h4>§1 Proof of F1 (centring identity)</h4>
+<p>$\tfrac1n\sum(x_i-\mu)(x_i-\mu)^T=\tfrac1n\sum x_ix_i^T-\tfrac1n\sum x_i\mu^T-\tfrac1n\sum\mu x_i^T+\mu\mu^T=S-\mu\mu^T-\mu\mu^T+\mu\mu^T=S-\mu\mu^T$, kyunki $\tfrac1n\sum x_i=\mu$. Taking trace: $\tfrac1n\sum\|\tilde x_i\|^2=\tfrac1n\sum\|x_i\|^2-\|\mu\|^2$ — B5 ke P7 ka "farak $=\|\mu\|^2$" isi ka special case hai.</p>
+<h4>§2 Proof of F2</h4>
+<p>$\mathbf 1^TC\mathbf 1=\tfrac1n\sum_i(\mathbf 1^T\tilde x_i)^2=\tfrac1n\sum_i(s_i-\bar s)^2$, jahan $s_i=\mathbf 1^Tx_i$ aur $\bar s=\mathbf 1^T\mu$. General: koi bhi $v$ (unit ho ya na ho) ke liye $v^TCv=\operatorname{Var}(v^Tx)$. Isliye $C$ PSD hai: variance kabhi negative nahi.</p>
+<h4>§3 Proof of F3 + kyun eigenvectors same nahi</h4>
+<p>$A^TAv=\lambda v$ ⇒ left se $A$: $AA^T(Av)=\lambda(Av)$. Agar $\lambda&gt;0$ to $Av\neq0$ (kyunki $\|Av\|^2=v^TA^TAv=\lambda\|v\|^2&gt;0$), aur $\|Av\|=\sqrt\lambda$ jab $\|v\|=1$ ⇒ $u=Av/\sqrt\lambda$ unit eigenvector of $AA^T$. Ulta bhi same tarah. Isliye non-zero spectrum same; zero eigenvalues ki ginti alag ($d-r$ vs $n-r$, $r=\operatorname{rank}A$). Eigenvectors same hone ke liye $u=v$ chahiye, yaani $Av=\sqrt\lambda v$ — yeh tab hi hota hai jab $A$ khud symmetric-type ho; general $A$ mein nahi. Yeh SVD $A=U\Sigma V^T$ ka seedha matlab hai: $AA^T=U\Sigma^2U^T$, $A^TA=V\Sigma^2V^T$.</p>
+<p><b>Numerical check (code-verified):</b> $A=\begin{bmatrix}1&amp;2&amp;0\\0&amp;1&amp;1\end{bmatrix}$: $AA^T=\begin{bmatrix}5&amp;2\\2&amp;2\end{bmatrix}$, eigenvalues $6,1$; $A^TA$ ($3\times3$) eigenvalues $6,1,0$. $\lambda=6$: $v=\tfrac1{\sqrt{30}}(2,5,1)$, $Av/\sqrt6=\tfrac1{\sqrt5}(2,1)$ ✓ eigenvector of $AA^T$.</p>
+<h4>§4 Constraints ⇔ null space (F4 ka converse)</h4>
+<p>$Ca=0\iff a^TCa=0\iff\tfrac1n\sum(a^T\tilde x_i)^2=0\iff a^T\tilde x_i=0\ \forall i$. Pehla "⇐" PSD ki wajah se: $a^TCa=0$ aur $C\succeq0$ ⇒ $Ca=0$ (likho $C=Q\Lambda Q^T$; $a^TCa=\sum\lambda_k(q_k^Ta)^2=0$ ⇒ jahan $\lambda_k&gt;0$ wahan $q_k^Ta=0$ ⇒ $Ca=0$). Null space ka dimension $=$ zero eigenvalues $=d-\operatorname{rank}C$.</p>
+<p><b>Edge case:</b> constraint $a^Tx=b$ ($b\neq0$, affine) bhi chalega — centring ke baad $a^T\tilde x=b-b=0$. Isliye "centred" na bhi bola ho, affine constraints zero eigenvalues dete hain.</p>
+<h4>§5 Ties aur "the" PC1</h4>
+<p>Cube mein $C=I$ ⇒ har unit $u$ eigenvector, variance 1. "Direction of maximum variance" unique nahi. Exam phir bhi value poochh sakta hai (P10 ke sibling Q9 mein "any unit $v$ ka variance" — B7). Value unique hai, direction nahi.</p>
+<h4>§6 Eigenvalue sequences</h4>
+<p>$\lambda_i=c\,r^{i}$ ($0&lt;r&lt;1$, $i=1..m$): $\lambda_1=cr$; total $=cr\frac{1-r^m}{1-r}$. P13: $c=100,r=\tfrac12$ ⇒ $\lambda_1=50$, total $=100(1-2^{-100})$. PC1 ka share $=\frac{1-r}{1-r^m}\approx1-r=50\%$. "Max-variance direction" ⇒ hamesha sabse bada term; agar sequence badhta ho (e.g. $\lambda_i=i^2$), to sabse bada index lo — order check karna mat bhoolo.</p>
+<h4>§7 $\tfrac1n$ vs $\tfrac1{n-1}$</h4>
+<p>Saare entries aur eigenvalues ek factor $\tfrac n{n-1}$ se scale; directions, ratios, zero-eigenvalue count same. Isliye MCQ (P8) mein option-set se convention pakdo: agar sirf $\tfrac13$ wale options hain ($n=3$), $\tfrac1n$ hi intended hai.</p>
+</details>
+</section>
+
+<section data-track="toolkit">
+<h3>⚡ PYQ pattern toolkit</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Trigger clue</th><th>Concept</th><th>First move</th></tr></thead>
+<tbody>
+<tr><td>Raw points diye, "covariance matrix" options</td><td>F1, centring</td><td>Mean nikalo; options mein uncentred $S$ dhoondo (trap)</td></tr>
+<tr><td>Options ka size $d$ se alag ($3\times3$ for $\mathbb R^2$)</td><td>$C$ is $d\times d$</td><td>Turant eliminate</td></tr>
+<tr><td>"sum of all entries of $C$"</td><td>F2</td><td>$s_i=\sum_jx_{ij}$ ka variance</td></tr>
+<tr><td>Symmetric set (cube, $\pm$ patterns)</td><td>Off-diagonals 0, mean 0</td><td>$C=\operatorname{diag}(\text{coord}^2\text{ averages})$</td></tr>
+<tr><td>"$A^TA$ and $AA^T$"</td><td>F3 / SVD</td><td>Shapes likho: $n\times n$ vs $d\times d$</td></tr>
+<tr><td>"every point satisfies …", "$x_j=\dots$", "lies in $k$-dim subspace"</td><td>F4</td><td>Independent constraints gino ⇒ zero eigenvalues</td></tr>
+<tr><td>Eigenvalues as a formula of $i$</td><td>$\lambda_1$ = largest term</td><td>Index range dekho, monotonic check, $\lambda_1$ vs total</td></tr>
+</tbody></table></div>
+<div class="box amber"><p><b>Common traps:</b> (1) centring skip ⇒ $S$ ($\tfrac13\begin{bmatrix}5&amp;4\\4&amp;5\end{bmatrix}$); (2) sum-of-entries ko trace samajhna; (3) $\mathbf 1^TC\mathbf 1$ ko "variance along $\mathbf 1$" samajhna (unit nahi); (4) "same nonzero eigenvalues" ko "same eigenvectors" bana dena; (5) PC1 ka unit-norm check skip; (6) $\lambda_1$ vs $\sum\lambda$.</p></div>
+</section>
+
+<!-- =========================== PYQs =========================== -->
+<h2>🎯 PYQs — 2.1 part B (P8–P13)</h2>
+
+<section data-track="pyq8">
+<h3>🎯 P8 — Raw 3 points ka covariance matrix</h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2025 July 13 · Original Q12 · ID <code>6406531302395</code> · Comprehension · 0 marks · Pages 10–11 · <span class="tag t-src">[SRC]</span> (context; subtopic 2.5 mein filed)</p>
+<p>Consider the following data points:</p>
+$$x_1=\begin{bmatrix}0\\0\end{bmatrix},\qquad x_2=\begin{bmatrix}2\\1\end{bmatrix},\qquad x_3=\begin{bmatrix}1\\2\end{bmatrix}.$$
+<p><b>Standard PCA</b> is run on this dataset. Based on the above data, answer the subquestions.</p>
+<hr style="margin:12px 0">
+<p class="mono" style="margin:0 0 6px">2025 July 13 · Original Q13 · ID <code>6406531302396</code> · MCQ · 2 marks · Parent Q12 · <span class="tag t-src">[SRC]</span></p>
+<p>Which of the following represents the covariance matrix $C$?</p>
+<p><b>Options:</b></p>
+<ol>
+<li>$\dfrac13\begin{bmatrix}5&amp;4\\4&amp;5\end{bmatrix}$</li>
+<li>$\dfrac13\begin{bmatrix}2&amp;1\\1&amp;2\end{bmatrix}$ <b>[correct]</b></li>
+<li>$\dfrac13\begin{bmatrix}0&amp;0&amp;0\\0&amp;5&amp;4\\0&amp;4&amp;5\end{bmatrix}$</li>
+<li>$\dfrac13\begin{bmatrix}0&amp;0&amp;0\\0&amp;2&amp;1\\0&amp;1&amp;2\end{bmatrix}$</li>
+</ol>
+<p class="note">Sirf broken LaTeX (matrix row breaks) theek kiya hai; content same.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Pehla step kya hai jo option 1 wala student bhool gaya? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> covariance matrix $C$ (MCQ).</li>
+<li><b>Given:</b> 3 points in $\mathbb R^2$, "standard PCA" (⇒ centring). Mean $=\tfrac13(0+2+1,\ 0+1+2)=(1,1)\neq0$.</li>
+<li><b>Trigger clues:</b> raw points, $\tfrac13$ in every option ($n=3$ ⇒ $\tfrac1n$), $3\times3$ options for 2-D data.</li>
+<li><b>Prerequisites:</b> B4 mean/centring (Procedural), outer product (Procedural), F1 (Conceptual).</li>
+<li><b>Core principle:</b> $C=\tfrac1n\sum\tilde x_i\tilde x_i^T$ — mean ghatao pehle.</li>
+</ul>
+<h4>2. 🧭 Methods (3 genuinely different)</h4>
+<p><b>M1 General</b> — centre, outer products jodo. <b>M2 Shortcut (F1)</b> — $S-\mu\mu^T$. <b>M3 Elimination</b> — size + trace check, bina poora $C$ banaye.</p>
+<h4>3. 🧮 Side-by-side working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Centre"><div class="mh">M1 · Centre → outer products</div>
+<p><b>Step 1:</b> $\mu=(1,1)$. $\tilde x_1=(-1,-1),\ \tilde x_2=(1,0),\ \tilde x_3=(0,1)$.</p>
+<p><b>Step 2:</b> $\tilde x_1\tilde x_1^T=\begin{bmatrix}1&amp;1\\1&amp;1\end{bmatrix}$, $\tilde x_2\tilde x_2^T=\begin{bmatrix}1&amp;0\\0&amp;0\end{bmatrix}$, $\tilde x_3\tilde x_3^T=\begin{bmatrix}0&amp;0\\0&amp;1\end{bmatrix}$.</p>
+<p><b>Step 3:</b> Sum $=\begin{bmatrix}2&amp;1\\1&amp;2\end{bmatrix}$; $\div n=3$.</p>
+<p><b>Step 4:</b> $C=\tfrac13\begin{bmatrix}2&amp;1\\1&amp;2\end{bmatrix}$ ⇒ <b>option 2</b>.</p></div>
+<div class="method" data-label="M2 S − μμᵀ"><div class="mh">M2 · $C=S-\mu\mu^T$</div>
+<p><b>Step 1:</b> $\mu=(1,1)$, $\mu\mu^T=\begin{bmatrix}1&amp;1\\1&amp;1\end{bmatrix}=\tfrac13\begin{bmatrix}3&amp;3\\3&amp;3\end{bmatrix}$.</p>
+<p><b>Step 2:</b> $\sum x_ix_i^T=0+\begin{bmatrix}4&amp;2\\2&amp;1\end{bmatrix}+\begin{bmatrix}1&amp;2\\2&amp;4\end{bmatrix}=\begin{bmatrix}5&amp;4\\4&amp;5\end{bmatrix}$ ⇒ $S=\tfrac13\begin{bmatrix}5&amp;4\\4&amp;5\end{bmatrix}$ (= option 1!).</p>
+<p><b>Step 3:</b> $S-\mu\mu^T=\tfrac13\begin{bmatrix}5-3&amp;4-3\\4-3&amp;5-3\end{bmatrix}$.</p>
+<p><b>Step 4:</b> $=\tfrac13\begin{bmatrix}2&amp;1\\1&amp;2\end{bmatrix}$ ⇒ <b>option 2</b>.</p></div>
+<div class="method" data-label="M3 Eliminate"><div class="mh">M3 · Size + trace elimination</div>
+<p><b>Step 1:</b> Data $\mathbb R^2$ ⇒ $C$ is $2\times2$ ⇒ options 3, 4 out.</p>
+<p><b>Step 2:</b> $\operatorname{tr}C=\tfrac1n\sum\|\tilde x_i\|^2$. Centred norms² (M1 step 1): $2,1,1$ ⇒ $\operatorname{tr}C=\tfrac43$.</p>
+<p><b>Step 3:</b> Option 1 trace $=\tfrac{10}3$, option 2 trace $=\tfrac43$.</p>
+<p><b>Step 4:</b> Sirf <b>option 2</b> bacha.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Centre</td><td>Medium</td><td>Low</td><td>Low (integers)</td><td>SA "find $C$"</td></tr>
+<tr><td>M2 $S-\mu\mu^T$</td><td>Medium</td><td>Low</td><td>Medium (subtraction)</td><td>Jab $S$ pehle se diya/chahiye ho; trap pehchanne ke liye</td></tr>
+<tr><td>M3 Eliminate</td><td>Fastest</td><td>Low</td><td>Low</td><td>MCQ with distinct traces</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M3. 🏆 <b>BEST EXAM METHOD:</b> M1 — integers, poori matrix mil jaati hai jo P9 mein reuse hogi; trade-off: M3 se ~30 sec zyada.</p>
+<h4>5. ✅ Verification</h4>
+<ul><li>M1 = M2 = M3 ✓. Code (numpy, $\tfrac1n$, centred): $3C=\begin{bmatrix}2&amp;1\\1&amp;2\end{bmatrix}$ ✓. Key option 2 ✓.</li>
+<li>$\tfrac1{n-1}$ se $\begin{bmatrix}1&amp;0.5\\0.5&amp;1\end{bmatrix}$ — kisi option mein nahi ⇒ $\tfrac1n$ convention phir confirm.</li></ul>
+<h4>6. ⚠️ Traps</h4>
+<ul><li><b>Option 1</b> = uncentred $S$ (mean ghatana bhoole). <b>Options 3/4</b> = galat size ($3\times3$) — shayad points ko 3 features samajh liya.</li></ul>
+<p><b>Recognition rule:</b> "Standard PCA" + raw points + mean $\neq0$ ⇒ options mein ek $S$ hoga; $C=S-\mu\mu^T$ se use pakdo.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>Points $(1,0),(3,2),(2,4)$. Covariance matrix ($\tfrac1n$)? Aur galti se uncentred banaoge to kya aayega?</p>
+<details class="reveal"><summary>Show answer</summary><p>$\mu=(2,2)$; $\tilde x=(-1,-2),(1,0),(0,2)$ ⇒ $C=\tfrac13\begin{bmatrix}2&amp;2\\2&amp;8\end{bmatrix}$. Uncentred $S=\tfrac13\begin{bmatrix}14&amp;14\\14&amp;20\end{bmatrix}$; farak $\mu\mu^T=\begin{bmatrix}4&amp;4\\4&amp;4\end{bmatrix}$ ✓. (Code-verified.)</p></details>
+</details>
+</section>
+
+<section data-track="pyq9">
+<h3>🎯 P9 — Same data: variance along PC1</h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2025 July 13 · Original Q14 · ID <code>6406531302397</code> · SA · 2 marks · Parent Q12 (<code>6406531302395</code>, upar P8 mein) · <span class="tag t-src">[SRC]</span></p>
+<p>What is the variance of the dataset along the <b>first principal component</b>?</p>
+<p><b>Accepted answer (source):</b> 1.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>P8 ka $C$ use karo. 30 second ka target. Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> $\lambda_1$ of $C$.</li>
+<li><b>Given:</b> $C=\tfrac13\begin{bmatrix}2&amp;1\\1&amp;2\end{bmatrix}$ (P8).</li>
+<li><b>Trigger clues:</b> "variance along first PC" ⇒ $\lambda_1$; $\begin{bmatrix}a&amp;b\\b&amp;a\end{bmatrix}$ pattern.</li>
+<li><b>Prerequisites:</b> B4 2×2 eigen (Procedural), B5 $\operatorname{Var}_{\text{PC}_1}=\lambda_1$ (Conceptual), B3 projection (Analogous).</li>
+<li><b>Core principle:</b> $\lambda_1=\max_{\|u\|=1}u^TCu$.</li>
+</ul>
+<h4>2. 🧭 Methods (3 genuinely different)</h4>
+<p><b>M1 General</b> — characteristic equation. <b>M2 Shortcut</b> — $a\pm b$ pattern. <b>M3 Advanced</b> — data ko $q_1=\tfrac1{\sqrt2}(1,1)$ par project karke mean square, phir trace se "max" confirm.</p>
+<h4>3. 🧮 Side-by-side working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Char. eq."><div class="mh">M1 · $\lambda^2-\operatorname{tr}\lambda+\det=0$</div>
+<p><b>Step 1:</b> $\operatorname{tr}C=\tfrac43$, $\det C=\tfrac19(4-1)=\tfrac13$.</p>
+<p><b>Step 2:</b> $\lambda^2-\tfrac43\lambda+\tfrac13=0$ ⇒ $3\lambda^2-4\lambda+1=0$ ⇒ $(3\lambda-1)(\lambda-1)=0$.</p>
+<p><b>Step 3:</b> $\lambda=1,\ \tfrac13$.</p>
+<p><b>Step 4:</b> $\lambda_1=\mathbf 1$.</p></div>
+<div class="method" data-label="M2 a ± b"><div class="mh">M2 · Pattern $a\pm b$</div>
+<p><b>Step 1:</b> $C=\tfrac13\begin{bmatrix}a&amp;b\\b&amp;a\end{bmatrix}$ with $a=2,b=1$.</p>
+<p><b>Step 2:</b> Eigenvalues of bracket $=a\pm b=3,\ 1$.</p>
+<p><b>Step 3:</b> $\times\tfrac13$ ⇒ $1,\ \tfrac13$.</p>
+<p><b>Step 4:</b> $\lambda_1=\mathbf 1$ (direction $(1,1)$).</p></div>
+<div class="method" data-label="M3 Project"><div class="mh">M3 · Project on $q_1$ + trace</div>
+<p><b>Step 1:</b> $q_1=\tfrac1{\sqrt2}(1,1)$; $z_i=q_1^T\tilde x_i$: $-\sqrt2,\ \tfrac1{\sqrt2},\ \tfrac1{\sqrt2}$.</p>
+<p><b>Step 2:</b> $z_i^2=2,\ \tfrac12,\ \tfrac12$; mean $=\tfrac33=1$.</p>
+<p><b>Step 3:</b> Doosri direction ka variance $=\operatorname{tr}C-1=\tfrac13&lt;1$ ⇒ 1 hi max.</p>
+<p><b>Step 4:</b> $\lambda_1=\mathbf 1$.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Char. eq.</td><td>Medium</td><td>Medium</td><td>Medium (fractions)</td><td>Any 2×2</td></tr>
+<tr><td>M2 $a\pm b$</td><td>Fastest</td><td>Low</td><td>Low</td><td>Equal diagonal</td></tr>
+<tr><td>M3 Project</td><td>Slow</td><td>Medium</td><td>Low</td><td>Jab PC direction pata ho / guess ho</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST</b> / 🏆 <b>BEST:</b> M2 — 5 second; trade-off: sirf equal-diagonal $2\times2$ par chalta hai, warna M1.</p>
+<h4>5. ✅ Verification</h4>
+<ul><li>Teeno = 1 ✓. Code: eigenvalues $[1,\ 0.3333]$ ✓. Widget (Interactive 1) θ = 45° par 1 ✓. Key 1 ✓.</li>
+<li>Bounds: $\lambda_1\ge\max(C_{11},C_{22})=\tfrac23$ aur $\le\operatorname{tr}C=\tfrac43$ ✓.</li></ul>
+<h4>6. ⚠️ Traps</h4>
+<ul><li><b>3</b> — uncentred $S$ ka $\lambda_1$ (P8 option 1 se aage chal gaye). <b>1.5</b> — $\tfrac1{n-1}$. <b>4/3</b> — total variance. <b>2/3</b> — $C_{11}$ (variance along x-axis).</li></ul>
+<p><b>Recognition rule:</b> "Variance along first PC" ⇒ $\lambda_1$ of the <b>centred</b> $C$; bounds $\max C_{jj}\le\lambda_1\le\operatorname{tr}C$ se answer sanity-check.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>P8 transfer wala data $(1,0),(3,2),(2,4)$: variance along PC1 (3 decimals)?</p>
+<details class="reveal"><summary>Show answer</summary><p>$C=\tfrac13\begin{bmatrix}2&amp;2\\2&amp;8\end{bmatrix}$: bracket ka $\operatorname{tr}=10$, $\det=16-4=12$ ⇒ $\mu^2-10\mu+12=0$ ⇒ $\mu=5\pm\sqrt{13}$. $\lambda_1=\tfrac{5+\sqrt{13}}3\approx\mathbf{2.869}$. Bounds: $\tfrac83=2.667\le2.869\le\tfrac{10}3$ ✓. (Code-verified.)</p></details>
+</details>
+</section>
+
+<section data-track="pyq10">
+<h3>🎯 P10 — Cube corners: sum of all entries of $C$ (pretest)</h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">15 March 2026 · Original Q7 · ID <code>6406531951439</code> · Comprehension · 0 marks · Pages 8–10 · <span class="tag t-src">[SRC]</span> (context; subtopic 2.2 mein filed)</p>
+<p>Consider a cube of <b>edge length 2</b>, centered at the origin, with corners represented by $(\pm1,\pm1,\pm1)$. These eight points form dataset $D$.</p>
+<hr style="margin:12px 0">
+<p class="mono" style="margin:0 0 6px">15 March 2026 · Original Q8 · ID <code>6406531951440</code> · SA · 3 marks · Parent Q7 · <span class="tag t-src">[SRC]</span></p>
+<p>Find the covariance matrix $C$ of the dataset. Enter the <b>sum of all entries</b> of $C$.</p>
+<p><b>Accepted answer (source):</b> 3.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Pretest wala answer yaad hai? Ab method ke saath dobara. Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> $\sum_{j,k}C_{jk}$ (9 entries).</li>
+<li><b>Given:</b> 8 points $(\pm1,\pm1,\pm1)$ — har sign combination exactly ek baar.</li>
+<li><b>Trigger clues:</b> "centered at origin" (mean 0), symmetric $\pm$ pattern, "sum of all entries".</li>
+<li><b>Prerequisites:</b> B4 covariance (Procedural), symmetry argument (Conceptual), F2 (Conceptual).</li>
+<li><b>Core principle:</b> mean 0 ⇒ $C_{jk}=\tfrac1n\sum x_{ij}x_{ik}$; sum of entries $=\operatorname{Var}(x_1+x_2+x_3)$.</li>
+</ul>
+<h4>2. 🧭 Methods (3 genuinely different)</h4>
+<p><b>M1 General</b> — har entry calculate. <b>M2 Shortcut</b> — symmetry: diagonal $=1$, off-diagonal $=0$. <b>M3 Advanced (F2)</b> — sum-feature $s=x_1+x_2+x_3$ ka variance.</p>
+<h4>3. 🧮 Side-by-side working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Entries"><div class="mh">M1 · Entry by entry</div>
+<p><b>Step 1 (mean):</b> har coordinate mein 4 baar $+1$, 4 baar $-1$ ⇒ $\mu=0$.</p>
+<p><b>Step 2 (diagonal):</b> $C_{11}=\tfrac18\sum x_{i1}^2=\tfrac18\cdot8=1$; same $C_{22}=C_{33}=1$.</p>
+<p><b>Step 3 (off-diag):</b> $C_{12}=\tfrac18\sum x_{i1}x_{i2}$: product $+1$ jab signs same (4 corners), $-1$ jab alag (4) ⇒ $0$. Same for $C_{13},C_{23}$.</p>
+<p><b>Step 4:</b> $C=I_3$ ⇒ sum $=\mathbf 3$.</p></div>
+<div class="method" data-label="M2 Symmetry"><div class="mh">M2 · Symmetry</div>
+<p><b>Step 1:</b> Coordinates independent signs ⇒ koi do coordinates ka "saath badhna" zero ⇒ $C$ diagonal.</p>
+<p><b>Step 2:</b> Har coordinate $\pm1$ ⇒ square hamesha 1 ⇒ diagonal 1.</p>
+<p><b>Step 3:</b> $C=I$.</p>
+<p><b>Step 4:</b> Sum $=\mathbf 3$.</p></div>
+<div class="method" data-label="M3 Sum-feature"><div class="mh">M3 · $\mathbf 1^TC\mathbf 1=\operatorname{Var}(s)$</div>
+<p><b>Step 1:</b> $s=x_1+x_2+x_3$ over 8 corners: number of $+1$'s $=0,1,2,3$ in $1,3,3,1$ corners ⇒ $s=-3,-1,1,3$ with counts $1,3,3,1$.</p>
+<p><b>Step 2:</b> Mean of $s$ $=0$.</p>
+<p><b>Step 3:</b> $\operatorname{Var}(s)=\tfrac18(9+3\cdot1+3\cdot1+9)=\tfrac{24}8=3$.</p>
+<p><b>Step 4:</b> Sum $=\mathbf 3$.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Entries</td><td>Slow (9 entries)</td><td>Low</td><td>Medium (counting)</td><td>Jab poora $C$ bhi chahiye (sibling Qs)</td></tr>
+<tr><td>M2 Symmetry</td><td>Fastest</td><td>Low</td><td>Low (agar pattern sach mein symmetric)</td><td>$\pm$ grids, cubes, boxes</td></tr>
+<tr><td>M3 Sum-feature</td><td>Fast</td><td>Medium</td><td>Low</td><td>Non-symmetric data, sirf sum poochha ho</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M2. 🏆 <b>BEST EXAM METHOD:</b> M2 yahan, M3 as backup — M3 har dataset par chalta hai (symmetry na ho tab bhi); trade-off: M2 sirf symmetric patterns par safe.</p>
+<h4>5. ✅ Verification</h4>
+<ul><li>Teeno = 3 ✓. Code: $C=I_3$, sum $3$; $\operatorname{Var}(s)=3$ ✓. Key 3 ✓.</li>
+<li>$\tfrac1{n-1}$ hota to $\tfrac87\cdot3\approx3.43$ — key se match nahi ⇒ $\tfrac1n$ phir confirm.</li></ul>
+<h4>6. ⚠️ Traps</h4>
+<ul><li><b>Trace = sum</b> sochna: yahan coincidence se dono 3, par P8 data par trace $\tfrac43$, sum $2$.</li>
+<li><b>8 ya 24</b> — $\tfrac1n$ lagana bhoole. <b>1</b> — sirf ek entry. <b>3.43</b> — $\tfrac1{n-1}$.</li></ul>
+<p><b>Recognition rule:</b> "Sum of all entries of $C$" ⇒ sum-feature ka variance (ya symmetry se $C$ diagonal).</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>8 points $(\pm1,\pm2,\pm3)$. Sum of all entries of $C$? Aur variance along $\tfrac1{\sqrt3}(1,1,1)$?</p>
+<details class="reveal"><summary>Show answer</summary><p>$C=\operatorname{diag}(1,4,9)$ ⇒ sum $=\mathbf{14}$. Unit direction ke liye $\tfrac13\mathbf 1^TC\mathbf 1=\tfrac{14}3\approx\mathbf{4.667}$. (Code-verified.)</p></details>
+</details>
+</section>
+
+<section data-track="pyq11">
+<h3>🎯 P11 — $A^TA$ vs $AA^T$: same eigenvectors?</h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">15 March 2026 · Original Q15 · ID <code>6406531951447</code> · MCQ · 2 marks · Pages 13–14 · <span class="tag t-src">[SRC]</span></p>
+<p>Let $A$ be a data matrix of shape $d\times n$.</p>
+<p>The question compares the eigenvectors of $A^TA$ and $AA^T$.</p>
+<p>Statement:</p>
+<blockquote style="margin:6px 0 6px 12px;color:#e9e9e9">$A^TA$ and $AA^T$ have the same eigenvectors.</blockquote>
+<p><b>Options:</b> True / False.</p>
+<p><b>Answer (source):</b> False.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Dono matrices ka size likho. Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> statement True/False.</li>
+<li><b>Given:</b> $A\in\mathbb R^{d\times n}$, general.</li>
+<li><b>Trigger clues:</b> "$A^TA$ and $AA^T$", "same eigenvectors" (eigenvalues nahi!).</li>
+<li><b>Prerequisites:</b> matrix shapes (Procedural), F3 (Conceptual), counterexample thinking (Evidence).</li>
+<li><b>Core principle:</b> same <b>non-zero eigenvalues</b>, eigenvectors linked by $A$ — equal nahi.</li>
+</ul>
+<h4>2. 🧭 Methods (2 — conceptual T/F, teesra genuinely alag nahi)</h4>
+<p><b>M1 Shape argument</b> — eigenvectors alag dimension mein. <b>M2 Counterexample</b> — $d=n$ case mein bhi alag (Ex 3). Teesra "method" bas F3 ka restatement hota, isliye nahi diya.</p>
+<h4>3. 🧮 Side-by-side working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Shapes"><div class="mh">M1 · Shapes</div>
+<p><b>Step 1:</b> $A^TA$ is $n\times n$ ⇒ eigenvectors $\in\mathbb R^n$.</p>
+<p><b>Step 2:</b> $AA^T$ is $d\times d$ ⇒ eigenvectors $\in\mathbb R^d$.</p>
+<p><b>Step 3:</b> $d\neq n$ ⇒ vectors compare hi nahi ho sakte. Statement "for a $d\times n$ data matrix" general hai ⇒ fail.</p>
+<p><b>Step 4:</b> <b>False</b>. Sahi rishta: $u=Av/\sqrt\lambda$.</p></div>
+<div class="method" data-label="M2 Counterexample"><div class="mh">M2 · $d=n$ counterexample</div>
+<p><b>Step 1:</b> $B=\begin{bmatrix}1&amp;1\\0&amp;1\end{bmatrix}$.</p>
+<p><b>Step 2:</b> $B^TB=\begin{bmatrix}1&amp;1\\1&amp;2\end{bmatrix}$, $BB^T=\begin{bmatrix}2&amp;1\\1&amp;1\end{bmatrix}$.</p>
+<p><b>Step 3:</b> $(1,1)$ check: $B^TB(1,1)^T=(2,3)$ — eigenvector nahi; dono ke top eigenvectors $\approx(0.526,0.851)$ vs $(0.851,0.526)$.</p>
+<p><b>Step 4:</b> Same size par bhi alag ⇒ <b>False</b>.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Shapes</td><td>Fastest</td><td>Low</td><td>Low</td><td>T/F, MSQ options</td></tr>
+<tr><td>M2 Counterexample</td><td>Slow</td><td>Medium</td><td>Low</td><td>Agar question $d=n$ de / "square $A$" bole</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST</b> / 🏆 <b>BEST:</b> M1 — 10 second; trade-off: agar question "$A$ square" bole to M2 ka idea chahiye.</p>
+<h4>5. ✅ Verification</h4>
+<ul><li>Code: $A=\begin{bmatrix}1&amp;2&amp;0\\0&amp;1&amp;1\end{bmatrix}$ — $AA^T$ eigenvalues $6,1$; $A^TA$ eigenvalues $6,1,0$; $Av/\sqrt\lambda$ is eigenvector of $AA^T$ ✓ (D3 §3). Key False ✓.</li></ul>
+<h4>6. ⚠️ Traps</h4>
+<ul><li>"Same non-zero eigenvalues" (True) ko "same eigenvectors" (False) ke saath mix karna — MSQs mein dono options saath aate hain (kernel PYQs 640653577734, 6406531104783 — B14/B15).</li>
+<li>"Trace same" (True: $\operatorname{tr}AA^T=\operatorname{tr}A^TA=\sum_{ij}A_{ij}^2$) bhi saath aata hai.</li></ul>
+<p><b>Recognition rule:</b> $A^TA$ vs $AA^T$: eigenvalues (non-zero) ✓, trace ✓, rank ✓, eigenvectors ✗, size ✗.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>$A$ is $3\times5$ aur $AA^T$ ke eigenvalues $9,4,0$ hain. $A^TA$ ke saare eigenvalues?</p>
+<details class="reveal"><summary>Show answer</summary><p>Non-zero same: $9,4$. $A^TA$ is $5\times5$, rank $=2$ ⇒ baaki 3 zero ⇒ $\mathbf{9,4,0,0,0}$. (Random rank-2 $3\times5$ matrix par code-verified: non-zero spectra match, extra zeros $5-2=3$.)</p></details>
+</details>
+</section>
+
+<section data-track="pyq12">
+<h3>🎯 P12 — Constraints ⇒ zero eigenvalues + PC1 <span class="tag t-q">[?]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">16 July 2026 · Original Q1 · ID <code>6406532158934</code> · MCQ · 4 marks · Page 3 · <span class="tag t-src">[SRC]</span> <span class="tag t-q">[?]</span></p>
+<p>Consider a mean-centred dataset $D$ consisting of <b>5000 points in $\mathbb R^{10}$</b> with features $x_1,\ldots,x_{10}$.</p>
+<p>Every data point satisfies the constraints shown in the question. The independent base feature has variance $100$. The remaining features are mutually uncorrelated, uncorrelated with the base feature, and each has variance $1$.</p>
+<p>Standard PCA is performed. Let $\lambda_1\ge\lambda_2\ge\cdots\ge\lambda_{10}$ be the covariance eigenvalues.</p>
+<p>Which statement is strictly true?</p>
+<p><b>Options:</b></p>
+<ol>
+<li>Exactly 3 eigenvalues are zero, with a corresponding PC1.</li>
+<li><b>Exactly 4 eigenvalues are zero, and</b> $PC_1=\frac1{\sqrt5}(1,1,1,0,0,0,0,0,0,0)$. <b>[correct]</b></li>
+<li>Exactly 4 eigenvalues are zero, with another PC1 configuration.</li>
+<li>Exactly 2 eigenvalues are zero and PC1 lies somewhere in the relevant subspace.</li>
+</ol>
+</div>
+<div class="box amber">
+<p><b><span class="tag t-q">[?]</span> Kya missing hai:</b> (1) "constraints shown in the question" — asli equations PYQ file mein nahi hain. (2) Options 1, 3, 4 ka exact wording (unke PC1 vectors) bhi file mein paraphrase hai. (3) Option 2 ka vector jaisa likha hai, <b>unit nahi hai</b>: $\big\|\tfrac1{\sqrt5}(1,1,1,0,\dots,0)\big\|=\sqrt{3/5}\approx0.775\neq1$ (code-verified). Yaani transcription mein kuch chhoot gaya (e.g. do aur 1's, ya koi coefficient). <b>Isliye main answer "verify" nahi kar sakta</b> — sirf method aur ek consistent reconstruction dikha sakta hoon. (State flag F13.)</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Jo recoverable hai: "har independent constraint ⇒ ek zero eigenvalue" — 4 zero eigenvalues ke liye kitne constraints chahiye? PC1 ka length check kaise karoge?</p></div>
+<details class="reveal"><summary>Show solution (recoverable part)</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> zero eigenvalues ki ginti + PC1.</li>
+<li><b>Given (recoverable):</b> centred, $d=10$, ek base feature (variance 100), kuch features constraints se bandhe hain, baaki uncorrelated variance 1.</li>
+<li><b>Trigger clues:</b> "every point satisfies", "exactly $k$ eigenvalues are zero", "PC1 $=$".</li>
+<li><b>Prerequisites:</b> F4 (Conceptual), block covariance $\sigma^2cc^T$ (Procedural), unit-norm check (Procedural).</li>
+<li><b>Core principle:</b> #zero eigenvalues $=$ #independent linear constraints; PC1 = sabse bade variance wale block ki direction.</li>
+</ul>
+<h4>2. 🧭 Methods (2 genuinely different)</h4>
+<p><b>M1 Null-space counting</b> — constraints ko vectors $a_k$ bana ke gino; PC1 un sab ke perpendicular. <b>M2 Block construction</b> — $C$ ko blocks mein likh ke eigenvalues directly. (Teesra method bina asli constraints ke bas guess hota.)</p>
+<h4>3. 🧮 Working on an <span class="tag t-add">[ADDED]</span> reconstruction (hypothesis — PYQ ka confirmed data nahi)</h4>
+<p>Ek setup jo marked option 2 ke saath <b>poori tarah consistent</b> hai: base $x_1$ (var 100), aur 4 constraints $x_2=x_1,\ x_3=x_1,\ x_4=x_1,\ x_5=x_1$; $x_6..x_{10}$ independent, var 1. (Is case mein PC1 $=\tfrac1{\sqrt5}(1,1,1,1,1,0,\dots,0)$ — jo unit hai; file ke vector mein do 1's kam hain.)</p>
+<div class="methods">
+<div class="method" data-label="M1 Null space"><div class="mh">M1 · Count constraints</div>
+<p><b>Step 1:</b> $a_1=e_1-e_2,\ a_2=e_1-e_3,\ a_3=e_1-e_4,\ a_4=e_1-e_5$ — linearly independent.</p>
+<p><b>Step 2:</b> Har $a_k^T\tilde x=0$ ⇒ $Ca_k=0$ ⇒ 4 zero eigenvalues. Baaki features mein koi dependence nahi ⇒ <b>exactly 4</b>.</p>
+<p><b>Step 3:</b> PC1 $\perp$ sab $a_k$ ⇒ pehle 5 coordinates barabar: $(c,c,c,c,c,\ast)$.</p>
+<p><b>Step 4:</b> Variance $100$ wala block yahi ⇒ PC1 $=\tfrac1{\sqrt5}(1,1,1,1,1,0,\dots,0)$.</p></div>
+<div class="method" data-label="M2 Blocks"><div class="mh">M2 · Block covariance</div>
+<p><b>Step 1:</b> $(x_1..x_5)=x_1\cdot c$, $c=(1,1,1,1,1)$ ⇒ block $=100\,cc^T$.</p>
+<p><b>Step 2:</b> $cc^T$ rank 1, eigenvalue $\|c\|^2=5$ ⇒ block eigenvalues $500,0,0,0,0$.</p>
+<p><b>Step 3:</b> $x_6..x_{10}$ block $=I_5$ ⇒ eigenvalues $1\times5$.</p>
+<p><b>Step 4:</b> Spectrum $500,1,1,1,1,1,0,0,0,0$ ⇒ 4 zeros, $\lambda_1=500$ at $c/\|c\|$.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Null space</td><td>Fast</td><td>Medium</td><td>Medium (independence check)</td><td>Count questions</td></tr>
+<tr><td>M2 Blocks</td><td>Medium</td><td>Medium</td><td>Low</td><td>Jab $\lambda_1$ ya PC1 ka exact vector chahiye</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M1 for count. 🏆 <b>BEST EXAM METHOD:</b> M1 (count) + PC1 unit-norm & $\perp a_k$ check — options turant filter hote hain; trade-off: $\lambda_1$ ka exact value M2 deta hai.</p>
+<h4>5. ✅ Verification</h4>
+<ul><li>Reconstruction ka $C$ code mein: eigenvalues $[500,1,1,1,1,1,0,0,0,0]$, PC1 $=0.4472\cdot(1,1,1,1,1,0,\dots)$ ✓ ($0.4472=1/\sqrt5$).</li>
+<li>File wala vector: norm $0.775$ ⇒ as written koi bhi PC1 nahi ho sakta (PC unit hota hai). <span class="tag t-q">[?]</span> — original paper dekh ke confirm karna.</li>
+<li>General rule bhi check: $x_2=2x_1$ type block ($c=(1,2)$) ⇒ eigenvalues $500,0$ ⇒ direction $\tfrac1{\sqrt5}(1,2)$ — yaani $\tfrac1{\sqrt5}$ factor $c$ ke kai shapes se aa sakta hai; asli constraints ke bina decide nahi hota.</li></ul>
+<h4>6. ⚠️ Traps</h4>
+<ul><li>Dependent features ki ginti ko zero-eigenvalue ginti maan lena bina independence check kiye (e.g. $x_3=x_1+x_2$ aur $x_4=2x_3-x_1$ independent constraints hain ya nahi — vectors banake dekho).</li>
+<li>PC1 option ka unit-norm check skip karna — yahi is PYQ ka hidden filter ho sakta hai.</li>
+<li>PC1 ko "base feature axis $e_1$" maan lena — copies ki wajah se direction un sab features mein phail jaati hai.</li></ul>
+<p><b>Recognition rule:</b> "Every point satisfies $k$ independent linear equations" ⇒ exactly $k$ zero eigenvalues (baaki generic ho to); PC1 must be unit and $\perp$ every constraint vector.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>Centred data in $\mathbb R^4$; har point $x_3=x_1+x_2$ aur $x_4=2x_1$ satisfy karta hai; $x_1,x_2$ perfectly correlated nahi. Kitne zero eigenvalues?</p>
+<details class="reveal"><summary>Show answer</summary><p>Constraint vectors $a_1=(1,1,-1,0)$, $a_2=(2,0,0,-1)$ — independent ⇒ <b>exactly 2</b> zero eigenvalues (rank 2). (Simulated data par code-verified: eigenvalues $7.49,\ 1.45,\ 0,\ 0$.)</p></details>
+</details>
+</section>
+
+<section data-track="pyq13">
+<h3>🎯 P13 — Eigenvalues $100\cdot2^{-i}$: max-variance direction <span class="tag t-flag">[FLAG]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">16 July 2026 · Original Q11 · ID <code>6406532158944</code> · SA · 3 marks · Page 12 · <span class="tag t-src">[SRC]</span> <span class="tag t-flag">[FLAG]</span></p>
+<p>Let $D=\{x^{(1)},\ldots,x^{(n)}\}$ be a dataset of $n$ observations where each $x^{(i)}\in\mathbb R^{100}$.</p>
+<p>The dataset is centered: $\sum_{i=1}^{n}x^{(i)}=0.$</p>
+<p>The covariance matrix has eigenvalues $\lambda_i=100\cdot 2^{-i},\ 1\le i\le100.$</p>
+<p>Let $u\in\mathbb R^{100}$ be the direction of maximum variance with $\|u\|=1.$</p>
+<p>Find $$\frac1n\sum_{i=1}^{n}\left(u^Tx^{(i)}\right)^2.$$</p>
+<p>Since $u$ is the direction of maximum variance, this quantity equals the largest eigenvalue.</p>
+<p><b>Accepted answer (source):</b> 100.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Sabse bada eigenvalue kis $i$ par? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> $\tfrac1n\sum(u^Tx^{(i)})^2$ for max-variance unit $u$.</li>
+<li><b>Given:</b> centred; $\lambda_i=100\cdot2^{-i}$ for $i=1,\dots,100$; question khud kehta hai "equals the largest eigenvalue".</li>
+<li><b>Trigger clues:</b> "direction of maximum variance", $\|u\|=1$, eigenvalue formula, index range $1\le i$.</li>
+<li><b>Prerequisites:</b> B5 $u^TCu$, $\max=\lambda_1$ (Conceptual); sequence reading (Procedural).</li>
+<li><b>Core principle:</b> $\tfrac1n\sum(u^Tx^{(i)})^2=u^TCu$, max over unit $u$ $=\lambda_{\max}$.</li>
+</ul>
+<h4>2. 🧭 Methods (2 — yeh ek-step reading hai)</h4>
+<p><b>M1 Direct</b> — sequence ka largest term. <b>M2 Rayleigh / weighted-average</b> — $u^TCu=\sum c_k^2\lambda_k$, max jab saara weight largest $\lambda$ par. Dono same number dete hain par M2 batata hai <i>kyun</i>; teesra method nahi hai.</p>
+<h4>3. 🧮 Side-by-side working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Direct"><div class="mh">M1 · Largest term</div>
+<p><b>Step 1:</b> $2^{-i}$ decreasing in $i$ ⇒ largest at smallest $i=1$.</p>
+<p><b>Step 2:</b> $\lambda_1=100\cdot2^{-1}$.</p>
+<p><b>Step 3:</b> $=50$.</p>
+<p><b>Step 4:</b> Answer $\mathbf{50}$.</p></div>
+<div class="method" data-label="M2 Rayleigh"><div class="mh">M2 · Weighted average</div>
+<p><b>Step 1:</b> $u=\sum c_kq_k$, $\sum c_k^2=1$ ⇒ $u^TCu=\sum c_k^2\lambda_k$.</p>
+<p><b>Step 2:</b> Weighted average $\le\max_k\lambda_k=\lambda_1$; equality at $u=q_1$.</p>
+<p><b>Step 3:</b> $\lambda_1=50$ (M1).</p>
+<p><b>Step 4:</b> Answer $\mathbf{50}$.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Direct</td><td>Fastest</td><td>Low</td><td>Low (index check)</td><td>Formula-given eigenvalues</td></tr>
+<tr><td>M2 Rayleigh</td><td>Medium</td><td>Medium</td><td>Low</td><td>Jab $u$ PC na ho (mixed direction)</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST</b> / 🏆 <b>BEST:</b> M1 — trade-off: index range aur monotonic direction zaroor check karo.</p>
+<h4>5. ✅ Verification + <span class="tag t-flag">[FLAG]</span></h4>
+<ul><li>Code (exact fractions): $\lambda_1=50$; $\sum_{i=1}^{100}\lambda_i=100-100\cdot2^{-100}\approx100$.</li></ul>
+<div class="box amber">
+<p><b><span class="tag t-flag">[FLAG]</span> Key 100 question ke apne statement se contradict karta hai.</b> Question kehta hai quantity $=$ largest eigenvalue; given range $1\le i\le100$ mein largest $=\lambda_1=50$. 100 do galtiyon mein se kisi ek se aata hai (code-verified):</p>
+<div class="tbl-wrap"><table><thead><tr><th>Interpretation</th><th class="num">Value</th><th>Key 100 se match?</th></tr></thead><tbody>
+<tr><td>Largest eigenvalue, $i\ge1$ (as stated)</td><td class="num">50</td><td>Nahi</td></tr>
+<tr><td>Total variance $\sum_{i=1}^{100}\lambda_i$</td><td class="num">≈ 100 (100 − 7.9×10⁻²⁹)</td><td>Haan (approx)</td></tr>
+<tr><td>Agar index $i=0$ se shuru hota: $\lambda_0$</td><td class="num">100</td><td>Haan</td></tr>
+</tbody></table></div>
+<p><b>Conclusion:</b> sahi answer <b>50</b>. Key ya to total variance hai ya off-by-one index. Exam mein: question jaisa likha ho waisa solve karo (50), aur yeh pattern yaad rakho ki keys kabhi $\lambda_1$ aur $\sum\lambda$ mix karti hain. (State flag F7.)</p>
+</div>
+<h4>6. ⚠️ Traps</h4>
+<ul><li><b>100</b> — total ya $i=0$. <b>≈0</b> — $\lambda_{100}=100\cdot2^{-100}$ (min-variance, largest index). <b>√50 ≈ 7.07</b> — std dev.</li></ul>
+<p><b>Recognition rule:</b> Formula-eigenvalues: (1) index range padho, (2) increasing/decreasing dekho, (3) "max-variance" = largest term, "total" = sum.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>Centred data in $\mathbb R^{50}$, eigenvalues $\lambda_i=90\cdot3^{-i}$, $1\le i\le50$. Variance along max-variance direction? Total variance (approx)? PC1 ka share?</p>
+<details class="reveal"><summary>Show answer</summary><p>$\lambda_1=\mathbf{30}$. Total $=90\cdot\tfrac{1/3\,(1-3^{-50})}{2/3}=45(1-3^{-50})\approx\mathbf{45}$. Share $\approx\tfrac{30}{45}=\mathbf{66.7\%}$. (Code-verified.)</p></details>
+</details>
+</section>
+
+<!-- =========================== Checkpoint 1 =========================== -->
+<section data-track="checkpoint1">
+<h2>🧩 Checkpoint 1 — mixed test: T1 + T2 (B3–B6) <span class="tag t-add">[ADDED]</span></h2>
+<div class="try">
+<p class="ttl">Rules</p>
+<ul style="margin:4px 0">
+<li>8 questions, <b>20 minutes</b>, bina notes. Order jaan-bujh ke mixed hai (interleaving).</li>
+<li>Har answer ke saath Confidence S / U / G likho. Answers sirf poora attempt karne ke baad kholo.</li>
+<li>Score: 1 point each. <b>≥ 7</b> = solid · <b>5–6</b> = galat waale ka build dobara · <b>≤ 4</b> = B4 + B5 memory cards se shuru.</li>
+<li>Chat mein bhejo: <code>Checkpoint 1: Q1 … Q8 | Confidence: … | Time: … min</code> — main grade karke status update karunga.</li>
+</ul>
+</div>
+<ol>
+<li><p><b>(B3)</b> $x=(1,2,2)$, line through origin along $w=(0,3,4)$. Length of projection, aur reconstruction error ka norm (3 decimals)?</p></li>
+<li><p><b>(B4)</b> Points $(1,2),(3,4),(5,0)$. Covariance matrix ($\tfrac1n$) aur uska largest eigenvalue?</p></li>
+<li><p><b>(B5)</b> Covariance eigenvalues $8,4,2,1,1$. Kam se kam kitne PCs chahiye taaki $\ge85\%$ variance capture ho?</p></li>
+<li><p><b>(B5)</b> $C=\begin{bmatrix}5&amp;2\\2&amp;2\end{bmatrix}$. Variance along $u=\tfrac1{\sqrt2}(1,1)$? Kya yeh PC1 ka variance hai?</p></li>
+<li><p><b>(B5 + B6)</b> Points $(1,2),(2,4),(3,6),(6,12)$, standard PCA. Variance along PC1? Options: (a) 62.5 (b) 17.5 (c) 23.33 (d) 45</p></li>
+<li><p><b>(B6, MSQ)</b> $A$ is $3\times5$. Kaun se sahi? (a) $AA^T$ aur $A^TA$ ke non-zero eigenvalues same (b) eigenvectors same (c) $A^TA$ ke kam se kam 2 eigenvalues zero (d) $\operatorname{tr}(AA^T)=\operatorname{tr}(A^TA)$</p></li>
+<li><p><b>(B6)</b> Points $(2,0),(-2,0),(0,1),(0,-1)$. Sum of all entries of $C$? Aur variance along $\tfrac1{\sqrt2}(1,1)$?</p></li>
+<li><p><b>(B5 + B6)</b> Centred data, eigenvalues $\lambda_i=12/i$, $i=1,2,3,4$. Max-variance direction ka variance, aur woh total ka kitna %?</p></li>
+</ol>
+<details class="reveal"><summary>Show answers (attempt ke baad hi)</summary>
+<div class="tbl-wrap"><table><thead><tr><th>Q</th><th>Answer</th><th>Key step</th><th>Agar galat — wapas jao</th></tr></thead><tbody>
+<tr><td>1</td><td>2.8 · 1.077</td><td>$x^Tw=14$, $\|w\|=5$ ⇒ 2.8; $\|x\|^2=9$ ⇒ $\sqrt{9-7.84}=\sqrt{1.16}$</td><td>B3 1.1, 1.2</td></tr>
+<tr><td>2</td><td>$\tfrac13\begin{bmatrix}8&amp;-4\\-4&amp;8\end{bmatrix}$ · $\lambda_1=4$</td><td>$\mu=(3,2)$; $\tilde x=(-2,0),(0,2),(2,-2)$; $a\pm|b|=\tfrac{8\pm4}3$</td><td>B4 covariance, eigen</td></tr>
+<tr><td>3</td><td>3</td><td>Total 16; cumulative 50%, 75%, <b>87.5%</b></td><td>B5 P6</td></tr>
+<tr><td>4</td><td>5.5 · Nahi</td><td>$\tfrac12(5+2+2+2)=5.5$; $\lambda_1=6$ (char. eq. $\lambda^2-7\lambda+6$), $5.5&lt;6$</td><td>B5 formal (weighted average)</td></tr>
+<tr><td>5</td><td>(b) 17.5</td><td>$\mu=(3,6)$; centred norms² $20,5,0,45$ ⇒ $70/4$. (a) uncentred, (c) $\tfrac1{n-1}$, (d) $\|\mu\|^2$</td><td>B5 P7, B6 P8</td></tr>
+<tr><td>6</td><td>(a), (c), (d)</td><td>Rank $\le3$ ⇒ $5\times5$ mein $\ge2$ zeros; trace $=\sum A_{ij}^2$ dono ka</td><td>B6 P11, D3 §3</td></tr>
+<tr><td>7</td><td>2.5 · 1.25</td><td>$C=\operatorname{diag}(2,0.5)$; $\mathbf 1^TC\mathbf 1=2.5$; unit direction ⇒ $2.5/2$</td><td>B6 P10, F2</td></tr>
+<tr><td>8</td><td>12 · 48%</td><td>$12,6,4,3$ — decreasing; total 25</td><td>B6 P13</td></tr>
+</tbody></table></div>
+<p class="note">Saare answers numpy se code-verified. Har galat answer ke saath error tag socho: [CONCEPT] / [CALCULATION] / [READING] / [CARELESS] …</p>
+</details>
+</section>
+
+<!-- =========================== Memory card =========================== -->
+<section data-track="memory">
+<h2>📌 Memory card — 2.1 (part B)</h2>
+<div class="grid2">
+<div class="box em">
+<p><b>Core model:</b> $v^TCv=\operatorname{Var}(v^Tx)$ har $v$ ke liye — isi se $\lambda_k$ (unit PC), $C_{jj}$ (axis), $\mathbf 1^TC\mathbf 1$ (sum-feature), aur zero eigenvalues (constraint directions) sab nikalte hain.</p>
+<p><b>Backbone chain:</b> raw $x_i$ → $\mu$ → $C=S-\mu\mu^T$ → constraints ⇒ zeros → $\lambda_1$ (largest, check order) · $\operatorname{tr}C$ (total) · $\mathbf 1^TC\mathbf 1$ (sum of entries).</p>
+</div>
+<div class="box">
+<p><b>Formulas (with conditions):</b></p>
+<ul>
+<li>$C=\tfrac1n\sum x_ix_i^T-\mu\mu^T$ (any data)</li>
+<li>$\sum_{jk}C_{jk}=\operatorname{Var}(\sum_jx_j)$</li>
+<li>$\operatorname{Var}_{\mathbf 1/\sqrt d}=\tfrac1d\mathbf 1^TC\mathbf 1$</li>
+<li>$A^TAv=\lambda v,\ \lambda&gt;0$ ⇒ $u=Av/\sqrt\lambda$ for $AA^T$</li>
+<li>#zero $\lambda$ = #independent constraints $=d-\operatorname{rank}C$</li>
+<li>$\max C_{jj}\le\lambda_1\le\operatorname{tr}C$</li>
+<li>$\lambda_i=cr^i$, $i\ge1$, $r&lt;1$ ⇒ $\lambda_1=cr$</li>
+</ul>
+</div>
+</div>
+<div class="grid2">
+<div class="box amber">
+<p><b>Top 3 traps:</b> (1) uncentred $S$ (P8 option 1, P9 → 3); (2) sum of entries vs trace vs $\lambda_1$; (3) same eigenvalues ≠ same eigenvectors (P11). Bonus: PC1 unit-norm check (P12), $\lambda_1$ vs $\sum\lambda$ (P13 key).</p>
+</div>
+<div class="box">
+<p><b>Trigger bank:</b> "standard PCA" + raw points → centre · "sum of all entries" → sum-feature variance · "$A^TA$ and $AA^T$" → shapes · "every point satisfies" → zero eigenvalues · "$\lambda_i=f(i)$" → largest term · cube / $\pm$ grid → diagonal $C$.</p>
+</div>
+</div>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Method selector — question deta hai…</th><th>Use</th></tr></thead>
+<tbody>
+<tr><td>Raw points, MCQ of matrices</td><td>Size → trace elimination (M3), phir M1 confirm</td></tr>
+<tr><td>Raw points, $\lambda_1$</td><td>Centre → $2\times2$ $a\pm b$ / char. eq.</td></tr>
+<tr><td>Symmetric $\pm$ pattern</td><td>Symmetry ⇒ diagonal $C$</td></tr>
+<tr><td>"Sum of entries"</td><td>Sum-feature variance</td></tr>
+<tr><td>Constraints / subspace</td><td>Count independent $a_k$; PC1 $\perp a_k$, unit</td></tr>
+<tr><td>Eigenvalue formula</td><td>Index range + monotonic ⇒ largest; total = series sum</td></tr>
+</tbody></table></div>
+<p class="note"><b>Spaced review (2.1 part B):</b> 2026-11-11 · 2026-11-13 · 2026-11-17 · 2026-12-01 — har baar P8 (M2), P10 (M3), P12 (rule) bina dekhe. Checkpoint 1 dobara: 2026-11-17.</p>
+</section>
+
+<section data-track="explain-back">
+<h2>✍️ Explain-it-back</h2>
+<div class="try">
+<p class="ttl">Chat mein apne words mein jawab do (3–5 lines):</p>
+<p>"Cube $(\pm1,\pm1,\pm1)$ mein trace of $C$ aur sum of all entries dono 3 aate hain. Ek aisa dataset banao jahan dono alag hon, aur batao sum of entries kis cheez ka variance hai — aur woh 'variance along $(1,1,1)$' se kaise alag hai?"</p>
+<p class="note">Format: <code>Answer: … | Confidence: S/U/G | Reason: …</code></p>
+</div>
+</section>

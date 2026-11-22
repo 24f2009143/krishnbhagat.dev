@@ -1,0 +1,1204 @@
+<style>#content mjx-container:not([display="true"]){display:inline-block;max-width:100%;overflow-x:auto;overflow-y:hidden;vertical-align:middle}#content li,#content p,#content td{overflow-wrap:anywhere}</style>
+<section data-track="intro">
+<p class="muted mono" style="margin:0">B17 · T4 K-means · topic ka pehla build · checkpoint 3</p>
+<h1>T4 K-means — prerequisites, 4.1 Core calculations, 4.2 Centroid updates, 🧩 checkpoint 3</h1>
+<p class="lead">Ab tak (T1–T3) har cheez "ek formula, ek answer" thi. K-means alag hai: ek <b>loop</b> hai — pehle har point ko sabse paas ke centre se jodo, phir har centre ko apne points ka <b>mean</b> bana do, aur dobara. Is build mein hum (1) is loop ke peeche ki maths (mean kyun, squared distance kyun, F kya naapta hai), (2) ek-ek step ki hand calculation (4.1) aur (3) centroid updates + "convergence tak chalao" waale sawaal (4.2) seekhenge. Sabse zaroori aadat: <b>F likhte waqt hamesha dono arguments likho — kaun sa assignment $z$ aur kaun se centres $\mu$</b>. Aaj ke 8 mein se 2 PYQs isi ek aadat par tike hain (P1, P2).</p>
+<div class="box">
+<p><b>Is build ke PYQs <span class="tag t-src">[SRC]</span></b> — subtopic 4.1 (4 IDs) + 4.2 (7 IDs) = <b>11 IDs</b>, jisme <b>8 solvable PYQs (P1–P8, kul 26 marks)</b> aur <b>3 comprehension context blocks</b> (C1–C3, 0 marks) hain. Bank ke 4.1 mein kul 4 aur 4.2 mein 7 IDs hain; baaki K-means subtopics (4.3–4.6) B18–B21 mein.</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>#</th><th>Paper · Q</th><th>ID</th><th>Type · marks</th><th>Kya poochha</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td colspan="6"><b>4.1 Core K-means calculations and properties</b></td></tr>
+<tr><td>P1</td><td>2024 October 27 · Q8</td><td class="mono">640653995448</td><td>SA · 5</td><td>7 points, $k=2$, initial means — assign karke objective $F$</td><td>Source key 6, par printed distance-table galat <span class="tag t-flag">[FLAG]</span></td></tr>
+<tr><td>P2</td><td>2025 February 23 · Q2</td><td class="mono">6406531104779</td><td>MCQ · 2</td><td>Lloyd: teen sums ka sahi order</td><td>Key option 3; printed notation mein (1)=(3) <span class="tag t-flag">[FLAG]</span> <span class="tag t-q">[?]</span></td></tr>
+<tr><td>C1</td><td>15 March 2026 · Q16</td><td class="mono">6406531951448</td><td>Comprehension · 0</td><td>$k=2$, 2-D dataset (children Q17, Q18 → 4.3, B18)</td><td>Sirf context; table is copy mein adhoora <span class="tag t-q">[?]</span></td></tr>
+<tr><td>P3</td><td>16 July 2026 · Q2</td><td class="mono">6406532158935</td><td>MCQ · 4</td><td>$v^*=\arg\min_v\sum\|3x_i-2v\|^2$</td><td>Key option 2 ✓ (options ka LaTeX theek kiya)</td></tr>
+<tr><td colspan="6"><b>4.2 Centroid updates and iteration calculations</b></td></tr>
+<tr><td>P4</td><td>2023 October · Q2</td><td class="mono">640653669231</td><td>MCQ · 4</td><td>9 points, $K=3$ — updated centroid $\mu_1$ of $C_1$</td><td>Key $(3,3)$ ✓</td></tr>
+<tr><td>C2</td><td>2024 February · Q9</td><td class="mono">640653738038</td><td>Comprehension · 0</td><td>9 points (child Q10 → 4.4, B19; Q11 yahan)</td><td>Parent image nahi; points text mein ✓ <span class="tag t-q">[?]</span></td></tr>
+<tr><td>P5</td><td>2024 February · Q11</td><td class="mono">640653738040</td><td>SA · 4</td><td>Naya point $(7,0)$ — updated centres ke x-coordinates ka sum</td><td>Key 8.18–8.22 ✓</td></tr>
+<tr><td>C3</td><td>2024 July 07 · Q13</td><td class="mono">640653829515</td><td>Comprehension · 0</td><td>6 points, init $(-4,-4)$, $(6,6)$ (children Q14, Q15)</td><td>Context ✓</td></tr>
+<tr><td>P6</td><td>2024 July 07 · Q14</td><td class="mono">640653829516</td><td>SA · 2</td><td>Cluster-1 ka converged mean: $x_1+y_1$</td><td>Key $-5$ ✓</td></tr>
+<tr><td>P7</td><td>2024 July 07 · Q15</td><td class="mono">640653829517</td><td>SA · 2</td><td>Cluster-2 ka converged mean: $x_2+y_2$</td><td>Key $9$ ✓</td></tr>
+<tr><td>P8</td><td>16 July 2026 · Q4</td><td class="mono">6406532158937</td><td>MCQ · 3</td><td>"Always true" — centroid change / configuration revisit</td><td>Key option 2 ✓; copy mein sirf 2 options dikhte hain <span class="tag t-q">[?]</span></td></tr>
+</tbody></table></div>
+<p><b>Bank frequency ≠ exam weightage:</b> K-means ke 39 blocks bank mein hain, par yeh sirf practice ka size batata hai, "kitna aayega" nahi.</p>
+<p><b>Tags:</b> <span class="tag t-src">[SRC]</span> PYQ file se · <span class="tag t-add">[ADDED]</span> meri explanation / naya question · <span class="tag t-flag">[FLAG]</span> source error, proof ke saath · <span class="tag t-q">[?]</span> unreadable / missing / ambiguous. <b>PACER:</b> Procedural · Analogous · Conceptual · Evidence · Reference.</p>
+<p><b>B17 notation (L1–L12):</b>
+L1 data $x_1,\dots,x_n\in\mathbb R^d$, clusters $K$ ·
+L2 assignment $z_i\in\{1,\dots,K\}$, cluster $C_k=\{i:z_i=k\}$, size $n_k$ ·
+L3 centroid $\mu_k=\frac1{n_k}\sum_{i\in C_k}x_i$ ·
+L4 objective $F(z,\mu)=\sum_{i}\|x_i-\mu_{z_i}\|^2$ (dono arguments zaroori) ·
+L5 assignment step $z_i^{t+1}=\arg\min_k\|x_i-\mu_k^t\|^2$ (tie ⇒ chhota index) ·
+L6 update step $\mu_k^{t+1}=$ mean of $\{x_i:z_i^{t+1}=k\}$ ·
+L7 mean-minimiser identity $\sum_i\|x_i-v\|^2=\sum_i\|x_i-\mu\|^2+n\|\mu-v\|^2$ ·
+L8 Lloyd chain $F(z^t,\mu^t)\ge F(z^{t+1},\mu^t)\ge F(z^{t+1},\mu^{t+1})$ ·
+L9 $\arg\min_v\sum_i\|ax_i-bv\|^2=\frac ab\,\mu$ ($b\ne0$) ·
+L10 incremental mean $\mu_{\text{new}}=\mu+\frac{x-\mu}{n+1}$ (point judne par), $\frac{n\mu-x}{n-1}$ (hatne par) ·
+L11 SSE shortcut $\sum_{i\in C}\|x_i-\mu\|^2=\sum_{i\in C}\|x_i\|^2-n_C\|\mu\|^2$ ·
+L12 nearest-centroid region: $\|x-a\|^2\le\|x-b\|^2\iff2x^T(b-a)\le\|b\|^2-\|a\|^2$ (half-plane, cells convex).
+(Pichhle builds ke $N$ aur $M$ labels B12–B16 mein.)</p>
+<p><b>Source integrity — 5 notes (detail har PYQ ke saath):</b></p>
+<ol>
+<li><span class="tag t-flag">[FLAG]</span> <b>P1:</b> printed table ke 4 cells galat hain ($3\to9$, $3\to9$, $5\to25$, $2\to4$); sahi initial-means wala $F=10$ hai, printed table se $8$ banta hai, aur key $6$ asal mein <i>centroids update hone ke baad</i> ka $F$ hai. Teeno numbers ka proof P1 mein.</li>
+<li><span class="tag t-flag">[FLAG]</span> <span class="tag t-q">[?]</span> <b>P2:</b> is copy mein expressions (1) aur (3) character-by-character same hain, to "(3) &lt; (1)" likha hi nahi ja sakta. Key ka strict order sirf Lloyd chain (L8) padhne par sach hota hai; yeh reading meri reconstruction hai.</li>
+<li><span class="tag t-q">[?]</span> <b>C1 / C2:</b> C1 ka table adhoora ("visible beginning" — sirf 4 rows); C2 ka plot image is copy mein nahi, par 9 points text mein diye hain.</li>
+<li><span class="tag t-q">[?]</span> <b>P5:</b> "cluster centers were updated" kis starting se? Do padhne ke tareeke (Q10 ke converged centres se, ya $(0,0),(6,0)$ se dobara) — dono se answer $8.2$.</li>
+<li><span class="tag t-q">[?]</span> <b>P8:</b> is copy mein sirf do statements dikhte hain (original mein shayad zyada); key "option 2" ke saath consistent hai.</li>
+</ol>
+<p>Saare numerical answers (8 PYQs, worked examples, transfer questions, checkpoint) python se code-verified; sirf upar waale source issues hain.</p>
+</div>
+</section>
+
+<h2>📚 T4 K-means — prerequisite module</h2>
+<section data-track="prereq-tree">
+<h3>Dependency tree — kya kis par tika hai</h3>
+<p>K-means ko samajhne ke liye teen layers chahiye. Neeche: general foundations (distance, sum/argmin, mean). Beech: K-means ki apni maths — mean hi minimiser kyun, assignments + objective $F$, nearest-centroid regions, aur "F sirf ghatta hai, isliye loop rukta hai". Sabse upar: Lloyd's algorithm. Har box ke neeche ek prerequisite hai (A–E format), aur end mein mini self-check.</p>
+<figure class="viz diagram">
+  <p class="vt">Visual P: T4 ka prerequisite tree <span class="tag t-add">[ADDED]</span></p>
+  <p class="vs">Neeche se upar padho. Tier 1 → Tier 2 → target. Schematic — arrows sirf nirbharta dikhate hain.</p>
+  <svg viewBox="0 0 760 400" role="img" aria-label="Three-tier prerequisite tree for K-means. Tier 1 general foundations: G1 distance and squared norm, G2 sums and argmin, G3 mean of vectors. Tier 2 topic-specific maths: S1 mean minimises sum of squared distances, S2 assignments and objective F, S3 nearest-centroid regions as half-planes, S4 monotone decrease on a finite set. Target: Lloyd K-means.">
+    <defs><marker id="ak17" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#a3a3a3"/></marker></defs>
+    <text x="8" y="22" fill="#737373" font-size="11.5" letter-spacing="1">TARGET</text>
+    <rect x="200" y="30" width="360" height="62" rx="10" fill="#101a14" stroke="#34D399" stroke-width="1.6"/>
+    <text x="380" y="58" text-anchor="middle" fill="#fff" font-size="15" font-weight="700">Lloyd's K-means</text>
+    <text x="380" y="78" text-anchor="middle" fill="#a3a3a3" font-size="12">assign → update → repeat, F kabhi nahi badhta (4.1–4.6)</text>
+    <text x="8" y="140" fill="#737373" font-size="11.5" letter-spacing="1">TIER 2 · TOPIC-SPECIFIC</text>
+    <rect x="10" y="150" width="170" height="82" rx="8" fill="#1e1e1e" stroke="#FBBF24"/>
+    <text x="95" y="174" text-anchor="middle" fill="#FBBF24" font-size="12.5" font-weight="700">S1</text>
+    <text x="95" y="194" text-anchor="middle" fill="#fff" font-size="12.5">Mean hi</text>
+    <text x="95" y="212" text-anchor="middle" fill="#fff" font-size="12.5">minimiser hai</text>
+    <rect x="195" y="150" width="170" height="82" rx="8" fill="#1e1e1e" stroke="#FBBF24"/>
+    <text x="280" y="174" text-anchor="middle" fill="#FBBF24" font-size="12.5" font-weight="700">S2</text>
+    <text x="280" y="194" text-anchor="middle" fill="#fff" font-size="12.5">Assignments z,</text>
+    <text x="280" y="212" text-anchor="middle" fill="#fff" font-size="12.5">objective F(z, μ)</text>
+    <rect x="380" y="150" width="170" height="82" rx="8" fill="#1e1e1e" stroke="#FBBF24"/>
+    <text x="465" y="174" text-anchor="middle" fill="#FBBF24" font-size="12.5" font-weight="700">S3</text>
+    <text x="465" y="194" text-anchor="middle" fill="#fff" font-size="12.5">Nearest-centroid</text>
+    <text x="465" y="212" text-anchor="middle" fill="#fff" font-size="12.5">regions (convex)</text>
+    <rect x="565" y="150" width="185" height="82" rx="8" fill="#1e1e1e" stroke="#FBBF24"/>
+    <text x="657" y="174" text-anchor="middle" fill="#FBBF24" font-size="12.5" font-weight="700">S4</text>
+    <text x="657" y="194" text-anchor="middle" fill="#fff" font-size="12.5">Monotone decrease +</text>
+    <text x="657" y="212" text-anchor="middle" fill="#fff" font-size="12.5">finite set ⇒ rukna</text>
+    <text x="8" y="272" fill="#737373" font-size="11.5" letter-spacing="1">TIER 1 · GENERAL FOUNDATIONS</text>
+    <rect x="60" y="284" width="190" height="82" rx="8" fill="#1e1e1e" stroke="#60A5FA"/>
+    <text x="155" y="308" text-anchor="middle" fill="#60A5FA" font-size="12.5" font-weight="700">G1</text>
+    <text x="155" y="328" text-anchor="middle" fill="#fff" font-size="12.5">Vectors, distance,</text>
+    <text x="155" y="346" text-anchor="middle" fill="#fff" font-size="12.5">squared norm</text>
+    <rect x="285" y="284" width="190" height="82" rx="8" fill="#1e1e1e" stroke="#60A5FA"/>
+    <text x="380" y="308" text-anchor="middle" fill="#60A5FA" font-size="12.5" font-weight="700">G2</text>
+    <text x="380" y="328" text-anchor="middle" fill="#fff" font-size="12.5">Σ notation,</text>
+    <text x="380" y="346" text-anchor="middle" fill="#fff" font-size="12.5">argmin vs min</text>
+    <rect x="510" y="284" width="190" height="82" rx="8" fill="#1e1e1e" stroke="#60A5FA"/>
+    <text x="605" y="308" text-anchor="middle" fill="#60A5FA" font-size="12.5" font-weight="700">G3</text>
+    <text x="605" y="328" text-anchor="middle" fill="#fff" font-size="12.5">Mean (centroid)</text>
+    <text x="605" y="346" text-anchor="middle" fill="#fff" font-size="12.5">of vectors</text>
+    <line x1="95" y1="150" x2="300" y2="94" stroke="#a3a3a3" stroke-width="1.4" marker-end="url(#ak17)"/>
+    <line x1="280" y1="150" x2="340" y2="94" stroke="#a3a3a3" stroke-width="1.4" marker-end="url(#ak17)"/>
+    <line x1="465" y1="150" x2="420" y2="94" stroke="#a3a3a3" stroke-width="1.4" marker-end="url(#ak17)"/>
+    <line x1="657" y1="150" x2="470" y2="94" stroke="#a3a3a3" stroke-width="1.4" marker-end="url(#ak17)"/>
+    <line x1="130" y1="284" x2="95" y2="234" stroke="#a3a3a3" stroke-width="1.4" marker-end="url(#ak17)"/>
+    <line x1="175" y1="284" x2="440" y2="234" stroke="#a3a3a3" stroke-width="1.4" marker-end="url(#ak17)"/>
+    <line x1="360" y1="284" x2="120" y2="234" stroke="#a3a3a3" stroke-width="1.4" marker-end="url(#ak17)"/>
+    <line x1="395" y1="284" x2="285" y2="234" stroke="#a3a3a3" stroke-width="1.4" marker-end="url(#ak17)"/>
+    <line x1="590" y1="284" x2="150" y2="234" stroke="#a3a3a3" stroke-width="1.4" marker-end="url(#ak17)"/>
+    <line x1="620" y1="284" x2="305" y2="234" stroke="#a3a3a3" stroke-width="1.4" marker-end="url(#ak17)"/>
+    <line x1="500" y1="284" x2="640" y2="234" stroke="#a3a3a3" stroke-width="1.4" marker-end="url(#ak17)"/>
+  </svg>
+  <figcaption><b>Interpretation:</b> G1–G3 do-teen line ki cheezein hain; asli dimaag S1 (mean kyun) aur S4 (loop kyun rukta hai) mein hai. 4.1 ka poora jhagda S2 (F ke do arguments) par tika hai, aur 4.2 ka S1 par (update = mean).</figcaption>
+</figure>
+</section>
+
+<section data-track="prereq-G">
+<h3>Tier 1 — general foundations</h3>
+
+<details class="deep"><summary>G1 · Vectors, Euclidean distance, squared norm</summary>
+<h4>A. Core idea</h4>
+<p>Do points $x,y\in\mathbb R^d$ ke beech ki doori har coordinate ka fark nikaal ke milti hai. K-means mein <b>squared</b> distance chalta hai (root nahi): $\|x-y\|^2=\sum_{j=1}^d(x_j-y_j)^2$. Yeh $\ge0$ hai, aur $0$ tabhi jab $x=y$.</p>
+<h4>B. Notation and operations</h4>
+<ul>
+<li>$\|v\|^2=v^Tv=\sum_jv_j^2$ ($v$ ki apni lambai ka square).</li>
+<li>Expand: $\|x-y\|^2=\|x\|^2-2x^Ty+\|y\|^2$ (L11 isi se nikalta hai).</li>
+<li>1-D mein $\|x-y\|^2=(x-y)^2$.</li>
+</ul>
+<h4>C. Worked examples</h4>
+<ul>
+<li>$x=(3,1)$, $y=(-1,0)$: $(3-(-1))^2+(1-0)^2=16+1=\mathbf{17}$.</li>
+<li>$x=(4,0)$, $y=(-1,0)$: $(4+1)^2+0=\mathbf{25}$ — dhyaan do, $5$ nahi (P1 ka printed table yahin chook gaya).</li>
+<li>$x=(3,1)$, $y=(2,0)$: $1+1=\mathbf2$.</li>
+</ul>
+<h4>D. Common mistakes</h4>
+<ul>
+<li>Fark ka square kiye bina jodna ($|4-(-1)|=5$ ko distance maan lena).</li>
+<li>Coordinate-wise absolute values jodna ($|x_1-y_1|+|x_2-y_2|$ — yeh Manhattan hai; K-means++ ke kuch PYQs mein poochha gaya hai, par yahan nahi).</li>
+<li>Squared aur normal distance mix karna: $\|x-y\|$ vs $\|x-y\|^2$.</li>
+</ul>
+<h4>E. Why K-means needs this</h4>
+<p><b>Q:</b> Squared distance lene se kaun sa centre "sabse paas" hai woh badalta hai? <b>A:</b> Nahi. Square non-negative numbers par increasing hai, to order wahi rehta hai. Badalta hai sirf $F$ ki value aur door ke points (outliers) ka asar — woh zyada chubhte hain.</p>
+</details>
+
+<details class="deep"><summary>G2 · Summation notation, argmin vs min</summary>
+<h4>A. Core idea</h4>
+<p>$\min_k g(k)$ ek <b>value</b> hai (sabse chhoti). $\arg\min_k g(k)$ ek <b>jagah</b> hai (kaun sa $k$ us value par pahunchata hai). K-means mein assignment step ek argmin hai (kaun sa centre), update step bhi ek argmin hai (kaun sa point $v$).</p>
+<h4>B. Notation and operations</h4>
+<ul>
+<li>$\sum_{i\in C_k}$ = un $i$ par jod jo cluster $k$ mein hain. Poora $F$ do tareekon se likh sakte hain: $\sum_{i=1}^n\|x_i-\mu_{z_i}\|^2=\sum_{k=1}^K\sum_{i\in C_k}\|x_i-\mu_k\|^2$ (point ke hisaab se ya cluster ke hisaab se — same cheez).</li>
+<li>Tie: agar do $k$ barabar hon to argmin ek set hai; hum convention lete hain — chhota index (L5). Exams mein jahan tie ho, tie-break ka nuksaan niche P-solutions mein dikhaya hai.</li>
+</ul>
+<h4>C. Worked examples</h4>
+<ul>
+<li>$g(1)=5,\ g(2)=3,\ g(3)=3$: $\min=3$, $\arg\min=\{2,3\}$ ⇒ tie ⇒ $k=2$.</li>
+<li>$z=(1,1,2,2)$, $x=(1,2,6,7)$, $\mu=(1.5,6.5)$: point-wise $0.25+0.25+0.25+0.25=1$; cluster-wise $(0.25+0.25)+(0.25+0.25)=1$ ✓.</li>
+</ul>
+<h4>D. Common mistakes</h4>
+<ul>
+<li>"argmin" par value likh dena (ya "min" par index).</li>
+<li>Double sum mein index galat jodna: $\sum_k\sum_{i\in C_k}$ mein $i$ har point bas ek baar aata hai.</li>
+</ul>
+<h4>E. Why K-means needs this</h4>
+<p><b>Q:</b> L5 aur L6 ko ek-ek line mein kaise likhein? <b>A:</b> $z_i^{t+1}=\arg\min_k\|x_i-\mu_k^t\|^2$ aur $\mu_k^{t+1}=\arg\min_v\sum_{i\in C_k}\|x_i-v\|^2$. Dono "argmin" hain — isi liye K-means ko "alternating minimisation" kehte hain; woh baad mein (4.4, B19) kaam aayega.</p>
+</details>
+
+<details class="deep"><summary>G3 · Mean (centroid) of vectors</summary>
+<h4>A. Core idea</h4>
+<p>Points ka mean = har coordinate ka alag-alag average. Yeh "balance point" hai: agar har point par barabar wazan rakho to scale yahin santulit hota hai. Isi ko centroid kehte hain.</p>
+<h4>B. Notation and operations</h4>
+<ul>
+<li>$\mu=\frac1n\sum_ix_i$ coordinate-wise.</li>
+<li>Deviations ka jod zero: $\sum_i(x_i-\mu)=0$ (yeh S1 ki proof ka heera hai).</li>
+<li>Mean ek data point hona zaroori nahi.</li>
+</ul>
+<h4>C. Worked examples</h4>
+<ul>
+<li>$(2,2),(3,3),(4,4)$ ⇒ $\mu=(3,3)$.</li>
+<li>$(1,2),(3,4),(5,9)$ ⇒ $\bigl(\tfrac{9}{3},\tfrac{15}{3}\bigr)=(3,5)$.</li>
+<li>$\{1,2,6,7\}$ ke do halves ka mean: $1.5$ aur $6.5$ — koi data point nahi.</li>
+</ul>
+<h4>D. Common mistakes</h4>
+<ul>
+<li>Galat $n$ se divide karna (cluster ke size $n_k$ se, poore $n$ se nahi).</li>
+<li>Mean ko median samajhna (1-D mein dono alag hote hain jab data skewed ho).</li>
+<li>Cluster ke purane members par mean nikaalna jabki assignment badal chuka hai.</li>
+</ul>
+<h4>E. Why K-means needs this</h4>
+<p><b>Q:</b> K-means "means" kyun hai? <b>A:</b> kyunki update step mein har naya centre = us cluster ke current members ka mean. "Medoid" (data point hi chunna) ek alag algorithm hai.</p>
+</details>
+</section>
+
+<section data-track="prereq-S">
+<h3>Tier 2 — topic-specific maths</h3>
+
+<details class="deep" open><summary>S1 · Mean hi sum of squared distances ka minimiser hai (L7, L9)</summary>
+<h4>A. Core idea</h4>
+<p>Points $x_1,\dots,x_n$ ke liye $f(v)=\sum_i\|x_i-v\|^2$ ko kaun sa $v$ sabse chhota karta hai? <b>Mean</b> $\mu$. Aur kitna farak padta hai kisi aur $v$ par? Bilkul $n\|\mu-v\|^2$ — yeh "parallel-axis" jaisa identity hai.</p>
+<h4>B. Notation and operations</h4>
+<p><b>Identity (L7):</b></p>
+$$\sum_{i=1}^n\|x_i-v\|^2=\sum_{i=1}^n\|x_i-\mu\|^2+n\,\|\mu-v\|^2.$$
+<p><b>Proof, koi step chhoote bina.</b> $x_i-v=(x_i-\mu)+(\mu-v)$. Square karo:</p>
+$$\|x_i-v\|^2=\|x_i-\mu\|^2+2(x_i-\mu)^T(\mu-v)+\|\mu-v\|^2.$$
+<p>$i$ par jodo. Beech ka term: $2\bigl(\sum_i(x_i-\mu)\bigr)^T(\mu-v)=2\cdot0^T(\mu-v)=0$ (G3 ka fact). Aakhri term $n$ baar aata hai. Isse identity mil gayi. Kyunki $n\|\mu-v\|^2\ge0$ aur $=0$ sirf $v=\mu$ par, minimiser <b>sirf $\mu$</b> hai.</p>
+<p><b>Dusra tareeka (calculus):</b> $\nabla_vf=-2\sum_i(x_i-v)=0\Rightarrow v=\frac1n\sum_ix_i=\mu$; Hessian $=2nI\succ0$ ⇒ minimum.</p>
+<p><b>Scaled version (L9):</b> $\sum_i\|ax_i-bv\|^2=b^2\sum_i\|\tfrac abx_i-v\|^2$ ($b\ne0$). Yeh $\tfrac ab x_i$ points ke mean ko minimiser banata hai: $v^*=\tfrac ab\mu$.</p>
+<h4>C. Worked examples</h4>
+<ul>
+<li>1-D $\{0,2,10\}$: $\mu=4$. $f(4)=16+4+36=56$. $f(2)=4+0+64=68$, aur $56+3(4-2)^2=68$ ✓.</li>
+<li>2-D: $\{(0,0),(4,0)\}$, $\mu=(2,0)$, $f(\mu)=4+4=8$; $v=(0,0)$ par $f=0+16=16=8+2\cdot4$ ✓.</li>
+</ul>
+<h4>D. Common mistakes</h4>
+<ul>
+<li>"Median minimiser hai" — median $\sum|x_i-v|$ ka minimiser hai; squared ke liye mean.</li>
+<li>Scaling ko idhar-udhar karna: $\arg\min\sum\|3x_i-2v\|^2$ mein answer $\tfrac32\mu$ hai, $\mu$ nahi, aur $\tfrac23\mu$ bhi nahi (P3).</li>
+</ul>
+<h4>E. Why K-means needs this</h4>
+<p><b>Q:</b> Update step mean hi kyun hai, koi aur formula kyun nahi? <b>A:</b> Assignment $z$ fixed rakhte hue $F$ sirf $\mu_k$'s par depend karta hai, aur har cluster ka hissa $\sum_{i\in C_k}\|x_i-\mu_k\|^2$ hai. S1 kehta hai ki iska best $\mu_k$ cluster ka mean hai. Yani update step $F$ ko <i>us $z$ ke liye</i> sabse zyada ghatata hai.</p>
+</details>
+
+<details class="deep"><summary>S2 · Assignments, clusters aur objective $F(z,\mu)$ (L2–L4)</summary>
+<h4>A. Core idea</h4>
+<p>K-means ek <b>labelling</b> $z=(z_1,\dots,z_n)$ aur ek <b>centres ki list</b> $\mu=(\mu_1,\dots,\mu_K)$ rakhta hai. $F(z,\mu)=\sum_i\|x_i-\mu_{z_i}\|^2$ batata hai ki labelling aur centres milke data ko kitni achhi tarah "jodte" hain. Yeh do alag cheezon ka function hai — isliye "F kya hai?" ka answer tab tak adhoora hai jab tak $z$ aur $\mu$ dono na pata hon.</p>
+<h4>B. Notation and operations</h4>
+<ul>
+<li>$F(z,\mu)$ ka kaam: har point ko apne <i>label wale</i> centre se naapo.</li>
+<li>Jab $\mu_k$ cluster $k$ ka mean hai, to $F$ ka naam "within-cluster sum of squares" (SSE) hai. Shortcut (L11): $\sum_{i\in C}\|x_i-\mu\|^2=\sum_{i\in C}\|x_i\|^2-n_C\|\mu\|^2$. Proof: L7 mein $v=0$ rakho.</li>
+</ul>
+<h4>C. Worked examples</h4>
+<ul>
+<li>1-D $x=(1,2,6,7)$, $z=(1,1,2,2)$. $\mu=(1,7)$: $F=0+1+1+0=2$. $\mu=(1.5,6.5)$: $F=1$. Wahi $z$, alag $\mu$ ⇒ alag $F$.</li>
+<li>Wahi $\mu=(1,7)$ par alag $z=(2,2,1,1)$: $F=36+25+25+36=122$.</li>
+</ul>
+<h4>D. Common mistakes</h4>
+<ul>
+<li>"After assigning, find the objective" ko bina soche kisi ek $\mu$ se jodna. <b>Hamesha likho: $F(z^{\text{kaun sa}},\mu^{\text{kaun sa}})$.</b></li>
+<li>$F$ ko sirf $\mu$ ka function samajhna (jaise $F=\min_z\ldots$) — woh tab sahi jab har point ko nearest centre se jodo.</li>
+</ul>
+<h4>E. Why K-means needs this</h4>
+<p><b>Q:</b> Ek iteration mein $F$ ki value kitni baar aur kaise badalti hai? <b>A:</b> Teen "pad" hote hain: $F(z^t,\mu^t)$ → (assign) $F(z^{t+1},\mu^t)$ → (update) $F(z^{t+1},\mu^{t+1})$. Har tir ke beech ek hi argument badalta hai (L8). P1 aur P2 yahi pad pooch rahe hain.</p>
+</details>
+
+<details class="deep"><summary>S3 · Nearest-centroid regions: half-planes aur convex cells (L12)</summary>
+<h4>A. Core idea</h4>
+<p>Do centres $a,b$ ke liye woh saare $x$ jo $a$ ke zyada paas hain, $a$–$b$ ki perpendicular bisector ke ek taraf aate hain (ek half-plane). $K$ centres ke liye cluster $k$ ka region $K-1$ half-planes ka intersection hai ⇒ convex polygon (Voronoi cell).</p>
+<h4>B. Notation and operations</h4>
+<p>$\|x-a\|^2\le\|x-b\|^2$. Dono expand karo: $\|x\|^2-2x^Ta+\|a\|^2\le\|x\|^2-2x^Tb+\|b\|^2$. $\|x\|^2$ dono taraf kat gaya ⇒ $2x^T(b-a)\le\|b\|^2-\|a\|^2$. Yeh $x$ mein <b>linear</b> hai ⇒ half-plane.</p>
+<h4>C. Worked examples</h4>
+<ul>
+<li>$a=(0,0)$, $b=(4,0)$: $8x_1\le16\Rightarrow x_1\le2$. Bisector $x_1=2$.</li>
+<li>$a=(-1,0)$, $b=(2,0)$: $2x_1\cdot3\le4-1=3\Rightarrow x_1\le0.5$. Check: $(0.5,5)$ par dono distances$^2$ $=2.25+25$ ✓ (barabar, bisector par).</li>
+</ul>
+<h4>D. Common mistakes</h4>
+<ul>
+<li>Cells ko gol (circles) maan lena — nahi, seedhi-sidhi polygons.</li>
+<li>Do clusters ke beech ki seemaa ko "data ke beech ka gap" maan lena — seemaa centres ki bisector hoti hai, data ki nahi.</li>
+</ul>
+<h4>E. Why K-means needs this</h4>
+<p><b>Q:</b> Concentric rings ko K-means alag kyun nahi kar sakta? <b>A:</b> Cells convex hain, ring "andar + bahar" ek convex region mein nahi aati. (4.3, B18 mein iske PYQs hain; yahan sirf neev rakhi.)</p>
+</details>
+
+<details class="deep"><summary>S4 · Monotone decrease + finite set ⇒ loop ruk jaata hai (L8)</summary>
+<h4>A. Core idea</h4>
+<p>Agar ek sankhya ka sequence kabhi badhe nahi, aur kuch se neeche bhi na jaa sake ($F\ge0$), to woh ruk-ruk ke ghatega. Aur agar sambhav "states" bas finite hon (n points ko $K$ groups mein baantne ke ek finite tareeke, $\le K^n$), aur har asli badlav par $F$ <i>strictly</i> ghatta hai, to koi state do baar nahi aa sakti ⇒ algorithm finite steps mein ruk jaata hai.</p>
+<h4>B. Notation and operations</h4>
+<ul>
+<li>Assignment step: har point ko nearest centre par bhejo ⇒ $F(z^{t+1},\mu^t)\le F(z^t,\mu^t)$ (har point ki apni cost ghati ya wahi rahi).</li>
+<li>Update step: $\mu^{t+1}$ = naye clusters ke means ⇒ S1 se $F(z^{t+1},\mu^{t+1})\le F(z^{t+1},\mu^t)$.</li>
+<li>Dono jodke L8. Gap exact: $F(z,\mu^{\text{old}})-F(z,\mu^{\text{new}})=\sum_kn_k\|\mu_k^{\text{old}}-\mu_k^{\text{new}}\|^2$ (L7 se).</li>
+</ul>
+<h4>C. Worked examples</h4>
+<ul>
+<li>Data $\{0,2,4,9,10\}$, $\mu^0=(0,5)$: $F$ ki kadi $46\to22.67\to18.22\to8.50\to8.50\to8.50$ — kabhi nahi badhi (4.1 Example 2 mein poori table).</li>
+</ul>
+<h4>D. Common mistakes</h4>
+<ul>
+<li>"F ghatta hai ⇒ global minimum milta hai" — nahi. Sirf <i>local</i> minimum / fixed point tak pahunchta hai (initialisation par nirbhar, 4.5).</li>
+<li>"F strictly ghatta hai har iteration" — nahi; jab assignment nahi badla to $F$ wahi rehta hai aur algorithm ruk jaata hai. Tie par $F$ bina ghate bhi assignment badal sakta hai.</li>
+</ul>
+<h4>E. Why K-means needs this</h4>
+<p><b>Q:</b> "K-means ek hi partition do baar dekh sakta hai kya?" <b>A:</b> Nahi: do baar dekhne ka matlab $F$ wapis usi value par, yaani beech mein kahin badhna ya barabar rehna padega. Barabar rehne par assignment nahi badla ⇒ ruk gaye. Yeh P8 ka argument hai.</p>
+</details>
+</section>
+
+<section data-track="prereq-check">
+<h3>Mini self-check — T4 prerequisites <span class="tag t-add">[ADDED]</span></h3>
+<p>5 chhote sawaal, bina dekhe; phir answers kholo.</p>
+<ol>
+<li>$\|(3,-1)-(-1,2)\|^2=$ ?</li>
+<li>$(0,0),(4,2),(2,7)$ ka mean?</li>
+<li>$x=\{1,5,9\}$: $v^*=\arg\min_v\sum(x_i-v)^2$ aur minimum value?</li>
+<li>Kis region mein $x\in\mathbb R^2$ centre $(0,0)$ ke zyada paas hai, $(6,0)$ ke mukable?</li>
+<li>Agar har asli assignment-badlav par $F$ strictly ghatta hai, to kya koi partition do baar aa sakta hai?</li>
+</ol>
+<details class="reveal"><summary>Show answers</summary>
+<ol>
+<li>$(3+1)^2+(-1-2)^2=16+9=\mathbf{25}$.</li>
+<li>$\bigl(\tfrac{0+4+2}3,\tfrac{0+2+7}3\bigr)=\mathbf{(2,3)}$.</li>
+<li>$v^*=\mu=\mathbf5$; min value $=16+0+16=\mathbf{32}$ (L7: $n\|\mu-v\|^2=0$).</li>
+<li>L12 ke saath $a=(0,0)$, $b=(6,0)$: $12x_1\le36\Rightarrow x_1\le3$; yaani $\mathbf{x_1&lt;3}$ (strict), $x_1=3$ par tie.</li>
+<li><b>Nahi.</b> Do baar aane ka matlab beech mein $F$ ko wapis usi value par laana, jo strict decrease ke saath mumkin nahi.</li>
+</ol></details>
+</section>
+
+<!-- =========================================================== -->
+<h2>📐 4.1 Core K-means calculations and properties</h2>
+
+<section data-track="w41">
+<h3>🔁 Recall warm-up — B10/B12 + B13 + B16 <span class="tag t-add">[ADDED]</span></h3>
+<p>3 chhote sawaal, notes dekhe bina. (Spaced review: B12 ka dual-PCA review abhi baaki hai — Q1 usi se judta hai; B14/B15/B16 ke items 2026-11-13 se due honge.)</p>
+<ol>
+<li><p><b>(B10, B12)</b> $X^TX$ ke pehle paanch eigenvalues $10,5,3,2,1$ hain, baaki sab zero. Pehle principal component dwara explained variance ka proportion?</p>
+<details class="reveal"><summary>Show answer</summary><p>$\dfrac{10}{10+5+3+2+1}=\dfrac{10}{21}=\mathbf{0.476}$ (code-verified; $X^TX$ ke nonzero eigenvalues covariance ke eigenvalues ke $n$ guna hote hain, ratio mein $n$ kat jaata hai).</p></details></li>
+<li><p><b>(B13)</b> Degree-3 polynomial kernel $(x^Ty+1)^3$, input dimension $d=4$: feature space ki dimension?</p>
+<details class="reveal"><summary>Show answer</summary><p>$\binom{4+3}{3}=\binom73=\mathbf{35}$ (4 variables ke degree $\le3$ tak ke saare monomials; PYQ 2026 March Q4 ka key 35 ✓).</p></details></li>
+<li><p><b>(B16)</b> Kernel PCA, $n=100$ points; centred kernel matrix $K^c$ ka sabse bada eigenvalue $10$. Transformed data ke covariance ka sabse bada eigenvalue?</p>
+<details class="reveal"><summary>Show answer</summary><p>$\lambda/n=10/100=\mathbf{0.1}$ ($K^c$ ke eigenvalue $n\times$ covariance ke eigenvalues hote hain; PYQ 2024 July Q5 ka key $0.1$ ✓).</p></details></li>
+</ol>
+</section>
+
+<section data-track="pre41">
+<h3>❓ Pretest — cold attempt (solution neeche 🎯 P3 mein)</h3>
+<div class="try">
+<p class="mono" style="margin:0 0 6px">16 July 2026 · Original Q2 · ID <code>6406532158935</code> · MCQ · 4 marks · <span class="tag t-src">[SRC]</span></p>
+<p>Let $x_1,x_2,\ldots,x_n\in\mathbb R^d$. Define $v^*=\arg\min_{v\in\mathbb R^d}\sum_{i=1}^n\|3x_i-2v\|^2$. Which is the correct expression for $v^*$?</p>
+<ol>
+<li>$v^*=\dfrac1n\sum_{i=1}^nx_i$</li>
+<li>$v^*=\dfrac32\cdot\dfrac1n\sum_{i=1}^nx_i$</li>
+<li>$v^*=\dfrac3n\sum_{i=1}^nx_i$</li>
+<li>$v^*=\dfrac23\cdot\dfrac1n\sum_{i=1}^nx_i$</li>
+</ol>
+<p class="note">2 minute. Answer + Confidence S / U / G note karo. Hint-sawaal: agar $n=1$ aur $x_1=1$ ho to $\|3-2v\|^2$ kahan sabse chhota hai? Is ek number se kitne options turant gir jaate hain?</p>
+</div>
+</section>
+
+<section data-track="pos41">
+<h3>🧭 Position — yeh kahan baitha hai</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Peeche (prerequisites)</th><th>Yeh subtopic</th><th>Aage (kya unlock hota hai)</th></tr></thead>
+<tbody><tr>
+<td>G1–G3 (distance, argmin, mean) · S1 (mean minimiser, L7/L9) · S2 ($F(z,\mu)$, L4) · S4 (monotone decrease, L8). Pichhle T1–T3 se seedhi dependency nahi — K-means ek naya family hai (par $\|x-y\|^2$ ka expansion B13 ke kernel wale distance jaisa hai).</td>
+<td>Ek iteration ki hand calculation: distances ⇒ $z$ ⇒ $\mu$ ⇒ $F$; $F$ ke teen "pad"; mean-minimiser identity (L9)</td>
+<td>4.2 (centroid updates, convergence tak), 4.3 (assignment/geometry/ties), 4.4 (objective + convergence proofs), 4.5 (K-means++), 4.6 (choosing $K$)</td>
+</tr></tbody></table></div>
+</section>
+
+<section data-track="int41">
+<h3>🧠 Intuition — plain language</h3>
+<ul>
+<li><b>K-means ek hi sawaal poochta hai:</b> "data ko $K$ jhundon mein is tarah baanto ki har jhund apne <i>centre</i> ke paas ho." "Paas" ka matlab seedhi (squared) doori. Centre ka matlab jhund ka mean.</li>
+<li><b>Do chhote kaam ek ke baad ek:</b> (1) har point ko sabse paas ke centre ka label do; (2) har centre ko apne label waale points ke mean par le jao. Jab kuch nahi badalta, ruk jao.</li>
+<li><b>$F$ ek "kharcha" hai:</b> har point ke centre se doori$^2$ ka jod. Dono kaam is kharche ko kam karte hain (ya wahi rehne dete hain). Isiliye loop ke aakhir mein shaanti hoti hai.</li>
+<li><b>$F$ ke do haath hain:</b> labels $z$ aur centres $\mu$. Pehla kaam labels badalta hai (centres wahi), doosra centres badalta hai (labels wahi). Isliye "F" ki value kaun sa waqt hai uspe depend karti hai.</li>
+<li><b>Centre data point nahi hota.</b> Mean do data points ke beech khali jagah par ho sakta hai ($\{1,2\}$ ka mean $1.5$).</li>
+</ul>
+<div class="box em">
+<p><b>Analogy <span class="tag t-add">[ADDED]</span> — depots aur ghar.</b> Shehar mein $K$ depots rakhne hain, ghar $n$ hain. Pehle depots ki koi bhi jagah chuno. Phir (1) har ghar ko sabse paas ke depot se jodo; (2) har depot ko apne gharon ke "balance point" par khiska do. Dobara jodo, dobara khiskao. Jab koi ghar depot nahi badalta, depots tik gaye.</p>
+<p><b>Analogy kahan tootti hai:</b> (1) Asli depot sadak ki doori par hote hain; K-means seedhi line ki <i>squared</i> doori maanta hai, jisme door ke ghar bahut zyada kharcha dalte hain. (2) Depot kisi ghar par hi rakhna ho (medoid) to alag algorithm hai; K-means ka mean khali jagah par bhi ja sakta hai. (3) Shuruaati jagah achhi na ho to depots kisi "theek-thaak par sabse achhe nahi" setup par atak sakte hain (local minimum, 4.5).</p>
+</div>
+<div class="box red">
+<p><b>Yeh kya NAHI hai:</b></p>
+<ul>
+<li>"$F$ ek hi number hai" — nahi; $F(z,\mu)$ do arguments ka function hai (P1, P2).</li>
+<li>"Centre ek data point hona chahiye" — nahi (K-medoids alag).</li>
+<li>"K-means global minimum dhoondhta hai" — nahi; sirf ek local fixed point (4.5 mein).</li>
+<li>"Assign karte hi centres bhi badal jaate hain" — nahi; centres tab tak wahi jab tak update step na ho.</li>
+<li>"Median/medoid bhi yahi karte hain" — nahi; squared distance ka minimiser mean hai (S1).</li>
+</ul>
+</div>
+</section>
+
+<section data-track="vis41">
+<h3>📊 Visual intuition — ek iteration, kadam-dar-kadam</h3>
+<figure class="viz">
+  <p class="vt">Visual 1: K-means stepper — P1 ka data <span class="tag t-add">[ADDED]</span></p>
+  <p class="vs">P1 ke 7 points aur initial means $(-1,0)$, $(2,0)$ (blue = cluster 1, amber = cluster 2; diamond = centre). "Next step" dabao: pehle <i>Assign</i> (har point sabse paas ke centre se jud jaata hai, $F(z,\mu^t)$ dikhta hai), phir <i>Update</i> (centres apne points ke mean par jaate hain, $F(z,\mu^{t+1})$ dikhta hai). Neeche log mein $F$ ki saari values hain — kabhi badhti nahi. Real computation, schematic nahi.</p>
+  <div data-widget="kmstep" data-points="-1,0;-1,1;-1,-1;2,0;3,1;3,-1;4,0" data-init="-1,0;2,0"></div>
+  <figcaption><b>Interpretation:</b> pehle Assign ke baad $F=10$ (sahi distances, P1 ka printed table 8 deta hai), Update ke baad $F=6$ — yahi source ki key hai. Dusra pass koi assignment nahi badalta, isliye ruk jaata hai.</figcaption>
+</figure>
+</section>
+
+<section data-track="form41">
+<h3>📖 Formal version — Formula Protocol</h3>
+$$F(z,\mu)\;=\;\sum_{i=1}^{n}\bigl\|x_i-\mu_{z_i}\bigr\|^2\;=\;\sum_{k=1}^{K}\sum_{i\in C_k}\bigl\|x_i-\mu_k\bigr\|^2 .$$
+<ul>
+<li><b>Symbols:</b> $x_i\in\mathbb R^d$ data; $z_i\in\{1,\dots,K\}$ point $i$ ka label; $C_k=\{i:z_i=k\}$ cluster $k$ ke point; $\mu_k\in\mathbb R^d$ cluster $k$ ka centre; $\|\cdot\|$ Euclidean norm.</li>
+<li><b>Assumptions:</b> $K\le n$; $z$ aur $\mu$ <i>do alag, swatantra</i> cheezein hain jinhe hum jaise chahein chun sakte hain; sirf Lloyd's algorithm mein $\mu$ ko "mean of $z$" bana dete hain.</li>
+<li><b>Words mein:</b> har point ke apne label waale centre se doori$^2$ ka jod.</li>
+</ul>
+<p><b>Notice that…</b> $F$ ko evaluate karne ke liye tumhein <i>do</i> cheezein chahiye. "$F$ after assignment" jaise phrase mein ek argument chhupa hai — kaun sa $\mu$?</p>
+<p><b>Do updates (L5, L6):</b></p>
+$$z_i^{t+1}=\arg\min_{k}\|x_i-\mu_k^t\|^2,\qquad \mu_k^{t+1}=\frac1{|C_k^{t+1}|}\sum_{i\in C_k^{t+1}}x_i.$$
+<div class="tbl-wrap"><table>
+<thead><tr><th>Quantity</th><th>$z$</th><th>$\mu$</th><th>Kab milti hai</th><th>Order (L8)</th></tr></thead>
+<tbody>
+<tr><td>$F(z^t,\mu^t)$</td><td>purana</td><td>purana (= $z^t$ ke means)</td><td>iteration shuru hone par</td><td>sabse bada</td></tr>
+<tr><td>$F(z^{t+1},\mu^t)$</td><td>naya (nearest)</td><td>purana</td><td>Assign ke turant baad</td><td>beech ka</td></tr>
+<tr><td>$F(z^{t+1},\mu^{t+1})$</td><td>naya</td><td>naya (= $z^{t+1}$ ke means)</td><td>Update ke baad</td><td>sabse chhota</td></tr>
+</tbody></table></div>
+<p><b>Chhota worked example.</b> $x=(1,2,6,7)$, $\mu^t=(1,7)$. Assign: $z=(1,1,2,2)$, $F(z,\mu^t)=0+1+1+0=2$. Update: $\mu^{t+1}=(1.5,6.5)$, $F=0.25\cdot4=1$. Ghata: $2\to1$.</p>
+<div class="box em"><p><b>Important insight.</b> Update step ke baad ghata hua $F$ ka exact fark hai $\sum_kn_k\|\mu_k^{\text{old}}-\mu_k^{\text{new}}\|^2$ (L7 se). Upar: $2\cdot0.25+2\cdot0.25=1=2-1$ ✓. Yani centre jitna kam khiska, utna kam fayda.</p></div>
+<p><b>This is why</b> P1 (kaun sa $F$) aur P2 (teen sums ka order) bina kisi nayi maths ke kewal L4 aur L8 ko dhyaan se padhne par hal ho jaate hain.</p>
+</section>
+
+<section data-track="how41">
+<h3>⚙️ How it works — ek iteration, no skipped steps</h3>
+<ol>
+<li><b>Input:</b> points $x_1..x_n$, current centres $\mu_1..\mu_K$ ($\mu^0$ diya hua ya chuna hua).</li>
+<li><b>Distance table:</b> har point $i$ aur har centre $k$ ke liye $d_{ik}=\|x_i-\mu_k\|^2$ (G1 ke formula se).</li>
+<li><b>Assign:</b> har row ka $\min$ lo, uska column index $z_i$ (tie par chhota index).</li>
+<li><b>F after assign:</b> $F(z,\mu^t)=\sum_i\min_kd_{ik}$ (har row ka minimum jodo).</li>
+<li><b>Update:</b> har cluster $k$ ke members ka coordinate-wise mean $\to\mu_k^{t+1}$. (Khaali cluster ho to purana centre rakhte hain — convention.)</li>
+<li><b>F after update:</b> naye centres se ek aur distance pass — $F(z,\mu^{t+1})$.</li>
+<li><b>Check:</b> agar assignment pichhli baar jaisa hi nikla ya $\mu$ nahi badla ⇒ ruk jao. Warna step 2 par wapas.</li>
+</ol>
+</section>
+
+<section data-track="ex41">
+<h3>🧪 Worked examples</h3>
+
+<h4>Example 1 (simple) — 1-D, ek iteration</h4>
+<p>$x=\{1,2,6,7\}$, $\mu^0=(1,7)$.</p>
+<div class="tbl-wrap"><table><thead><tr><th>Point</th><th>$d_{i1}=(x-1)^2$</th><th>$d_{i2}=(x-7)^2$</th><th>$z_i$</th><th>cost</th></tr></thead><tbody>
+<tr><td>1</td><td>0</td><td>36</td><td>1</td><td>0</td></tr>
+<tr><td>2</td><td>1</td><td>25</td><td>1</td><td>1</td></tr>
+<tr><td>6</td><td>25</td><td>1</td><td>2</td><td>1</td></tr>
+<tr><td>7</td><td>36</td><td>0</td><td>2</td><td>0</td></tr>
+</tbody></table></div>
+<p>$F(z,\mu^0)=2$. Update: $\mu^1=(1.5,6.5)$ (dono khali jagah par — koi data point nahi). $F(z,\mu^1)=4\times0.25=1$. Agla pass: $z$ same ⇒ ruk gaye. Gap check (L7): $2\cdot(0.5)^2+2\cdot(0.5)^2=1=2-1$ ✓.</p>
+
+<h4>Example 2 (exam-level) — 1-D, teen pass, ek point idhar se udhar</h4>
+<p>$x=\{0,2,4,9,10\}$, $\mu^0=(0,5)$. Poori F-kadi code-verified:</p>
+<div class="tbl-wrap"><table><thead><tr><th>Pass</th><th>Assign step ke baad $z$</th><th>$F(z,\mu^{\text{purane}})$</th><th>Update ke baad $\mu$</th><th>$F(z,\mu^{\text{naye}})$</th></tr></thead><tbody>
+<tr><td>1</td><td>$(1,1,2,2,2)$</td><td class="num">46</td><td>$(1,\ 7.667)$</td><td class="num">22.667</td></tr>
+<tr><td>2</td><td>$(1,1,1,2,2)$ — point $4$ cluster 2 se 1 mein gaya</td><td class="num">18.222</td><td>$(2,\ 9.5)$</td><td class="num">8.5</td></tr>
+<tr><td>3</td><td>$(1,1,1,2,2)$ — koi badlav nahi</td><td class="num">8.5</td><td>$(2,\ 9.5)$</td><td class="num">8.5</td></tr>
+</tbody></table></div>
+<p><b>Pass 1 detail:</b> $d(0)=(0,25)\to1$; $d(2)=(4,9)\to1$; $d(4)=(16,1)\to2$; $d(9)=(81,16)\to2$; $d(10)=(100,25)\to2$. $F=0+4+1+16+25=46$. $\mu^1=(\tfrac{0+2}2,\tfrac{4+9+10}3)=(1,7.667)$. $F=1+1+(4-7.667)^2+(9-7.667)^2+(10-7.667)^2=2+13.444+1.778+5.444=22.667$.<br>
+<b>Pass 2 detail:</b> $d(4)=((4-1)^2,(4-7.667)^2)=(9,13.444)\to1$ (point badla!); baaki wahi. $F=1+1+9+1.778+5.444=18.222$. $\mu^2=(2,9.5)$; $F=4+0+4+0.25+0.25=8.5$.<br>
+<b>Pass 3:</b> $d(4)=(4,30.25)\to1$ — koi badlav nahi ⇒ ruk gaye. Kadi: $46\ge22.667\ge18.222\ge8.5\ge8.5\ge8.5$ ✓.</p>
+
+<h4>Example 3 (tricky) — tie aur tie-break</h4>
+<p>$x=\{0,4,5,6,10\}$, $\mu^0=(0,10)$. Point $5$: $d=(25,25)$ — <b>tie</b>.</p>
+<ul>
+<li><b>Tie → cluster 1 (chhota index):</b> $z=(1,1,1,2,2)$, $F(z,\mu^0)=0+16+25+16+0=57$. Update: $\mu=(3,8)$, $F=14+8=22$. Stable ($5$: $(4,9)\to1$; $6$: $(9,4)\to2$).</li>
+<li><b>Tie → cluster 2:</b> $z=(1,1,2,2,2)$, $F(z,\mu^0)=0+16+25+16+0=57$ (<i>wahi</i>, kyunki tie ka matlab dono costs barabar). Update: $\mu=(2,7)$, $F=8+14=22$. Stable ($5$: $(9,4)\to2$; $4$: $(4,9)\to1$).</li>
+</ul>
+<p><b>Seekh:</b> tie par $F(z,\mu^t)$ ki value nahi badalti, par <i>agla centre</i> badal jaata hai — aur algorithm do alag fixed points par ruk sakta hai ($(3,8)$ vs $(2,7)$), dono par $F=22$. Isliye PYQs mein tie dikhne par sawaal mein tie-break ka niyam dhoondho (4.3 mein aur).</p>
+
+<div class="box red">
+<p><b>Non-example:</b> "$\mu^1=(1.5,6.5)$ ek data point hona chahiye, to rounding karke $(1,7)$ le lo" — galat. K-means mein centre mean hota hai; data point lena K-medoids hai aur woh alag $F$ (alag minimiser) banata hai.</p>
+</div>
+</section>
+
+<section data-track="deep41">
+<details class="deep"><summary>🔬 Deeper insight (D3) — proofs, edge cases, connections</summary>
+<h4>1. Gap identity (L7 se, har step likha hua)</h4>
+<p>$z$ fixed. Cluster $k$ ke liye $v=\mu_k^{\text{old}}$ aur "mean" $=\mu_k^{\text{new}}$ lo (naya centre = cluster ka mean). L7 se $\sum_{i\in C_k}\|x_i-\mu_k^{\text{old}}\|^2=\sum_{i\in C_k}\|x_i-\mu_k^{\text{new}}\|^2+n_k\|\mu_k^{\text{new}}-\mu_k^{\text{old}}\|^2$. $k$ par jodo: $F(z,\mu^{\text{old}})-F(z,\mu^{\text{new}})=\sum_kn_k\|\mu_k^{\text{old}}-\mu_k^{\text{new}}\|^2\ge0$, aur $=0$ sirf jab har cluster ka centre wahi rahe.</p>
+<h4>2. Assign step kyun $F$ nahi badhata</h4>
+<p>$F(z,\mu^t)=\sum_i\|x_i-\mu^t_{z_i}\|^2$ ke har term mein sirf $z_i$ badalta hai. $z_i^{t+1}$ us $k$ ko chunta hai jo $\|x_i-\mu_k^t\|^2$ sabse chhota kare ⇒ har term $\le$ purane term ⇒ jod $\le$ purana jod. Barabar sirf tab jab koi point nahi badla (ya tie).</p>
+<h4>3. Edge cases</h4>
+<ul>
+<li><b>Khaali cluster:</b> kisi centre ko koi point na mile to mean undefined ($0/0$). Convention: purana centre rakho, ya naya random chuno. Yeh bhi $F$ nahi badhata.</li>
+<li><b>$K=n$ ya $K\ge$ distinct points:</b> $F$ $0$ tak jaa sakta hai (har point apna centre). Isliye "chhota $F$" akela $K$ chunne ka criterion nahi (4.6).</li>
+<li><b>Scale:</b> data ko $c$ se guna karo to $F$ $c^2$ guna ho jaata hai par clusters wahi (distances ka order same).</li>
+</ul>
+<h4>4. L11 (SSE shortcut) ka proof</h4>
+<p>L7 mein $v=0$: $\sum\|x_i\|^2=\sum\|x_i-\mu\|^2+n\|\mu\|^2\Rightarrow\sum\|x_i-\mu\|^2=\sum\|x_i\|^2-n\|\mu\|^2$.</p>
+<h4>5. Cost aur connection</h4>
+<p>Ek iteration $O(nKd)$ (har point ke liye $K$ distances, har distance $O(d)$). Dual PCA ($K=XX^T$, B12) aur K-means dono mein $\|x_i-x_j\|^2=x_i^Tx_i-2x_i^Tx_j+x_j^Tx_j$ ka dot-product structure dikhta hai — kernel K-means isi par bana hai (syllabus ke bahar).</p>
+</details>
+</section>
+
+<section data-track="tool41">
+<h3>⚡ PYQ pattern toolkit — 4.1</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Trigger clue</th><th>Concept</th><th>First move</th></tr></thead>
+<tbody>
+<tr><td>"After assigning…, find the objective $F$"</td><td>$F(z,\mu)$ ke do arguments</td><td>Likho: kaun sa $z$, kaun sa $\mu$. Phir dono ke liye distances$^2$ ki table banao.</td></tr>
+<tr><td>"relationship among …$\mu^t,\ \mu^{t+1}$…" / "which is larger"</td><td>Lloyd chain (L8)</td><td>Har quantity ko $(z\text{ kaun sa},\ \mu\text{ kaun sa})$ jodi bana ke chain mein rakho.</td></tr>
+<tr><td>"$\arg\min_v\sum\|a x_i-bv\|^2$"</td><td>Mean-minimiser, scaled (L9)</td><td>$b^2$ bahar nikaalo ya $n=1$ test karo.</td></tr>
+<tr><td>"Which cluster / how many iterations" (4.3, 4.4)</td><td>Nearest-centroid region, convergence</td><td>Aage ke builds.</td></tr>
+</tbody></table></div>
+<p><b>Common traps:</b> (1) table ke printed numbers par bharosa — khud do cells recompute karo; (2) $\|x-y\|$ vs $\|x-y\|^2$; (3) $v^*$ mein scalar factor ulat dena ($\tfrac32$ vs $\tfrac23$).</p>
+</section>
+
+<h2>🎯 4.1 PYQs — P1, P2, C1, P3</h2>
+
+<section data-track="pyq1">
+<h3>🎯 P1 — F after assigning (2024 October 27) <span class="tag t-src">[SRC]</span> <span class="tag t-flag">[FLAG]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2024 October 27 · Original Q8 · ID <code>640653995448</code> · SA · 5 marks · Page 8 · <span class="tag t-src">[SRC]</span></p>
+<p>Consider the data points: $(-1,0),(-1,1),(-1,-1),(2,0),(3,1),(3,-1),(4,0).$ K-means is initialized with $k=2$: $\mu_1^0=(-1,0),\ \mu_2^0=(2,0).$ Squared distances to the initial means are:</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Point</th><th>$\|x_i-\mu_1^0\|^2$</th><th>$\|x_i-\mu_2^0\|^2$</th></tr></thead>
+<tbody>
+<tr><td>$(-1,0)$</td><td class="num">0</td><td class="num">3</td></tr>
+<tr><td>$(-1,1)$</td><td class="num">1</td><td class="num">10</td></tr>
+<tr><td>$(-1,-1)$</td><td class="num">1</td><td class="num">10</td></tr>
+<tr><td>$(2,0)$</td><td class="num">3</td><td class="num">0</td></tr>
+<tr><td>$(3,1)$</td><td class="num">17</td><td class="num">2</td></tr>
+<tr><td>$(3,-1)$</td><td class="num">17</td><td class="num">2</td></tr>
+<tr><td>$(4,0)$</td><td class="num">5</td><td class="num">2</td></tr>
+</tbody></table></div>
+<p>After assigning every point to the closest cluster, find the objective: $F(z_1,\ldots,z_n)=\sum_{i=1}^n\|x_i-\mu_{z_i}\|^2.$</p>
+<p><b>Accepted answer shown in source: 6.</b> <b>Source note:</b> the displayed distance table appears to sum to 8 under the stated objective, while the exam page explicitly shows accepted answer = 6. (Wording ka baaki hissa source jaisa; table jaisa printed hai waisa hi dikhaya.)</p>
+</div>
+<div class="box amber">
+<p><span class="tag t-flag">[FLAG]</span> <b>Source error, proof ke saath.</b> Printed table ke 4 cells galat hain — G1 ke formula se: </p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Point</th><th>Centre</th><th>Printed</th><th>Sahi $\|x-\mu\|^2$</th><th>Working</th></tr></thead>
+<tbody>
+<tr><td>$(-1,0)$</td><td>$\mu_2^0=(2,0)$</td><td class="num">3</td><td class="num"><b>9</b></td><td>$(-1-2)^2+0=9$</td></tr>
+<tr><td>$(2,0)$</td><td>$\mu_1^0=(-1,0)$</td><td class="num">3</td><td class="num"><b>9</b></td><td>$(2+1)^2+0=9$</td></tr>
+<tr><td>$(4,0)$</td><td>$\mu_1^0=(-1,0)$</td><td class="num">5</td><td class="num"><b>25</b></td><td>$(4+1)^2+0=25$</td></tr>
+<tr><td>$(4,0)$</td><td>$\mu_2^0=(2,0)$</td><td class="num">2</td><td class="num"><b>4</b></td><td>$(4-2)^2+0=4$</td></tr>
+</tbody></table></div>
+<p>Baaki 10 cells sahi hain. In 4 galtiyon se <i>assignments</i> nahi badalte (har row ka argmin wahi), par row-minimums ka jod badal jaata hai: printed table se $0+1+1+0+2+2+2=8$ (source ka note), sahi table se $0+1+1+0+2+2+4=\mathbf{10}$.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>(1) Sahi distances se $F$ nikaalo jab centres $\mu^0$ hain. (2) Phir centres ko update karke $F$ nikaalo. Dono numbers ko key ($6$) se milao — kaun sa key se milta hai? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> $F$ "after assigning every point to the closest cluster". <b>Given:</b> 7 points, $k=2$, $\mu^0$, ek distance table.</li>
+<li><b>Trigger clues:</b> "assigning" (⇒ L5), "objective $F=\sum\|x_i-\mu_{z_i}\|^2$" (⇒ L4: dono $z$ aur $\mu$ chahiye), table ka note "sums to 8 / answer 6" (⇒ kuch $F$ ke kaun se argument se jud raha hai).</li>
+<li><b>Prerequisites:</b> G1, S2, S1 — Procedural, Evidence. <b>Core principle:</b> $F(z,\mu)$ ke har $\mu$ ke liye alag value.</li>
+</ul>
+<h4>2. 🧭 Methods (3 genuinely different)</h4>
+<p><b>M1 General:</b> har distance khud nikaalo, row-min, jodo. <b>M2 Shortcut:</b> centres update karke $F$ ko SSE formula (L11) se $\sum\|x\|^2-n\|\mu\|^2$ bana lo. <b>M3 Advanced:</b> gap identity (L7) se $F(z,\mu^0)$ ko $F(z,\mu^1)$ aur centre ke khiskaav se jodo — distance table ke bina.</p>
+<h4>3. 🧮 Working — pehle $F(z,\mu^0)$ (assignment ke turant baad)</h4>
+<div class="methods">
+<div class="method" data-label="M1 General"><div class="mh">M1 · Distance table</div>
+<p><b>Step 1 (z):</b> sahi table: $(0,9),(1,10),(1,10),(9,0),(17,2),(17,2),(25,4)$ ⇒ $z=(1,1,1,2,2,2,2)$. Cluster 1 = $\{(-1,0),(-1,1),(-1,-1)\}$, cluster 2 = $\{(2,0),(3,1),(3,-1),(4,0)\}$.</p>
+<p><b>Step 2:</b> $F(z,\mu^0)=0+1+1+0+2+2+4=\mathbf{10}$.</p></div>
+<div class="method" data-label="M3 Gap identity"><div class="mh">M3 · L7 se</div>
+<p><b>Step 1:</b> pehle $\mu^1$ nikaalo (neeche): $\mu_1^1=(-1,0)$, $\mu_2^1=(3,0)$ aur $F(z,\mu^1)=6$.</p>
+<p><b>Step 2:</b> $F(z,\mu^0)=F(z,\mu^1)+\sum_kn_k\|\mu_k^0-\mu_k^1\|^2=6+3\cdot\|(-1,0)-(-1,0)\|^2+4\cdot\|(2,0)-(3,0)\|^2=6+0+4\cdot1=\mathbf{10}$ ✓.</p></div>
+</div>
+<h4>3b. 🧮 Phir centres update karke $F(z,\mu^1)$</h4>
+<div class="methods">
+<div class="method" data-label="M1 General"><div class="mh">M1 · Direct</div>
+<p><b>Step 1:</b> $\mu_1^1=\tfrac13[(-1,0)+(-1,1)+(-1,-1)]=(-1,0)$. $\mu_2^1=\tfrac14[(2,0)+(3,1)+(3,-1)+(4,0)]=(\tfrac{12}4,\tfrac04)=(3,0)$.</p>
+<p><b>Step 2:</b> cluster 1: $0+1+1=2$. Cluster 2: $(2,0)\to1$, $(3,1)\to1$, $(3,-1)\to1$, $(4,0)\to1$ ⇒ $4$. $F=2+4=\mathbf6$.</p></div>
+<div class="method" data-label="M2 SSE shortcut"><div class="mh">M2 · L11</div>
+<p><b>Step 1:</b> Cluster 1: $\sum\|x\|^2=1+2+2=5$, $n=3$, $\|\mu\|^2=1$ ⇒ $5-3\cdot1=2$.</p>
+<p><b>Step 2:</b> Cluster 2: $\sum\|x\|^2=4+10+10+16=40$, $n=4$, $\|\mu\|^2=9$ ⇒ $40-36=4$. $F=2+4=\mathbf6$.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Distance table</td><td>Slow (14 distances)</td><td>Low</td><td>Medium — ek cell galat to jod galat (exactly yahi source mein hua)</td><td>Pehla pass, aur printed table check karne ke liye</td></tr>
+<tr><td>M2 SSE shortcut</td><td>Fast (2 sums)</td><td>Low–medium</td><td>Low</td><td>Jab centres pehle se pata hon</td></tr>
+<tr><td>M3 Gap identity</td><td>Fast</td><td>Medium (L7 yaad ho)</td><td>Low</td><td>Do $F$'s ko jodne / key ki reading samjhane ke liye</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M2 ($6$). 🏆 <b>BEST EXAM METHOD:</b> M1 ek baar poora likho (assign ke liye zaroori hai), phir M2 se $F(z,\mu^1)$ cross-check karo; trade-off: M1 lamba hai par printed table ki galti pakadta hai.</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li>Code: sahi distances ⇒ $z=(1,1,1,2,2,2,2)$; $F(z,\mu^0)=10$; $\mu^1=((-1,0),(3,0))$; $F(z,\mu^1)=6$; agla pass: $z$ wahi, $F=6$, $\mu$ wahi ⇒ converged ✓.</li>
+<li>Gap identity: $10-6=4=4\cdot\|(2,0)-(3,0)\|^2$ ✓.</li>
+<li><b>Teen numbers, kaun sa kaha se:</b> printed table ke min-sum $=8$ (4 cells galat hone ki wajah se); sahi $F(z,\mu^0)=10$; key $\mathbf{6}=F(z,\mu^1)$ — yaani centres update hone ke <i>baad</i> ka $F$.</li>
+</ul>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>Source ke printed table se seedhe $8$ likh dena — table galat hai.</li>
+<li>"After assigning" ko literally $F(z,\mu^0)=10$ maan ke $10$ likhna jabki official accepted answer $6$ hai. <b>Exam mein key $6$ hai</b>; maine $10$ aur $6$ dono ka rishta (M3) isliye dikhaya taaki clear rahe ki $6$ kyun hai. Mera reading: sawaal ka matlab "ek full update ke baad objective" tha — yeh meri inference hai <span class="tag t-q">[?]</span>, source ne yeh saaf nahi likha.</li>
+<li>Cells ke sirf <i>assignment</i> check karna aur values ko trust kar lena.</li>
+</ul>
+<p><b>Recognition rule:</b> $F$ dikhe to dono arguments likho; aur printed distance tables mein kam se kam jahan point centre ke ek taraf nahi hai wahan ek cell recompute karo.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>Points $(0,0),(2,0),(0,2),(6,6),(8,6),(6,8)$, $\mu^0=(0,0),(6,6)$. $F(z,\mu^0)$ aur $F(z,\mu^1)$ nikaalo; aur gap identity se ek ko doosre se check karo.</p>
+<details class="reveal"><summary>Show answer</summary><p>$z=(1,1,1,2,2,2)$. $F(z,\mu^0)=(0+4+4)+(0+4+4)=\mathbf{16}$. $\mu^1=(\tfrac23,\tfrac23),(\tfrac{20}3,\tfrac{20}3)$ ⇒ $F(z,\mu^1)=\mathbf{32/3\approx10.667}$. Gap: $3\|(\tfrac23,\tfrac23)\|^2+3\|(\tfrac23,\tfrac23)\|^2=3\cdot\tfrac89\cdot2=\tfrac{16}3=16-\tfrac{32}3$ ✓ (code-verified).</p></details>
+</details>
+</section>
+
+<section data-track="pyq2">
+<h3>🎯 P2 — Lloyd: teen sums ka order (2025 February 23) <span class="tag t-src">[SRC]</span> <span class="tag t-flag">[FLAG]</span> <span class="tag t-q">[?]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2025 February 23 · Original Q2 · ID <code>6406531104779</code> · MCQ · 2 marks · Pages 3–4 · <span class="tag t-src">[SRC]</span></p>
+<p>For <b>Lloyd's algorithm</b>, what would be the correct relationship among the following three quantities?</p>
+<p>$(1)\ \sum_{i=1}^n\|x_i-\mu_{z_i}^{t+1}\|^2\qquad(2)\ \sum_{i=1}^n\|x_i-\mu_{z_i}^{t}\|^2\qquad(3)\ \sum_{i=1}^n\|x_i-\mu_{z_i}^{t+1}\|^2$</p>
+<p>The paper defines $\mu_{z_i}^t$ and $\mu_{z_i}^{t+1}$ as the means of cluster $z_i$ at iterations $t$ and $t+1$, respectively, and $\mu_{z_i}^{t+1}$ corresponding to the cluster to which $x_i$ will move in the next iteration.</p>
+<ol>
+<li>(1) &gt; (2) &gt; (3)</li>
+<li>(1) &lt; (2) &lt; (3)</li>
+<li>(3) &lt; (1) &lt; (2) <b>[marked correct in source]</b></li>
+<li>(2) &lt; (3) &lt; (1)</li>
+</ol>
+</div>
+<div class="box amber">
+<p><span class="tag t-flag">[FLAG]</span> <span class="tag t-q">[?]</span> <b>Printed notation mein error.</b> Is copy mein (1) aur (3) <i>bilkul same</i> likhe hain: $\sum\|x_i-\mu_{z_i}^{t+1}\|^2$. Do same expressions ke beech "(3) &lt; (1)" ho hi nahi sakta. Matlab printed text mein koi superscript ($z_i^t$ vs $z_i^{t+1}$) kho gaya hai.</p>
+<p><b>Meri reconstruction (inference, source se confirm nahi):</b> teen quantities Lloyd chain (L8) ke teen pad hain: $(2)=F(z^t,\mu^t)$ (purane labels, purane centres), $(1)=F(z^{t+1},\mu^t)$ (naye labels, purane centres), $(3)=F(z^{t+1},\mu^{t+1})$ (naye labels, naye centres). Isi reading mein key ka order "(3) &lt; (1) &lt; (2)" bilkul L8 hai. Dusri koi reading nahi chalti: agar (1) ko $F(z^t,\mu^{t+1})$ padhein (purane labels par naye centres) to $\mu^t$ already $z^t$ ka mean hai, S1 ke hisaab se $F(z^t,\mu^{t+1})\ge F(z^t,\mu^t)$ yaani $(1)\ge(2)$ — key ke ulta.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Teeno ko $(z,\mu)$ jodi mein likho, phir socho: (a) labels badalne (assign) se $F$ kya karta hai? (b) centres badalne (update) se? Chain banao, phir options mein dekho. Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> teen sums ka sahi order. <b>Given:</b> $t,t+1$ notation, key.</li>
+<li><b>Trigger clues:</b> "relationship among quantities" + "$\mu^t$ vs $\mu^{t+1}$" ⇒ monotonicity chain. <b>Prerequisites:</b> S2, S4, L8 — Conceptual, Reference. <b>Core principle:</b> assign aur update, dono $F$ ko ghatate (ya wahi rakhte) hain.</li>
+</ul>
+<h4>2. 🧭 Methods (2 genuinely different; teesra nahi — yeh ek hi sach ka do rup hai)</h4>
+<p><b>M1 Proof via do inequalities</b> (General) aur <b>M2 Numeric witness</b> (Shortcut: Example 2 ki actual kadi). MCQ hone se option-elimination bhi chalta hai.</p>
+<h4>3. 🧮 Working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Proof"><div class="mh">M1 · Do inequalities</div>
+<p><b>Step 1 (assign, $(2)\to(1)$):</b> centres $\mu^t$ fixed. Har point $i$ ki cost $\|x_i-\mu^t_{z_i^{t+1}}\|^2=\min_k\|x_i-\mu^t_k\|^2\le\|x_i-\mu^t_{z_i^t}\|^2$ (kyunki $z_i^t$ ek candidate $k$ hai). Jodo: $(1)\le(2)$.</p>
+<p><b>Step 2 (update, $(1)\to(3)$):</b> labels $z^{t+1}$ fixed. Har cluster ka $\mu_k^{t+1}$ us cluster ke SSE ka minimiser hai (S1), isliye $\sum_{i\in C_k}\|x_i-\mu_k^{t+1}\|^2\le\sum_{i\in C_k}\|x_i-\mu_k^t\|^2$. Jodo: $(3)\le(1)$.</p>
+<p><b>Step 3:</b> chain $(3)\le(1)\le(2)$; strictness tab jab kuch asli badlav ho ⇒ option 3.</p></div>
+<div class="method" data-label="M2 Witness"><div class="mh">M2 · Numeric witness</div>
+<p><b>Step 1:</b> Example 2 (data $\{0,2,4,9,10\}$), pass 2: $z^1=(1,1,2,2,2)$, $\mu^1=(1,7.667)$ ⇒ $(2)=F(z^1,\mu^1)=22.667$.</p>
+<p><b>Step 2:</b> assign: $z^2=(1,1,1,2,2)$ ⇒ $(1)=F(z^2,\mu^1)=18.222$.</p>
+<p><b>Step 3:</b> update: $\mu^2=(2,9.5)$ ⇒ $(3)=F(z^2,\mu^2)=8.5$. Order $8.5&lt;18.222&lt;22.667$ ⇒ $(3)&lt;(1)&lt;(2)$ ✓.</p></div>
+</div>
+<p><b>Option elimination:</b> 1 kehta hai $(1)&gt;(2)&gt;(3)$ — assign step ne $F$ badhaya, jhoot. 2 kehta hai naye-naye ($(3)$) sabse bada, jhoot. 4 kehta hai purane-purane ($(2)$) sabse chhota, jhoot. Sirf 3 bachta hai.</p>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Proof</td><td>Medium</td><td>Medium</td><td>Low (jab pairs sahi likhe)</td><td>Samajhna aur yaad rakhna</td></tr>
+<tr><td>M2 Witness</td><td>Medium</td><td>Low</td><td>Low — numbers saaf dikhate hain</td><td>Option confirm karna</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> yaad rakho "teen pad: purana-purana $\ge$ naya-label-purana-centre $\ge$ naya-naya" — 10 second. 🏆 <b>BEST EXAM METHOD:</b> M1 ek line mein ($(z,\mu)$ jodi likh ke) + option elimination; trade-off: yahan printed notation galat hai, isliye jodi ke saath apni reading ek line mein likh do.</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li>Code: random 30 points, 3 centres — chha passes mein har baar $F(z^t,\mu^t)\ge F(z^{t+1},\mu^t)\ge F(z^{t+1},\mu^{t+1})$ ✓ (pehle pass: $37.507\ge36.040\ge34.643$).</li>
+<li>Key option 3 reading ke saath consistent ✓.</li>
+</ul>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>Printed $(1)=(3)$ dekh ke "ye galat sawaal hai, koi option nahi" — nahi, intended chain wahi hai.</li>
+<li>Chain ko ulta padhna ("naya centre hamesha bada $F$ deta hai").</li>
+<li>Strict "&lt;" ko hamesha sach maan lena: converge hone par $\le$ equal ho jaata hai. MCQ mein "&lt;" generic step ke liye diya hai.</li>
+</ul>
+<p><b>Recognition rule:</b> "teen quantities, $t$ aur $t+1$" ⇒ $(z,\mu)$ jodi likho; sirf ek argument ek kadam mein badalta hai; $F$ neeche.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>Ek iteration mein $F(z^t,\mu^t)=50$ aur $F(z^{t+1},\mu^t)=44$. Kya $F(z^{t+1},\mu^{t+1})=45$ ho sakta hai? Aur $F(z^t,\mu^{t+1})$ kitna kam ho sakta hai?</p>
+<details class="reveal"><summary>Show answer</summary><p>$F(z^{t+1},\mu^{t+1})\le F(z^{t+1},\mu^t)=44$, to $45$ <b>nahi</b> ho sakta. Doosra: $\mu^t$ already $z^t$ ka mean hai, S1 se $F(z^t,\mu)\ge F(z^t,\mu^t)=50$ har $\mu$ ke liye, to $F(z^t,\mu^{t+1})\ge50$ — kam nahi ho sakta.</p></details>
+</details>
+</section>
+
+<section data-track="ctx1">
+<h3>🧱 C1 — comprehension context (15 March 2026 · Q16) <span class="tag t-src">[SRC]</span> <span class="tag t-q">[?]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">15 March 2026 · Original Q16 · ID <code>6406531951448</code> · Comprehension · 0 marks · Pages 14–16 · <span class="tag t-src">[SRC]</span></p>
+<p>Consider a dataset in $\mathbb R^2$ for a clustering problem with $k=2$. The $i$-th data point is represented as $(x_i,y_i)$. The source gives the dataset in table form. The visible beginning is:</p>
+<div class="tbl-wrap"><table><thead><tr><th class="num">$i$</th><th class="num">$x_i$</th><th class="num">$y_i$</th></tr></thead><tbody>
+<tr><td class="num">1</td><td class="num">0</td><td class="num">0</td></tr>
+<tr><td class="num">2</td><td class="num">3</td><td class="num">0</td></tr>
+<tr><td class="num">3</td><td class="num">4</td><td class="num">1</td></tr>
+<tr><td class="num">4</td><td class="num">1</td><td class="num">1</td></tr>
+</tbody></table></div>
+<p>The initial cluster assignments are then specified for the child questions.</p>
+<p><span class="tag t-q">[?]</span> Is copy mein table sirf "visible beginning" hai — 4 rows se zyada ho sakti hai. Maine kuch invent nahi kiya. Is block mein koi numerical sawaal nahi; iske do bachche (Q17 aur Q18, initial assignments $z^{(0)}=(1,1,2,2)$ aur $(1,2,2,1)$) bank mein 4.3 ke andar hain, isliye wahi B18 mein solve honge. Aaj sirf itna: $z^{(0)}$ diya ho to pehla kadam wahi hai jo "How it works" ka step 5 hai — centres ko assigned points ka mean bana do.</p>
+</div>
+<p class="note">(Is block ke liye "Try first / solution" nahi — koi sawaal nahi poochha gaya.)</p>
+</section>
+
+<section data-track="pyq3">
+<h3>🎯 P3 — $\arg\min_v\sum\|3x_i-2v\|^2$ (16 July 2026) <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">16 July 2026 · Original Q2 · ID <code>6406532158935</code> · MCQ · 4 marks · Page 4 · <span class="tag t-src">[SRC]</span></p>
+<p>Let $x_1,x_2,\ldots,x_n\in\mathbb R^d$. Define $v^*=\arg\min_{v\in\mathbb R^d}\sum_{i=1}^n\|3x_i-2v\|^2.$ Which is the correct expression for $v^*$?</p>
+<ol>
+<li>$v^*=\dfrac1n\sum_{i=1}^nx_i$</li>
+<li>$v^*=\dfrac32\cdot\dfrac1n\sum_{i=1}^nx_i$ <b>[correct]</b></li>
+<li>$v^*=\dfrac3n\sum_{i=1}^nx_i$</li>
+<li>$v^*=\dfrac23\cdot\dfrac1n\sum_{i=1}^nx_i$</li>
+</ol>
+<p class="note">Options ke LaTeX ka formatting is copy mein toota hua tha (stray $\$\$$ aur brackets); maine sirf formatting theek ki, expressions wahi hain jo source ne dikhaye.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Ek hi $b^2$ bahar nikaal ke dekho ki andar kaun se points ka "mean" aa raha hai. Ya $n=1$, $x_1=1$ test karo. Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> $v^*$. <b>Given:</b> scaled sum of squares, $a=3$, $b=2$.</li>
+<li><b>Trigger clue:</b> "$\arg\min_v\sum\|\cdot\|^2$" ⇒ mean. Scalars andar ⇒ L9. <b>Prerequisites:</b> S1, G3 — Procedural + Conceptual. <b>Core principle:</b> $\arg\min\sum\|ax_i-bv\|^2=\tfrac ab\mu$.</li>
+</ul>
+<h4>2. 🧭 Methods (3 genuinely different)</h4>
+<p><b>M1 General:</b> gradient = 0. <b>M2 Shortcut:</b> $n=1$ test se options eliminate. <b>M3 Advanced:</b> $\|3x_i-2v\|^2=4\|\tfrac32x_i-v\|^2$ — ab "mean minimises" seedha lagao.</p>
+<h4>3. 🧮 Working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Gradient"><div class="mh">M1 · Gradient</div>
+<p><b>Step 1:</b> $f(v)=\sum_i\|3x_i-2v\|^2$. $\nabla_vf=\sum_i2(3x_i-2v)\cdot(-2)=-4\sum_i(3x_i-2v)$.</p>
+<p><b>Step 2:</b> $=0\Rightarrow\sum_i3x_i=2nv\Rightarrow v=\dfrac{3}{2n}\sum_ix_i=\dfrac32\mu$.</p>
+<p><b>Step 3:</b> Hessian $=8nI\succ0$ ⇒ minimum. ⇒ option 2.</p></div>
+<div class="method" data-label="M2 n=1 test"><div class="mh">M2 · $n=1$ test</div>
+<p><b>Step 1:</b> $n=1$, $x_1=1$: $f(v)=(3-2v)^2$, minimum $0$ at $v=1.5$.</p>
+<p><b>Step 2:</b> Options ki values $\mu=1$: (1) $1$, (2) $1.5$, (3) $3$, (4) $\tfrac23$.</p>
+<p><b>Step 3:</b> Sirf (2) $1.5$ deta hai ⇒ option 2.</p></div>
+<div class="method" data-label="M3 Substitution"><div class="mh">M3 · Substitution</div>
+<p><b>Step 1:</b> $3x_i-2v=-2\,(v-\tfrac32x_i)$ ⇒ $\|3x_i-2v\|^2=4\|v-y_i\|^2$ with $y_i=\tfrac32x_i$.</p>
+<p><b>Step 2:</b> $f=4\sum\|v-y_i\|^2$ ⇒ S1 se minimiser $=\bar y=\tfrac32\cdot\tfrac1n\sum x_i$.</p></div>
+</div>
+<p><b>Distractors kyon fail:</b> (1) scaling ignore karta hai; (3) $n$ se divide hi nahi karta (jod); (4) $\tfrac ab$ ki jagah $\tfrac ba$ ($\tfrac23$) — flip.</p>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Gradient</td><td>Medium</td><td>Low</td><td>Low (arithmetic)</td><td>Safe, general</td></tr>
+<tr><td>M2 $n=1$ test</td><td>Fastest (15 sec)</td><td>Low</td><td>Low–medium (sirf elimination; ek se zyada option bache to aur test)</td><td>MCQ ke liye</td></tr>
+<tr><td>M3 Substitution</td><td>Fast</td><td>Medium</td><td>Low</td><td>Samajh pakki karne ke liye</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M2. 🏆 <b>BEST EXAM METHOD:</b> M2 se answer chunna aur M3 ki ek line se justify karna; trade-off: M2 sirf options ko chhaantta hai, general $a,b$ ke liye proof nahi deta.</p>
+<h4>5. ✅ Verification</h4>
+<ul><li>Code: random $x_i\in\mathbb R^3$, scipy minimiser $=1.5\cdot\bar x$ ✓ (teeno coordinates match). Option 2 ✓ key match.</li></ul>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>$\tfrac ab$ vs $\tfrac ba$ ulatna. Check: $2v\approx3x$ ⇒ $v\approx\tfrac32x$.</li>
+<li>Factor $4$ ko gradient mein bhoolna (answer par asar nahi padta, par woh ek ghalti ka dar dikhata hai).</li>
+<li>Median/medoid sochna.</li>
+</ul>
+<p><b>Recognition rule:</b> $\arg\min_v\sum\|ax_i-bv\|^2$ ⇒ $v^*=\tfrac ab\times$mean.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>$v^*=\arg\min_v\sum_i\|4x_i+2v\|^2$ ko mean $\mu$ ke terms mein likho.</p>
+<details class="reveal"><summary>Show answer</summary><p>$4x_i+2v=4x_i-(-2)v$, to $a=4$, $b=-2$ ⇒ $v^*=\tfrac ab\mu=\mathbf{-2\mu}$ (code: scipy minimiser $=-2\cdot\bar x$ ✓). Dhyaan: $b$ ka sign bhi aata hai.</p></details>
+</details>
+</section>
+
+<section data-track="mem41">
+<h3>📌 Memory card — 4.1</h3>
+<div class="box em">
+<ul>
+<li><b>Core model:</b> K-means = (1) har point → nearest centre; (2) centre := apne points ka mean. $F(z,\mu)=\sum\|x_i-\mu_{z_i}\|^2$.</li>
+<li><b>Backbone chain:</b> distance$^2$ table → $z=\arg\min$ → $F(z,\mu^t)$ → $\mu^{t+1}$=means → $F(z,\mu^{t+1})$ → repeat.</li>
+<li><b>Formulas (conditions):</b> L7 $\sum\|x_i-v\|^2=\sum\|x_i-\mu\|^2+n\|\mu-v\|^2$ · L9 $\arg\min\sum\|ax_i-bv\|^2=\tfrac ab\mu$ ($b\ne0$) · L11 $\sum\|x-\mu\|^2=\sum\|x\|^2-n\|\mu\|^2$ · gap $F(z,\mu^{\text{old}})-F(z,\mu^{\text{new}})=\sum n_k\|\Delta\mu_k\|^2$ (jab naya $\mu$ = cluster ka mean).</li>
+<li><b>Top 3 traps:</b> (1) $F$ ka ek argument chhod dena; (2) printed table / $\|x-y\|$ vs $\|x-y\|^2$; (3) $\tfrac ab$ ulatna.</li>
+<li><b>Trigger bank:</b> "after assigning… $F$" · "relationship among…$t,t+1$" · "$\arg\min_v\sum\|ax-bv\|^2$".</li>
+<li><b>Method selector:</b> $F$ ke liye table (M1) + SSE check (M2); order ke liye $(z,\mu)$ jodi chain; argmin ke liye $n=1$ test.</li>
+<li><b>Spaced review (due):</b> 2026-11-13 P2 (chain), P3 · 2026-11-15 P1 (kaun sa $F$) · 2026-11-19 4.1 memory card · 2026-12-03 4.1 + 4.2 poora.</li>
+</ul>
+</div>
+</section>
+
+<section data-track="eib41">
+<h3>✍️ Explain-it-back — 4.1 (chat mein jawab do)</h3>
+<div class="try"><p>Apne shabdon mein, chat mein likho (3–5 lines): (a) "$F$ ke do arguments" kya matlab; ek example do jahan same $z$ par do alag $\mu$ se $F$ alag aata hai. (b) Update step mean hi kyun — S1 ki ek line. (c) P1 mein key $6$ kaun sa $F$ hai?</p>
+<p class="note">Format: <code>Answer: … | Confidence: S/U/G | Reason: …</code></p></div>
+</section>
+
+<!-- =========================================================== -->
+<h2>📐 4.2 Centroid updates and iteration calculations</h2>
+
+<section data-track="w42">
+<h3>🔁 Recall warm-up — B14 + B16 + B3 <span class="tag t-add">[ADDED]</span></h3>
+<p>3 chhote sawaal, notes dekhe bina. (Spaced review: B14 ke items 2026-11-13 ko due hain — Q1 usi ka ek chhota abhyaas hai.)</p>
+<ol>
+<li><p><b>(B14)</b> Kya $\begin{bmatrix}2&amp;3\\3&amp;2\end{bmatrix}$ ek valid kernel Gram matrix ho sakta hai?</p>
+<details class="reveal"><summary>Show answer</summary><p><b>Nahi.</b> Cauchy–Schwarz: $3^2=9&gt;2\cdot2=4$; $\det=4-9=-5&lt;0$, eigenvalues $5$ aur $-1$ (code) — PSD nahi.</p></details></li>
+<li><p><b>(B15, B16)</b> Gaussian kernel PCA, $n=10$ generic points: nonzero components kitne tak mil sakte hain?</p>
+<details class="reveal"><summary>Show answer</summary><p>$n-1=\mathbf9$ (feature space infinite, bound $\min(\infty,n-1)$; code ne rank $9$ di) — $d$ se bandha nahi.</p></details></li>
+<li><p><b>(B3)</b> $x=(3,4)$ ko line $w=(1,1)$ par project karo: projection ki lambai aur reconstruction error ka norm?</p>
+<details class="reveal"><summary>Show answer</summary><p>Lambai $=\dfrac{|x^Tw|}{\|w\|}=\dfrac7{\sqrt2}=\mathbf{4.95}$; error norm $=\dfrac{|{-3}+4|}{\sqrt2}=\dfrac1{\sqrt2}=\mathbf{0.707}$ (PYQ 2024 Oct Q12 aur Q13 ke keys ke range mein ✓).</p></details></li>
+</ol>
+</section>
+
+<section data-track="pre42">
+<h3>❓ Pretest — cold attempt (solution neeche 🎯 P6 mein)</h3>
+<div class="try">
+<p class="mono" style="margin:0 0 6px">2024 July 07 · Original Q13 + Q14 · IDs <code>640653829515</code>, <code>640653829516</code> · SA · 2 marks · <span class="tag t-src">[SRC]</span></p>
+<p>Consider the six points $(-1,-4),(5,6),(-2,-2),(4,5),(-3,-3),(3,4)$ in $R^2$. K-means with $k=2$; first cluster initialized with mean $(-4,-4)$, second with mean $(6,6)$. If $(x_1,y_1)$ is the mean of the first cluster after convergence, find $x_1+y_1$.</p>
+<p class="note">4 minute. Answer + Confidence S / U / G note karo. Hint-sawaal: pehle assign mein har point ka label kya hoga? Naye means ke saath kya koi point label badalta hai?</p>
+</div>
+</section>
+
+<section data-track="pos42">
+<h3>🧭 Position — yeh kahan baitha hai</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Peeche (prerequisites)</th><th>Yeh subtopic</th><th>Aage (kya unlock hota hai)</th></tr></thead>
+<tbody><tr>
+<td>4.1: $F(z,\mu)$ aur teen pad (L4, L8) · S1 (mean minimiser) · G3 (mean) · S4 (monotone ⇒ ruk jaana)</td>
+<td>Update step ki calculation: centroid = members ka mean, incremental update (point judne par), iteration chalana jab tak assignment na badle, aur "always true" claims (kya centroid zaroor badalta hai? kya configuration repeat ho sakta hai?)</td>
+<td>4.3 (assignment/geometry/ties), 4.4 (objective aur convergence ka poora proof, "kitni iteration"), 4.5 (K-means++), 4.6 (choosing $K$)</td>
+</tr></tbody></table></div>
+</section>
+
+<section data-track="int42">
+<h3>🧠 Intuition — plain language</h3>
+<ul>
+<li><b>Update step ka ek hi kaam:</b> har cluster ke <i>abhi ke</i> members ka mean nikaalo. Purana centre ya purane members is mean mein nahi aate (memory sirf $z$ mein hai).</li>
+<li><b>Centre sirf tab hilta hai jab membership badle</b> — ya kam se kam, agar members wahi hain to mean wahi. Par ulta bhi sahi nahi: members badalne ke baad bhi mean wahi reh sakta hai (Example 6 — P8 ka option 1 isi se girta hai).</li>
+<li><b>Naya point judne par:</b> mean us point ki taraf khisakta hai, par kaafi kam — $\tfrac1{n+1}$ hisse kitna. Cluster jitna bada, utna kam khiskaav.</li>
+<li><b>Convergence matlab:</b> ek poora pass (assign + update) kuch nahi badalta. Bahut baar do pass hi kaafi hote hain; kabhi kabhi ek point idhar-udhar hone par teen.</li>
+<li><b>Ek tip jo samay bachata hai:</b> clusters ka andaaza data ke shape se lagao (jaise negatives ek taraf, positives doosri taraf), phir <i>verify</i> karo ki har point apne mean ke paas hai (fixed-point check, P6/P7 M2).</li>
+</ul>
+<div class="box em">
+<p><b>Analogy <span class="tag t-add">[ADDED]</span> — class ki average height.</b> $n$ students ki average height $\mu$ hai. Ek naya student (height $x$) aata hai: nayi average $\mu+\tfrac{x-\mu}{n+1}$ — $x$ aur $\mu$ ka fark, $n+1$ se baanta hua. Koi student jaye to $\tfrac{n\mu-x}{n-1}$. Update step bas yahi hai, har cluster ke liye.</p>
+<p><b>Analogy kahan tootti hai:</b> (1) Class mein membership koi tay karta hai; K-means mein membership nearest-centre rule se tay hoti hai aur woh khud naye centres par nirbhar hai (loop). (2) Hum assembly line mein students ek-ek karke nahi jodte — Lloyd poora mean dobara nikaalta hai; incremental formula sirf shortcut hai jab ek ya kuch points hi badlein. (3) Class mein naya student aane se "average" naya group nahi banata, K-means mein naya point doosre clusters ke points ko bhi idhar-udhar kar sakta hai (isliye P5 mein check karna padta hai ki koi aur point flip na kare).</p>
+</div>
+<div class="box red">
+<p><b>Yeh kya NAHI hai:</b></p>
+<ul>
+<li>"Centroid badla $\Leftrightarrow$ koi point cluster badla" — ulta ($\Leftarrow$) sach hai agar centre badle to kuch members badle; par ($\Rightarrow$) nahi: point badalne par bhi centre wahi reh sakta hai (Example 6).</li>
+<li>"Mean ko nearest data point par round kar do" — nahi (K-medoids).</li>
+<li>"Naya point sirf apne cluster ka mean badlata hai, kuch aur nahi" — shuru mein haan, par naye mean se doosre points ke label badal sakte hain; ek pass ke baad jaanch zaroori.</li>
+<li>"Initial centres hi final centres hain" — nahi; $\mu^0$ sirf shuruaat hai (P6 mein $(-4,-4)\to(-2,-3)$).</li>
+</ul>
+</div>
+</section>
+
+<section data-track="vis42">
+<h3>📊 Visual intuition — centre khiskte hain, ek point idhar-udhar hota hai</h3>
+<figure class="viz">
+  <p class="vt">Visual 2: K-means stepper — Example 2 ka 1-D data <span class="tag t-add">[ADDED]</span></p>
+  <p class="vs">Points $\{0,2,4,9,10\}$, initial centres $0$ aur $5$ (number-line par; blue = cluster 1, amber = cluster 2). "Next step" baar-baar dabao ya "Run to convergence". Dhyaan do: pass 2 mein point $4$ cluster 2 se cluster 1 mein jaata hai, aur dono centre phir khiskte hain.</p>
+  <div data-widget="kmstep" data-points="0;2;4;9;10" data-init="0;5"></div>
+  <figcaption><b>Interpretation:</b> $F$ ki kadi $46\to22.667\to18.222\to8.5$ — har kadam ke baad ghatti. Update step ke baad centre members ke beech balance point par hi hote hain (koi data point nahi).</figcaption>
+</figure>
+</section>
+
+<section data-track="form42">
+<h3>📖 Formal version — Formula Protocol</h3>
+$$\mu_k^{t+1}\;=\;\frac1{n_k}\sum_{i\in C_k}x_i,\qquad C_k=\{i:\ z_i^{t+1}=k\},\quad n_k=|C_k|.$$
+<ul>
+<li><b>Symbols:</b> $C_k$ — assignment step ke baad cluster $k$ ke point (index), $n_k$ unki sankhya, $x_i$ coordinates; mean har coordinate mein alag nikalta hai.</li>
+<li><b>Assumptions:</b> $n_k\ge1$ (khaali cluster ho to convention: purana centre rakho); mean sirf <i>current</i> members se banta hai.</li>
+<li><b>Words mein:</b> cluster ke members ke coordinates ko jodo aur sankhya se baanto.</li>
+</ul>
+<p><b>Notice that…</b> yeh formula $\arg\min_v\sum_{i\in C_k}\|x_i-v\|^2$ ka answer hai (S1), isliye "naya centre" koi choice nahi — nearest data point ya median kuch nahi, mean hi.</p>
+<p><b>Incremental forms (L10):</b></p>
+$$\mu^{\text{new}}=\frac{n\mu+x}{n+1}=\mu+\frac{x-\mu}{n+1}\ \ (\text{point judne par}),\qquad \mu^{\text{new}}=\frac{n\mu-x}{n-1}\ \ (\text{point hatne par}).$$
+<div class="tbl-wrap"><table>
+<thead><tr><th>Haalat</th><th>Naya mean</th><th>Check</th></tr></thead>
+<tbody>
+<tr><td>Cluster ke members wahi</td><td>wahi mean</td><td>—</td></tr>
+<tr><td>Ek point $x$ judta hai</td><td>$\mu+\frac{x-\mu}{n+1}$</td><td>Example: $\mu=8.5,n=4,x=7$ ⇒ $8.5-0.3=8.2$</td></tr>
+<tr><td>Ek point $x$ hatta hai</td><td>$\frac{n\mu-x}{n-1}$</td><td>Wapis: $\frac{5\cdot8.2-7}{4}=8.5$ ✓</td></tr>
+<tr><td>Ek judta, ek hatta (same size)</td><td>$\mu+\frac{x_{\text{in}}-x_{\text{out}}}{n}$</td><td>Example 6 mein alag sizes — direct jodo</td></tr>
+</tbody></table></div>
+<p><b>Chhota worked example.</b> $C=\{(1,2),(3,4),(5,9)\}$ ⇒ $\mu=(\tfrac93,\tfrac{15}3)=(3,5)$. Ab $(7,3)$ judta hai: $\mu^{\text{new}}=(3,5)+\tfrac{(7,3)-(3,5)}{4}=(3,5)+(1,-0.5)=(4,4.5)$; direct: $\tfrac14(16,18)=(4,4.5)$ ✓.</p>
+<div class="box em"><p><b>Important insight.</b> Ek cluster ke SSE par bhi asar ek formula se aata hai: point judne par $\text{SSE}_{\text{new}}=\text{SSE}_{\text{old}}+\tfrac n{n+1}\|x-\mu\|^2$ (D3 mein). Yani door ka point sasta nahi — $\|x-\mu\|^2$ se kharcha badhta hai.</p></div>
+<p><b>This is why</b> P5 mein sirf ek line ka kaam hai ($8.5\to8.2$), aur P6/P7 mein dobara poora mean nikaalna padta hai kyunki membership naye pass mein badal chuka hai.</p>
+</section>
+
+<section data-track="how42">
+<h3>⚙️ How it works — "converged means chahiye" waale sawaal ka recipe</h3>
+<ol>
+<li><b>Likho:</b> data, $\mu^0$, $K$.</li>
+<li><b>Pass 1 assign:</b> har point ka nearest centre (distance$^2$, tie ⇒ chhota index).</li>
+<li><b>Pass 1 update:</b> har cluster ke members ka mean ⇒ $\mu^1$.</li>
+<li><b>Pass 2 assign:</b> $\mu^1$ se dobara nearest. Agar koi point label badle to cluster ke naye members ke saath update (step 3 dobara), warna <b>ruk jao</b>.</li>
+<li><b>Fast-path:</b> pass 1 ke baad data ke shape se andaaza lagao (sabse zyada separated groups), un groups ke means nikaalo, phir <i>verify</i> karo ki har point apne mean ke paas hai (fixed point). Par yeh bhi confirm karo ki given $\mu^0$ se pass 1 wahi groups deta hai (varna alag fixed point ho sakta hai).</li>
+<li><b>New point sawaal:</b> naya point nearest centre ko do; sirf us cluster ka mean L10 se update karo; ek aur pass se check karo ki koi bhi point label nahi badla.</li>
+</ol>
+</section>
+
+<section data-track="ex42">
+<h3>🧪 Worked examples</h3>
+
+<h4>Example 4 (simple) — mean of 3 points</h4>
+<p>$C=\{(1,2),(3,4),(5,9)\}$: $x$: $\tfrac{1+3+5}3=3$; $y$: $\tfrac{2+4+9}3=5$ ⇒ $\mu=(3,5)$ (code ✓). Mean data point nahi hai — $(3,4)$ paas hai par woh centre nahi.</p>
+
+<h4>Example 5 (exam-level) — naya point, incremental update</h4>
+<p>Cluster mean $(8.5,0)$ ke 4 points: $(8,2),(8,-2),(9,1),(9,-1)$. Naya point $(7,0)$ (P5 jaisa). Dusre cluster ka mean $(0,0)$.</p>
+<ul>
+<li>Assign: $d=(49,\ 2.25)\to$ cluster 2.</li>
+<li>Update: $\mu_2=(8.5,0)+\tfrac{(7,0)-(8.5,0)}5=(8.5-0.3,0)=(8.2,0)$ ✓ (direct: $\tfrac{34+7}5=8.2$).</li>
+<li>SSE par asar: purana $\text{SSE}=4.25+4.25+1.25+1.25=11$; naya $=4.04+4.04+1.64+1.64+1.44=12.8$; fark $1.8=\tfrac45\cdot2.25$ ✓ (L10 ka SSE-version).</li>
+<li>Check: kya koi aur point flip karta hai? $(2,2)$: cluster 1 se $8$, cluster 2 se $(6.2)^2+4=42.44$ ⇒ nahi. Baaki bhi wahi ⇒ converged. Updated x-coordinates ka sum $=0+8.2=\mathbf{8.2}$.</li>
+</ul>
+
+<h4>Example 6 (tricky) — point cluster chhodta hai, par centre wahi rehta hai</h4>
+<p>$x=\{-1,2,2,3,6\}$, $K=2$. Maan lo purana labelling $z^t=(1,2,2,1,2)$: $C_1=\{-1,3\}$, $C_2=\{2,2,6\}$ ⇒ $\mu^t=(1,\ \tfrac{10}3)$ (har cluster apne points ka mean hai, yaani Lloyd ki ek sahi state).</p>
+<div class="tbl-wrap"><table><thead><tr><th>Point</th><th>$d$ to $\mu_1=1$</th><th>$d$ to $\mu_2=3.333$</th><th>naya label</th></tr></thead><tbody>
+<tr><td>$-1$</td><td class="num">4</td><td class="num">18.78</td><td>1</td></tr>
+<tr><td>$2$</td><td class="num">1</td><td class="num">1.78</td><td>1 <i>(2 se aaya)</i></td></tr>
+<tr><td>$2$</td><td class="num">1</td><td class="num">1.78</td><td>1 <i>(2 se aaya)</i></td></tr>
+<tr><td>$3$</td><td class="num">4</td><td class="num">0.11</td><td>2 <i>(1 se gaya!)</i></td></tr>
+<tr><td>$6$</td><td class="num">25</td><td class="num">7.11</td><td>2</td></tr>
+</tbody></table></div>
+<p>Naya $C_1=\{-1,2,2\}$ ⇒ $\mu_1^{t+1}=\tfrac{-1+2+2}3=\mathbf1=\mu_1^t$ — point $3$ cluster 1 chhod gaya, par centre bilkul nahi hila (do points aaye, ek gaya, aur saath mein mean sahi tarah balance ho gaya). $\mu_2^{t+1}=\tfrac{3+6}2=4.5$. (Code ✓.)</p>
+<div class="box red">
+<p><b>Non-example:</b> "Cluster $j$ se point nikal gaya ⇒ $\mu_j$ zaroor badla" — galat; upar ka example iska counterexample hai. Sahi statement: "agar $C_j$ ke members <i>wahi</i> rahe to $\mu_j$ nahi badla."</p>
+</div>
+</section>
+
+<section data-track="deep42">
+<details class="deep"><summary>🔬 Deeper insight (D3) — incremental formula ka proof, SSE par asar, online vs batch</summary>
+<h4>1. Incremental mean ka proof</h4>
+<p>$n\mu=\sum_{i=1}^nx_i$. Naya point $x$: $\mu^{\text{new}}=\dfrac{n\mu+x}{n+1}=\dfrac{(n+1)\mu+(x-\mu)}{n+1}=\mu+\dfrac{x-\mu}{n+1}$. Hatne par: $\mu^{\text{new}}=\dfrac{n\mu-x}{n-1}$ ($n\ge2$).</p>
+<h4>2. SSE par asar (L7 se, no step skipped)</h4>
+<p>Purana $S=\sum_{i=1}^n\|x_i-\mu\|^2$. Naya mean $\mu'$, naya set mein $n+1$ points. L7 mein $v=\mu$ aur "mean" $=\mu'$ lo (naye set ke liye): $\sum_{\text{naye}}\|x_j-\mu\|^2=S'+(n+1)\|\mu'-\mu\|^2$. Left side $=S+\|x-\mu\|^2$ (purane points ka jod $S$, plus naya). Aur $\|\mu'-\mu\|^2=\tfrac{\|x-\mu\|^2}{(n+1)^2}$ (incremental formula se). To $S'=S+\|x-\mu\|^2-\tfrac{\|x-\mu\|^2}{n+1}=S+\tfrac n{n+1}\|x-\mu\|^2$. Example 5: $11+\tfrac45\cdot2.25=12.8$ ✓.</p>
+<h4>3. Naye point se baaki cluster ke labels kyun flip ho sakte hain</h4>
+<p>Cluster 2 ka centre hil gaya ⇒ doosre points ke liye "nearest" badal sakta hai. Jab centre $O(\tfrac1{n+1})$ khiske to flip kam hote hain par zero nahi — isliye ek pass se verify.</p>
+<h4>4. Batch (Lloyd) vs online</h4>
+<p>Lloyd poora data assign karke tab means badalta hai. "Online/sequential" K-means ek-ek point par centre ko L10 se khiskata hai — alag algorithm; PYQs mein hamesha batch hai jab tak sawaal na likhe.</p>
+<h4>5. Fixed point $\ne$ global minimum</h4>
+<p>Converged $(\mu,z)$ aisa hai ki na labels badal sakte hain, na centre; par kisi aur shuruaat se aur chhota $F$ mil sakta hai (4.5 mein: K-means++).</p>
+</details>
+</section>
+
+<section data-track="tool42">
+<h3>⚡ PYQ pattern toolkit — 4.2</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Trigger clue</th><th>Concept</th><th>First move</th></tr></thead>
+<tbody>
+<tr><td>"updated centroid $\mu_k$ of $C_k$"</td><td>Update = members ka mean (L6)</td><td>Cluster ke abhi ke members likho; coordinate-wise mean; phir check ki assignment stable hai.</td></tr>
+<tr><td>"new data point introduced… centres updated"</td><td>Incremental mean (L10)</td><td>Naye point ko nearest centre do; sirf us cluster ko $\mu+\frac{x-\mu}{n+1}$; ek verify pass.</td></tr>
+<tr><td>"final means / mean after convergence"</td><td>Lloyd fixed point</td><td>Pass 1, pass 2 … jab tak assignment stable; ya geometry se andaaza + verify.</td></tr>
+<tr><td>"always true for K-means between iterations $t,t+1$"</td><td>Monotonicity, finite partitions</td><td>Har statement ke liye: proof ya ek chhota counterexample (Example 6 jaisa).</td></tr>
+</tbody></table></div>
+<p><b>Common traps:</b> (1) ek pass ke baad ruk jana jab ek point flip kar chuka ho; (2) centre ko data point maanna; (3) purane members se mean nikaalna; (4) "mean wahi" ko "membership wahi" ka saboot maanna.</p>
+</section>
+
+<h2>🎯 4.2 PYQs — P4, C2, P5, C3, P6, P7, P8</h2>
+
+<section data-track="pyq4">
+<h3>🎯 P4 — updated centroid $\mu_1$ (2023 October) <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2023 October · Original Q2 · ID <code>640653669231</code> · MCQ · 4 marks · Pages 3–4 · <span class="tag t-src">[SRC]</span></p>
+<p>Suppose you have a dataset of 9 two-dimensional data points and are performing K-means clustering with <b>K = 3</b> clusters. After the first iteration: <b>C₁:</b> {(2,2), (3,3), (4,4)} · <b>C₂:</b> {(6,6), (7,7), (8,8)} · <b>C₃:</b> {(10,10), (11,11), (12,12)}. After the second iteration, which option represents the updated cluster centroid <b>μ₁</b> for C₁ using the provided formula?</p>
+<ol><li>μ₁ = (2.5, 2.5)</li><li>μ₁ = (4.5, 4.5)</li><li>μ₁ = (3, 3)</li><li>μ₁ = (5.5, 5.5)</li></ol>
+<p><b>Answer indicated in source:</b> μ₁ = (3,3). <span class="tag t-q">[?]</span> "the provided formula" is copy mein print nahi hai; main standard centroid formula $\mu_1=\tfrac1{|C_1|}\sum_{x\in C_1}x$ lagata hoon (L6).</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Pehle mean nikaalo. Phir socho: kya dusri iteration mein koi point cluster badalta hai? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul><li><b>Asked:</b> $\mu_1$ after second iteration. <b>Given:</b> clusters after iteration 1. <b>Trigger:</b> "updated centroid" ⇒ L6. <b>Prerequisites:</b> G3, S1, L5 — Procedural. <b>Core:</b> mean of <i>current members</i>.</li></ul>
+<h4>2. 🧭 Methods (2 genuinely different)</h4>
+<p><b>M1 Direct</b> (mean of the 3 points + stability check) aur <b>M2 Symmetry</b> (3 barabar-doori waale points ka mean = beech wala point). Teesra nahi — ek hi ek-line calculation hai.</p>
+<h4>3. 🧮 Working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Direct"><div class="mh">M1 · Direct + stability</div>
+<p><b>Step 1:</b> $\mu_1^{(1)}=\bigl(\tfrac{2+3+4}3,\tfrac{2+3+4}3\bigr)=(3,3)$; $\mu_2=(7,7)$; $\mu_3=(11,11)$.</p>
+<p><b>Step 2 (iteration 2 assign):</b> $(4,4)$: $d=(2,\ 18)\to C_1$; $(6,6)$: $d=(18,\ 2,\ 50)\to C_2$; $(8,8)$: $d$ to $(7,7)=2$ vs to $(11,11)=18\to C_2$; $(10,10)$: $d$ to $(11,11)=2$ vs $(7,7)=18\to C_3$. Koi flip nahi.</p>
+<p><b>Step 3:</b> membership wahi ⇒ $\mu_1=(3,3)$ ⇒ option 3.</p></div>
+<div class="method" data-label="M2 Symmetry"><div class="mh">M2 · Symmetry</div>
+<p><b>Step 1:</b> $(2,2),(3,3),(4,4)$ ek arithmetic progression hain; AP ka mean = beech wala = $(3,3)$.</p>
+<p><b>Step 2:</b> Option 1 ($2.5$) = sirf $\{2,3\}$ ka mean (ek point chhoot gaya); $4.5$, $5.5$ bhi galat subsets ke means. Sirf (3,3).</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Direct + stability</td><td>Medium</td><td>Low</td><td>Low</td><td>Jab "after second iteration" ho</td></tr>
+<tr><td>M2 Symmetry</td><td>5 sec</td><td>Low</td><td>Low — jab points equally spaced hon</td><td>Cross-check</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M2. 🏆 <b>BEST EXAM METHOD:</b> M1 Step 1 (mean) + ek line stability check; trade-off: stability check ke bina bhi answer wahi aata hai, par proof poora nahi.</p>
+<h4>5. ✅ Verification</h4>
+<ul><li>Code: mean $(3,3)$; assignment second pass mein wahi ✓; key $(3,3)$ ✓.</li></ul>
+<h4>6. ⚠️ Traps</h4>
+<ul><li>"After the second iteration" ko soch ke $\mu$ ko aur khiskana. Jab koi point nahi flipta, update wahi mean deta hai.</li><li>Poore data ka mean le lena ($\mu=(7,7)$) ya $C_2$ ke saath mix karna.</li></ul>
+<p><b>Recognition rule:</b> "updated centroid of $C_k$" ⇒ $C_k$ ke abhi ke members ka mean.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>$C=\{(1,2),(3,4),(5,9)\}$ ka centroid? Ab $(5,9)$ nikal ke $(7,3)$ aa jaata hai: naya centroid?</p>
+<details class="reveal"><summary>Show answer</summary><p>$\mu=(3,5)$. Naya set $\{(1,2),(3,4),(7,3)\}$ ⇒ $\bigl(\tfrac{11}3,\tfrac93\bigr)=\mathbf{(3.667,\ 3)}$ (code ✓).</p></details>
+</details>
+</section>
+
+<section data-track="ctx2">
+<h3>🧱 C2 — comprehension context (2024 February · Q9) <span class="tag t-src">[SRC]</span> <span class="tag t-q">[?]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2024 February · Original Q9 · ID <code>640653738038</code> · COMPREHENSION · 0 marks · <span class="tag t-src">[SRC]</span></p>
+<p>The question provides these data points: $(-2,2),\ (-2,-2),\ (0,0),\ (2,2),\ (2,-2),\ (8,2),\ (8,-2),\ (9,1),\ (9,-1)$. The plotted image is part of the question and should be retained as the original visual asset. Children: Q10 and Q11.</p>
+<p><span class="tag t-q">[?]</span> Plot ki image is copy mein nahi hai; 9 points text mein poore diye hain, isliye jo bhi poochha gaya woh solve ho jaata hai. Q10 (initial centres $(0,0),(6,0)$, final means) bank mein 4.4 ke andar hai ⇒ B19; Q11 yahan P5 hai.</p>
+</div>
+<p class="note">(Context block — koi "Try first" nahi.)</p>
+</section>
+
+<section data-track="pyq5">
+<h3>🎯 P5 — naya point $(7,0)$, updated x-coordinates ka sum (2024 February) <span class="tag t-src">[SRC]</span> <span class="tag t-q">[?]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2024 February · Original Q11 · ID <code>640653738040</code> · Parent Q9 · SA · 4 marks · <span class="tag t-src">[SRC]</span></p>
+<p>After introducing a new data point $(7,0)$, the cluster centers were updated. Enter the sum of the updated x-coordinates for both cluster centers accurately, rounding your answer to two decimal places.</p>
+<p><b>Accepted answer:</b> 8.18 to 8.22. <span class="tag t-q">[?]</span> Wording sirf itna kehta hai "cluster centers were updated" — kaun se centres se shuru? Do reading: (a) Q10 ke converged centres $(0,0),(8.5,0)$ par naya point jod ke; (b) $K=2$, init $(0,0),(6,0)$ se 10 points par dobara. Dono se answer same (neeche).</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Naya point kis centre ke paas hai? Us cluster ka naya mean kya? Kya koi aur point flip hota hai? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul><li><b>Asked:</b> $x_1^{\text{new}}+x_2^{\text{new}}$ (x-coordinates ka sum). <b>Given:</b> C2 ke 9 points, naya point. <b>Trigger:</b> "new point introduced, centres updated" ⇒ incremental update (L10). <b>Prerequisites:</b> G3, S3, L10 — Procedural. <b>Core:</b> naya point nearest cluster mein, sirf us ka mean badlta hai.</li></ul>
+<h4>2. 🧭 Methods (3 genuinely different)</h4>
+<p><b>M1 Poora re-run</b> (General): $K=2$ ka Lloyd 10 points par $(0,0),(6,0)$ se. <b>M2 Incremental mean</b> (Shortcut): $8.5+\tfrac{7-8.5}5$. <b>M3 Cluster sums</b> (Advanced-ish): coordinate-sum se.</p>
+<h4>3. 🧮 Working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Re-run"><div class="mh">M1 · Re-run Lloyd</div>
+<p><b>Step 1 (assign):</b> $(-2,\pm2),(0,0),(2,\pm2)$ ⇒ $(0,0)$ ke paas (jaise $(2,2)$: $d=(8,\ 20)$); $(8,\pm2),(9,\pm1)$ ⇒ $(6,0)$ ke paas ($(8,2)$: $d=(68,\ 8)$); $(7,0)$: $d=(49,\ 1)\to$ cluster 2.</p>
+<p><b>Step 2 (update):</b> $\mu_1=(0,0)$ (symmetric). $\mu_2=\tfrac15[(8,2)+(8,-2)+(9,1)+(9,-1)+(7,0)]=\tfrac15(41,0)=(8.2,0)$.</p>
+<p><b>Step 3 (verify):</b> naye centres se koi flip nahi (e.g. $(2,2)$: $8$ vs $(6.2)^2+4=42.44$) ⇒ converged: $0+8.2=\mathbf{8.2}$.</p></div>
+<div class="method" data-label="M2 Incremental"><div class="mh">M2 · L10</div>
+<p><b>Step 1:</b> Converged $(0,0),(8.5,0)$ (Q10 ka result). $(7,0)$: $d=(49,\ 2.25)\to$ cluster 2, $n=4$.</p>
+<p><b>Step 2:</b> $\mu_2^{\text{new}}=8.5+\dfrac{7-8.5}{4+1}=8.5-0.3=8.2$. Cluster 1 ke members wahi ⇒ $0$.</p>
+<p><b>Step 3:</b> sum $=0+8.2=\mathbf{8.2}$.</p></div>
+<div class="method" data-label="M3 Sums"><div class="mh">M3 · Coordinate sums</div>
+<p><b>Step 1:</b> Cluster 2 ke x: $8+8+9+9=34$; naya point $7$ ⇒ $41$ aur $n=5$ ⇒ $\tfrac{41}5=8.2$.</p>
+<p><b>Step 2:</b> Cluster 1 ke x: $-2-2+0+2+2=0$ ⇒ $0$.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Re-run</td><td>Slow</td><td>Low</td><td>Low (poora hai), par arithmetic zyada</td><td>Jab starting centres $\mu^0$ hi diye hon</td></tr>
+<tr><td>M2 Incremental</td><td>Fastest</td><td>Low</td><td>Medium — Q10 ke converged centres pata hone chahiye</td><td>Jab purane means pata hon</td></tr>
+<tr><td>M3 Sums</td><td>Fast</td><td>Low</td><td>Low</td><td>Hamesha safe</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M2. 🏆 <b>BEST EXAM METHOD:</b> M3 (sums) ya M2, phir ek verify pass; trade-off: M2 ke liye purane means ko sahi pehchanna zaroori.</p>
+<h4>5. ✅ Verification</h4>
+<ul><li>Code: reading (a) ⇒ $(0,0),(8.2,0)$, sum $8.2$; reading (b) ⇒ $(0,0),(8.2,0)$, sum $8.2$ ✓; key $8.18$–$8.22$ ✓.</li></ul>
+<h4>6. ⚠️ Traps</h4>
+<ul><li>Naye point ko galat cluster dena ($7$ ka $|7-6|=1$ vs $|7-0|=7$: paas $6$ ya $8.5$ ke).</li><li>Dono centres ko naya count karna (cluster 1 ka mean nahi badla).</li><li>Sirf $8.2$ likhna jab sum maanga ho — yahan sum $0+8.2$ coincidentally wahi hai.</li></ul>
+<p><b>Recognition rule:</b> naya point $\Rightarrow$ sirf ek cluster ka mean, $\mu+\frac{x-\mu}{n+1}$.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>Points $(0,0),(2,0),(0,2),(2,2)$ aur $(10,0),(12,0),(10,2),(12,2)$; centres $(1,1)$ aur $(11,1)$. Naya point $(7,1)$ aata hai. Updated centres ke x-coordinates ka sum?</p>
+<details class="reveal"><summary>Show answer</summary><p>$(7,1)$: $d=(36,16)\to$ cluster 2 ($n=4$, mean $(11,1)$). $\mu_2^{\text{new}}=(11,1)+\tfrac{(7,1)-(11,1)}5=(10.2,\ 1)$; $\mu_1$ wahi $(1,1)$. Sum $=1+10.2=\mathbf{11.2}$ (code ✓; verify pass mein koi flip nahi).</p></details>
+</details>
+</section>
+
+<section data-track="ctx3">
+<h3>🧱 C3 — comprehension context (2024 July 07 · Q13) <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2024 July 07 · Original Q13 · ID <code>640653829515</code> · COMPREHENSION · 0 marks · Pages 11–12 · <span class="tag t-src">[SRC]</span></p>
+<p>Consider the following six points in $R^2$:</p>
+<div class="tbl-wrap"><table><thead><tr><th class="num">$x$</th><th class="num">$y$</th></tr></thead><tbody>
+<tr><td class="num">-1</td><td class="num">-4</td></tr><tr><td class="num">5</td><td class="num">6</td></tr><tr><td class="num">-2</td><td class="num">-2</td></tr><tr><td class="num">4</td><td class="num">5</td></tr><tr><td class="num">-3</td><td class="num">-3</td></tr><tr><td class="num">3</td><td class="num">4</td></tr></tbody></table></div>
+<p>K-means clustering is run with $k=2$. The first cluster is initialized with mean $(-4,-4)$ and the second cluster is initialized with mean $(6,6)$. Answer the following subquestions.</p>
+</div>
+</section>
+
+<section data-track="pyq6">
+<h3>🎯 P6 — cluster 1 ka converged mean, $x_1+y_1$ (2024 July 07 · Q14) <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2024 July 07 · Original Q14 · ID <code>640653829516</code> · Parent Q13 · SA · 2 marks · <span class="tag t-src">[SRC]</span></p>
+<p>If $(x_1,y_1)$ is the mean of the first cluster after convergence, find: $x_1+y_1$.</p>
+<p><b>Accepted answer:</b> −5.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>(Pretest mein ho chuka — agar kiya tha to apna answer dekho, nahi kiya to ab: $\mu^0$ se assign, update, phir check.) Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul><li><b>Asked:</b> converged mean of cluster 1; sum of its coordinates. <b>Given:</b> 6 points, $\mu^0=(-4,-4),(6,6)$. <b>Trigger:</b> "after convergence" ⇒ iterate to a fixed point. <b>Prerequisites:</b> G1, G3, L5, L6 — Procedural. <b>Core:</b> Lloyd's alternation until assignment stable.</li></ul>
+<h4>2. 🧭 Methods (2 genuinely different)</h4>
+<p><b>M1 Iterate</b> (General) aur <b>M2 Geometry-guess + fixed-point check</b> (Shortcut). Teesra nahi — problem chhoti hai.</p>
+<h4>3. 🧮 Working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Iterate"><div class="mh">M1 · Lloyd iterations</div>
+<p><b>Pass 1 assign</b> (distance$^2$ to $(-4,-4)$, to $(6,6)$): $(-1,-4)$: $(9,149)\to1$; $(5,6)$: $(181,1)\to2$; $(-2,-2)$: $(8,128)\to1$; $(4,5)$: $(145,5)\to2$; $(-3,-3)$: $(2,162)\to1$; $(3,4)$: $(113,13)\to2$.</p>
+<p><b>Pass 1 update:</b> $C_1=\{(-1,-4),(-2,-2),(-3,-3)\}$ ⇒ $\mu_1=\bigl(\tfrac{-6}3,\tfrac{-9}3\bigr)=(-2,-3)$. $C_2=\{(5,6),(4,5),(3,4)\}$ ⇒ $\mu_2=(4,5)$.</p>
+<p><b>Pass 2 assign</b> (to $(-2,-3)$, to $(4,5)$): $(-1,-4)$: $(2,106)\to1$; $(5,6)$: $(130,2)\to2$; $(-2,-2)$: $(1,85)\to1$; $(4,5)$: $(100,0)\to2$; $(-3,-3)$: $(1,113)\to1$; $(3,4)$: $(74,2)\to2$. Koi flip nahi ⇒ converged.</p>
+<p><b>Answer:</b> $\mu_1=(-2,-3)$ ⇒ $x_1+y_1=\mathbf{-5}$.</p></div>
+<div class="method" data-label="M2 Guess+verify"><div class="mh">M2 · Guess + fixed point</div>
+<p><b>Step 1:</b> Data do saaf jhundon mein hai: teen negative-negative, teen positive-positive. Guess: $C_1$ = teen negative points.</p>
+<p><b>Step 2:</b> Unka mean $(-2,-3)$; doosre ka $(4,5)$.</p>
+<p><b>Step 3 (verify fixed point):</b> har point apne mean ke paas — upar ki Pass-2 table. Aur given $\mu^0$ se bhi pass 1 wahi groups deta hai (Pass-1 table), isliye yeh wahi fixed point hai jahan Lloyd pahunchta hai ⇒ $-5$.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Iterate</td><td>Medium (12 distances)</td><td>Low</td><td>Low</td><td>Hamesha safe</td></tr>
+<tr><td>M2 Guess + verify</td><td>Fast</td><td>Medium</td><td>Medium — doosra fixed point ho to galat</td><td>Jab jhund saaf alag hon</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M2. 🏆 <b>BEST EXAM METHOD:</b> M2 ke baad ek hi pass M1 style (pass 1 ke 6 distances) — dono ka faayda; trade-off: pure M2 mein "yeh wahi fixed point hai" ka dhyaan chhoot sakta hai.</p>
+<h4>5. ✅ Verification</h4>
+<ul><li>Code: $\mu=(-2,-3),(4,5)$; converged in 1 update (agla pass wahi); final $F=8$; $x_1+y_1=-5$ ✓ key.</li></ul>
+<h4>6. ⚠️ Traps</h4>
+<ul><li>Initial centre $(-4,-4)$ ka sum ($-8$) likh dena.</li><li>$-2-3$ ko $-1$ ya $5$ jaisa galti se likhna; signs dhyaan.</li><li>Pass 1 par ruk jaana jab verify pass nahi kiya.</li></ul>
+<p><b>Recognition rule:</b> "after convergence" ⇒ assign–update–verify; answer tabhi final jab ek pass kuch na badle.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>Points $(3,-6),(3,-4),(2,-2),(-3,6),(0,5),(-4,0)$, $k=2$, init $(-2,-1)$ aur $(-6,2)$. Cluster 1 (pehle centre wale) ke converged mean ka $x_1+y_1$?</p>
+<details class="reveal"><summary>Show answer</summary><p>Pass 1: sab points cluster 1 mein except $(-3,6)$ (jo cluster 2). $\mu=(0.8,-1.4),\ (-3,6)$. Pass 2: $(0,5)$ flip karta hai cluster 2 mein; ab $C_1=\{(3,-6),(3,-4),(2,-2),(-4,0)\}$ ⇒ $\mu_1=(1,-3)$, $C_2=\{(-3,6),(0,5)\}$ ⇒ $\mu_2=(-1.5,5.5)$. Pass 3 mein koi flip nahi. $x_1+y_1=\mathbf{-2}$ (code ✓). (Yahan ek point flip karta hai — P5/P6 se ek kadam upar.)</p></details>
+</details>
+</section>
+
+<section data-track="pyq7">
+<h3>🎯 P7 — cluster 2 ka converged mean, $x_2+y_2$ (2024 July 07 · Q15) <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2024 July 07 · Original Q15 · ID <code>640653829517</code> · Parent Q13 · SA · 2 marks · <span class="tag t-src">[SRC]</span></p>
+<p>If $(x_2,y_2)$ is the mean of the second cluster after convergence, find: $x_2+y_2$.</p>
+<p><b>Accepted answer:</b> 9.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>P6 ka run dobara mat karo — wahi data, wahi run. Sirf doosra cluster padho. Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul><li><b>Asked:</b> $x_2+y_2$. <b>Given:</b> wahi C3 data. <b>Trigger:</b> same run as P6. <b>Prerequisites:</b> same — Procedural. <b>Core:</b> same fixed point; ab cluster 2 ka mean.</li></ul>
+<h4>2. 🧭 Methods (2 genuinely different; P6 ka run reuse)</h4>
+<p><b>M1</b> P6 Pass-1/Pass-2 se $C_2=\{(5,6),(4,5),(3,4)\}$. <b>M2 Sum-of-sums shortcut:</b> poore data ke coordinate-sum se cluster 1 ka sum ghatao.</p>
+<h4>3. 🧮 Working</h4>
+<div class="methods">
+<div class="method" data-label="M1 From run"><div class="mh">M1 · P6 ke run se</div>
+<p><b>Step 1:</b> $C_2=\{(5,6),(4,5),(3,4)\}$ (Pass 1 aur Pass 2 dono mein).</p>
+<p><b>Step 2:</b> $\mu_2=\bigl(\tfrac{5+4+3}3,\tfrac{6+5+4}3\bigr)=(4,5)$ ⇒ $x_2+y_2=\mathbf9$.</p></div>
+<div class="method" data-label="M2 Sum trick"><div class="mh">M2 · Sum trick</div>
+<p><b>Step 1:</b> $x_2+y_2=\tfrac13\sum_{i\in C_2}(x_i+y_i)$. Har point ka $x+y$: $(5,6)\to11$, $(4,5)\to9$, $(3,4)\to7$.</p>
+<p><b>Step 2:</b> $\tfrac{11+9+7}3=\tfrac{27}3=\mathbf9$ ✓.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 From run</td><td>Fast (P6 ke baad)</td><td>Low</td><td>Low</td><td>Hamesha</td></tr>
+<tr><td>M2 Sum trick</td><td>Fast</td><td>Low</td><td>Low</td><td>Jab $x+y$ hi maanga ho</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M2. 🏆 <b>BEST EXAM METHOD:</b> M1 (clusters P6 se), M2 se cross-check; trade-off: dono par $C_2$ galat pehchana to dono galat.</p>
+<h4>5. ✅ Verification</h4>
+<ul><li>Code: $\mu_2=(4,5)$, sum $9$ ✓ key. P6 aur P7 milake: $-5$ aur $9$, dono key se match.</li></ul>
+<h4>6. ⚠️ Traps</h4>
+<ul><li>Initial centre $(6,6)$ ka $12$ likhna. Cluster 2 ke $(5,6)$ ka mean-sa lena.</li></ul>
+<p><b>Recognition rule:</b> comprehension ke children ek hi run share karte hain — ek baar run, kai answers.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>P6 ke transfer data ($(3,-6),(3,-4),(2,-2),(-3,6),(0,5),(-4,0)$, init $(-2,-1),(-6,2)$) mein cluster 2 ka converged $x_2+y_2$?</p>
+<details class="reveal"><summary>Show answer</summary><p>Converged $\mu_2=(-1.5,\ 5.5)$ ⇒ $\mathbf{4}$ (code ✓).</p></details>
+</details>
+</section>
+
+<section data-track="pyq8">
+<h3>🎯 P8 — "always true" statements (16 July 2026 · Q4) <span class="tag t-src">[SRC]</span> <span class="tag t-q">[?]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">16 July 2026 · Original Q4 · ID <code>6406532158937</code> · MCQ · 3 marks · Pages 5–6 · <span class="tag t-src">[SRC]</span></p>
+<p>Which of the following statements is <b>always true</b> for the K-means algorithm with $K&lt;n$ cluster centres, between consecutive iterations $t$ and $t+1$?</p>
+<ol>
+<li>If a data point changes its cluster assignment from cluster $j$ to cluster $k$, it is guaranteed that the centroid of cluster $j$ strictly changes.</li>
+<li>It is not possible for the K-means algorithm to revisit a configuration, where a configuration corresponds to the $K$-way partition generated by clustering at the end of each iteration. <b>[correct]</b></li>
+</ol>
+<p><span class="tag t-q">[?]</span> Is copy mein sirf do statements dikhte hain; original mein shayad aur ho. Key "option 2" iske saath consistent hai.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Statement 1 ke liye ek chhota 1-D counterexample dhoondho (point $j\to k$ jaaye par centroid $j$ wahi). Statement 2 ke liye socho: partition dobara aaye to $F$ ko kya karna padega? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul><li><b>Asked:</b> kaun sa statement "always" sach. <b>Given:</b> 2 statements. <b>Trigger:</b> "always true" ⇒ proof ya ek counterexample. <b>Prerequisites:</b> S4, L8, L10, Example 6 — Conceptual, Evidence. <b>Core:</b> $F$ monotone, partitions finite.</li></ul>
+<h4>2. 🧭 Methods (2 genuinely different)</h4>
+<p><b>M1 Theory</b> (L8 + strict decrease) aur <b>M2 Counterexample hunt</b> (Example 6 for statement 1; for statement 2 no counterexample exists, isliye proof). Statement ko MCQ ki tarah har ek par chalayenge.</p>
+<h4>3. 🧮 Working</h4>
+<p><b>Statement 1 — "point $j\to k$ ⇒ centroid $j$ strictly changes"</b></p>
+<div class="methods">
+<div class="method" data-label="M1 Theory"><div class="mh">M1 · Theory</div>
+<p><b>Step 1:</b> Centroid $j$ ka naya mean $=\tfrac{\text{(purana sum)}-x_{\text{gaya}}+\sum_{\text{aaye}}x}{n_j'}$. Do points aa sakte hain, ek ja sakta hai.</p>
+<p><b>Step 2:</b> Is expression ko purane mean $\mu_j$ ke barabar rakhna ek chhoti si equation hai (jaise $y+z-x=\mu_j$ jab $n_j'=n_j+1$); kuch values ke liye woh hold karti hai. Matlab "guaranteed" ka koi general saboot nahi ban sakta.</p>
+<p><b>Step 3:</b> To statement 1 hamesha sach nahi ⇒ ✗.</p></div>
+<div class="method" data-label="M2 Counterexample"><div class="mh">M2 · Counterexample (Example 6)</div>
+<p><b>Step 1:</b> $x=\{-1,2,2,3,6\}$, $K=2&lt;n=5$; $z^t=(1,2,2,1,2)$ ⇒ $\mu^t=(1,\tfrac{10}3)$.</p>
+<p><b>Step 2:</b> Assign: $z^{t+1}=(1,1,1,2,2)$ — point $3$ cluster 1 se 2 mein gaya.</p>
+<p><b>Step 3:</b> $\mu_1^{t+1}=\tfrac{-1+2+2}3=1=\mu_1^t$ — centroid nahi badla ⇒ statement 1 ✗.</p></div>
+</div>
+<p><b>Statement 2 — "configuration kabhi revisit nahi hoti"</b></p>
+<div class="methods">
+<div class="method" data-label="M1 Proof"><div class="mh">M1 · Monotone + finite</div>
+<p><b>Step 1:</b> Har partition $z$ ke saath ek $F(z,\mu(z))$ (apne means ke saath) judi hai. L8 ke hisaab se Lloyd ka har step is value ko ghatata ya wahi rakhta hai.</p>
+<p><b>Step 2:</b> Partition badalne par kam se kam ek point ne strictly paas wala centre chuna ⇒ $F$ strictly ghata (tie-break: point tabhi hilta hai jab strict paas ho ya fixed rule se). Isliye $F$ ke values strictly ghatti hui sequence banate hain jab tak partition badle.</p>
+<p><b>Step 3:</b> Agar koi partition purani wali par laut aaye ($z^s=z^t$, $s&gt;t$ beech mein badal ke) to $F$ wapis usi value par aati, jo strictly ghatti sequence mein nahi ho sakta ⇒ <b>sach ✓</b>.</p></div>
+<div class="method" data-label="M2 Witness"><div class="mh">M2 · Numeric witness</div>
+<p><b>Step 1:</b> Example 2 ki sequence: partitions $(1,1,2,2,2)\to(1,1,1,2,2)\to(1,1,1,2,2)$ (ruk gaye).</p>
+<p><b>Step 2:</b> $F$: $22.667\to8.5\to8.5$. Koi purana partition badal ke wapis nahi aaya; jo repeat hua woh "ruka hua" tha.</p>
+<p><b>Step 3:</b> Witness sirf consistent hai, saboot M1 hai ⇒ ✓.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Theory</td><td>Fast</td><td>Medium</td><td>Low</td><td>"Always" ke liye saboot</td></tr>
+<tr><td>M2 Counterexample</td><td>Medium (example dhoondhna)</td><td>Medium</td><td>Low — ek asli example kaafi</td><td>"Always" ko todne ke liye</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> yaad karo "monotone ⇒ no revisit" (10 sec). 🏆 <b>BEST EXAM METHOD:</b> statement 2 par M1, statement 1 par ek 1-D counterexample; trade-off: counterexample dhoondhna padhne se zyada samay le sakta hai — isliye Example 6 yaad rakho.</p>
+<h4>5. ✅ Verification</h4>
+<ul><li>Code: Example 6 reproduce hua — $z^{t+1}=(1,1,1,2,2)$, $\mu^{t+1}=(1,4.5)$, $\mu_1^t=\mu_1^{t+1}=1$ ✓. Random 1-D search ne aise aur bhi examples diye ✓.</li><li>Key option 2 ✓.</li></ul>
+<h4>6. ⚠️ Traps</h4>
+<ul><li>"Point gaya ⇒ centroid badla" mantiq mein sahi lagta hai par galat.</li><li>Statement 2 ko "converge hoga hi" se milana — yeh "no revisit" hai, convergence ke saath jura par alag (aur "global optimum" se bilkul alag).</li><li>Tie-break assumption bhool jaana: statement 2 tab sach jab tie par fixed rule ho.</li></ul>
+<p><b>Recognition rule:</b> "always true" + K-means ⇒ monotone aur finite wale statements sach; "strictly", "guaranteed", "global optimum" wale zyada tar jhoot.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>Do consecutive iterations mein $F$ barabar hai par kuch point ne cluster badla. Kya ho sakta hai?</p>
+<details class="reveal"><summary>Show answer</summary><p>Aisa tab hi ho sakta hai jab kisi point ke liye do centre barabar doori par hon (tie) aur tie-break ne use ek se doosre mein bhej diya. Agar rule "sirf strictly paas hone par jao" hai to $F$ barabar ⇒ koi point nahi hila. (Example 3 mein dono tie-breaks $F=22$ par pahunchte hain par alag final means par.)</p></details>
+</details>
+</section>
+
+<section data-track="mem42">
+<h3>📌 Memory card — 4.2</h3>
+<div class="box em">
+<ul>
+<li><b>Core model:</b> update = abhi ke members ka mean. Centre ki memory nahi; membership hi sab kuch.</li>
+<li><b>Backbone chain:</b> naya point/purane means → nearest cluster → L10 update → verify pass → converge.</li>
+<li><b>Formulas:</b> $\mu=\frac1{n_k}\sum x$ · judne par $\mu+\frac{x-\mu}{n+1}$ · hatne par $\frac{n\mu-x}{n-1}$ · SSE judne par $+\frac n{n+1}\|x-\mu\|^2$.</li>
+<li><b>Top 3 traps:</b> (1) ek pass ke baad ruk jana bina verify; (2) "point gaya ⇒ centre badla"; (3) purane members se mean.</li>
+<li><b>Trigger bank:</b> "updated centroid" · "new point introduced" · "after convergence" · "always true… between iterations".</li>
+<li><b>Method selector:</b> mean ke liye sums; naya point ke liye L10; convergence ke liye iterate ya guess+verify; "always" ke liye proof/counterexample.</li>
+<li><b>Spaced review (due):</b> 2026-11-13 P4/P5 · 2026-11-15 P6/P7/P8 · 2026-11-19 4.2 memory card · 2026-12-03 4.1 + 4.2.</li>
+</ul>
+</div>
+</section>
+
+<section data-track="eib42">
+<h3>✍️ Explain-it-back — 4.2 (chat mein jawab do)</h3>
+<div class="try"><p>Chat mein 3–5 lines: (a) naya point judne par centre kitna khiskta hai aur kyun $\tfrac1{n+1}$? (b) "point cluster chhodta hai par centroid wahi rehta hai" — ek example do (apna banao). (c) Tie par Lloyd ke do alag fixed points kaise ho sakte hain?</p>
+<p class="note">Format: <code>Answer: … | Confidence: S/U/G | Reason: …</code></p></div>
+</section>
+
+<!-- =========================================================== -->
+<h2>🧩 Checkpoint 3 — mixed test (T1 → T4)</h2>
+
+<section data-track="cp3">
+<p class="lead">Checkpoint 1 (B6) T2 par tha, checkpoint 2 (B12) T2 ka end. Yeh checkpoint 3 T1–T4 ke mix se hai — T3 (kernels) ab complete hai aur T4 (K-means) ke do subtopics ho chuke hain. 10 sawaal, ~25 minute, notes band. <b>Answers hidden</b> — pehle khud karo, phir chat mein bhejo (format neeche).</p>
+<div class="box">
+<p><b>Chat mein jawab ka format (sirf apni attempt bhejne par grading hogi):</b> <code>Q#: Answer: … | Confidence: S/U/G | Reason: …</code> — S = sure, U = unsure, G = guess. Main answer aur reasoning alag-alag grade karunga; "Correct + U/G" par mastery credit nahi milta, "Incorrect + S" par pehle misconception theek karenge.</p>
+</div>
+<p class="muted">Sab sawaal <span class="tag t-add">[ADDED]</span> hain (PYQ nahi); numerical answers code-verified.</p>
+
+<div class="try"><p class="ttl">M1 · T1 (B3)</p><p>$x=(3,4)$ ko line $w=(1,2)$ par project karo. Scalar projection aur residual ka $\|r\|^2$?</p>
+<details class="reveal"><summary>Show answer</summary><p>$x^Tw=3+8=11$, $\|w\|=\sqrt5$ ⇒ scalar projection $=\tfrac{11}{\sqrt5}=\mathbf{4.919}$. $\|r\|^2=\|x\|^2-(\text{proj})^2=25-\tfrac{121}5=\mathbf{0.8}$ (code ✓).</p></details></div>
+
+<div class="try"><p class="ttl">M2 · T2 (B10)</p><p>$\mathbb R^4$ mein centred data ke covariance ke eigenvalues $12,6,2,0$. Top-2 PCs kitna % variance pakadte hain? $\ge95\%$ ke liye kam se kam kitne PCs?</p>
+<details class="reveal"><summary>Show answer</summary><p>Total $20$. Top-2: $\tfrac{18}{20}=\mathbf{90\%}$. Cumulative: $60\%,\ 90\%,\ 100\%$ ⇒ $\ge95\%$ ke liye $\mathbf{k=3}$.</p></details></div>
+
+<div class="try"><p class="ttl">M3 · T2 (B11)</p><p>$n=40$ points $\mathbb R^{800}$ mein; PCA ke baad residues $3$ rounds mein zero ho jaate hain. Poora dataset store karne ke liye kitne numbers?</p>
+<details class="reveal"><summary>Show answer</summary><p>$k(d+n)=3\times(800+40)=\mathbf{2520}$ ($k$ PC vectors $\times d$ plus $k\times n$ coefficients; yahi formula PYQ 2025 July Q11 ka $5(1000+50)=5250$ deta hai).</p></details></div>
+
+<div class="try"><p class="ttl">M4 · T3 (B13)</p><p>$k(x,y)=(x^Ty+1)^2$ on $\mathbb R^2$. $x=(1,2)$, $y=(2,-1)$ par $k$? Is kernel ka feature space kitni dimension ka hai?</p>
+<details class="reveal"><summary>Show answer</summary><p>$x^Ty=2-2=0$ ⇒ $k=(0+1)^2=\mathbf1$. Feature dimension $\binom{2+2}2=\mathbf6$ (monomials $1,x_1,x_2,x_1^2,x_1x_2,x_2^2$ ke scaled versions).</p></details></div>
+
+<div class="try"><p class="ttl">M5 · T3 (B14)</p><p>Kya $\begin{bmatrix}1&amp;2\\2&amp;3\end{bmatrix}$ ek valid Gram matrix ho sakta hai? Kaaran.</p>
+<details class="reveal"><summary>Show answer</summary><p><b>Nahi.</b> $\det=3-4=-1&lt;0$; eigenvalues $\approx4.236$ aur $-0.236$ (code) ⇒ PSD nahi. Ya: $b^2=4&gt;ac=3$ (Cauchy–Schwarz toot gaya).</p></details></div>
+
+<div class="try"><p class="ttl">M6 · T3 (B16)</p><p>Kernel PCA, $n=60$. Centred kernel matrix ka sabse bada eigenvalue $30$. Transformed data ke covariance ka sabse bada eigenvalue?</p>
+<details class="reveal"><summary>Show answer</summary><p>$\lambda/n=30/60=\mathbf{0.5}$.</p></details></div>
+
+<div class="try"><p class="ttl">M7 · T4 (4.1)</p><p>Points $(0,0),(0,4),(6,0),(6,4)$, $K=2$, $\mu^0=(0,0),(6,0)$. (a) Assign ke baad $F(z,\mu^0)$? (b) Update ke baad $F(z,\mu^1)$ aur final centres? (c) Gap identity se (a) aur (b) ka rishta check karo.</p>
+<details class="reveal"><summary>Show answer</summary><p>(a) $z=(1,1,2,2)$; $F=0+16+0+16=\mathbf{32}$. (b) $\mu^1=(0,2),(6,2)$; $F=4\times4=\mathbf{16}$; final centres $(0,2),(6,2)$ (agla pass kuch nahi badalta). (c) $32-16=16=2\|(0,0)-(0,2)\|^2+2\|(6,0)-(6,2)\|^2=2\cdot4+2\cdot4$ ✓ (code ✓).</p></details></div>
+
+<div class="try"><p class="ttl">M8 · T4 (4.1)</p><p>$v^*=\arg\min_v\sum_i\|2x_i-5v\|^2$ ko mean $\mu$ ke terms mein likho.</p>
+<details class="reveal"><summary>Show answer</summary><p>$a=2$, $b=5$ ⇒ $v^*=\tfrac ab\mu=\mathbf{\tfrac25\mu}$ (L9).</p></details></div>
+
+<div class="try"><p class="ttl">M9 · T4 (4.1)</p><p>Ek iteration mein $F(z^t,\mu^t)=100$ aur $F(z^{t+1},\mu^t)=90$. In mein se $\{95,\ 85,\ 100\}$ kaun sa $F(z^{t+1},\mu^{t+1})$ ho sakta hai?</p>
+<details class="reveal"><summary>Show answer</summary><p>L8: $F(z^{t+1},\mu^{t+1})\le F(z^{t+1},\mu^t)=90$ ⇒ sirf $\mathbf{85}$ (95 aur 100 $&gt;90$).</p></details></div>
+
+<div class="try"><p class="ttl">M10 · T4 (4.2)</p><p>Sach ya jhoot (reason ke saath): "Agar K-means ke ek iteration mein koi point cluster $j$ chhod deta hai, to cluster $j$ ka centroid zaroor badalta hai."</p>
+<details class="reveal"><summary>Show answer</summary><p><b>Jhoot.</b> Counterexample: $x=\{-1,2,2,3,6\}$, $z^t=(1,2,2,1,2)$, $\mu^t=(1,\tfrac{10}3)$; assign ke baad $z^{t+1}=(1,1,1,2,2)$ — point $3$ cluster 1 se gaya, par $\mu_1^{t+1}=\tfrac{-1+2+2}3=1=\mu_1^t$ (do point aaye bhi). Yahi P8 ke statement 1 ko todta hai.</p></details></div>
+
+<div class="box em">
+<p><b>Jab answers bhej do:</b> main grade karunga (answer aur reasoning alag), errors ko tag karunga ([MEMORY] / [CONCEPT] / [CALCULATION] / …) aur status update karunga. Abhi tak T4 ka status "In progress" hai — koi mastery claim nahi, kyunki tumhare chat answers abhi nahi aaye. <b>Agla build B18:</b> 4.3 (Assignment, distance, geometry — ties, convex cells, "kaun definitely same cluster mein") + 4.6 (Choosing $K$) — 8 PYQs.</p>
+</div>
+</section>

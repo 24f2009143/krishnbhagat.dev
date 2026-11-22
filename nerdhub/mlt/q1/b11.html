@@ -1,0 +1,832 @@
+<section data-track="intro">
+<p class="muted mono" style="margin:0">B11 · T2 PCA</p>
+<h1>2.5 Reconstruction, residuals, compression, storage</h1>
+<p class="lead">B10 mein dekha ki "kitne PCs rakhein" eigenvalues ke hisse se tay hota hai. B11 us decision ke <i>nateeje</i> dekhta hai: PCs kam rakhne par har point ka kya bachta hai (<b>reconstruction</b> $\hat x$), kya kho jaata hai (<b>residue</b> $r=\tilde x-\hat x$), average loss kitna hai (discarded eigenvalues ka jod), aur dataset ko store karne mein kitne numbers bachte hain (<b>compression</b>, $k(d+n)$ vs $dn$). 9 PYQ blocks, saare ek hi chain ke hisse hain: project → subtract → count.</p>
+<div class="box">
+<p><b>Is build ke PYQs <span class="tag t-src">[SRC]</span></b> — subtopic 2.5 ke saare 9 blocks (file order; 1 context block + 8 questions), total 25 marks. Numbering P1–P9 (2.5 mein kul 9 blocks).</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>#</th><th>Paper · Q</th><th>ID</th><th>Type · marks</th><th>Kya poochha</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td>P1</td><td>2023 July · Q5</td><td class="mono">640653577732</td><td>MSQ · 4</td><td>2000 points in $\mathbb R^{30}$, 4-dim subspace mein; eigenvalues, residues, reconstruction ke 4 statements</td><td>Source mein key nahi; derived 2, 3, 4 <span class="tag t-q">[?]</span></td></tr>
+<tr><td>P2</td><td>2024 July 07 · Q2</td><td class="mono">640653829504</td><td>MCQ · 2</td><td>Top-2 PCs par projection ke baad reconstruction error ka expression</td><td>Key option 1 ✓</td></tr>
+<tr><td>P3</td><td>2024 October 27 · Q5</td><td class="mono">640653995440</td><td>MSQ · 4</td><td>Line $w$ ke liye reconstruction error ke expressions</td><td>Key options 1, 2 ✓; option 3 <span class="tag t-q">[?]</span></td></tr>
+<tr><td>P4</td><td>2025 February 23 · Q8</td><td class="mono">6406531104785</td><td>SA · 3</td><td>1000 samples in $\mathbb R^{20}$, top 5 PCs; storage mein percentage decrease</td><td>Key 74–75 ✓ (74.5)</td></tr>
+<tr><td>P5</td><td>2025 July 13 · Q11</td><td class="mono">6406531302393</td><td>SA · 2</td><td>50 points in $\mathbb R^{1000}$, residues 5th round ke baad zero; kitne numbers store</td><td>Key 5250 ✓</td></tr>
+<tr><td>P6</td><td>2025 July 13 · Q12</td><td class="mono">6406531302395</td><td>Comprehension · 0</td><td>Points $(0,0),(2,1),(1,2)$, standard PCA (context; children Q13, Q14 pehle solve, Q15 = P7)</td><td>—</td></tr>
+<tr><td>P7</td><td>2025 July 13 · Q15</td><td class="mono">6406531302398</td><td>MCQ · 3</td><td>P6 ke data par PC1 par project karne ke baad residues</td><td>Key option 2 ✓</td></tr>
+<tr><td>P8</td><td>2025 October 26 · Q3</td><td class="mono">6406531527614</td><td>MSQ · 4</td><td>5000 points in $\mathbb R^{50}$, 6-dim subspace; 4 statements</td><td>Source mein key nahi; derived 2, 4 <span class="tag t-q">[?]</span></td></tr>
+<tr><td>P9</td><td>2025 October 26 · Q7</td><td class="mono">6406531527618</td><td>SA · 3</td><td>$150\times6$ centred matrix, columns ke relations; error zero kab, $k$ = ?</td><td>Key 3 ✓</td></tr>
+</tbody></table></div>
+<p><b>Bank frequency ≠ exam weightage:</b> 9 blocks sirf practice ka size hain; isse yeh nahi nikalta ki exam mein itne sawaal aayenge.</p>
+<p><b>Tags:</b> <span class="tag t-src">[SRC]</span> PYQ file se · <span class="tag t-add">[ADDED]</span> meri explanation / naya question · <span class="tag t-flag">[FLAG]</span> source error, proof ke saath · <span class="tag t-q">[?]</span> unreadable / missing / ambiguous. <b>PACER:</b> Procedural · Analogous · Conceptual · Evidence · Reference. Convention $C=\tfrac1n\sum_i\tilde x_i\tilde x_i^T$ ($\tilde x$ = centred point). Source ke saare answered keys (P2, P3, P4, P5, P7, P9) mere code-check se match karte hain; koi <span class="tag t-flag">[FLAG]</span> nahi. Do blocks (P1, P8) mein source ne answer mark nahi kiya, wahan answer derived hai aur ek wording ambiguity <span class="tag t-q">[?]</span> hai (neeche proof ke saath); P3 ke option 3 ka text bhi <span class="tag t-q">[?]</span> hai.</p>
+</div>
+</section>
+
+<section data-track="warmup">
+<h2>🔁 Recall warm-up — B3 + B8 + B10 <span class="tag t-add">[ADDED]</span></h2>
+<p>3 chhote sawaal, notes dekhe bina. (Spaced review: T1 aur B4–B7 aaj 2026-11-11 ko due hain; B8–B10 kal 2026-11-12 ko.)</p>
+<ol>
+<li><p><b>(B3 / T1 1.2)</b> $x=(3,4)$, line $w=(1,1)$. Projection ki length aur reconstruction error ka norm $\|r\|$?</p>
+<details class="reveal"><summary>Show answer</summary><p>$\hat w=\tfrac1{\sqrt2}(1,1)$. Length $=\tfrac{3+4}{\sqrt2}$ $=\tfrac7{\sqrt2}$ $=\mathbf{4.950}$. $\|r\|^2=\|x\|^2-z^2$ $=25-24.5$ $=0.5$ ⇒ $\|r\|=\mathbf{0.707}$ (source 640653995439 ka accepted range 0.5–0.9 ✓; code-verified). Yehi aaj ki pehli seedhi (Pythagoras) ka chhota roop hai.</p></details></li>
+<li><p><b>(B8 G6)</b> B4 dataset ka $w_1=\tfrac1{\sqrt2}(1,1)$, centred point $\tilde x=(1,-1)$ (original point $(4,0)$, $\mu=(3,1)$). $z_1$ aur $\hat x=W_1W_1^T\tilde x$?</p>
+<details class="reveal"><summary>Show answer</summary><p>$z_1=\tfrac{1-1}{\sqrt2}=\mathbf0$ ⇒ $\hat x=\mathbf{(0,0)}$ (centred coordinates mein). Is point ka poora $\tilde x=(1,-1)$ residue ban jaata hai: $r=(1,-1)$, $\|r\|^2=2$ (code-verified). Original coordinates mein $\hat x+\mu=(3,1)$.</p></details></li>
+<li><p><b>(B10 J3 + J6)</b> $C$ ke eigenvalues $7,\,2,\,0.6,\,0.3,\,0.1$. 95% ke liye smallest $k$, aur us $k$ par average squared reconstruction error?</p>
+<details class="reveal"><summary>Show answer</summary><p>Total $=10$. CEV (percent) $=70,\ 90,\ 96,\ 99,\ 100$ ⇒ $k=\mathbf3$ ($90<95\le96$). Discarded $=0.3+0.1=\mathbf{0.4}$ ($=4\%$ of $10$, $=(1-0.96)\times10$) — yeh aaj ka L4 ka pehla jhalak hai (code-verified).</p></details></li>
+</ol>
+</section>
+
+<!-- =========================================================== -->
+<h2>📐 2.5 Reconstruction, residuals, compression, storage</h2>
+
+<section data-track="pretest">
+<h3>❓ Pretest — cold attempt (solution neeche 🎯 P4 mein)</h3>
+<div class="try">
+<p class="mono" style="margin:0 0 6px">2025 February 23 · Original Q8 · ID <code>6406531104785</code> · SA · 3 marks · <span class="tag t-src">[SRC]</span></p>
+<p>Consider a dataset with 1000 samples, where each sample belongs to $\mathbb R^{20}$. PCA is run and the top 5 principal components are retained, while the rest are discarded. If it takes one unit of memory to store a real number, find the percentage decrease in storage space of the dataset by moving to its compressed representation. Enter the answer correct to two decimal places.</p>
+<p class="note">2 minute, bina neeche padhe. Answer + Confidence S / U / G note karo. Sochne wali baat: compressed form mein <i>kya-kya</i> store karna padta hai?</p>
+</div>
+</section>
+
+<section data-track="position">
+<h3>🧭 Position — yeh kahan baitha hai</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Peeche (prerequisites)</th><th>Yeh subtopic</th><th>Aage (kya unlock hota hai)</th></tr></thead>
+<tbody><tr>
+<td>B3: projection, residue $r=x-\hat x$, $\|r\|^2=\|x\|^2-z^2$ · B8: scores $z_j$, G4 Pythagoras, G6 $\hat x=W_KW_K^T\tilde x$ · B10: J1–J6 (total variance, CEV, rank $\le n-1$, error $=$ tail eigenvalues)</td>
+<td>Reconstruction $\hat x$, residue $r$, average error $=\sum_{j&gt;k}\lambda_j$, "rounds" (residue zero kab), rank se $k$, storage $k(d+n)$ aur percentage saving</td>
+<td>B12: dual PCA mein wahi storage/reconstruction $K=X^TX$ se · B16: kernel PCA mein reconstruction ki mushkil (pre-image) · B26: regression ke MSE se compare (squared error ka wahi form)</td>
+</tr></tbody></table></div>
+</section>
+
+<section data-track="intuition">
+<h3>🧠 Intuition — plain language</h3>
+<ul>
+<li><b>Compression = dataset ko kam numbers mein likhna.</b> Har point ko poore $d$ numbers ke badle sirf $k$ scores ($z_1,\dots,z_k$) mein likho, aur ek baar sab ke liye $k$ PC directions ($d\times k$) store karo. Wapas banane ke liye: $\hat x=\sum_{j\le k}z_jw_j$.</li>
+<li><b>Residue = jo compression mein kho gaya.</b> $r=\tilde x-\hat x$ wahi hissa hai jo discarded PCs ki directions mein tha: $r=\sum_{j&gt;k}z_jw_j$. Yeh kept PCs ke <i>perpendicular</i> hota hai.</li>
+<li><b>Average loss discarded eigenvalues ka jod hai.</b> $\tfrac1n\sum\|r_i\|^2=\sum_{j&gt;k}\lambda_j$ — B10 ka tail-budget yahi hai. Bada eigenvalue rakho to loss kam.</li>
+<li><b>"Rounds" = ek ek line nikalte jao.</b> Round 1: best line, projection subtract. Round 2: bache hue residues par best line. Jab residues zero ho jayein, kaam khatam; jitne round lage utna hi rank hai.</li>
+<li><b>Storage ka sawaal pure counting hai.</b> Raw: $dn$ numbers. Compressed: $kd$ (directions) $+\;kn$ (scores) $=k(d+n)$. Fayda tabhi jab $k(d+n)&lt;dn$.</li>
+<li><b>Data jab pehle se low-dimensional ho</b> (4-dim subspace mein 30-dim points): sirf 4 eigenvalues nonzero, 4 rounds ke baad residue zero, aur 4 PCs se <i>poora</i> dataset reconstruct hota hai — lossless compression.</li>
+</ul>
+<div class="box em">
+<p><b>Analogy <span class="tag t-add">[ADDED]</span> — passport photo ka thumbnail + recipe.</b> Poori photo ($d$ pixels) store karne ki jagah ek chhota "recipe": kuch standard patterns ($k$ PC directions, sab photos ke liye ek baar) aur har photo ke liye kuch weights ($k$ scores). Wapas banane par photo thodi dhundli aati hai; dhundlapan (residue) wahi hai jo discarded patterns mein tha.</p>
+<p><b>Analogy kahan tootti hai:</b> (1) Photo thumbnail mein pixels ghatate hain; PCA mein <i>coordinates ghatte</i> hain, points ka count wahi rehta hai ($n$). (2) Standard patterns fixed library se nahi, <i>data se</i> seekhe jaate hain, isliye woh bhi store karne padte hain ($kd$). (3) Thumbnail ka dhundlapan har jagah barabar hota hai; PCA mein loss sirf kam-variance directions mein hota hai.</p>
+</div>
+<div class="box red">
+<p><b>Yeh kya NAHI hai:</b></p>
+<ul>
+<li>"Storage $=kn$" ya "$=kd$" — nahi. Dono chahiye: $k(d+n)$ (directions + scores).</li>
+<li>"Reconstruction error = $x-\hat x$ ka alag-alag line ke errors ka jod" — nahi. Ek saath $k$ PCs par project karo (P2 ka option 2 yahin galat hai).</li>
+<li>"Reconstruction error = captured variance" — nahi. Captured $\sum_{j\le k}\lambda_j$ hai, error $\sum_{j&gt;k}\lambda_j$ hai; dono mil kar $V_{\text{tot}}$.</li>
+<li>"$k$ PCs rakhne se hamesha storage kam hoga" — nahi. $k\ge\tfrac{dn}{d+n}$ par saving $0$ ya negative ho jaati hai.</li>
+<li>"Reconstruction ka matlab original wapas mil gaya" — sirf $k\ge$ rank par (residue zero); warna approximation. Aur original coordinates mein $\mu$ wapas jodna padta hai.</li>
+</ul>
+</div>
+</section>
+
+<section data-track="visual">
+<h3>📊 Visual intuition</h3>
+<figure class="viz">
+  <p class="vt">Interactive: ek point ka projection aur residue (P7 ka centred point) <span class="tag t-add">[ADDED]</span></p>
+  <p class="vs">x = (1, 0), line w = (1, 1) (P7 ka x₂ − μ aur PC1). Sliders se x aur w badlo: p = projection, r = x − p = residue. Dekho ki r hamesha w ke perpendicular hai aur ‖x‖² = (xᵀŵ)² + ‖r‖².</p>
+  <div data-widget="proj2d" data-x="1,0" data-w="1,1"></div>
+  <figcaption><b>Interpretation:</b> yahan z = 1/√2 = 0.707, p = (0.5, 0.5), r = (0.5, −0.5), ‖r‖² = 0.5. Pythagoras: 0.5 + 0.5 = 1 = ‖x‖². P7 ke option 2 ka x₂′ = (0.5, −0.5) bilkul yahi hai.</figcaption>
+</figure>
+
+<figure class="viz">
+  <p class="vt">B4 dataset: har point ka squared residue jab sirf PC1 rakhte hain (k = 1) <span class="tag t-add">[ADDED]</span></p>
+  <p class="vs">Points (5,3), (1,−1), (4,0), (2,2); PC1 = (1,1)/√2. Do points PC1 line par hain (residue 0), do points par residue (1,−1) aur (−1,1): ‖r‖² = 2 har ek.</p>
+  <div class="chart" data-chart='{"type":"hbar","labels":["(5, 3)","(1, -1)","(4, 0)","(2, 2)"],"values":[0,0,2,2],"unit":"","labelWidth":90,"tips":["residue (0, 0)","residue (0, 0)","residue (1, -1), score z1 = 0","residue (-1, 1), score z1 = 0"],"aria":"Squared reconstruction residue of each of the four B4 points when only the first principal component is kept"}'></div>
+  <figcaption><b>Interpretation:</b> average ‖r‖² = (0 + 0 + 2 + 2)/4 = 1 = λ₂, yaani discarded eigenvalue. Yahi L4 hai. Jinke scores z₁ = 0 hain unka poora point residue ban jaata hai.</figcaption>
+  <details class="table-view"><summary>Table view</summary><div class="tbl-wrap"><table><thead><tr><th>Point</th><th class="num">Score z₁</th><th>x̂ (centred)</th><th>Residue r</th><th class="num">‖r‖²</th></tr></thead><tbody>
+<tr><td>(5, 3)</td><td class="num">2.83</td><td>(2, 2)</td><td>(0, 0)</td><td class="num">0</td></tr>
+<tr><td>(1, −1)</td><td class="num">−2.83</td><td>(−2, −2)</td><td>(0, 0)</td><td class="num">0</td></tr>
+<tr><td>(4, 0)</td><td class="num">0</td><td>(0, 0)</td><td>(1, −1)</td><td class="num">2</td></tr>
+<tr><td>(2, 2)</td><td class="num">0</td><td>(0, 0)</td><td>(−1, 1)</td><td class="num">2</td></tr>
+</tbody></table></div></details>
+</figure>
+
+<figure class="viz">
+  <p class="vt">B10 P1 spectrum: k badhane par average reconstruction error (= discarded eigenvalues ka jod) <span class="tag t-src">[SRC]</span> eigenvalues, <span class="tag t-add">[ADDED]</span> errors</p>
+  <p class="vs">Eigenvalues 1.7, 1.4, 0.25, 0.20, 0.005 (total 3.555). Bar = k ke baad bacha hua tail: k=1 ke baad 1.4+0.25+0.20+0.005 = 1.855, aur aise hi aage.</p>
+  <div class="chart" data-chart='{"type":"vbar","labels":["k = 1","k = 2","k = 3","k = 4","k = 5"],"values":[1.855,0.455,0.205,0.005,0],"unit":"","tips":["1.4 + 0.25 + 0.20 + 0.005","0.25 + 0.20 + 0.005","0.20 + 0.005 (5.77% of 3.555)","0.005 (0.14% of 3.555)","kuch nahi bacha: sab 5 PCs rakhe"],"aria":"Average squared reconstruction error as the number of kept principal components k goes from 1 to 5"}'></div>
+  <figcaption><b>Interpretation:</b> error k ke saath girta hai aur k = d par 0. k = 3 par 0.205 (5.77% — 95% target se thoda bahar), k = 4 par 0.005. Jaisa B10 mein dekha tha, par ab hum isse seedha "error" bolte hain.</figcaption>
+  <details class="table-view"><summary>Table view</summary><div class="tbl-wrap"><table><thead><tr><th>k</th><th class="num">Error (tail sum)</th><th class="num">% of 3.555</th></tr></thead><tbody>
+<tr><td>1</td><td class="num">1.855</td><td class="num">52.18</td></tr>
+<tr><td>2</td><td class="num">0.455</td><td class="num">12.80</td></tr>
+<tr><td>3</td><td class="num">0.205</td><td class="num">5.77</td></tr>
+<tr><td>4</td><td class="num">0.005</td><td class="num">0.14</td></tr>
+<tr><td>5</td><td class="num">0</td><td class="num">0</td></tr>
+</tbody></table></div></details>
+</figure>
+
+<figure class="viz">
+  <p class="vt">Storage mein percentage decrease, k ke saath (d = 20, n = 1000) <span class="tag t-add">[ADDED]</span></p>
+  <p class="vs">Raw = 20 000 numbers. Compressed = k × (20 + 1000) = 1020 k. Decrease % = 100 × (1 − 1020k / 20 000). k = 5 par 74.5% — P4 ka answer.</p>
+  <div class="chart" data-chart='{"type":"vbar","labels":["k = 1","k = 2","k = 5","k = 10","k = 15","k = 19"],"values":[94.9,89.8,74.5,49.0,23.5,3.1],"unit":"%","tips":["1020 / 20000 stored","2040 / 20000 stored","5100 / 20000 stored (P4)","10200 / 20000 stored","15300 / 20000 stored","19380 / 20000 stored; k = 20 par saving negative (-2.0%)"],"aria":"Percentage decrease in storage for k equals 1, 2, 5, 10, 15 and 19 kept components with d equals 20 and n equals 1000"}'></div>
+  <figcaption><b>Interpretation:</b> saving k ke saath seedhi line mein ghatti hai (har extra PC 1020 numbers jodta hai). Break-even k = 20 000 / 1020 = 19.6: k = 19 par bhi thodi bachat (3.1%), k = 20 par storage badh jaata hai (−2.0%). Is liye d = 20 ke liye "saari PCs rakho" compression nahi hai.</figcaption>
+  <details class="table-view"><summary>Table view</summary><div class="tbl-wrap"><table><thead><tr><th>k</th><th class="num">Stored k(d+n)</th><th class="num">Decrease %</th></tr></thead><tbody>
+<tr><td>1</td><td class="num">1020</td><td class="num">94.9</td></tr>
+<tr><td>2</td><td class="num">2040</td><td class="num">89.8</td></tr>
+<tr><td>5</td><td class="num">5100</td><td class="num">74.5</td></tr>
+<tr><td>10</td><td class="num">10200</td><td class="num">49.0</td></tr>
+<tr><td>15</td><td class="num">15300</td><td class="num">23.5</td></tr>
+<tr><td>19</td><td class="num">19380</td><td class="num">3.1</td></tr>
+<tr><td>20</td><td class="num">20400</td><td class="num">−2.0</td></tr>
+</tbody></table></div></details>
+</figure>
+</section>
+<section data-track="formal">
+<h3>📖 Formal version — Formula Protocol</h3>
+$$\text{(L1)}\ \ \hat x=W_kW_k^T\tilde x=\sum_{j=1}^{k}z_j\,w_j,\qquad z_j=w_j^T\tilde x$$
+$$\text{(L2)}\ \ r=\tilde x-\hat x=\sum_{j&gt;k}z_j\,w_j,\qquad r\perp w_1,\dots,w_k$$
+$$\text{(L3)}\ \ \|r\|^2=\|\tilde x\|^2-\sum_{j\le k}z_j^2=\sum_{j&gt;k}z_j^2$$
+$$\text{(L4)}\ \ E_k=\frac1n\sum_{i=1}^{n}\|r_i\|^2=\sum_{j&gt;k}\lambda_j=\bigl(1-\text{CEV}(k)\bigr)V_{\text{tot}}$$
+$$\text{(L5)}\ \ E_k=0\iff k\ge\operatorname{rank}(C)\le\min(d,\,n-1)$$
+$$\text{(L6)}\ \ \text{stored}=k(d+n)\ \ \text{vs raw}\ dn,\qquad \text{decrease}\,\%=100\Bigl(1-\frac{k(d+n)}{dn}\Bigr)$$
+$$\text{(L7)}\ \ E(w)=\frac1n\sum_{i}\|\tilde x_i-(\tilde x_i^Tw)w\|^2=V_{\text{tot}}-w^TCw\quad(\|w\|=1)$$
+<p><b>Symbols aur assumptions:</b></p>
+<ul>
+<li>$\tilde x=x-\mu$ — centred point ($\mu$ = data ka mean). Is page mein data $d\times n$ matrix $X$ ke columns hain ($d$ features, $n$ points) jab tak P9 jaisa $n\times d$ (rows = samples) na likha ho.</li>
+<li>$W_k=[w_1\ \cdots\ w_k]\in\mathbb R^{d\times k}$ — top-$k$ PCs, orthonormal columns ($W_k^TW_k=I_k$, B7). $z_j$ — score (B8 G1).</li>
+<li>$\hat x$ — reconstruction (centred coordinates mein); original coordinates mein $\hat x+\mu$. $r$ — residue. $\|\cdot\|$ — Euclidean norm.</li>
+<li>$E_k$ — average squared reconstruction error, $1/n$ convention. $\lambda_j$, $V_{\text{tot}}$, CEV — B10 (J1–J3). $\sum_{j&gt;k}$ — $j=k+1,\dots,d$.</li>
+<li>L5: rank $C=$ nonzero eigenvalues ki ginti (B10 J5); centred data ke liye $\le n-1$. "Round" = ek PC nikalna aur uska projection subtract karna.</li>
+<li>L6: har real number ek unit memory ($W_k$ ke $dk$ numbers + $n$ scores-vectors ke $kn$ numbers). Mean $\mu$ ($d$ numbers) aur $W_k$ ki orthonormality se bachi constraints gini nahi ja rahi (Deeper 5).</li>
+<li>L7: single unit vector $w$ (line through origin), centred data; $V_{\text{tot}}=\tfrac1n\sum\|\tilde x_i\|^2$.</li>
+</ul>
+<p><b>Words mein:</b> L1 — point ko $k$ PCs par project karke wapas banao. L2 — jo bacha woh discarded directions ka hissa hai, kept directions ke perpendicular. L3 — residue ki squared length $=$ poori length$^2$ minus kept scores$^2$. L4 — sab points ka average loss $=$ discarded eigenvalues ka jod $=$ (kho gaya hissa) $\times$ total variance. L5 — loss zero tabhi jab sab nonzero eigenvalues rakh liye (rank tak). L6 — directions $+$ scores gino, raw se ghatao. L7 — ek line ke liye error $=$ total $-$ us line par variance.</p>
+<p><b>Notice that…</b> (1) L3 se L4 ek average ka fark hai: $\tfrac1n\sum_iz_{ij}^2=\lambda_j$ (B8 G5). (2) L2 mein $r$ ek <i>vector</i> hai, L3–L4 mein scalar (squared length). "Residues" maange to vector, "error" maange to scalar. (3) L6 mein $k$ sirf ek baar aata hai aur $d+n$ <i>jod</i> mein hai, product mein nahi; $dn$ raw hai. (4) L7 L3 ka $k=1$ wala, general line wala roop hai; $w=$ PC1 par minimum $V_{\text{tot}}-\lambda_1$.</p>
+<div class="tbl-wrap"><table><thead><tr><th>Commonly confused</th><th>Residue $r$</th><th>Error $\|r\|^2$ / $E_k$</th><th>Captured $\sum_{j\le k}\lambda_j$</th><th>Reconstruction $\hat x$</th></tr></thead><tbody>
+<tr><td>Type</td><td>Vector ($\in\mathbb R^d$)</td><td>Scalar, $\ge0$</td><td>Scalar variance</td><td>Vector ($\in\mathbb R^d$)</td></tr>
+<tr><td>Kahan rehta hai</td><td>Discarded PCs ki span mein</td><td>Discarded eigenvalues ka jod</td><td>Kept PCs par variance</td><td>Kept PCs ki span mein</td></tr>
+<tr><td>$k=d$ ya $k\ge$ rank par</td><td>$0$</td><td>$0$</td><td>$V_{\text{tot}}$</td><td>$=\tilde x$</td></tr>
+<tr><td>Source ke options mein</td><td>P7 ("residues")</td><td>P2, P3 ("reconstruction error")</td><td>P2 option 3, P8 option 4</td><td>P1 option 4</td></tr>
+</tbody></table></div>
+<p><b>Small worked example <span class="tag t-add">[ADDED]</span>:</b> B4 dataset, $\lambda=(4,1)$, $k=1$. $V_{\text{tot}}=5$. L4: $E_1=\lambda_2=1$ $\;(=0.2\times5)$. Seedha check: residues $(0,0),(0,0),(1,-1),(-1,1)$ ⇒ $\|r\|^2=0,0,2,2$ ⇒ average $1$ ✓. Storage ($d=2,\ n=4,\ k=1$): $1\times(2+4)=6$ vs raw $8$ ⇒ $25\%$ decrease (L6; code-verified).</p>
+<div class="box em"><p><b>Important insight:</b> reconstruction error aur explained variance ek hi sikke ke do pehlu hain: $V_{\text{tot}}=\underbrace{\sum_{j\le k}\lambda_j}_{\text{captured}}+\underbrace{\sum_{j&gt;k}\lambda_j}_{\text{error}}$. Isliye "error minimise karo" aur "variance maximise karo" ek hi optimisation hai (L7, Deeper 2).</p>
+<p><b>This is why…</b> PYQs mein "reconstruction error" ke sawaal ya to tail eigenvalues se, ya Pythagoras se, ya storage count se hal hote hain — kabhi data ke har point ka lamba calculation nahi chahiye.</p></div>
+</section>
+
+<section data-track="how">
+<h3>⚙️ How it works — numbered mechanism</h3>
+<ol>
+<li><b>Orientation padho:</b> $X$ ka shape $d\times n$ hai ya $n\times d$ (rows = samples)? $k$ ya "rounds" ya rank kahan se aata hai?</li>
+<li><b>Reconstruction/residue ke sawaal:</b> pehle centre karo ($\tilde x=x-\mu$), phir $z_j=w_j^T\tilde x$, $\hat x=\sum_{j\le k}z_jw_j$, $r=\tilde x-\hat x$. Original coordinates chahiye to $\hat x+\mu$.</li>
+<li><b>Dot test:</b> har residue ko $w_j$ ($j\le k$) se dot karo; $0$ hona chahiye. Options eliminate karne ka sabse tez tareeka (P7 M3).</li>
+<li><b>Ek point ka error:</b> $\|r\|^2=\|\tilde x\|^2-\sum_{j\le k}z_j^2$ (L3); residue vector banana zaroori nahi.</li>
+<li><b>Average error:</b> eigenvalues diye hon to discarded $\lambda$'s ka jod (L4); $X^TX$ ke eigenvalues hon to $n$ se bhaago (B10 J4).</li>
+<li><b>Zero residue / rounds:</b> rank gino — independent columns/features ya nonzero eigenvalues. Rounds ki ginti $=$ rank (L5). $d$ ya $n$ ko rank mat samjho.</li>
+<li><b>Storage:</b> raw $dn$, compressed $k(d+n)$; ratio banao, $1-$ratio, $\times100$, round last mein (L6). Break-even check: $k<\tfrac{dn}{d+n}$.</li>
+<li><b>Statement/MSQ sawaal:</b> har option ko ek label do — eigenvalue count, rounds, captured variance, reconstruct, ya storage — phir uska rule lagao (P1, P8).</li>
+</ol>
+</section>
+
+<section data-track="examples">
+<h3>🧪 Worked examples</h3>
+
+<h4>Example 1 — simple: B4 dataset, $k=1$ <span class="tag t-add">[ADDED]</span></h4>
+<p>Points $(5,3),(1,-1),(4,0),(2,2)$; $\mu=(3,1)$; $w_1=\tfrac1{\sqrt2}(1,1)$. Centred: $(2,2),(-2,-2),(1,-1),(-1,1)$. Scores $z_1=(2.828,\,-2.828,\,0,\,0)$. $\hat x=(2,2),(-2,-2),(0,0),(0,0)$ ⇒ original coordinates mein $(5,3),(1,-1),(3,1),(3,1)$. Residues $(0,0),(0,0),(1,-1),(-1,1)$. Average $\|r\|^2=1=\lambda_2$ ✓ (L4; code-verified). Dhyaan do: do points exactly wapas mil gaye, do points dono $\mu=(3,1)$ par collapse ho gaye.</p>
+
+<h4>Example 2 — exam-level: storage calculation <span class="tag t-add">[ADDED]</span></h4>
+<p>$d=100$ features, $n=500$ samples, top $k=10$ PCs. Raw $=100\times500=50\,000$. Compressed $=10\times(100+500)=6\,000$ ($W$: $1000$, scores: $5000$). Decrease $=1-\tfrac{6000}{50000}=0.88$ ⇒ $\mathbf{88.00\%}$. Break-even $k<\tfrac{50000}{600}=83.3$ ⇒ $k\le83$ par bhi saving hai (code-verified).</p>
+
+<h4>Example 3 — tricky: residue discarded PC ke along hota hai <span class="tag t-add">[ADDED]</span></h4>
+<p>2024 February (B8) ke PCs: $w_1=\tfrac1{\sqrt3}(1,1,1)$, $w_2=\tfrac1{\sqrt2}(1,-1,0)$, centred point $\tilde x=(2,1,-1)$. Scores $a=\tfrac2{\sqrt3}=1.155$, $b=\tfrac1{\sqrt2}=0.707$. $\hat x=\tfrac23(1,1,1)+\tfrac12(1,-1,0)=(\tfrac76,\tfrac16,\tfrac23)$. $r=\tilde x-\hat x=(\tfrac56,\tfrac56,-\tfrac53)=\tfrac56(1,1,-2)$. $\|r\|^2=\tfrac{25+25+100}{36}=4.167$. Shortcut L3: $\|\tilde x\|^2-a^2-b^2=6-\tfrac43-\tfrac12=\tfrac{25}6=4.167$ ✓. $\mathbb R^3$ mein sirf ek direction discard hui ($w_3=\tfrac1{\sqrt6}(1,1,-2)$), isliye $r\parallel w_3$ aur $z_3^2=\tfrac{25}6$ (L2; code-verified).</p>
+
+<h4>Example 4 — non-example: "alag-alag line ke errors jodo" <span class="tag t-add">[ADDED]</span></h4>
+<p>$\mathbb R^2$ mein, $\tilde x=(3,1)$, $w_1=\tfrac1{\sqrt2}(1,1)$, $w_2=\tfrac1{\sqrt2}(-1,1)$ — do PCs $\mathbb R^2$ ko poora cover karte hain, isliye sahi reconstruction error:</p>
+$$\|\tilde x-(\tilde x^Tw_1)w_1-(\tilde x^Tw_2)w_2\|^2=\mathbf0$$
+<p>Galat tareeka:</p>
+$$\|\tilde x-(\tilde x^Tw_1)w_1\|^2+\|\tilde x-(\tilde x^Tw_2)w_2\|^2=2+8=\mathbf{10}$$
+<p>Yeh $2\|\tilde x\|^2-z_1^2-z_2^2=\|\tilde x\|^2$ ban jaata hai ($z_1^2+z_2^2=\|\tilde x\|^2$ kyunki $w_1,w_2$ poora $\mathbb R^2$ cover karte hain), yaani $\|\tilde x\|^2$ do baar gina gaya; yeh joint error nahi hai. Aur "$(x^Tw_1)^2+(x^Tw_2)^2$" bhi $10$ nikla, par woh <i>captured</i> hai, error nahi (P2; code-verified).</p>
+
+<h4>Example 5 — tricky: rank aur rounds <span class="tag t-add">[ADDED]</span></h4>
+<p>$X$ ka shape $150\times6$ (rows = samples), jo ek random $150\times3$ matrix ko random $3\times6$ matrix se guna karke banaya (columns ke beech 3 independent relations). Centred covariance $6\times6$ ke eigenvalues $12.23,\ 5.26,\ 2.29,\ 0,\ 0,\ 0$ nikle. Rank $=3$; $k=2$ par average error $=\lambda_3=2.29$ (L4); $k=3$ par $0$. Matlab: 3 rounds ke baad residues zero, chahe $d=6$ features the (code-verified).</p>
+
+<h4>Example 6 — non-example + tricky: storage jab compression nahi hota <span class="tag t-add">[ADDED]</span></h4>
+<p>(a) Galat: "storage $=kd$" ya "$=kn$". P4 ke $d=20,n=1000,k=5$ par $kd=100$ lo to $99.5\%$ decrease aata hai — scores bhool gaye. Sahi $5100$, $74.5\%$. (b) $d=n=10$: raw $100$. $k=5$: $5\times20=100$ ⇒ $0\%$ saving. $k=6$: $120$ ⇒ $-20\%$ (storage badh gaya). Break-even $k=\tfrac{dn}{d+n}=5$ (code-verified).</p>
+</section>
+
+<section data-track="deeper">
+<h3>🔬 Deeper insight (D3)</h3>
+<details class="deep"><summary>1. L2, L3: residue discarded directions mein hota hai — proof</summary>
+<p>$w_1,\dots,w_d$ ek orthonormal basis hain (B7), isliye $\tilde x=\sum_{j=1}^{d}z_jw_j$ (B8 G3). Pehle $k$ terms jod do ⇒ $\hat x$; $r=\tilde x-\hat x=\sum_{j&gt;k}z_jw_j$ (L2). Kisi $w_l$ ($l\le k$) se dot: $w_l^Tr=\sum_{j&gt;k}z_j\,w_l^Tw_j=0$ (orthonormal) ⇒ $r\perp$ kept PCs. Squared norm: $\|r\|^2=\sum_{j&gt;k}z_j^2$ (cross terms $0$); aur $\|\tilde x\|^2=\sum_{j\le k}z_j^2+\sum_{j&gt;k}z_j^2$ (G4) ⇒ L3. Example 3: $z_3^2=\tfrac{25}6$ aur $6-\tfrac43-\tfrac12=\tfrac{25}6$ ✓.</p></details>
+<details class="deep"><summary>2. L7: error minimise karna = variance maximise karna</summary>
+<p>Ek unit $w$ ke liye (L3, $k=1$):</p>
+$$\|\tilde x-(\tilde x^Tw)w\|^2=\|\tilde x\|^2-(\tilde x^Tw)^2$$
+<p>Average lo:</p>
+$$E(w)=\tfrac1n\sum\|\tilde x_i\|^2-\tfrac1n\sum(\tilde x_i^Tw)^2=V_{\text{tot}}-w^TCw$$
+<p>$V_{\text{tot}} $w$ par depend nahi karta, isliye $E$ minimum wahi $w$ jo $w^TCw$ maximum kare (PC1, $\lambda_1$). Example: points $(\pm2,0),(0,\pm1)$: $V_{\text{tot}}=2.5$; $w=(1,0)$ par $E=0.5=2.5-2$, $w=(0,1)$ par $E=2.0=2.5-0.5$ (code-verified). P3 ka option 4 ($-\tfrac1n\sum(x^Tw)^2$) $E$ ka sirf woh hissa hai jo $w$ par depend karta hai — $-w^TCw$ — isliye error ke saath ek jaisa minimiser deta hai, par error nahi hai.</p></details>
+<details class="deep"><summary>3. "Rounds": residue deflation aur rank</summary>
+<p>Round 1: $w_1$ nikalo, $r^{(1)}=\tilde x-(\tilde x^Tw_1)w_1$. Round 2: $r^{(1)}$ ke covariance ka top eigenvector $w_2$ ($w_2\perp w_1$ aata hai), $r^{(2)}=r^{(1)}-(r^{(1)T}w_2)w_2$, aur aage. Round $j$ ke baad $r^{(j)}=\sum_{l&gt;j}z_lw_l$ (L2). $r^{(j)}=0$ $\iff$ $z_l=0$ sab $l&gt;j$ ke liye sab points par $\iff\lambda_l=0$ ($l&gt;j$) $\iff j\ge$ rank. Code: $\mathbb R^{30}$ mein 4-dim data par rounds ke baad max residue $5.68,\,3.76,\,1.51,\,8\times10^{-15}$ (4 rounds ke baad $\approx0$).</p></details>
+<details class="deep"><summary>4. P9: columns ke relations centring ke baad bhi rehte hain</summary>
+<p>Agar $C_4=2C_1-C_2$ (as columns of $X\in\mathbb R^{n\times d}$) to centred columns $\tilde C_j=C_j-\bar C_j\mathbf 1$ ke liye bhi $\tilde C_4=2\tilde C_1-\tilde C_2$, kyunki average (mean) linear hai: $\bar C_4=2\bar C_1-\bar C_2$. To relations sahi rehte hain aur rank wahi: $\operatorname{rank}(\tilde X)=3$ jab $\tilde C_1,\tilde C_2,\tilde C_3$ independent hon (jo sawaal <i>given</i> karta hai). Rank-nullity: $6$ columns, $3$ independent relations (har relation ek naya column $C_4,C_5,C_6$ introduce karta hai ⇒ triangular, independent) ⇒ rank $=6-3=3$. Code: $150\times6$ matrix ka numeric rank $3$.</p></details>
+<details class="deep"><summary>5. Storage count ki fine print</summary>
+<p>Exam convention: $k(d+n)$ numbers, mean aur orthonormality ignore (P5 ki key $5250=5(1000+50)$ exactly yahi hai; mean $+1000$ jodte to $6250$ aata, key se alag). P4 mein mean ($+d=20$) jodo to $5120$ ⇒ $74.4\%$, jo accepted range $74$–$75$ ke andar hai, isliye wahan dono convention chalte hain. Orthonormality ki wajah se $W_k$ ke asli free parameters $dk-\tfrac{k(k+1)}2$ hain, par yeh "kitne numbers store karne padte hain" ka exam sawaal nahi hai. Scores ko ek $k\times n$ matrix $Z=W_k^T\tilde X$ socho, directions $d\times k$: jodo $kn+dk$.</p></details>
+<details class="deep"><summary>6. Original coordinates mein reconstruction</summary>
+<p>$\hat x_{\text{orig}}=\mu+W_kW_k^T(x-\mu)$. Residue $x-\hat x_{\text{orig}}=\tilde x-W_kW_k^T\tilde x$ wahi rehta hai (mean dono mein cancel). P7 mein $\mu=(1,1)$ PC1 ki line par hai, isliye uncentred points ko seedha $w_1$ par project karne se bhi wahi residues aate hain ($(0,0),(0.5,-0.5),(-0.5,0.5)$ — code-verified); general data mein centre karna zaroori hai.</p></details>
+</section>
+
+<section data-track="toolkit">
+<h3>⚡ PYQ pattern toolkit</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Trigger clue</th><th>Concept</th><th>First move</th></tr></thead>
+<tbody>
+<tr><td>"reconstruction error" of $x$ after top-$k$ PCs, options with norms</td><td>L1–L3</td><td>Project on all $k$ PCs together, subtract once, square norm; "alag-alag line" ya "captured" wale options hatao</td></tr>
+<tr><td>"reconstruction error" for line $w$, $\tfrac1n\sum$ forms</td><td>L7</td><td>$\|x-(x^Tw)w\|^2$ ka kisi bhi equivalent form dekho; sign aur "vector vs scalar" check</td></tr>
+<tr><td>"percentage decrease in storage", $n$, $d$, $k$ diye</td><td>L6</td><td>raw $dn$, compressed $k(d+n)$, $1-$ratio</td></tr>
+<tr><td>"residues become zero after $k$-th round", "how many numbers to store"</td><td>L5 + L6</td><td>rank $=k$ ⇒ $k(d+n)$</td></tr>
+<tr><td>"residues after projecting onto the first PC", points diye</td><td>L2</td><td>Centre, project, subtract; dot test $r\cdot w_1=0$ se options hatao</td></tr>
+<tr><td>"lie in a $r$-dimensional subspace" + eigenvalue/round/variance statements</td><td>L4–L5</td><td>Rank $\le r$; $k\ge r$ par error $0$, captured $=V_{\text{tot}}$</td></tr>
+<tr><td>columns ke linear relations ("$C_4=2C_1-C_2$"), error zero after $k$ components</td><td>L5, Deeper 4</td><td>Independent columns gino; $k=$ rank</td></tr>
+</tbody></table></div>
+<p><b>Common traps:</b> (1) storage mein $kn$ ya $kd$ akela; (2) $k$ ko $d$ ya $n$ se confuse karna; (3) P2 jaisa "do alag lines ka error jod"; (4) captured variance aur error ko ulta padhna; (5) centre kiye bina project karna; (6) "$k$ PCs $=$ $k$ non-zero eigenvalues" ko $k<$ rank par bhi maan lena; (7) percentage mein round karna beech mein; (8) options mein vector aur scalar ka fark na dekhna.</p>
+</section>
+<!-- =========================== PYQs =========================== -->
+<h2>🎯 PYQs — 2.5 (P1–P9)</h2>
+
+<section data-track="pyq1">
+<h3>🎯 P1 — 4-dim subspace mein 2000 points: eigenvalues, rounds, reconstruction (2023 July) <span class="tag t-src">[SRC]</span> <span class="tag t-q">[?]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2023 July · Original Q5 · ID <code>640653577732</code> · MSQ · 4 marks · Pages 5–6 · <span class="tag t-src">[SRC]</span></p>
+<p>Consider a dataset of 2000 points all of which lie in $\mathbb R^{30}$. If all these points lie in four dimensional low subspace then after applying the PCA algorithm which of the following statements is/are true?</p>
+<ol>
+<li>The covariance matrix corresponding to this dataset has 30 non-zero eigenvalues.</li>
+<li>The covariance matrix corresponding to this dataset has only four non-zero eigenvalues.</li>
+<li>The residues will become zero after four rounds.</li>
+<li>By utilizing four principal component vectors and their corresponding coefficients, we have the ability to reconstruct the complete dataset using representatives.</li>
+</ol>
+<p><b>Answer in source:</b> koi marking nahi di gayi.</p>
+</div>
+<div class="box amber">
+<p><b>Source status <span class="tag t-q">[?]</span> (F16):</b> source mein is block par answer mark nahi hai, isliye neeche ka answer <b>2, 3, 4</b> mera derived hai. Option 2 ka "only four" tabhi exactly sach hai jab 2000 points us 4-dim subspace ko poora span karte hon (generic data mein hota hai); strictly sirf "at most four" guarantee hota hai. Yahi ambiguity P8 ke option 2 mein bhi hai. Sawaal ki wording mein kuch badla nahi gaya.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Agar $x_i=Bz_i$ ($B$ ka rank 4), to covariance ka rank kya ho sakta hai? Har option ko ek label do (eigenvalue count / rounds / reconstruct). Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> kaun se statements sach hain.</li>
+<li><b>Given:</b> $n=2000$, $d=30$, sab points ek 4-dim subspace mein. $n$ aur $d$ yahan distractor hain; kaam ki baat sirf "4".</li>
+<li><b>Trigger clues:</b> "lie in four dimensional subspace", "residues become zero after … rounds", "reconstruct the complete dataset".</li>
+<li><b>Prerequisites:</b> B10 J5 (rank), L2, L5 (Procedural + Conceptual) · <b>Core principle:</b> rank $=$ subspace ki dimension $=$ nonzero eigenvalues $=$ rounds jab tak residue zero.</li>
+</ul>
+<h4>2. 🧭 Methods (2 genuinely different + option elimination)</h4>
+<p><b>M1 Algebraic</b> — points ko basis mein likho ($X=BZ$) aur rank bound nikalo. <b>M2 Option-by-option label</b> — har option ko L-rule se judge karo. Dono alag tareeke hain: M1 ek baar mein rank tay karta hai, M2 har statement alag se tolta hai.</p>
+<h4>3. 🧮 Side-by-side working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Rank bound"><div class="mh">M1 · $X=BZ$ se rank</div>
+<p><b>Step 1:</b> $4$-dim subspace ka basis $B\in\mathbb R^{30\times4}$; har point $x_i=Bz_i$, $z_i\in\mathbb R^4$. $X=BZ$ ($Z$ ka size $4\times2000$).</p>
+<p><b>Step 2:</b> centring ke baad bhi subspace wahi (mean bhi $B$ ki span mein): $\tilde X=B\tilde Z$ ⇒ $\operatorname{rank}\tilde X\le4$.</p>
+<p><b>Step 3:</b> $C=\tfrac1n\tilde X\tilde X^T$ ka rank $\le4$ ⇒ nonzero eigenvalues $\le4$, baaki $\ge26$ zero (J5). Generic data par exactly $4$.</p>
+<p><b>Step 4:</b> $4$ PCs span karte hain poori subspace ⇒ residue $0$ ⇒ rounds $=4$ (L5).</p>
+<p><b>Step 5:</b> $\hat x=W_4W_4^T\tilde x=\tilde x$ ⇒ reconstruction exact. Option 1 ✗; 2, 3, 4 ✓.</p></div>
+<div class="method" data-label="M2 Option labels"><div class="mh">M2 · har option ka rule</div>
+<p><b>Option 1 (count):</b> "30 nonzero" ⇒ rank $30$ maanta hai, par rank $\le4$ ⇒ ✗.</p>
+<p><b>Option 2 (count):</b> "only four nonzero" ⇒ rank $=4$ (data subspace ko span kare to) ⇒ ✓ <span class="tag t-q">[?]</span>.</p>
+<p><b>Option 3 (rounds):</b> residues L5 ke hisaab se rank ke baad zero ⇒ $4$ rounds ⇒ ✓.</p>
+<p><b>Option 4 (reconstruct):</b> zero residue ka matlab $\hat x=\tilde x$; "four PCs aur unke coefficients (scores)" se poora dataset wapas (mean add karke) ⇒ ✓.</p>
+<p><b>Answer:</b> $\mathbf{2,3,4}$.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Algebraic</td><td>Medium</td><td>Medium</td><td>Low</td><td>Kyun rank $\le4$ hai yeh samajhna</td></tr>
+<tr><td>M2 Option labels</td><td>Fast</td><td>Low</td><td>Medium ("only four" par dhyaan)</td><td>Exam mein MSQ ki tarah</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST</b> / 🏆 <b>BEST EXAM METHOD:</b> M2 — ek line mein rank, phir 3 labels; trade-off: M1 ke bina "only four" ka caveat chhoot sakta hai.</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li><b>Numeric model:</b> $\mathbb R^{30}$ mein random $4$-dim subspace, $n=2000$ centred points ($1/n$ covariance): top eigenvalues $24.84,\ 8.81,\ 3.84,\ 0.98$, baaki $\approx0$; nonzero count $=4$ (code-verified).</li>
+<li><b>Rounds:</b> max abs residue round 1–4 ke baad $5.68,\ 3.76,\ 1.51,\ 8\times10^{-15}$ ⇒ 4 rounds par zero.</li>
+<li><b>Reconstruction:</b> $4$ PCs se max error $9\times10^{-15}$ ✓. Storage $4\times(30+2000)=8120$ vs raw $60\,000$ (lossless).</li>
+</ul>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>Option 1: $d=30$ ko rank samajhna ("30 features ⇒ 30 eigenvalues").</li>
+<li>Option 2 ko "rank $\le4$" ki jagah galat maan lena ya "only four" ko chhod dena; zero eigenvalues sirf numerically zero nahi, exactly zero hain.</li>
+<li>Option 3: "four rounds" ko "30 rounds" se confuse karna.</li>
+<li>Option 4: "reconstruct" ko approximate maanna, jabki yahan zero residue ki wajah se exact hai.</li>
+</ul>
+<p><b>Recognition rule:</b> "points lie in an $r$-dim subspace" ⇒ $r$ nonzero eigenvalues, $r$ rounds, $r$ PCs se exact reconstruction.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>3000 points $\mathbb R^{40}$ mein, 7-dim subspace mein (span karte hain). (a) Covariance ke kitne eigenvalues nonzero? (b) Residues kitne rounds ke baad zero? (c) $k=7$ par kitne numbers store, aur raw ke muqable percentage decrease?</p>
+<details class="reveal"><summary>Show answer</summary><p>(a) $\mathbf7$. (b) $\mathbf7$. (c) $7\times(40+3000)=\mathbf{21\,280}$ vs raw $40\times3000=120\,000$ ⇒ decrease $=1-\tfrac{21280}{120000}=\mathbf{82.27\%}$ (code-verified).</p></details>
+</details>
+</section>
+
+<section data-track="pyq2">
+<h3>🎯 P2 — Top-2 PCs ke baad reconstruction error ka expression (2024 July 07) <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2024 July 07 · Original Q2 · ID <code>640653829504</code> · MCQ · 2 marks · Pages 3–4 · <span class="tag t-src">[SRC]</span></p>
+<p>Let $w_1$ and $w_2$ be the top two principal components of the covariance matrix of a centered dataset. Let $x\in R^d$ be a data point. Which expression gives the <b>reconstruction error</b> of $x$ after projecting it onto the top two principal components?</p>
+<ol>
+<li>$$\left\|x-(x^Tw_1)w_1-(x^Tw_2)w_2\right\|^2$$</li>
+<li>$$\left\|x-(x^Tw_1)w_1\right\|^2+\left\|x-(x^Tw_2)w_2\right\|^2$$</li>
+<li>$(x^Tw_1)^2+(x^Tw_2)^2$</li>
+<li>$\|x-w_1\|^2+\|x-w_2\|^2$</li>
+</ol>
+<p><b>Source indication:</b> option 1 marked correct. <i>(Option 1 mein extraction ne norm bars single dikhaye the; sirf LaTeX formatting theek kiya, content nahi.)</i></p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Ek hi $x$ aur $w_1=e_1$, $w_2=e_2$ lekar chaaron options ke numbers nikalo ($x=(3,4,12)$). Kaun sa "$x$ ka bacha hua hissa" hai? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> ek point ke top-2 PCs par projection ke baad ka reconstruction error.</li>
+<li><b>Given:</b> centred data, $w_1,w_2$ orthonormal (PCs). $x$ ek point.</li>
+<li><b>Trigger clues:</b> "reconstruction error", "after projecting onto the top two principal components".</li>
+<li><b>Prerequisites:</b> L1–L3 (Procedural + Conceptual), B8 G6 · <b>Core principle:</b> error $=\|x-\hat x\|^2$ jahan $\hat x=\sum_{j\le2}(x^Tw_j)w_j$, <i>ek saath</i>.</li>
+</ul>
+<h4>2. 🧭 Methods (3 genuinely different)</h4>
+<p><b>M1 General</b> — definition: $x-\hat x$ ki squared norm. <b>M2 Shortcut (Pythagoras)</b> — error $=\|x\|^2-(x^Tw_1)^2-(x^Tw_2)^2$, uske saath options ko compare karo. <b>M3 Advanced (numeric test)</b> — ek concrete $x$ par chaaron options evaluate karo. Teenon alag cheez karte hain: definition, algebraic identity, ya numbers.</p>
+<h4>3. 🧮 Side-by-side working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Definition"><div class="mh">M1 · $\|x-\hat x\|^2$</div>
+<p><b>Step 1:</b> projection onto span$(w_1,w_2)$: $\hat x=(x^Tw_1)w_1+(x^Tw_2)w_2$ (L1; $w_1\perp w_2$).</p>
+<p><b>Step 2:</b> error $=\|x-\hat x\|^2$, yaani:</p>
+$$\|x-(x^Tw_1)w_1-(x^Tw_2)w_2\|^2$$
+<p><b>Step 3:</b> yeh option 1 ka word-for-word hai ⇒ ✓.</p></div>
+<div class="method" data-label="M2 Pythagoras"><div class="mh">M2 · $\|x\|^2-$ captured</div>
+<p><b>Step 1:</b> L3: error $=\|x\|^2-(x^Tw_1)^2-(x^Tw_2)^2$.</p>
+<p><b>Step 2:</b> option 3 $=(x^Tw_1)^2+(x^Tw_2)^2$ sirf captured hissa hai, $\|x\|^2$ minus nahi ⇒ ✗.</p>
+<p><b>Step 3:</b> option 2: har term $\|x\|^2-(x^Tw_j)^2$; jod $=2\|x\|^2-(x^Tw_1)^2-(x^Tw_2)^2$, $\|x\|^2$ do baar ⇒ ✗.</p>
+<p><b>Step 4:</b> option 4: $\|x-w_j\|^2=\|x\|^2-2x^Tw_j+1$, $w_j$ khud (scale kiye bina) subtract ⇒ ✗.</p></div>
+<div class="method" data-label="M3 Numeric test"><div class="mh">M3 · $x=(3,4,12)$, $w_1=e_1$, $w_2=e_2$</div>
+<p><b>Step 1:</b> $\hat x=(3,4,0)$, $x-\hat x=(0,0,12)$ ⇒ true error $=144$.</p>
+<p><b>Step 2:</b> option 1 $=144$ ✓.</p>
+<p><b>Step 3:</b> option 2 $=(16+144)$ $+(9+144)$ $=313$ ✗.</p>
+<p><b>Step 4:</b> option 3 $=9+16=25$ ✗.</p>
+<p><b>Step 5:</b> option 4 $=(4+16+144)$ $+(9+9+144)$ $=326$ ✗.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Definition</td><td>Very fast</td><td>Low</td><td>Low</td><td>Jab option 1 jaisa literal form ho</td></tr>
+<tr><td>M2 Pythagoras</td><td>Fast</td><td>Medium</td><td>Low</td><td>Distractors ko samajh kar hatana</td></tr>
+<tr><td>M3 Numeric</td><td>Medium</td><td>Low</td><td>Low</td><td>Jab shak ho; ek hi example kaafi</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M1. 🏆 <b>BEST EXAM METHOD:</b> M1 phir M2 se ek distractor confirm; trade-off: M3 sabse bharosemand hai par $2$ marks ke liye lamba.</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li><b>B4 dataset point:</b> $\tilde x=(3,1)$, PCs $\tfrac1{\sqrt2}(1,1)$, $\tfrac1{\sqrt2}(-1,1)$ (poora $\mathbb R^2$): option 1 $=0$, option 2 $=10$, option 3 $=10$, option 4 $=19.17$ (code-verified).</li>
+<li><b>Identity:</b> $169=144+25$ ($\|x\|^2=$ error $+$ captured).</li>
+<li><b>Source key:</b> option 1 ✓.</li>
+</ul>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>Option 2: "do PCs hain to do errors jodo" — har line ka error ek ek PC ko hi alag se hatata hai, doosre PC ka hissa phir bhi "loss" gina jaata hai.</li>
+<li>Option 3: captured ko error samajhna (sabse aam galti).</li>
+<li>Option 4: unit vector $w$ ko point ke projection ki jagah subtract karna.</li>
+</ul>
+<p><b>Recognition rule:</b> "reconstruction error after top-$k$" ⇒ $x$ minus <i>saare $k$ projections ka sum</i>, phir squared norm.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>$w_1=e_1$, $w_2=e_2$ ($\mathbb R^3$), $x=(3,4,12)$. Options 1, 2, 3 ki values aur $\|x\|^2$ batao. Kaunsa $\|x\|^2$ se kaise jura hai?</p>
+<details class="reveal"><summary>Show answer</summary><p>Option 1 $=\mathbf{144}$, option 2 $=\mathbf{313}$, option 3 $=\mathbf{25}$, $\|x\|^2=169$. Rishta: option 1 $+$ option 3 $=\|x\|^2$ ($144+25=169$) — error aur captured Pythagoras se jude hain; option 2 $=2\cdot169-25$ (double count) (code-verified).</p></details>
+</details>
+</section>
+
+<section data-track="pyq3">
+<h3>🎯 P3 — Line $w$ ke liye reconstruction error ke expressions (2024 October 27) <span class="tag t-src">[SRC]</span> <span class="tag t-q">[?]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2024 October 27 · Original Q5 · ID <code>640653995440</code> · MSQ · 4 marks · Pages 5–6 · <span class="tag t-src">[SRC]</span></p>
+<p>Which of the following expressions is the <b>reconstruction error</b> for a dataset of $n$ points with respect to a line passing through the origin represented by unit vector $w$, where $\|w\|=1$?</p>
+<p><b>Options include:</b></p>
+<ol>
+<li>$$\frac1n\sum_{i=1}^{n}\left\|x_i-(x_i^Tw)w\right\|^2$$</li>
+<li>$$\frac1n\sum_{i=1}^{n}[x_i-(x_i^Tw)w]^T[x_i-(x_i^Tw)w]$$</li>
+<li>$$\frac1n\sum_{i=1}^{n}[x_i^Tx_i,\ (x_i^Tw)^2]$$</li>
+<li>$$-\frac1n\sum_{i=1}^{n}(x_i^Tw)^2$$</li>
+</ol>
+<p><b>Source marking:</b> pehle do forms same reconstruction error hain; source ne unhe green mark kiya hai. <i>(Option 1 ka norm bar extraction mein single dikha tha; sirf LaTeX formatting theek kiya.)</i></p>
+</div>
+<div class="box amber">
+<p><b>Source status <span class="tag t-q">[?]</span> (F17):</b> option 3 as extracted mein $x_i^Tx_i$ aur $(x_i^Tw)^2$ ke beech <b>comma</b> hai (do-entry list), koi operator nahi. Jaisa likha hai, woh ek $2$-vector hai, scalar nahi, isliye error nahi ban sakta. Agar comma asal mein minus hota to $\tfrac1n\sum[x_i^Tx_i-(x_i^Tw)^2]$ L7 ke hisaab se error ke barabar hota; par source sirf options 1, 2 mark karta hai, isliye main text ko jaisa hai waisa hi judge karta hoon. Header mein "Options include" ka matlab hai ki source ne option list poori nahi dikhayi ho sakti.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Option 1 aur 2 mein kya fark hai? Option 4 ka sign aur "$\|x\|^2$" ka term dekho — kya woh gayab hai? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> kaun se expressions $\tfrac1n\sum$ squared distance of $x_i$ from its projection on the line hain.</li>
+<li><b>Given:</b> $n$ points, unit $w$, line through origin (centred data).</li>
+<li><b>Trigger clues:</b> "reconstruction error", "line passing through the origin", "$\|w\|=1$".</li>
+<li><b>Prerequisites:</b> B3 (projection), L3, L7 (Procedural + Conceptual) · <b>Core principle:</b> $E(w)=\tfrac1n\sum\|x_i-(x_i^Tw)w\|^2$ $=V_{\text{tot}}-w^TCw$.</li>
+</ul>
+<h4>2. 🧭 Methods (3 genuinely different)</h4>
+<p><b>M1 Algebraic equivalence</b> — $a^Ta=\|a\|^2$ se options 1 aur 2 ek hi hain. <b>M2 Structure (L7)</b> — error $=V_{\text{tot}}-$ (captured) se option 3, 4 ko compare karo. <b>M3 Numeric</b> — chhote dataset par chaaron expressions nikalo.</p>
+<h4>3. 🧮 Side-by-side working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Equivalence"><div class="mh">M1 · $a^Ta=\|a\|^2$</div>
+<p><b>Step 1:</b> $a_i=x_i-(x_i^Tw)w$.</p>
+<p><b>Step 2:</b> option 2 $=\tfrac1n\sum a_i^Ta_i$.</p>
+<p><b>Step 3:</b> $a_i^Ta_i=\|a_i\|^2$ ⇒ option 2 $=$ option 1 ⇒ dono ✓.</p></div>
+<div class="method" data-label="M2 L7 structure"><div class="mh">M2 · $E=V_{\text{tot}}-\tfrac1n\sum(x_i^Tw)^2$</div>
+<p><b>Step 1:</b> L7: $E=\tfrac1n\sum x_i^Tx_i-\tfrac1n\sum(x_i^Tw)^2$.</p>
+<p><b>Step 2:</b> option 4 $=-\tfrac1n\sum(x_i^Tw)^2$ — $E$ ka sirf doosra hissa; $\tfrac1n\sum x_i^Tx_i$ ($=V_{\text{tot}}$) gayab ⇒ ✗ (yeh $-w^TCw$ hai: sign wala captured variance).</p>
+<p><b>Step 3:</b> option 3 mein dono pieces hain par comma se ek <i>list</i>, minus se nahi ⇒ as written ✗ (F17).</p></div>
+<div class="method" data-label="M3 Numeric"><div class="mh">M3 · points $(\pm2,0),(0,\pm1)$, $w=(1,0)$</div>
+<p><b>Step 1:</b> projections $(\pm2,0),(0,0),(0,0)$ ⇒ residues $(0,0),(0,0),(0,\pm1)$ ⇒ $\|r\|^2=0,0,1,1$.</p>
+<p><b>Step 2:</b> $E=\tfrac14(0+0+1+1)=0.5$. Options 1, 2 ⇒ $0.5$ ✓.</p>
+<p><b>Step 3:</b> option 4 $=-\tfrac14(4+4+0+0)=-2.0$ ✗ (error negative nahi ho sakta).</p>
+<p><b>Step 4:</b> option 3 $=[2.5,\ 2.0]$ (entries: $\tfrac14\sum x_i^Tx_i$ aur $\tfrac14\sum(x_i^Tw)^2$) ⇒ list ✗.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Equivalence</td><td>Very fast</td><td>Low</td><td>Low</td><td>Options 1 vs 2</td></tr>
+<tr><td>M2 L7 structure</td><td>Fast</td><td>Medium</td><td>Low</td><td>Option 3, 4 ka sahi diagnose</td></tr>
+<tr><td>M3 Numeric</td><td>Slow</td><td>Low</td><td>Low</td><td>Final confirmation</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M1. 🏆 <b>BEST EXAM METHOD:</b> M1 + M2 — pehle do options same form, phir "$V_{\text{tot}}$ ke bina" aur "negative" se baaki hatao; trade-off: M3 sirf tab jab option text ambiguous ho (jaise option 3).</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li><b>Dono lines:</b> $w=(1,0)$ par $E=0.5=V_{\text{tot}}-\lambda_1=2.5-2$; $w=(0,1)$ par $E=2.0=2.5-0.5$ (code-verified). Option 4 $=-2.0,\ -0.5$ ⇒ $E=V_{\text{tot}}+\text{option 4}$ ✓.</li>
+<li><b>Random 5-D check:</b> $\tfrac1n\sum\|x-(x^Tw)w\|^2=3.4254$ aur $\tfrac1n\sum\|x\|^2-\tfrac1n\sum(x^Tw)^2=3.4254$ (L7 ✓).</li>
+<li><b>Source key:</b> options 1, 2 ✓.</li>
+</ul>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>Option 4: "variance ka negative to loss hai" — nahi; $V_{\text{tot}}$ constant ke bina error nahi hai.</li>
+<li>Option 2: product $[\cdot]^T[\cdot]$ ko "matrix" samajh kar chhod dena; yeh scalar $a^Ta=\|a\|^2$ hai.</li>
+<li>Option 3 ko comma/operator dekhe bina maan lena; vector list scalar error nahi hota.</li>
+</ul>
+<p><b>Recognition rule:</b> error ka har valid form $\|x-\text{proj}\|^2$ ya $\|x\|^2-\text{(projection)}^2$ hota hai; sirf $-\text{(projection)}^2$ ya sirf $+\text{(projection)}^2$ error nahi.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>Points $(\pm2,0),(0,\pm1)$ (centred). (a) $w=(1,0)$ par aur (b) $w=(0,1)$ par $E(w)=\tfrac1n\sum\|x_i-(x_i^Tw)w\|^2$. (c) Kaunsi $w$ error kam karti hai, aur uska $E$ $V_{\text{tot}}$ aur $\lambda$ se kaise judta hai?</p>
+<details class="reveal"><summary>Show answer</summary><p>(a) $\mathbf{0.5}$. (b) $\mathbf{2.0}$. (c) $w=(1,0)$ (PC1, $\lambda_1=2$): $E=V_{\text{tot}}-\lambda_1=2.5-2=0.5=\lambda_2$ (code-verified).</p></details>
+</details>
+</section>
+
+<section data-track="pyq4">
+<h3>🎯 P4 — 1000 samples in $\mathbb R^{20}$, top 5 PCs: storage mein percentage decrease (2025 February 23) — pretest yahi tha <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2025 February 23 · Original Q8 · ID <code>6406531104785</code> · SA · 3 marks · Page 8 · <span class="tag t-src">[SRC]</span></p>
+<p>Consider a dataset with <b>1000 samples</b>, where each sample belongs to $\mathbb R^{20}$. PCA is run and the <b>top 5 principal components are retained</b>, while the rest are discarded. If it takes one unit of memory to store a real number, find the <b>percentage decrease in storage space</b> of the dataset by moving to its compressed representation. Enter the answer correct to two decimal places.</p>
+<p><b>Accepted answer (source):</b> 74 to 75.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Raw storage $=$? Compressed mein kaun se do cheezein store hongi? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> $100\times\bigl(1-\tfrac{\text{compressed}}{\text{raw}}\bigr)$, 2 decimal places.</li>
+<li><b>Given:</b> $n=1000$, $d=20$, $k=5$; ek real number $=1$ unit.</li>
+<li><b>Trigger clues:</b> "percentage decrease in storage", "compressed representation", "top 5 PCs retained".</li>
+<li><b>Prerequisites:</b> L1, L6 (Procedural + Conceptual) · <b>Core principle:</b> compressed $=$ $k$ directions ($d$ numbers each) $+$ $k$ scores per point ($n$ points).</li>
+</ul>
+<h4>2. 🧭 Methods (2 genuinely different)</h4>
+<p><b>M1 Direct counting</b> — raw aur compressed alag-alag numbers mein. <b>M2 Reciprocal form</b> — fraction stored $=k\bigl(\tfrac1n+\tfrac1d\bigr)$, bina bade products ke. Dono L6 ke roop hain par calculation alag chalti hai.</p>
+<h4>3. 🧮 Side-by-side working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Direct count"><div class="mh">M1 · numbers gino</div>
+<p><b>Step 1 (raw):</b> $1000\times20=20\,000$.</p>
+<p><b>Step 2 (directions):</b> $W_5\in\mathbb R^{20\times5}$ ⇒ $100$ numbers.</p>
+<p><b>Step 3 (scores):</b> $1000$ points $\times5$ scores $=5000$ numbers.</p>
+<p><b>Step 4 (compressed):</b> $100+5000=5100$ $\bigl(=5\times1020\bigr)$.</p>
+<p><b>Step 5:</b> decrease $=1-\tfrac{5100}{20000}=1-0.255=0.745$ ⇒ <b>74.50%</b>.</p></div>
+<div class="method" data-label="M2 Reciprocal"><div class="mh">M2 · $k(1/n+1/d)$</div>
+<p><b>Step 1:</b> $\tfrac{k(d+n)}{dn}=k\Bigl(\tfrac1n+\tfrac1d\Bigr)$.</p>
+<p><b>Step 2:</b> $\tfrac1n=0.001$, $\tfrac1d=0.05$ ⇒ sum $=0.051$.</p>
+<p><b>Step 3:</b> $5\times0.051=0.255$ (fraction stored).</p>
+<p><b>Step 4:</b> $100(1-0.255)=\mathbf{74.50\%}$.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Direct count</td><td>Medium</td><td>Low</td><td>Low</td><td>Hamesha, har number visible</td></tr>
+<tr><td>M2 Reciprocal</td><td>Fast</td><td>Medium</td><td>Medium (decimal slip)</td><td>Jab $d,n$ bade hon</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M2. 🏆 <b>BEST EXAM METHOD:</b> M1 — "directions $+$ scores" dono visible hote hain, galat formula ka chance kam; trade-off: M2 sirf cross-check ke liye.</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li><b>Mean bhi store karo:</b> $+20$ ⇒ $5120$ ⇒ $74.40\%$ — accepted range $74$–$75$ ke andar, dono convention theek (Deeper 5; code-verified).</li>
+<li><b>Symmetry:</b> $d$ aur $n$ badalne par $k(d+n)$ wahi; formula ka symmetric hona sahi lagta hai.</li>
+<li><b>Break-even:</b> $\tfrac{dn}{d+n}=19.6$; $k=5<19.6$ ⇒ saving positive ✓.</li>
+<li><b>Source key:</b> $74.5\in[74,75]$ ✓.</li>
+</ul>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>Sirf scores ($kn=5000$): $75.00\%$ — range ke edge par accidentally pass ho jaata hai, par concept galat. Isi tarah $1-\tfrac kd=75\%$ bhi. Exam answer $74.50$ likho.</li>
+<li>Sirf directions ($kd=100$): $99.5\%$ ✗.</li>
+<li>Compressed ko "$5$ components $\times\,20$ features" ya "$5$ out of $20$" samajhna.</li>
+<li>Percent ki jagah fraction ($0.745$) likhna.</li>
+</ul>
+<p><b>Recognition rule:</b> storage ka sawaal ⇒ $k(d+n)$ vs $dn$; "decrease" ⇒ $1-$ratio.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>$n=300$ samples in $\mathbb R^{60}$, top $k=6$ PCs. (a) Percentage decrease? (b) Kitne $k$ tak storage bachta hai (largest integer $k$)?</p>
+<details class="reveal"><summary>Show answer</summary><p>(a) raw $=18\,000$; compressed $=6\times360=2160$ ⇒ $1-0.12=\mathbf{88.00\%}$. (b) Break-even $\tfrac{18000}{360}=50$ — $k=50$ par saving $0$, isliye strictly bachat $k\le\mathbf{49}$ par (code-verified).</p></details>
+</details>
+</section>
+<section data-track="pyq5">
+<h3>🎯 P5 — 50 points in $\mathbb R^{1000}$, residues 5th round ke baad zero: kitne numbers store (2025 July 13) <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2025 July 13 · Original Q11 · ID <code>6406531302393</code> · SA · 2 marks · Page 10 · <span class="tag t-src">[SRC]</span></p>
+<p>Consider a dataset $\{x_1,x_2,\ldots,x_{50}\},\ x_i\in\mathbb R^{1000}$. After performing PCA on the dataset, suppose that the <b>residues become zero after the fifth round</b>. Then, how many numbers do we need to store for this dataset?</p>
+<p><b>Accepted answer (source):</b> <b>5250</b>.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Residue zero after 5 rounds ka matlab $k$ kya hai? Phir $k(d+n)$. Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> lossless compressed representation mein numbers ki ginti.</li>
+<li><b>Given:</b> $n=50$, $d=1000$, rounds $=5$ ⇒ rank $=5$.</li>
+<li><b>Trigger clues:</b> "residues become zero after the fifth round", "how many numbers do we need to store".</li>
+<li><b>Prerequisites:</b> L5, L6 (Procedural + Conceptual) · <b>Core principle:</b> rank $5$ ⇒ $5$ PCs aur $5$ scores per point kaafi; store $=k(d+n)$.</li>
+</ul>
+<h4>2. 🧭 Methods (2 genuinely different)</h4>
+<p><b>M1 Components count</b> — directions aur scores alag-alag gino. <b>M2 Factorisation view</b> — $X\approx W_kZ$ ($d\times k$ aur $k\times n$) ke entries gino. Dono ek hi $k(d+n)$ dete hain par soch alag hai: pehla PCA ke objects, doosra matrix factor ke shapes.</p>
+<h4>3. 🧮 Side-by-side working</h4>
+<div class="methods">
+<div class="method" data-label="M1 PCs + scores"><div class="mh">M1 · directions + scores</div>
+<p><b>Step 1:</b> rounds zero ⇒ $k=5$.</p>
+<p><b>Step 2:</b> $5$ PCs, har ek $1000$ numbers ⇒ $5000$.</p>
+<p><b>Step 3:</b> $50$ points $\times5$ scores $=250$.</p>
+<p><b>Step 4:</b> total $5000+250=\mathbf{5250}$.</p></div>
+<div class="method" data-label="M2 Factor shapes"><div class="mh">M2 · $X=W_5Z$ ke shapes</div>
+<p><b>Step 1:</b> $X\in\mathbb R^{1000\times50}$ ($d\times n$).</p>
+<p><b>Step 2:</b> $W_5\in\mathbb R^{1000\times5}$ ⇒ $5000$ entries; $Z\in\mathbb R^{5\times50}$ ⇒ $250$ entries.</p>
+<p><b>Step 3:</b> $5000+250=\mathbf{5250}$.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<p>Dono ek line ke; speed ~15 second, difficulty low. M1 jaldi samajh aata hai, M2 shapes se cross-check deta hai. ⚡ <b>FASTEST</b> / 🏆 <b>BEST EXAM METHOD:</b> $k(d+n)$ seedha; trade-off: sirf rank sahi nikalna zaroori hai.</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li><b>Raw $=50\,000$:</b> $5250<50\,000$ ⇒ decrease $89.5\%$ (code-verified).</li>
+<li><b>Rank bound:</b> $k=5\le\min(1000,\,50-1)=49$ ✓ (L5), isliye data consistent hai.</li>
+<li><b>Mean store karte to:</b> $+1000=6250\ne5250$ ⇒ key mean count nahi karti (Deeper 5).</li>
+<li><b>Source key:</b> $5250$ ✓.</li>
+</ul>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>$5\times1000$ ya $5\times50$ akela ($5000$ ya $250$).</li>
+<li>Raw $50\,000$ likhna (compression bhool jana).</li>
+<li>$k$ ko $d$ ya $n$ se mix karna ($k=50$ lena).</li>
+<li>Mean ya $\lambda$'s bhi jod dena ($+1000$ ya $+5$).</li>
+</ul>
+<p><b>Recognition rule:</b> "residues zero after $k$-th round" + "numbers to store" ⇒ $k(d+n)$.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>$n=200$ points $\mathbb R^{500}$ mein, residues $8$ rounds ke baad zero. Kitne numbers store, aur raw ke muqable?</p>
+<details class="reveal"><summary>Show answer</summary><p>$8\times(500+200)=\mathbf{5600}$ vs raw $100\,000$ ⇒ decrease $94.4\%$. Rank bound $8\le199$ ✓ (code-verified).</p></details>
+</details>
+</section>
+
+<section data-track="pyq6">
+<h3>🎯 P6 — Context: $x_1=(0,0),\,x_2=(2,1),\,x_3=(1,2)$, standard PCA (2025 July 13) <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2025 July 13 · Original Q12 · ID <code>6406531302395</code> · Comprehension · 0 marks · Pages 10–11 · <span class="tag t-src">[SRC]</span></p>
+<p>Consider the following data points: $x_1=\begin{bmatrix}0\\0\end{bmatrix},\ x_2=\begin{bmatrix}2\\1\end{bmatrix},\ x_3=\begin{bmatrix}1\\2\end{bmatrix}$. <b>Standard PCA</b> is run on this dataset. Based on the above data, answer the subquestions.</p>
+<p><b>Children (same paper):</b> Q13 (<code>6406531302396</code>, covariance matrix) aur Q14 (<code>6406531302397</code>, variance along PC1) 2.1 builds (B5/B6) mein solve ho chuke; Q15 (<code>6406531302398</code>) neeche P7 hai.</p>
+</div>
+<p>Context block mein khud koi sawaal nahi (0 marks), isliye solution format lagu nahi. Par yeh setup P7 ke liye ek baar mein saari cheezein deta hai (sab code-verified):</p>
+<ol>
+<li><b>Mean aur centring:</b> $\mu=(1,1)$ ⇒ centred points $(-1,-1),\,(1,0),\,(0,1)$.</li>
+<li><b>Covariance:</b> $C=\tfrac13\begin{bmatrix}2&amp;1\\1&amp;2\end{bmatrix}$ (B5/B6 ki option 2).</li>
+<li><b>Eigen:</b> $\lambda_1=1$ with $w_1=\tfrac1{\sqrt2}(1,1)$; $\lambda_2=\tfrac13$ with $w_2=\tfrac1{\sqrt2}(-1,1)$ (B5/B6 ka answer 1 ✓).</li>
+<li><b>$V_{\text{tot}}=\operatorname{tr}C=\tfrac43$</b>; $\text{CEV}(1)=\tfrac{1}{4/3}=75\%$.</li>
+<li><b>L4 ka agla qadam:</b> $k=1$ par average squared error $=\lambda_2=\tfrac13$.</li>
+</ol>
+<div class="try"><p class="ttl">✍️ Chhota apna check <span class="tag t-add">[ADDED]</span></p><p>Is dataset par $k=1$ ke baad teeno points ke residues ke squared norm ka average (L4) kya hoga? Phir P7 ke options se compare karna.</p></div>
+<details class="reveal"><summary>Show answer</summary><p>Average error $=\lambda_2=\tfrac13=\mathbf{0.333}$. Seedha check: residues $(0,0),(0.5,-0.5),(-0.5,0.5)$ ⇒ $\|r\|^2=0,\ 0.5,\ 0.5$ ⇒ $\tfrac{0+0.5+0.5}3=0.333$ ✓ (P7 ke option 2 ke residues). Teeno points ka mean $(1,1)$ PC1 ki line par hai — yeh P7 ka M2 yahin se aata hai (code-verified).</p></details>
+</section>
+
+<section data-track="pyq7">
+<h3>🎯 P7 — P6 ke data par PC1 par projection ke baad residues (2025 July 13) <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2025 July 13 · Original Q15 · ID <code>6406531302398</code> · MCQ · 3 marks · Pages 12–13 · parent Q12 (<code>6406531302395</code>, P6) · <span class="tag t-src">[SRC]</span></p>
+<p>Find the <b>residues</b> after projecting the data points onto the first principal component. Here $x_i'$ represents the residue of the data point $x_i$.</p>
+<ol>
+<li>$$x_1'=\begin{bmatrix}0\\0\end{bmatrix},\ x_2'=\begin{bmatrix}0.5\\0.5\end{bmatrix},\ x_3'=\begin{bmatrix}0.5\\0.5\end{bmatrix}$$</li>
+<li>$$x_1'=\begin{bmatrix}0\\0\end{bmatrix},\ x_2'=\begin{bmatrix}0.5\\-0.5\end{bmatrix},\ x_3'=\begin{bmatrix}-0.5\\0.5\end{bmatrix}$$ <b>[correct]</b></li>
+<li>$$x_1'=\begin{bmatrix}0\\0\end{bmatrix},\ x_2'=\begin{bmatrix}1\\2\end{bmatrix},\ x_3'=\begin{bmatrix}2\\1\end{bmatrix}$$</li>
+<li>$$x_1'=\begin{bmatrix}0\\0\end{bmatrix},\ x_2'=\begin{bmatrix}0\\-1\end{bmatrix},\ x_3'=\begin{bmatrix}-1\\0\end{bmatrix}$$</li>
+</ol>
+<p><b>Answer in source:</b> option 2 marked correct.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Residue PC1 ke <i>perpendicular</i> hona chahiye. $w_1=\tfrac1{\sqrt2}(1,1)$ — kaun se options ke residues $(1,1)$ se dot $=0$ dete hain? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> $x_i'=\tilde x_i-(\tilde x_i^Tw_1)w_1$ teeno points ke liye.</li>
+<li><b>Given:</b> P6 ka data; $\mu=(1,1)$, $w_1=\tfrac1{\sqrt2}(1,1)$ (P6 ke steps).</li>
+<li><b>Trigger clues:</b> "residues", "after projecting onto the first principal component", chaar vector-triplet options.</li>
+<li><b>Prerequisites:</b> B5/B6 (eigen), L2 (Procedural + Conceptual) · <b>Core principle:</b> residue $=$ centred point $-$ projection; $r\perp w_1$.</li>
+</ul>
+<h4>2. 🧭 Methods (3 genuinely different)</h4>
+<p><b>M1 General</b> — centre karo, project karo, subtract. <b>M2 Shortcut (2-D complement)</b> — $\mathbb R^2$ mein PC1 hatane ke baad sirf PC2 ka hissa bacha: $r=(\tilde x^Tw_2)w_2$. <b>M3 Advanced (option elimination)</b> — $r\cdot w_1=0$ aur $\sum r_i=0$ se options hatao, bina pura calculation kiye. Teenon alag hain: subtract, complement, perpendicularity test.</p>
+<h4>3. 🧮 Side-by-side working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Project + subtract"><div class="mh">M1 · centre, project, subtract</div>
+<p><b>Step 1:</b> $\tilde x_1=(-1,-1)$, $\tilde x_2=(1,0)$, $\tilde x_3=(0,1)$.</p>
+<p><b>Step 2:</b> $z_1=\tilde x^Tw_1$: $\tfrac{-2}{\sqrt2},\ \tfrac1{\sqrt2},\ \tfrac1{\sqrt2}$.</p>
+<p><b>Step 3:</b> $\hat x=z_1w_1$: $(-1,-1),\ (0.5,0.5),\ (0.5,0.5)$.</p>
+<p><b>Step 4:</b> $r=\tilde x-\hat x$: $(0,0),\ (0.5,-0.5),\ (-0.5,0.5)$ ⇒ option 2.</p></div>
+<div class="method" data-label="M2 PC2 component"><div class="mh">M2 · $r=(\tilde x^Tw_2)w_2$</div>
+<p><b>Step 1:</b> $w_2=\tfrac1{\sqrt2}(-1,1)$ ($\mathbb R^2$ mein $w_1$ ke saath basis).</p>
+<p><b>Step 2:</b> $\tilde x^Tw_2$: $0,\ -\tfrac1{\sqrt2},\ \tfrac1{\sqrt2}$.</p>
+<p><b>Step 3:</b> $r=z_2w_2$: $(0,0),\ (0.5,-0.5),\ (-0.5,0.5)$ ⇒ option 2 (same, L2).</p></div>
+<div class="method" data-label="M3 Dot test"><div class="mh">M3 · $r\cdot(1,1)=0$</div>
+<p><b>Step 1:</b> option 1: $(0.5,0.5)\cdot(1,1)=1\ne0$ ✗.</p>
+<p><b>Step 2:</b> option 3: $(1,2)\cdot(1,1)=3\ne0$ ✗.</p>
+<p><b>Step 3:</b> option 4: $(0,-1)\cdot(1,1)=-1\ne0$ ✗.</p>
+<p><b>Step 4:</b> option 2: $0.5-0.5=0$ ✓ aur $(0.5,-0.5)+(-0.5,0.5)=0$ (centred residues ka sum zero).</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Project + subtract</td><td>Medium</td><td>Low</td><td>Medium (centring bhoolna)</td><td>Jab options close hon</td></tr>
+<tr><td>M2 PC2 component</td><td>Medium</td><td>Medium</td><td>Low</td><td>$\mathbb R^2$, $k=d-1$</td></tr>
+<tr><td>M3 Dot test</td><td>Very fast (~20 sec)</td><td>Low</td><td>Low</td><td>MCQ; 3 options ek line mein</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M3. 🏆 <b>BEST EXAM METHOD:</b> M3 se option 2 chuno, phir ek point (jaise $x_2$) par M1 se confirm; trade-off: M3 akela tab chal jaata hai jab sirf ek option perpendicular ho.</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li><b>Dot products with $w_1$:</b> option 1 $(0,\,0.707,\,0.707)$, option 2 $(0,0,0)$, option 3 $(0,\,2.12,\,2.12)$, option 4 $(0,\,-0.707,\,-0.707)$ (code-verified) ⇒ sirf option 2 perpendicular.</li>
+<li><b>L4:</b> $\tfrac13(0+0.5+0.5)=0.333=\lambda_2$ ✓.</li>
+<li><b>Uncentred project karo to bhi:</b> $\mu=(1,1)\parallel w_1$ ⇒ same residues (Deeper 6).</li>
+<li><b>Source key:</b> option 2 ✓.</li>
+</ul>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>Option 1: projection $(0.5,0.5)$ ko hi residue likh dena (residue $=$ point $-$ projection, projection khud nahi).</li>
+<li>Option 3: size check fail — centred $\tilde x_2=(1,0)$ ka $\|\tilde x_2\|^2=1$, par option 3 ka $\|x_2'\|^2=5$; residue point se lamba ho hi nahi sakta ($\|r\|^2\le\|\tilde x\|^2$, L3).</li>
+<li>Option 4: perpendicular test fail ($r\cdot w_1\ne0$); jaldi mein sign ya swap se banaya hua option.</li>
+<li>Centring bhool jana (general data mein residues alag aate; yahan mean $(1,1)$ PC1 ki line par hone se bach gaye).</li>
+</ul>
+<p><b>Recognition rule:</b> "residue after PC1" ⇒ $r\perp w_1$; options ko dot test se pehle eliminate karo.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>Points $(0,0),(3,0),(0,3)$; PC1 ki direction $\tfrac1{\sqrt2}(1,-1)$ ($\lambda_1=3$, $\lambda_2=1$). (a) PC1 ke baad residues? (b) Residues ke $\|r\|^2$ ka average?</p>
+<details class="reveal"><summary>Show answer</summary><p>$\mu=(1,1)$; centred $(-1,-1),(2,-1),(-1,2)$. (a) Residues $(-1,-1),\ (0.5,0.5),\ (0.5,0.5)$ (sab $(1,1)$ ki direction mein, jo PC1 ke perpendicular hai). (b) $\tfrac{2+0.5+0.5}3=\mathbf{1.0}=\lambda_2$ (L4; code-verified).</p></details>
+</details>
+</section>
+
+<section data-track="pyq8">
+<h3>🎯 P8 — 5000 points in $\mathbb R^{50}$, 6-dim subspace: PCA ke baad kya sach (2025 October 26) <span class="tag t-src">[SRC]</span> <span class="tag t-q">[?]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2025 October 26 · Original Q3 · ID <code>6406531527614</code> · MSQ · 4 marks · Page 4 · <span class="tag t-src">[SRC]</span></p>
+<p>Consider a dataset consisting of <b>5000 points in $R^{50}$</b>. All points lie in a <b>6-dimensional linear subspace</b>. Which of the following will be true after applying PCA?</p>
+<ol>
+<li>There will be 50 non-zero eigenvalues of the covariance matrix.</li>
+<li>There will be 6 non-zero eigenvalues of the covariance matrix.</li>
+<li>Using the first 5 principal components, the dataset can be reconstructed with zero residue.</li>
+<li>The variance captured by the top 6 principal components equals the total variance of the dataset.</li>
+</ol>
+<p><b>Answer in source:</b> koi marking nahi di gayi.</p>
+</div>
+<div class="box amber">
+<p><b>Source status <span class="tag t-q">[?]</span> (F16):</b> source mein answer mark nahi, isliye <b>2, 4</b> mera derived hai. P1 ki tarah option 2 ka "6 non-zero" exactly tabhi sach hai jab points 6-dim subspace ko span karte hon; strictly "at most 6". Option 3 ka ✗ bhi isi reading (rank exactly 6) par tika hai: agar rank $\le5$ hota to 5 PCs kaafi hote.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>P1 jaisa label: option 1 count, option 2 count, option 3 rounds, option 4 captured. Rank kitna? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> kaun se statements sach hain.</li>
+<li><b>Given:</b> $n=5000$, $d=50$, 6-dim linear subspace ⇒ rank $\le6$ (aur generic mein $=6$).</li>
+<li><b>Trigger clues:</b> "lie in a 6-dimensional linear subspace", "reconstructed with zero residue", "variance captured … equals total variance".</li>
+<li><b>Prerequisites:</b> L4, L5, B10 J1 (Procedural + Conceptual) · <b>Core principle:</b> rank $=6$ ⇒ $\sum_{j\le6}\lambda_j=V_{\text{tot}}$, error $0$ sirf $k\ge6$ par.</li>
+</ul>
+<h4>2. 🧭 Methods (2 genuinely different + option elimination)</h4>
+<p><b>M1 Rank chain</b> — rank se har option derive karo. <b>M2 Tail argument</b> — L4 se: error $=\sum_{j>k}\lambda_j$; kab zero, kab nahi. Dono alag hain: M1 rank gina karta hai, M2 $k=5$ aur $k=6$ ki error ko direct dekhta hai.</p>
+<h4>3. 🧮 Side-by-side working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Rank chain"><div class="mh">M1 · rank $=6$ se</div>
+<p><b>Step 1:</b> subspace dim $6$ ⇒ rank $C\le6$; span karte hon to $=6$.</p>
+<p><b>Step 2:</b> option 1: $50$ nonzero ✗ (rank $\le6$). Option 2: $6$ nonzero ✓ <span class="tag t-q">[?]</span>.</p>
+<p><b>Step 3:</b> option 4: $6$ PCs poora span ⇒ captured $=\sum_{j\le6}\lambda_j=V_{\text{tot}}$ ✓.</p>
+<p><b>Step 4:</b> option 3: $5$ PCs $\mathbb R^6$ subspace ke ek direction ko miss karte hain ⇒ residue nonzero ✗.</p></div>
+<div class="method" data-label="M2 Tail sums"><div class="mh">M2 · $E_k=\sum_{j&gt;k}\lambda_j$</div>
+<p><b>Step 1:</b> $\lambda_1\ge\dots\ge\lambda_6&gt;0$, $\lambda_7=\dots=\lambda_{50}=0$.</p>
+<p><b>Step 2:</b> $E_5=\lambda_6&gt;0$ ⇒ option 3 ✗.</p>
+<p><b>Step 3:</b> $E_6=0$ ⇒ $\text{CEV}(6)=1$ ⇒ option 4 ✓.</p>
+<p><b>Step 4:</b> nonzero eigenvalues $=6$ ⇒ option 2 ✓, option 1 ✗.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Rank chain</td><td>Fast</td><td>Low</td><td>Medium (option 3 par sign)</td><td>Pehli reading</td></tr>
+<tr><td>M2 Tail sums</td><td>Fast</td><td>Medium</td><td>Low</td><td>Option 3 aur 4 ka clean proof</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST</b> / 🏆 <b>BEST EXAM METHOD:</b> M1 phir M2 se option 3 confirm ($\lambda_6&gt;0$); trade-off: "exactly 6" ka caveat F16 mein hai.</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li><b>Numeric model:</b> $\mathbb R^{50}$ mein random 6-dim subspace, $n=5000$ centred: nonzero eigenvalues $=6$, $\lambda_6=0.995>0$ (⇒ $k=5$ par error $0.995$), $\lambda_7\approx10^{-14}$; top-6 / total $=1.0000$ (code-verified).</li>
+<li><b>$k=6$ par error:</b> $\approx1\times10^{-15}$ ⇒ zero residue.</li>
+<li><b>Source:</b> koi key nahi; derived $2,4$ ✓ (F16).</li>
+</ul>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>Option 1: $d=50$ eigenvalues nonzero maan lena.</li>
+<li>Option 3: "5 PCs" ko "6" se confuse karna; ek component kam karte hi residue aa jaata hai.</li>
+<li>Option 4: "equals total variance" ko "approx 95%" jaisa samajh kar ✗ karna.</li>
+</ul>
+<p><b>Recognition rule:</b> "$r$-dim subspace" ⇒ $r$ PCs poora variance aur zero residue; $r-1$ PCs se nahi.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>2000 points $\mathbb R^{25}$ mein, 3-dim subspace mein (span). Sach ya jhooth: (i) 3 nonzero eigenvalues, (ii) top 2 PCs se zero residue, (iii) top 3 PCs poora variance, (iv) $\text{CEV}(2)=1$. Aur $k=3$ par storage?</p>
+<details class="reveal"><summary>Show answer</summary><p>(i) ✓ (ii) ✗ (iii) ✓ (iv) ✗. Numeric model: eigenvalues $9.11,\ 3.93,\ 0.98,\ 0$ (baaki 0), $\text{CEV}(2)=0.930<1$. Storage $3\times(25+2000)=\mathbf{6075}$ vs raw $50\,000$ (code-verified).</p></details>
+</details>
+</section>
+
+<section data-track="pyq9">
+<h3>🎯 P9 — $150\times6$ matrix, columns ke relations: reconstruction error zero kab (2025 October 26) <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2025 October 26 · Original Q7 · ID <code>6406531527618</code> · SA · 3 marks · Page 7 · <span class="tag t-src">[SRC]</span></p>
+<p>Consider a <b>mean-centered dataset</b> consisting of <b>150 patients</b> from the healthcare domain with 6 features. The dataset is represented as a $150\times6$ matrix $X$. PCA is performed and it is observed that the reconstruction error becomes zero after completing <b>$k$</b> components. A domain expert provides:</p>
+<ul>
+<li>The set $C_1,C_2,C_3$ is linearly independent.</li>
+<li>The following relationships hold: $C_4=2C_1-C_2$, $C_5=C_2+C_3$, $C_6=4C_1-3C_5$.</li>
+</ul>
+<p>What is the value of $k$?</p>
+<p><b>Accepted answer (source):</b> <b>3</b>.</p>
+<p class="note">Notation: yahan $X$ ka shape $n\times d=150\times6$ hai (rows = patients), aur $C_j$ ($j=1..6$) $X$ ke <i>columns</i> (features) hain — covariance matrix $C$ nahi. Baaki page par $X$ $d\times n$ tha.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Kitne columns independent hain? Zero error kab milta hai (L5)? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> smallest $k$ jis par reconstruction error $0$ ho.</li>
+<li><b>Given:</b> $n=150$, $d=6$, centred; $C_1,C_2,C_3$ independent; $C_4,C_5,C_6$ unke combinations.</li>
+<li><b>Trigger clues:</b> "reconstruction error becomes zero after $k$ components", "linearly independent", "relationships hold".</li>
+<li><b>Prerequisites:</b> L5, B10 J5, Deeper 4 (Procedural + Conceptual) · <b>Core principle:</b> $k=\operatorname{rank}(\tilde X)$ $=$ independent columns ki ginti.</li>
+</ul>
+<h4>2. 🧭 Methods (2 genuinely different)</h4>
+<p><b>M1 Spanning set</b> — dekho har dependent column kis span mein hai; independent columns gino. <b>M2 Rank-nullity</b> — $d$ minus independent relations ki ginti. Dono alag cheez gino: M1 independent columns, M2 relations.</p>
+<h4>3. 🧮 Side-by-side working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Span"><div class="mh">M1 · independent columns</div>
+<p><b>Step 1:</b> $C_4=2C_1-C_2\in\operatorname{span}(C_1,C_2)$.</p>
+<p><b>Step 2:</b> $C_5=C_2+C_3\in\operatorname{span}(C_2,C_3)$.</p>
+<p><b>Step 3:</b> $C_6=4C_1-3C_5$ $=4C_1-3C_2-3C_3$ $\in\operatorname{span}(C_1,C_2,C_3)$.</p>
+<p><b>Step 4:</b> saare $6$ columns $\operatorname{span}(C_1,C_2,C_3)$ mein ⇒ rank $\le3$; $C_1,C_2,C_3$ independent ⇒ rank $=3$.</p>
+<p><b>Step 5:</b> $k=\mathbf3$.</p></div>
+<div class="method" data-label="M2 Rank-nullity"><div class="mh">M2 · $6-\#$ relations</div>
+<p><b>Step 1:</b> relations: $2C_1-C_2-C_4=0$, $C_2+C_3-C_5=0$, $4C_1-3C_5-C_6=0$.</p>
+<p><b>Step 2:</b> har relation ek naya column ($C_4,C_5,C_6$) lata hai (coefficient $-1$) ⇒ teeno independent (triangular).</p>
+<p><b>Step 3:</b> nullity $=3$ ⇒ rank $=6-3=3$.</p>
+<p><b>Step 4:</b> $k=\mathbf3$.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Span</td><td>Fast</td><td>Low</td><td>Low</td><td>Hamesha, relations simple hon</td></tr>
+<tr><td>M2 Rank-nullity</td><td>Fast</td><td>Medium</td><td>Medium (independence of relations)</td><td>Jab bahut relations hon</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST</b> / 🏆 <b>BEST EXAM METHOD:</b> M1 — har dependent column ko $C_1,C_2,C_3$ mein likho (30 second); trade-off: M2 sirf cross-check ke liye.</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li><b>Numeric:</b> random $C_1,C_2,C_3\in\mathbb R^{150}$, baaki 3 unhi relations se; centred $150\times6$ matrix ka numeric rank $=3$; $C$ ke eigenvalues $36.25,\ 3.41,\ 1.13,\ 0,\ 0,\ 0$ (code-verified).</li>
+<li><b>Relation matrix:</b> $3\times6$ relation matrix ka rank $3$ ⇒ nullity route se bhi $3$.</li>
+<li><b>Bound:</b> $3\le\min(6,149)$ ✓ (L5).</li>
+<li><b>Source key:</b> $3$ ✓.</li>
+</ul>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>$k=6$ (features ki ginti) ya $k=150$ (patients).</li>
+<li>"Dependent columns ki ginti" ($=3$) ko answer likh dena — yahan coincidence se $3$ hi hai ($6-3$), par principle independent columns hai. Agar $4$ independent aur $2$ dependent hote to $k=4$, $2$ nahi.</li>
+<li>$C_6$ ko $C_5$ ke through hi independent maan lena.</li>
+<li>Centring se relations toot'ne ka dar (nahi tootte, Deeper 4).</li>
+</ul>
+<p><b>Recognition rule:</b> "error zero after $k$ components" + column relations ⇒ $k$ = independent features ki ginti.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>$80$ samples, $5$ features, centred. $D_1,D_2$ independent; $D_3=D_1+D_2$, $D_4=3D_1-2D_3$, $D_5=D_4-D_2$. Reconstruction error zero after kitne components?</p>
+<details class="reveal"><summary>Show answer</summary><p>$D_3=D_1+D_2$; $D_4=3D_1-2(D_1+D_2)$ $=D_1-2D_2$; $D_5=D_1-2D_2-D_2$ $=D_1-3D_2$. Saare $D_1,D_2$ ki span mein ⇒ rank $=\mathbf2$ ⇒ $k=2$ (numeric rank $2$; code-verified).</p></details>
+</details>
+</section>
+<section data-track="memory">
+<h2>📌 Memory card — 2.5 reconstruction, residuals, compression, storage</h2>
+<div class="grid2">
+<div class="box em">
+<p><b>Core model:</b> $k$ PCs par reconstruction $\hat x=\sum_{j\le k}z_jw_j$; residue $r=\tilde x-\hat x\perp$ kept PCs; average squared error $=$ discarded eigenvalues ka jod; storage $=k(d+n)$ vs $dn$.</p>
+<p><b>Backbone chain:</b> centre → scores $z_j$ → $\hat x$ → residue $r$ → $\|r\|^2=\|\tilde x\|^2-\sum z_j^2$ → average $=\sum_{j&gt;k}\lambda_j$ → rank se zero kab → $k(d+n)$ → percentage.</p>
+</div>
+<div class="box">
+<p><b>Formulas (with conditions):</b></p>
+<ul>
+<li>$\hat x=W_kW_k^T\tilde x$ — orthonormal PCs, centred; original coord: $+\mu$</li>
+<li>$r=\sum_{j&gt;k}z_jw_j$, $r\perp w_1..w_k$ — dot test</li>
+<li>$\|r\|^2=\|\tilde x\|^2-\sum_{j\le k}z_j^2$ — Pythagoras</li>
+<li>$E_k=\sum_{j&gt;k}\lambda_j=(1-\text{CEV})V_{\text{tot}}$ — $1/n$ convention</li>
+<li>$E(w)=V_{\text{tot}}-w^TCw$ — single unit line $w$</li>
+<li>zero residue $\iff k\ge$ rank $\le\min(d,n-1)$</li>
+<li>decrease $\%=100\bigl(1-\tfrac{k(d+n)}{dn}\bigr)$; saves iff $k&lt;\tfrac{dn}{d+n}$</li>
+</ul>
+</div>
+</div>
+<div class="grid2">
+<div class="box amber">
+<p><b>Top 3 traps:</b> (1) storage mein $kn$ ya $kd$ akela (ya mean jodna jab key na jode); (2) captured variance ya "alag-alag line ke errors ka jod" ko error maan lena; (3) rank ko $d$/$n$ samajhna, ya "only $r$ eigenvalues" ko bina span ke exactly $r$ maan lena.</p>
+</div>
+<div class="box">
+<p><b>Trigger bank:</b> "reconstruction error after top-$k$" → $\|x-\sum\|^2$ · "percentage decrease in storage" → $1-\tfrac{k(d+n)}{dn}$ · "residues zero after $k$ rounds" → rank $k$, store $k(d+n)$ · "residues after PC1" → dot test $r\cdot w_1=0$ · "lie in $r$-dim subspace" → $r$ PCs, zero error · "columns ke relations" → independent columns gino.</p>
+</div>
+</div>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Method selector — question deta hai…</th><th>Use</th></tr></thead>
+<tbody>
+<tr><td>Ek point, $k$ PCs, error maanga</td><td>L3: $\|x\|^2-\sum z^2$ (residue vector nahi)</td></tr>
+<tr><td>Options mein "error" ke expressions</td><td>$\|x-\text{proj}\|^2$ ya $\|x\|^2-\text{proj}^2$ ki shakl dhundo; numeric test $x=(3,4,12)$</td></tr>
+<tr><td>Residue vectors ke options</td><td>Dot test $r\cdot w_j=0$, phir ek point par project+subtract</td></tr>
+<tr><td>Eigenvalues diye, average error maanga</td><td>Discarded $\lambda$'s ka jod ($X^TX$ ho to $n$ se bhaago)</td></tr>
+<tr><td>Storage / percentage</td><td>$k(d+n)$ vs $dn$; break-even $\tfrac{dn}{d+n}$</td></tr>
+<tr><td>Subspace / column relations / rounds</td><td>Rank $=$ independent dimensions; $k=$ rank</td></tr>
+</tbody></table></div>
+<p class="note"><b>Spaced review (2.5):</b> 2026-11-12 · 2026-11-14 · 2026-11-18 · 2026-12-02 — har baar P2 (option 2 ka double-count), P4 ($k(d+n)$, $75.00$ ka accident), P7 (dot test, mean line par), P9 (independent columns), Example 3 (residue discarded PC ke along), Example 6 (break-even), Deeper 2 (L7 proof).</p>
+</section>
+
+<section data-track="explain-back">
+<h2>✍️ Explain-it-back</h2>
+<div class="try">
+<p class="ttl">Chat mein apne words mein jawab do (3–5 lines):</p>
+<p>"P2 mein 'do alag lines ka error jodo' (option 2) kyun galat hai jabki option 1 sahi hai? Aur P4 mein storage $kn$ nahi balki $k(d+n)$ kyun hai — compressed form mein dono cheezein kya hain?"</p>
+<p class="note">Format: <code>Answer: … | Confidence: S/U/G | Reason: …</code></p>
+</div>
+</section>

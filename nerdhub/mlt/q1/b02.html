@@ -1,0 +1,679 @@
+<section data-track="intro">
+<p class="muted mono" style="margin:0">B2 · Orientation</p>
+<h1>Roadmap, Cheat Sheet v1, Progress Tracker + T1 Prerequisites</h1>
+<p class="lead">Is build mein koi PYQ solve nahi hota. Yahan chaar cheezein hain: (1) poora 26-build roadmap, (2) progress tracker, (3) Cheat Sheet v1 — saare 8 topics ke formulas ek jagah, (4) T1 Linear Algebra ka prerequisite module, jo B3 (projection) aur poore PCA ki neev hai.</p>
+<div class="box">
+<p><b>Tags:</b> <span class="tag t-src">[SRC]</span> = PYQ file / tumhari spec se · <span class="tag t-add">[ADDED]</span> = meri explanation, example ya naya question · <span class="tag t-flag">[FLAG]</span> = source / spec error, proof ke saath · <span class="tag t-q">[?]</span> = unreadable ya missing.</p>
+<p><b>Cheat Sheet v1 ke baare mein:</b> formulas standard theory se hain, isliye <span class="tag t-add">[ADDED]</span>; sab code se verify hue hain (projection, PCA, dual PCA, kernel PCA, MLE, Beta, EM, regression, gradient descent). Lekin PYQ-specific conventions — jaise covariance mein $\tfrac1n$ ya $\tfrac1{n-1}$, K-means++ mein distance ya distance² — jis build mein woh question aata hai wahin confirm honge. Final version B26 mein banegi.</p>
+<p><b>Important caveat:</b> Bank frequency ≠ exam weightage. Roadmap learning order hai, "kya zyada aayega" ki prediction nahi.</p>
+</div>
+</section>
+
+<section data-track="roadmap">
+<h2>🗺️ 1. Roadmap: 26 builds, seekhne ke order mein <span class="tag t-src">[SRC]</span></h2>
+<p>Order bank-frequency ka nahi, <b>dependency</b> ka hai — har topic woh tools use karta hai jo pehle aa chuke hote hain:</p>
+<ol>
+<li><b>T1 Linear Algebra → T2 PCA:</b> PCA ka har question projection (dot product, norm) par chalta hai. Isliye pehle T1 (B3), phir PCA ke prerequisites (B4), phir PCA ke 6 subtopics (B5–B12).</li>
+<li><b>T2 → T3 Kernels:</b> Dual PCA (2.6) mein $X^TX$ aata hai — wahi matrix kernel ka Gram matrix ban jaata hai. Isliye Kernels PCA ke turant baad.</li>
+<li><b>T4 K-means:</b> distance + mean ka simple algorithm; GMM iska "soft" version hai, isliye GMM se pehle.</li>
+<li><b>T5 Probability / MLE / Bayes:</b> GMM ka M-step asal mein weighted MLE hai.</li>
+<li><b>T6 Convexity → T7 GMM/EM → T8 Regression:</b> Jensen EM ke proof ki neev hai; Regression sabse chhota topic hai, isliye last.</li>
+</ol>
+<figure class="viz">
+  <p class="vt">PYQ blocks assigned to each build</p>
+  <p class="vs">Spec ke hisaab se har build mein kitne question blocks (comprehension parents samet). Neeche ka label = topic. Hover for build content.</p>
+  <div class="chart" data-chart="{&quot;type&quot;: &quot;vbar&quot;, &quot;labels&quot;: [&quot;B1&quot;, &quot;B2&quot;, &quot;B3&quot;, &quot;B4&quot;, &quot;B5&quot;, &quot;B6&quot;, &quot;B7&quot;, &quot;B8&quot;, &quot;B9&quot;, &quot;B10&quot;, &quot;B11&quot;, &quot;B12&quot;, &quot;B13&quot;, &quot;B14&quot;, &quot;B15&quot;, &quot;B16&quot;, &quot;B17&quot;, &quot;B18&quot;, &quot;B19&quot;, &quot;B20&quot;, &quot;B21&quot;, &quot;B22&quot;, &quot;B23&quot;, &quot;B24&quot;, &quot;B25&quot;, &quot;B26&quot;], &quot;values&quot;: [0, 0, 3, 0, 7, 6, 9, 7, 6, 4, 9, 5, 7, 6, 5, 5, 11, 8, 8, 6, 6, 5, 8, 10, 12, 10], &quot;sub&quot;: [&quot;–&quot;, &quot;–&quot;, &quot;T1&quot;, &quot;T2&quot;, &quot;T2&quot;, &quot;T2&quot;, &quot;T2&quot;, &quot;T2&quot;, &quot;T2&quot;, &quot;T2&quot;, &quot;T2&quot;, &quot;T2&quot;, &quot;T3&quot;, &quot;T3&quot;, &quot;T3&quot;, &quot;T3&quot;, &quot;T4&quot;, &quot;T4&quot;, &quot;T4&quot;, &quot;T4&quot;, &quot;T4&quot;, &quot;T5&quot;, &quot;T5&quot;, &quot;T5&quot;, &quot;6·7&quot;, &quot;7·8&quot;], &quot;unit&quot;: &quot;&quot;, &quot;aria&quot;: &quot;PYQ blocks assigned to each build&quot;, &quot;tips&quot;: [&quot;Orientation · PYQ analysis dashboard, big picture, why each topic exists, dependency…&quot;, &quot;Orientation · Roadmap, Cheat Sheet v1, progress tracker, T1 prerequisites&quot;, &quot;T1 Linear Algebra · 1.1 Vector projection + 1.2 Projection reconstruction error + ⏱️ T1 se…&quot;, &quot;T2 PCA · PCA prerequisites (mean, variance, covariance, eigen-decomposition, sy…&quot;, &quot;T2 PCA · 2.1 Covariance, eigenvalues, variance along PCs — part A (first 7 Qs)&quot;, &quot;T2 PCA · 2.1 part B (remaining 6) + 🧩 checkpoint 1&quot;, &quot;T2 PCA · 2.2 PC directions and orthogonality&quot;, &quot;T2 PCA · 2.3 Projection scores and PC coordinates — part A (first 7)&quot;, &quot;T2 PCA · 2.3 part B (remaining 6)&quot;, &quot;T2 PCA · 2.4 Explained variance, rank, dimension selection&quot;, &quot;T2 PCA · 2.5 Reconstruction, residuals, compression, storage&quot;, &quot;T2 PCA · 2.6 Dual PCA, Gram matrices, d &gt; n + ⏱️ T2 set + 🧩 checkpoint 2&quot;, &quot;T3 Kernels · T3 Kernel prerequisites + 3.1 Feature maps + 3.3 Polynomial and Gaussi…&quot;, &quot;T3 Kernels · 3.2 Valid kernels, Gram matrices, closure — part A (first 6)&quot;, &quot;T3 Kernels · 3.2 part B (remaining 5)&quot;, &quot;T3 Kernels · 3.4 Kernel PCA + ⏱️ T3 set&quot;, &quot;T4 K-means · T4 K-means prerequisites + 4.1 Core calculations + 4.2 Centroid update…&quot;, &quot;T4 K-means · 4.3 Assignment, distance, geometry + 4.6 Choosing K&quot;, &quot;T4 K-means · 4.4 Objective, monotonicity, convergence&quot;, &quot;T4 K-means · 4.5 K-means++ — part A (first 6)&quot;, &quot;T4 K-means · 4.5 part B (remaining 6) + ⏱️ T4 set&quot;, &quot;T5 Probability · T5 Probability prerequisites + 5.1 Bernoulli MLE + 🧩 checkpoint 4&quot;, &quot;T5 Probability · 5.2 Likelihood and MLE for distributions&quot;, &quot;T5 Probability · 5.3 Beta priors, posterior, mean/mode + ⏱️ T5 set&quot;, &quot;T6 + T7 · T6 Convexity/Jensen + T7 GMM prerequisites + 7.1 Fundamentals + 7.2 Li…&quot;, &quot;T7 + T8 · 7.4 M-step + 7.5 EM vs Lloyd + T8 Regression (8.1 MSE, 8.2 Gradient de…&quot;]}"></div>
+  <figcaption><b>Interpretation:</b> B1, B2 aur B4 mein koi PYQ nahi — woh orientation / prerequisite builds hain. PCA (B5–B12) aur K-means (B17–B21) ke builds sabse bhare hue hain; B25 sabse bada single build hai (12).</figcaption>
+  <details class="table-view"><summary>Table view</summary><div class="tbl-wrap"><table><thead><tr><th>Build</th><th class="num">PYQ blocks</th></tr></thead><tbody>
+<tr><td>B1</td><td class="num">0</td></tr>
+<tr><td>B2</td><td class="num">0</td></tr>
+<tr><td>B3</td><td class="num">3</td></tr>
+<tr><td>B4</td><td class="num">0</td></tr>
+<tr><td>B5</td><td class="num">7</td></tr>
+<tr><td>B6</td><td class="num">6</td></tr>
+<tr><td>B7</td><td class="num">9</td></tr>
+<tr><td>B8</td><td class="num">7</td></tr>
+<tr><td>B9</td><td class="num">6</td></tr>
+<tr><td>B10</td><td class="num">4</td></tr>
+<tr><td>B11</td><td class="num">9</td></tr>
+<tr><td>B12</td><td class="num">5</td></tr>
+<tr><td>B13</td><td class="num">7</td></tr>
+<tr><td>B14</td><td class="num">6</td></tr>
+<tr><td>B15</td><td class="num">5</td></tr>
+<tr><td>B16</td><td class="num">5</td></tr>
+<tr><td>B17</td><td class="num">11</td></tr>
+<tr><td>B18</td><td class="num">8</td></tr>
+<tr><td>B19</td><td class="num">8</td></tr>
+<tr><td>B20</td><td class="num">6</td></tr>
+<tr><td>B21</td><td class="num">6</td></tr>
+<tr><td>B22</td><td class="num">5</td></tr>
+<tr><td>B23</td><td class="num">8</td></tr>
+<tr><td>B24</td><td class="num">10</td></tr>
+<tr><td>B25</td><td class="num">12</td></tr>
+<tr><td>B26</td><td class="num">10</td></tr>
+  </tbody></table></div></details>
+</figure>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Build</th><th>Topic</th><th>Content</th><th class="num">PYQs</th><th>Lines in PYQ file</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td class="mono">B1</td><td>Orientation</td><td>PYQ analysis dashboard, big picture, why each topic exists, dependency map</td><td class="num">—</td><td class="mono" style="font-size:12px">1–31, 5145–5163 + headings scan</td><td><span class="chip target">Done</span></td></tr>
+<tr><td class="mono">B2</td><td>Orientation</td><td>Roadmap, Cheat Sheet v1, progress tracker, T1 prerequisites</td><td class="num">—</td><td class="mono" style="font-size:12px">—</td><td><span class="chip prog" style="white-space:nowrap">This page</span></td></tr>
+<tr><td class="mono">B3</td><td>T1 Linear Algebra</td><td>1.1 Vector projection + 1.2 Projection reconstruction error + ⏱️ T1 set</td><td class="num">3</td><td class="mono" style="font-size:12px">4916–4983</td><td><span class="chip">Planned</span></td></tr>
+<tr><td class="mono">B4</td><td>T2 PCA</td><td>PCA prerequisites (mean, variance, covariance, eigen-decomposition, symmetric matrices)</td><td class="num">—</td><td class="mono" style="font-size:12px">—</td><td><span class="chip">Planned</span></td></tr>
+<tr><td class="mono">B5</td><td>T2 PCA</td><td>2.1 Covariance, eigenvalues, variance along PCs — part A (first 7 Qs)</td><td class="num">7</td><td class="mono" style="font-size:12px">1164–1515</td><td><span class="chip">Planned</span></td></tr>
+<tr><td class="mono">B6</td><td>T2 PCA</td><td>2.1 part B (remaining 6) + 🧩 checkpoint 1</td><td class="num">6</td><td class="mono" style="font-size:12px">1164–1515</td><td><span class="chip">Planned</span></td></tr>
+<tr><td class="mono">B7</td><td>T2 PCA</td><td>2.2 PC directions and orthogonality</td><td class="num">9</td><td class="mono" style="font-size:12px">1516–1789</td><td><span class="chip">Planned</span></td></tr>
+<tr><td class="mono">B8</td><td>T2 PCA</td><td>2.3 Projection scores and PC coordinates — part A (first 7)</td><td class="num">7</td><td class="mono" style="font-size:12px">1790–2148</td><td><span class="chip">Planned</span></td></tr>
+<tr><td class="mono">B9</td><td>T2 PCA</td><td>2.3 part B (remaining 6)</td><td class="num">6</td><td class="mono" style="font-size:12px">1790–2148</td><td><span class="chip">Planned</span></td></tr>
+<tr><td class="mono">B10</td><td>T2 PCA</td><td>2.4 Explained variance, rank, dimension selection</td><td class="num">4</td><td class="mono" style="font-size:12px">2149–2260</td><td><span class="chip">Planned</span></td></tr>
+<tr><td class="mono">B11</td><td>T2 PCA</td><td>2.5 Reconstruction, residuals, compression, storage</td><td class="num">9</td><td class="mono" style="font-size:12px">2261–2551</td><td><span class="chip">Planned</span></td></tr>
+<tr><td class="mono">B12</td><td>T2 PCA</td><td>2.6 Dual PCA, Gram matrices, d &gt; n + ⏱️ T2 set + 🧩 checkpoint 2</td><td class="num">5</td><td class="mono" style="font-size:12px">2552–2716</td><td><span class="chip">Planned</span></td></tr>
+<tr><td class="mono">B13</td><td>T3 Kernels</td><td>T3 Kernel prerequisites + 3.1 Feature maps + 3.3 Polynomial and Gaussian kernels</td><td class="num">7</td><td class="mono" style="font-size:12px">2717–2951, 3446–3504</td><td><span class="chip">Planned</span></td></tr>
+<tr><td class="mono">B14</td><td>T3 Kernels</td><td>3.2 Valid kernels, Gram matrices, closure — part A (first 6)</td><td class="num">6</td><td class="mono" style="font-size:12px">2952–3445</td><td><span class="chip">Planned</span></td></tr>
+<tr><td class="mono">B15</td><td>T3 Kernels</td><td>3.2 part B (remaining 5)</td><td class="num">5</td><td class="mono" style="font-size:12px">2952–3445</td><td><span class="chip">Planned</span></td></tr>
+<tr><td class="mono">B16</td><td>T3 Kernels</td><td>3.4 Kernel PCA + ⏱️ T3 set</td><td class="num">5</td><td class="mono" style="font-size:12px">3505–3678</td><td><span class="chip">Planned</span></td></tr>
+<tr><td class="mono">B17</td><td>T4 K-means</td><td>T4 K-means prerequisites + 4.1 Core calculations + 4.2 Centroid updates + 🧩 checkpoint 3</td><td class="num">11</td><td class="mono" style="font-size:12px">32–366</td><td><span class="chip">Planned</span></td></tr>
+<tr><td class="mono">B18</td><td>T4 K-means</td><td>4.3 Assignment, distance, geometry + 4.6 Choosing K</td><td class="num">8</td><td class="mono" style="font-size:12px">367–585, 1135–1161</td><td><span class="chip">Planned</span></td></tr>
+<tr><td class="mono">B19</td><td>T4 K-means</td><td>4.4 Objective, monotonicity, convergence</td><td class="num">8</td><td class="mono" style="font-size:12px">586–812</td><td><span class="chip">Planned</span></td></tr>
+<tr><td class="mono">B20</td><td>T4 K-means</td><td>4.5 K-means++ — part A (first 6)</td><td class="num">6</td><td class="mono" style="font-size:12px">813–1134</td><td><span class="chip">Planned</span></td></tr>
+<tr><td class="mono">B21</td><td>T4 K-means</td><td>4.5 part B (remaining 6) + ⏱️ T4 set</td><td class="num">6</td><td class="mono" style="font-size:12px">813–1134</td><td><span class="chip">Planned</span></td></tr>
+<tr><td class="mono">B22</td><td>T5 Probability</td><td>T5 Probability prerequisites + 5.1 Bernoulli MLE + 🧩 checkpoint 4</td><td class="num">5</td><td class="mono" style="font-size:12px">4298–4394</td><td><span class="chip">Planned</span></td></tr>
+<tr><td class="mono">B23</td><td>T5 Probability</td><td>5.2 Likelihood and MLE for distributions</td><td class="num">8</td><td class="mono" style="font-size:12px">4395–4694</td><td><span class="chip">Planned</span></td></tr>
+<tr><td class="mono">B24</td><td>T5 Probability</td><td>5.3 Beta priors, posterior, mean/mode + ⏱️ T5 set</td><td class="num">10</td><td class="mono" style="font-size:12px">4695–4915</td><td><span class="chip">Planned</span></td></tr>
+<tr><td class="mono">B25</td><td>T6 + T7</td><td>T6 Convexity/Jensen + T7 GMM prerequisites + 7.1 Fundamentals + 7.2 Likelihood + 7.3 E-step</td><td class="num">12</td><td class="mono" style="font-size:12px">5089–5144, 3679–4160</td><td><span class="chip">Planned</span></td></tr>
+<tr><td class="mono">B26</td><td>T7 + T8</td><td>7.4 M-step + 7.5 EM vs Lloyd + T8 Regression (8.1 MSE, 8.2 Gradient descent) + ⏱️ final timed mixed test + 🧩 checkpoint 5 + final cheat sheet + weak-areas page</td><td class="num">10</td><td class="mono" style="font-size:12px">4161–4297, 4984–5088</td><td><span class="chip">Planned</span></td></tr>
+</tbody></table></div>
+<p class="note">Roadmap tumhari build spec (§6) se hai. "Lines" = <code>mlt_topicwise_subtopicwise.md</code> ki line ranges; har build sirf apni range padhta hai. ⏱️ = timed set, 🧩 = mixed checkpoint.</p>
+<div class="box amber">
+<p><span class="tag t-flag">[FLAG]</span> <span class="tag t-q">[?]</span> <b>Count check:</b> spec ke per-build PYQ numbers ka total <b>163</b> aata hai (code se), jabki B1 ke hisaab se bank mein <b>162</b> question blocks hain (138 scorable + 24 comprehension parents). B1 ke topic-wise blocks se T6 (1) + T7 (16) + T8 (4) = <b>21</b>, par spec mein B25 + B26 = 12 + 10 = <b>22</b>. Matlab B26 mein 9 hone chahiye, 10 nahi. Maine plan nahi badla; B25 / B26 ki lines padhte waqt exact recount karunga.</p>
+</div>
+<div class="box">
+<p><b>Har build kaise kaam karta hai:</b></p>
+<ol>
+<li>Page padho — core idea pehle, deeper parts collapsible sections mein.</li>
+<li><b>"Try first"</b> box: solution kholne se pehle khud attempt karo.</li>
+<li>Chat mein reply karo: <code>Answer: X | Confidence: S/U/G | Reason: …</code> — S = Sure, U = Unsure, G = Guess.</li>
+<li>Grading: answer aur reasoning <b>alag</b> judge hote hain. Correct + U/G = mastery credit nahi. Incorrect + S = pehle misconception fix hoga.</li>
+<li>Galti ka type tag hota hai: [MEMORY] [CONCEPT] [PREREQUISITE] [CONFUSION] [METHOD] [LOGIC] [CALCULATION] [READING] [CARELESS] [TIME] [EDGE CASE]. Ek hi cheez mein 3 baar galti → naye representation ke saath dobara teach.</li>
+</ol>
+</div>
+</section>
+
+<section data-track="tracker">
+<h2>📈 2. Progress tracker</h2>
+<p>Progress do tarah ka hai: <b>(a) Topic status</b> — sirf tumhare chat mein diye gaye answers (demonstrated) se badalta hai, aur state JSON mein rehta hai. <b>(b) Section ticks</b> — page ke "Mark this section done" boxes, sirf is browser mein save hote hain.</p>
+<h3>Topic status <span class="note">(state JSON, saved 2026-11-10)</span></h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>ID</th><th>Topic</th><th>Status</th><th>Evidence</th><th>Builds</th></tr></thead>
+<tbody>
+<tr><td class="mono">T1</td><td>Linear Algebra</td><td><span class="chip">Not started</span></td><td class="muted">—</td><td class="mono">B2 (prereq), B3</td></tr>
+<tr><td class="mono">T2</td><td>PCA</td><td><span class="chip">Not started</span></td><td class="muted">—</td><td class="mono">B4–B12</td></tr>
+<tr><td class="mono">T3</td><td>Kernels</td><td><span class="chip">Not started</span></td><td class="muted">—</td><td class="mono">B13–B16</td></tr>
+<tr><td class="mono">T4</td><td>K-means</td><td><span class="chip">Not started</span></td><td class="muted">—</td><td class="mono">B17–B21</td></tr>
+<tr><td class="mono">T5</td><td>Probability / MLE / Bayes</td><td><span class="chip">Not started</span></td><td class="muted">—</td><td class="mono">B22–B24</td></tr>
+<tr><td class="mono">T6</td><td>Convexity</td><td><span class="chip">Not started</span></td><td class="muted">—</td><td class="mono">B25</td></tr>
+<tr><td class="mono">T7</td><td>GMM / EM</td><td><span class="chip">Not started</span></td><td class="muted">—</td><td class="mono">B25–B26</td></tr>
+<tr><td class="mono">T8</td><td>Regression</td><td><span class="chip">Not started</span></td><td class="muted">—</td><td class="mono">B26</td></tr>
+</tbody></table></div>
+<p class="note">Status ladder: Not started → Orientation complete → In progress → Practised → Needs repair → Delayed recall verified → Mastered → Exam-ready. "In progress" ke aage ka har kadam tumhare demonstrated answers se hi milega. Colour code: <span class="chip target">emerald</span> = mastered / target, <span class="chip prog">blue</span> = in progress, <span class="chip repair">amber</span> = needs repair.</p>
+<div class="grid2">
+<div class="box amber"><p><b>Needs repair:</b> abhi koi entry nahi. Pehla demonstrated answer aane ke baad galat concepts yahan [error tag] ke saath aayenge.</p></div>
+<div class="box em"><p><b>Spaced review due:</b> abhi koi nahi. Review dates tab banengi jab koi concept "Practised" tak pahunche.</p></div>
+</div>
+<h3>Section ticks <span class="note">(live, is browser mein)</span></h3>
+<div data-progress-tracker></div>
+<p class="note">Counts tab dikhte hain jab tum woh build ek baar khol lo (sections ginne ke liye). Ticks doosre device par sync nahi hote — wahan khali dikhenge. Overall bar sidebar mein bhi hai.</p>
+<h3>Source flags <span class="tag t-flag">[FLAG]</span></h3>
+<p>B1 mein 11 source flags ka proof-summary tha; yahan unka compact index hai (full solution unke build mein). F12 naya hai.</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>#</th><th>Question ID</th><th>Issue</th><th>Build</th></tr></thead>
+<tbody>
+<tr><td>F1</td><td class="mono">640653995448</td><td>Distance table wrong; 6 = F after mean update</td><td class="mono">B17</td></tr>
+<tr><td>F2</td><td class="mono">640653669234</td><td>Highest probability is (13,13), not (10,10)</td><td class="mono">B20</td></tr>
+<tr><td>F3</td><td class="mono">640653669235</td><td>Closest mean is (3,3), not (10,10)</td><td class="mono">B20</td></tr>
+<tr><td>F4</td><td class="mono">640653577736</td><td>ab = 180 as given; 60 if the value is −1 <span class="tag t-q">[?]</span></td><td class="mono">B19</td></tr>
+<tr><td>F5</td><td class="mono">6406531527625</td><td>C2 mean (2.5, −1.5) vs marked (1.5, −1.5) <span class="tag t-q">[?]</span></td><td class="mono">B19</td></tr>
+<tr><td>F6</td><td class="mono">6406531104791</td><td>Centred $\lambda_1 = 18.44$; key 43.75 is uncentred</td><td class="mono">B6</td></tr>
+<tr><td>F7</td><td class="mono">6406532158944</td><td>$\lambda_1 = 50$; key 100 = total variance</td><td class="mono">B6</td></tr>
+<tr><td>F8</td><td class="mono">640653669240</td><td>Posterior mean 18/57 = 0.316, outside 0.2–0.3</td><td class="mono">B24</td></tr>
+<tr><td>F9</td><td class="mono">640653995450</td><td>Responsibility 2.5 invalid; answer 1.563 still in range</td><td class="mono">B26</td></tr>
+<tr><td>F10</td><td class="mono">6406531527629</td><td>Density rows x = 10, 20 inconsistent; index unreadable <span class="tag t-q">[?]</span></td><td class="mono">B25</td></tr>
+<tr><td>F11</td><td class="mono">6406531104779</td><td>Expressions (1) and (3) identical <span class="tag t-q">[?]</span></td><td class="mono">B17</td></tr>
+<tr><td>F12</td><td>Spec roadmap</td><td>Per-build PYQ counts sum to 163 vs 162 blocks; B26 likely 9 <span class="tag t-q">[?]</span></td><td class="mono">B26</td></tr>
+</tbody></table></div>
+</section>
+<section data-track="cheatsheet">
+<h2>📌 3. Cheat Sheet v1 <span class="tag t-add">[ADDED]</span></h2>
+<p>Saare 8 topics ke core formulas, unki <b>conditions</b> ke saath, ek jagah. Yeh v1 hai: standard theory se bana, code se verify hua, aur PYQ-specific conventions ke liye har jagah "check the question" note hai. Jaise-jaise builds aate hain, yahan ki entries confirm / correct hongi; final cheat sheet B26 mein.</p>
+<div class="box">
+<p><b>Conventions (is page ke liye):</b> data matrix $X\in\mathbb R^{d\times n}$ — $n$ points, har point ek <b>column</b> $x_i\in\mathbb R^d$. $\mathbf 1_n=\tfrac1n\mathbf{1}\mathbf{1}^T$ (har entry $1/n$). Gram matrix ke eigenvalues ko $\nu$ likha hai taaki mean $\mu$ se confuse na ho.</p>
+</div>
+
+<h3>T1 · Linear Algebra</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Item</th><th>Formula</th><th>Condition / note</th></tr></thead>
+<tbody>
+<tr><td>Scalar projection of $x$ on $w$</td><td>$\dfrac{x^Tw}{\|w\|}$</td><td>Signed length; $w\neq 0$. Unit $w$: simply $x^Tw$.</td></tr>
+<tr><td>Vector projection</td><td>$\dfrac{x^Tw}{w^Tw}\,w$</td><td>Denominator $w^Tw=\|w\|^2$ (squared!). Unit $w$: $(x^Tw)\,w$.</td></tr>
+<tr><td>Residual</td><td>$r=x-\text{proj}_w(x)$, with $r^Tw=0$</td><td>Residual is always orthogonal to the direction.</td></tr>
+<tr><td>Reconstruction error (squared)</td><td>$\|x-\text{proj}\|^2=\|x\|^2-\dfrac{(x^Tw)^2}{w^Tw}$</td><td>Unit $w$: $\|x\|^2-(x^Tw)^2$. Pythagoras se (B3 mein derive).</td></tr>
+<tr><td>Squared distance</td><td>$\|x-y\|^2=\|x\|^2-2x^Ty+\|y\|^2$</td><td>K-means, kernels, sab jagah.</td></tr>
+</tbody></table></div>
+
+<h3>T2 · PCA</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Item</th><th>Formula</th><th>Condition / note</th></tr></thead>
+<tbody>
+<tr><td>Centre the data</td><td>$\mu=\tfrac1n\sum_i x_i,\quad x_i\leftarrow x_i-\mu$</td><td>Standard PCA <b>pehle centre</b> karta hai (flag F6 yahin se aaya).</td></tr>
+<tr><td>Covariance</td><td>$C=\tfrac1n\sum_i x_ix_i^T=\tfrac1nXX^T$</td><td>$X$ centred, $d\times d$. $\tfrac1{n-1}$ use ho to saare eigenvalues $\tfrac n{n-1}$ guna; eigenvectors same. <b>Question check karo.</b></td></tr>
+<tr><td>Principal components</td><td>$Cw=\lambda w,\ \|w\|=1$; PC$_k$ = $k$-th largest $\lambda$ ka eigenvector</td><td>$C$ symmetric PSD ⇒ $\lambda\ge0$ real, eigenvectors orthogonal. $\pm w$ dono valid (sign ambiguity).</td></tr>
+<tr><td>Variance along unit $w$</td><td>$w^TCw$; maximum $=\lambda_1$ at $w=w_1$</td><td>$\|w\|=1$ zaroori.</td></tr>
+<tr><td>PC coordinate (score)</td><td>$x^Tw_k$</td><td>Centred $x$, unit $w_k$.</td></tr>
+<tr><td>Total variance / explained ratio</td><td>$\operatorname{tr}(C)=\sum_j\lambda_j$; ratio $=\dfrac{\sum_{j\le k}\lambda_j}{\sum_j\lambda_j}$</td><td>Total variance = sab eigenvalues ka sum (flag F7: $\lambda_1\neq$ total).</td></tr>
+<tr><td>Rank-$k$ reconstruction</td><td>$\hat x=\mu+\sum_{j\le k}(x^Tw_j)\,w_j$ ($x$ centred)</td><td>Average squared error $=\sum_{j>k}\lambda_j$ (jab $C$ mein $\tfrac1n$ ho).</td></tr>
+<tr><td>Rank of covariance</td><td>$\operatorname{rank}(C)\le\min(d,\,n-1)$</td><td>Centring ke baad points ka sum zero ⇒ ek rank kam. Data $k$-dim subspace mein ho ⇒ $\le k$ non-zero eigenvalues (points poora subspace span karein to exactly $k$); tab $k$ PCs se residue zero.</td></tr>
+<tr><td>Dual PCA ($d&gt;n$)</td><td>$X^TXv=\nu v\ \Rightarrow\ XX^T(Xv)=\nu(Xv)$; PC $w=\dfrac{Xv}{\sqrt\nu}$; eigenvalue of $C$ $=\nu/n$</td><td>$XX^T$ ($d\times d$) aur $X^TX$ ($n\times n$): <b>non-zero eigenvalues same, eigenvectors alag</b> (size hi alag hai).</td></tr>
+<tr><td>Storage after PCA</td><td>$kd$ (PCs) $+\ kn$ (coefficients) $\ (+\,d$ mean$)$ vs $dn$ originally</td><td>Counting convention question se confirm karo (B11).</td></tr>
+</tbody></table></div>
+
+<h3>T3 · Kernels</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Item</th><th>Formula</th><th>Condition / note</th></tr></thead>
+<tbody>
+<tr><td>Kernel &amp; Gram matrix</td><td>$k(x,y)=\phi(x)^T\phi(y)$; $K_{ij}=k(x_i,x_j)$</td><td>Linear kernel: $K=X^TX$.</td></tr>
+<tr><td>Valid kernel</td><td>$K$ symmetric aur PSD (har finite point set ke liye)</td><td>PSD ⇔ saare eigenvalues $\ge0$ ⇔ $a^TKa\ge0\ \forall a$. Sirf symmetric kaafi nahi.</td></tr>
+<tr><td>Standard kernels</td><td>Polynomial $(x^Ty+c)^p$, $c\ge0$; Gaussian $\exp\!\big(-\tfrac{\|x-y\|^2}{2\sigma^2}\big)$</td><td>Gaussian: $k(x,x)=1$ hamesha.</td></tr>
+<tr><td>Closure rules</td><td>$k_1+k_2,\ \ a\,k_1\ (a\ge0),\ \ k_1k_2,\ \ f(x)f(y),\ \ e^{k_1}$ valid</td><td>$k_1-k_2$ aur $-k_1$ <b>guaranteed nahi</b>. Counterexample: $k_1=xy,\ k_2=2xy$ ⇒ $k_1-k_2=-xy$; single point $x=1$ par Gram matrix $[-1]$, eigenvalue $-1&lt;0$.</td></tr>
+<tr><td>Feature maps (2-D)</td><td>$(x^Ty)^2\to\phi(x)=(x_1^2,\ \sqrt2x_1x_2,\ x_2^2)$<br>$(x^Ty+1)^2\to(x_1^2,\ x_2^2,\ \sqrt2x_1x_2,\ \sqrt2x_1,\ \sqrt2x_2,\ 1)$</td><td>$\phi$ unique nahi — coordinates ka order badalna ya rotate karna bhi chalta hai.</td></tr>
+<tr><td>Centred Gram matrix</td><td>$K^c=K-\mathbf 1_nK-K\mathbf 1_n+\mathbf 1_nK\mathbf 1_n$</td><td>Kernel PCA se pehle; $\phi$-space mein centring ke barabar.</td></tr>
+<tr><td>Kernel PCA</td><td>$K^cv=\nu v$ (unit $v$); variance $=\nu/n$; training point $i$ ka PC-$k$ score $=\sqrt{\nu_k}\,v_k[i]$</td><td>Linear kernel lo to ordinary PCA scores aate hain (code se verified).</td></tr>
+</tbody></table></div>
+
+<h3>T4 · K-means</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Item</th><th>Formula / rule</th><th>Condition / note</th></tr></thead>
+<tbody>
+<tr><td>Objective</td><td>$F=\sum_{i=1}^n\|x_i-\mu_{z_i}\|^2$</td><td>Squared distance, grouped by cluster.</td></tr>
+<tr><td>Lloyd's algorithm</td><td>Assign: $z_i=\arg\min_k\|x_i-\mu_k\|^2$. Update: $\mu_k=\tfrac1{|S_k|}\sum_{i\in S_k}x_i$. Repeat jab tak assignments na badlein.</td><td>Pehle <b>sab</b> points assign karo, tab means update.</td></tr>
+<tr><td>Monotonicity</td><td>$F$ har assign step aur har update step par non-increasing</td><td>Mean squared distance ka minimiser hai (code se verified). Local minimum tak finite steps; init par depend.</td></tr>
+<tr><td>K-means++</td><td>Pehla centre uniform random. Agla: $P(x)=\dfrac{D(x)^2}{\sum_{x'}D(x')^2}$, $D(x)$ = nearest chosen centre se distance</td><td>Chosen points ke liye $D=0$ ⇒ probability 0. Bank mein "$\propto D$" wale variants bhi hain (flag F2) — <b>question ka wording padho</b>.</td></tr>
+<tr><td>Choosing $K$</td><td>$F$ $K$ badhne par ghatta hai; $K=n$ par $F=0$</td><td>Isliye sirf $F$ minimise karke $K$ nahi chun sakte (elbow idea).</td></tr>
+</tbody></table></div>
+
+<h3>T5 · Probability, MLE, Bayes</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Item</th><th>Formula</th><th>Condition / note</th></tr></thead>
+<tbody>
+<tr><td>MLE recipe</td><td>$\ell(\theta)=\sum_i\log f(x_i;\theta)$; solve $\ell'(\theta)=0$, check $\ell''&lt;0$</td><td>i.i.d. samples. Likelihood = product, log-likelihood = sum.</td></tr>
+<tr><td>Bernoulli($p$)</td><td>$\hat p=\dfrac{\#\text{ones}}{n}$</td><td>Likelihood $p^k(1-p)^{n-k}$.</td></tr>
+<tr><td>Gaussian</td><td>$\hat\mu=\bar x,\quad\hat\sigma^2=\tfrac1n\sum_i(x_i-\bar x)^2$</td><td>MLE variance mein $n$ se divide (biased), $n-1$ se nahi.</td></tr>
+<tr><td>Poisson($\lambda$)</td><td>$\hat\lambda=\bar x$</td><td></td></tr>
+<tr><td>Exponential (rate $\lambda$)</td><td>$\hat\lambda=\dfrac{n}{\sum_ix_i}=\dfrac1{\bar x}$</td><td>pdf $\lambda e^{-\lambda x}$. Agar pdf mean-parametrised ho to formula badlega.</td></tr>
+<tr><td>Pareto (known $x_m$)</td><td>$\hat\alpha=\dfrac{n}{\sum_i\ln(x_i/x_m)}$</td><td>pdf $\alpha x_m^\alpha/x^{\alpha+1}$; question ka pdf-form B23 mein confirm.</td></tr>
+<tr><td>Bayes rule</td><td>posterior $\propto$ likelihood $\times$ prior</td><td>Normalising constant parameter par depend nahi karta.</td></tr>
+<tr><td>Beta–Bernoulli</td><td>Prior Beta$(\alpha,\beta)$ + $h$ ones, $t$ zeros ⇒ Beta$(\alpha+h,\ \beta+t)$</td><td>Example: Beta(3,4) + (15, 35) ⇒ Beta(18, 39).</td></tr>
+<tr><td>Beta mean / mode</td><td>mean $\dfrac{\alpha}{\alpha+\beta}$; mode $\dfrac{\alpha-1}{\alpha+\beta-2}$</td><td>Mode ke liye $\alpha,\beta&gt;1$. MAP = posterior mode. Beta(1,1) prior ⇒ MAP = MLE. Upar wale example mein mean $18/57=0.316$, mode $17/55$.</td></tr>
+</tbody></table></div>
+
+<h3>T6 · Convexity</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Item</th><th>Formula</th><th>Condition / note</th></tr></thead>
+<tbody>
+<tr><td>Convex function</td><td>$f(\lambda a+(1-\lambda)b)\le\lambda f(a)+(1-\lambda)f(b)$</td><td>$\lambda\in[0,1]$. Twice differentiable: convex ⇔ $f''\ge0$.</td></tr>
+<tr><td>Jensen (finite form)</td><td>$f\big(\sum_j\lambda_ja_j\big)\le\sum_j\lambda_jf(a_j)$</td><td>$f$ convex, $\lambda_j\ge0$, $\sum_j\lambda_j=1$. Concave ho to inequality ulti.</td></tr>
+<tr><td>Log version</td><td>$\log\big(\sum_j\lambda_ja_j\big)\ge\sum_j\lambda_j\log a_j$</td><td>$\log$ concave; $a_j&gt;0$. EM ka lower bound isi se banta hai.</td></tr>
+</tbody></table></div>
+
+<h3>T7 · GMM + EM</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Item</th><th>Formula</th><th>Condition / note</th></tr></thead>
+<tbody>
+<tr><td>Mixture density</td><td>$p(x)=\sum_k\pi_k\,\mathcal N(x\mid\mu_k,\sigma_k^2)$; 1-D: $\mathcal N(x\mid\mu,\sigma^2)=\dfrac1{\sqrt{2\pi\sigma^2}}e^{-(x-\mu)^2/(2\sigma^2)}$</td><td>$\pi_k\ge0,\ \sum_k\pi_k=1$.</td></tr>
+<tr><td>Log-likelihood</td><td>$\sum_i\log\sum_k\pi_k\,\mathcal N(x_i\mid\mu_k,\sigma_k^2)$</td><td>Log of a <b>sum</b> ⇒ closed form nahi ⇒ EM.</td></tr>
+<tr><td>E-step (responsibility)</td><td>$\lambda_k^i=\dfrac{\pi_k\,\mathcal N(x_i\mid\mu_k,\sigma_k^2)}{\sum_j\pi_j\,\mathcal N(x_i\mid\mu_j,\sigma_j^2)}$</td><td>Normalise <b>clusters</b> par; $\sum_k\lambda_k^i=1$ har point $i$ ke liye.</td></tr>
+<tr><td>M-step (1-D)</td><td>$\pi_k=\tfrac1n\sum_i\lambda_k^i,\quad\mu_k=\dfrac{\sum_i\lambda_k^ix_i}{\sum_i\lambda_k^i},\quad\sigma_k^2=\dfrac{\sum_i\lambda_k^i(x_i-\mu_k)^2}{\sum_i\lambda_k^i}$</td><td>Weighted MLE. $d$-dim spherical covariance ho to $\sigma_k^2$ ke denominator mein extra $d$ (B26 mein confirm).</td></tr>
+<tr><td>EM vs Lloyd</td><td>Lloyd: hard 0/1 assignment, plain mean. EM: soft $\lambda_k^i\in[0,1]$, weighted mean.</td><td>EM mein log-likelihood kabhi kam nahi hota (code se 30 iterations par verified).</td></tr>
+</tbody></table></div>
+
+<h3>T8 · Regression</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Item</th><th>Formula</th><th>Condition / note</th></tr></thead>
+<tbody>
+<tr><td>Model &amp; loss</td><td>$\hat y=w^Tx$; $\ \text{MSE}(w)=\tfrac1n\sum_i(w^Tx_i-y_i)^2$</td><td>Bias term alag se ho sakta hai — question dekho.</td></tr>
+<tr><td>Gradient</td><td>$\nabla\text{MSE}=\tfrac2nX(X^Tw-y)$</td><td>$X\in\mathbb R^{d\times n}$, $y\in\mathbb R^n$ (finite differences se verified).</td></tr>
+<tr><td>Closed form</td><td>$XX^Tw=Xy\ \Rightarrow\ w^*=(XX^T)^{-1}Xy$</td><td>Jab $XX^T$ invertible ho.</td></tr>
+<tr><td>Gradient descent</td><td>$w\leftarrow w-\eta\,\nabla\text{MSE}(w)$</td><td>MSE convex; quadratic loss par converge hota hai $0&lt;\eta&lt;2/L$ ke liye, $L=\tfrac2n\lambda_{\max}(XX^T)$; $\eta&gt;2/L$ par diverge (code se verified).</td></tr>
+</tbody></table></div>
+
+<h3>⚡ Trigger → first move</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Question mein yeh dikhe</th><th>Pehla kadam</th></tr></thead>
+<tbody>
+<tr><td>"variance along PC1" / "maximum variance direction"</td><td>Covariance ka <b>largest eigenvalue</b> (data pehle centre).</td></tr>
+<tr><td>"coordinates of $x$ on PC1, PC2"</td><td>Unit eigenvectors ke saath dot product $x^Tw_k$.</td></tr>
+<tr><td>"how many non-zero eigenvalues" / "data lies in a $k$-dim subspace"</td><td>Centred data matrix ka rank (upper bound $\min(d,n-1)$).</td></tr>
+<tr><td>"fraction of variance retained by $k$ PCs"</td><td>Top-$k$ eigenvalues ka sum ÷ sab ka sum.</td></tr>
+<tr><td>"eigenvectors of $XX^T$ vs $X^TX$"</td><td>Sizes compare karo; non-zero eigenvalues same, eigenvectors different.</td></tr>
+<tr><td>"is $k(x,y)$ a valid kernel?"</td><td>Closure rules lagao, ya $2\times2$ Gram matrix ka eigenvalue / determinant dekho.</td></tr>
+<tr><td>"find $\phi$ for this kernel"</td><td>Kernel ko expand karo — $x$-terms aur $y$-terms ke products ka sum.</td></tr>
+<tr><td>"final centres / objective after convergence"</td><td>Assign → mean → repeat; assignments stable hone par $F$ nikalo.</td></tr>
+<tr><td>"probability next centre is point $p$" (K-means++)</td><td>Har point ka nearest-centre distance (squared), normalise.</td></tr>
+<tr><td>"MLE of …"</td><td>Log-likelihood likho, derivative = 0. Bernoulli ho to seedha count.</td></tr>
+<tr><td>"posterior" with Beta prior</td><td>$\alpha\mathrel{+}=h,\ \beta\mathrel{+}=t$.</td></tr>
+<tr><td>"responsibility" / "probability point came from cluster $k$"</td><td>Numerator $\pi_k\mathcal N(x\mid\mu_k,\sigma_k^2)$, phir clusters par normalise.</td></tr>
+<tr><td>"log of a weighted sum" inequality</td><td>Concavity / Jensen; check weights non-negative aur sum 1.</td></tr>
+<tr><td>"gradient descent step size" / "will it converge"</td><td>$\eta$ ko $2/L$ se compare karo.</td></tr>
+</tbody></table></div>
+
+<h3>⚠️ Top traps (topic-wise)</h3>
+<div class="grid2">
+<div class="box amber"><p><b>T1:</b> Vector projection mein $\|w\|^2$ se divide karna hai, $\|w\|$ se nahi. Non-unit $w$ ko unit maan lena.</p></div>
+<div class="box amber"><p><b>T2:</b> Centre karna bhoolna (F6). $\tfrac1n$ vs $\tfrac1{n-1}$. $\lambda_1$ aur total variance mix karna (F7). Eigenvector ka sign — $\pm w$ dono sahi.</p></div>
+<div class="box amber"><p><b>T3:</b> "Symmetric hai to valid" — galat, PSD chahiye. Do kernels ka difference valid maan lena. Kernel PCA se pehle centring bhoolna.</p></div>
+<div class="box amber"><p><b>T4:</b> $D$ vs $D^2$ (F2, F3). Empty cluster ka mean. Points ek ek karke update karna — pehle sab assign, tab update.</p></div>
+<div class="box amber"><p><b>T5:</b> MLE variance $\tfrac1n$ se. Beta ka mean aur mode alag cheezein. Posterior mein prior ke $\alpha,\beta$ bhoolna.</p></div>
+<div class="box amber"><p><b>T6–T8:</b> Jensen mein weights ka sum 1 aur non-negative; concave par inequality ulti. Responsibility $[0,1]$ mein honi chahiye (F9). Bada $\eta$ diverge karata hai.</p></div>
+</div>
+<p class="note">Print ya PDF ke liye: toolbar ka "Print / PDF" dabao — cheat sheet light theme mein aayegi.</p>
+</section>
+<section data-track="t1-tree">
+<h2>🧱 4. T1 Linear Algebra — prerequisite module <span class="tag t-add">[ADDED]</span></h2>
+<p>T1 ke target subtopics (B3): <b>1.1 Vector projection</b> (length aur direction) aur <b>1.2 Projection-based reconstruction error</b>. Bank mein yeh sirf 2 scorable questions hain, par inki maths PCA ke har coordinate / reconstruction question ke andar chalti hai (B1 §2 ka careful-reading note). Pehle dekhte hain ki in dono ke neeche kya-kya khada hai.</p>
+<div class="box amber"><p><b>Scope note:</b> yeh module T1 ki <i>general</i> prerequisite maths hai. B3 ki PYQ lines (4916–4983) is build mein nahi padhi gayi (spec ke hisaab se woh B3 ki range hai); B3 ke questions ka exact notation dekhne ke baad wahan jo extra chahiye hoga woh B3 mein hi add hoga.</p></div>
+<figure class="viz diagram">
+  <p class="vt">T1 prerequisite tree: foundations → topic-specific maths → target</p>
+  <p class="vs">Upar se neeche padho. Solid arrow = "chahiye". Dashed = aage ke builds ke liye. <i>Schematic</i> — learning order dikhane ke liye, formal hierarchy nahi.</p>
+<svg viewBox="0 0 900 470" role="img" aria-label="T1 prerequisite dependency tree">
+<defs>
+  <marker id="aht" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#a3a3a3"/></marker>
+</defs>
+<g font-size="11" fill="#737373"><text x="6" y="18">TIER 1 · GENERAL FOUNDATIONS</text><text x="894" y="172" text-anchor="end">TIER 2 · TOPIC-SPECIFIC MATHS</text><text x="6" y="334">TIER 3 · TARGET (B3)</text></g>
+<!-- tier 1 -->
+<g>
+<rect x="40" y="28" width="250" height="62" rx="10" fill="#181818" stroke="#a3a3a3"/>
+<text x="165" y="54" text-anchor="middle" fill="#fff" font-size="13.5" font-weight="600">Coordinates in the plane</text>
+<text x="165" y="74" text-anchor="middle" fill="#a3a3a3" font-size="11.5">points = arrows from origin</text>
+<rect x="325" y="28" width="250" height="62" rx="10" fill="#181818" stroke="#a3a3a3"/>
+<text x="450" y="54" text-anchor="middle" fill="#fff" font-size="13.5" font-weight="600">Σ notation, squares, roots</text>
+<text x="450" y="74" text-anchor="middle" fill="#a3a3a3" font-size="11.5">(a+b)² ≠ a² + b²</text>
+<rect x="610" y="28" width="250" height="62" rx="10" fill="#181818" stroke="#a3a3a3"/>
+<text x="735" y="54" text-anchor="middle" fill="#fff" font-size="13.5" font-weight="600">Right triangle</text>
+<text x="735" y="74" text-anchor="middle" fill="#a3a3a3" font-size="11.5">Pythagoras · cos θ = adj / hyp</text>
+</g>
+<!-- tier 2 -->
+<g>
+<rect x="10" y="182" width="160" height="70" rx="10" fill="#141c2b" stroke="#60A5FA"/>
+<text x="90" y="212" text-anchor="middle" fill="#fff" font-size="13.5" font-weight="600">P1 Vectors</text>
+<text x="90" y="232" text-anchor="middle" fill="#a3a3a3" font-size="11.5">linear combination</text>
+<rect x="185" y="182" width="160" height="70" rx="10" fill="#141c2b" stroke="#60A5FA"/>
+<text x="265" y="212" text-anchor="middle" fill="#fff" font-size="13.5" font-weight="600">P2 Dot product</text>
+<text x="265" y="232" text-anchor="middle" fill="#a3a3a3" font-size="11.5">xᵀw = Σ xⱼwⱼ</text>
+<rect x="360" y="182" width="160" height="70" rx="10" fill="#141c2b" stroke="#60A5FA"/>
+<text x="440" y="212" text-anchor="middle" fill="#fff" font-size="13.5" font-weight="600">P3 Norm, distance</text>
+<text x="440" y="232" text-anchor="middle" fill="#a3a3a3" font-size="11.5">‖x‖, unit vector</text>
+<rect x="535" y="182" width="160" height="70" rx="10" fill="#141c2b" stroke="#60A5FA"/>
+<text x="615" y="212" text-anchor="middle" fill="#fff" font-size="13.5" font-weight="600">P4 Angle, ⟂</text>
+<text x="615" y="232" text-anchor="middle" fill="#a3a3a3" font-size="11.5">cos θ, orthogonality</text>
+<rect x="710" y="182" width="160" height="70" rx="10" fill="#141c2b" stroke="#60A5FA"/>
+<text x="790" y="212" text-anchor="middle" fill="#fff" font-size="13.5" font-weight="600">P5 Matrix ops</text>
+<text x="790" y="232" text-anchor="middle" fill="#a3a3a3" font-size="11.5">Ax, Xᵀ, xwᵀ</text>
+</g>
+<!-- tier 3 -->
+<g>
+<rect x="60" y="345" width="280" height="66" rx="10" fill="#0f1d17" stroke="#34D399"/>
+<text x="200" y="373" text-anchor="middle" fill="#fff" font-size="13.5" font-weight="600">1.1 Vector projection</text>
+<text x="200" y="393" text-anchor="middle" fill="#a3a3a3" font-size="11.5">length and direction</text>
+<rect x="380" y="345" width="280" height="66" rx="10" fill="#0f1d17" stroke="#34D399"/>
+<text x="520" y="373" text-anchor="middle" fill="#fff" font-size="13.5" font-weight="600">1.2 Reconstruction error</text>
+<text x="520" y="393" text-anchor="middle" fill="#a3a3a3" font-size="11.5">‖x − proj‖²</text>
+<rect x="720" y="350" width="160" height="56" rx="10" fill="#0f1d17" stroke="#34D399" stroke-dasharray="5 4"/>
+<text x="800" y="374" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">→ T2 PCA</text>
+<text x="800" y="392" text-anchor="middle" fill="#a3a3a3" font-size="11.5">B4 onwards</text>
+</g>
+<!-- solid edges -->
+<g stroke="#a3a3a3" stroke-width="1.6" fill="none" marker-end="url(#aht)">
+<path d="M130,90 L95,180"/>
+<path d="M400,90 L270,180"/>
+<path d="M450,90 L445,180"/>
+<path d="M700,90 L470,180"/>
+<path d="M745,90 L620,180"/>
+<path d="M170,217 L183,217"/>
+<path d="M345,217 L358,217"/>
+<path d="M520,217 L533,217"/>
+<path d="M240,252 L200,343"/>
+<path d="M420,252 L300,343"/>
+<path d="M460,252 L480,343"/>
+<path d="M600,252 L560,343"/>
+<path d="M340,378 L378,378"/>
+<path d="M660,378 L718,378"/>
+</g>
+<g stroke="#34D399" stroke-width="1.4" fill="none" stroke-dasharray="5 4" marker-end="url(#aht)"><path d="M790,252 L800,348"/></g>
+<g font-size="10.5" fill="#d4d4d4">
+<text x="120" y="142">coordinates</text>
+<text x="334" y="132" text-anchor="end">Σ of products</text>
+<text x="482" y="122">Pythagoras</text>
+<text x="702" y="136">cos θ</text>
+<text x="196" y="302">x·w</text>
+<text x="292" y="298">÷ ‖w‖²</text>
+<text x="492" y="302">‖x‖²</text>
+<text x="598" y="300">residual ⟂ w</text>
+<text x="806" y="304" fill="#6ee7b7">X Xᵀ, XᵀX</text>
+<text x="700" y="270" font-size="10" fill="#a3a3a3">builds on P1 + P2</text>
+</g>
+<g font-size="11" fill="#a3a3a3"><rect x="20" y="445" width="14" height="10" rx="2" fill="#181818" stroke="#a3a3a3"/><text x="40" y="454">general foundation</text>
+<rect x="170" y="445" width="14" height="10" rx="2" fill="#141c2b" stroke="#60A5FA"/><text x="190" y="454">topic-specific maths</text>
+<rect x="340" y="445" width="14" height="10" rx="2" fill="#0f1d17" stroke="#34D399"/><text x="360" y="454">target</text>
+<line x1="430" y1="450" x2="460" y2="450" stroke="#a3a3a3" stroke-width="1.6" marker-end="url(#aht)"/><text x="468" y="454">needs</text>
+<line x1="520" y1="450" x2="550" y2="450" stroke="#34D399" stroke-dasharray="5 4"/><text x="558" y="454">needed later (B4+)</text></g>
+</svg>
+  <figcaption><b>Interpretation:</b> Target 1.1 ko dot product (P2) aur norm (P3) chahiye, 1.2 ko norm (P3) aur orthogonality (P4). Yeh teeno P1 aur general foundations par tikte hain. P5 T1 ke 2 questions ke liye utna zaroori nahi, par B4–B12 (PCA ka XXᵀ, XᵀX) mein har jagah lagega — isliye ab hi cover kiya.</figcaption>
+</figure>
+<p><b>Tree ko kaise padhein:</b> neeche se upar. Projection ka answer <i>ek number</i> hai ($x^Tw$, dot product) jise <i>length</i> se normalise karte hain (norm), aur uska matlab <i>angle</i> ke through samajh aata hai (cos θ). Reconstruction error = "kitna hissa direction ke bahar bacha" — iske liye perpendicular residual aur Pythagoras chahiye. Dono ko vectors ki bhasha (P1) aur Σ, squares, right triangle (Tier 1) aani chahiye.</p>
+</section>
+
+<section data-track="t1-tier1">
+<h3>Tier 1 · General foundations — quick refresher</h3>
+<p>Yeh school-level cheezein hain. Har card mein A–E ka chhota roop: core idea, notation, example, common mistake, aur T1 ko iski zaroorat kyun.</p>
+<div class="grid2">
+<div class="card"><div class="k">G1 · Σ notation, squares, roots</div>
+<p><b>A.</b> $\sum_{j=1}^{d}a_j=a_1+a_2+\cdots+a_d$ — "jodte jao". Square aur root ulte operations hain: $\sqrt{a^2}=|a|$.</p>
+<p><b>B.</b> $(a+b)^2=a^2+2ab+b^2$, $(a-b)^2=a^2-2ab+b^2$.</p>
+<p><b>C.</b> $\sum_{j=1}^{3}j^2=1+4+9=14$. $(3-5)^2=(-2)^2=4$.</p>
+<p><b>D.</b> $(a+b)^2\neq a^2+b^2$; $\sqrt{a^2+b^2}\neq a+b$.</p>
+<p><b>E.</b> Norm ka formula $\sqrt{\sum x_j^2}$ aur $\|x-y\|^2$ ka expansion yahin se aata hai.</p></div>
+<div class="card"><div class="k">G2 · Right triangle</div>
+<p><b>A.</b> Right triangle mein $a^2+b^2=c^2$ (Pythagoras), aur $\cos\theta=\dfrac{\text{adjacent}}{\text{hypotenuse}}$.</p>
+<p><b>B.</b> $\cos0^\circ=1,\ \cos60^\circ=\tfrac12,\ \cos90^\circ=0$, $\cos45^\circ=\tfrac1{\sqrt2}\approx0.707$. Obtuse angle ($&gt;90^\circ$) ka cosine negative.</p>
+<p><b>C.</b> Triangle $(3,4,5)$: $3^2+4^2=25=5^2$, $\cos\theta=\tfrac35=0.6$.</p>
+<p><b>D.</b> Degrees aur radians mix karna; hypotenuse ki jagah koi aur side lena.</p>
+<p><b>E.</b> Dot product ka $\cos\theta$ form aur residual par Pythagoras (P4).</p></div>
+<div class="card"><div class="k">G3 · Coordinates in the plane</div>
+<p><b>A.</b> Point $(a,b)$ = origin se $a$ right, $b$ up ka arrow. Arrow ki length Pythagoras se: $\sqrt{a^2+b^2}$.</p>
+<p><b>B.</b> $(a,b)$ mein pehla number horizontal ($x$-axis) hota hai.</p>
+<p><b>C.</b> $(3,4)$: 3 right, 4 up ⇒ length $\sqrt{9+16}=5$.</p>
+<p><b>D.</b> Order ulta padhna: $(3,4)$ aur $(4,3)$ alag points hain.</p>
+<p><b>E.</b> Is course ki saari figures $2$-D mein hain; $d$ dimensions mein bhi wahi idea chalta hai.</p></div>
+</div>
+</section>
+<section data-track="t1-p1">
+<h3>P1 · Vectors, linear combinations, data matrix</h3>
+<h4>A. Core idea</h4>
+<p>Vector = $d$ numbers ki ordered list. Do tareeke se dekh sakte ho: ek <b>point</b> $d$-dimensional space mein, ya origin se us point tak ka <b>arrow</b>. Vectors par bas do operations hain jinse sab kuch banta hai: <b>scale</b> (har number ko ek constant se guna) aur <b>add</b> (matching positions jodo). Inka mel $c_1a+c_2b$ <b>linear combination</b> kehlata hai.</p>
+<h4>B. Notation and operations</h4>
+$$x=\begin{bmatrix}x_1\\x_2\\\vdots\\x_d\end{bmatrix}\in\mathbb R^d,\qquad c\,a+b=\begin{bmatrix}c\,a_1+b_1\\\vdots\\c\,a_d+b_d\end{bmatrix},\qquad \mu=\frac1n\sum_{i=1}^n x_i=\frac1n X\mathbf 1$$
+<ul>
+<li>$\mathbb R^d$ = $d$ real numbers ke saare vectors. $c$ = koi real number (scalar). $a,b$ = <b>same length</b> ke vectors — alag length ke vectors add nahi hote.</li>
+<li>$X\in\mathbb R^{d\times n}$ = data matrix: $n$ points, har point ek <b>column</b> $x_i$. $\mathbf 1$ = saari entries 1 wala column vector (length $n$).</li>
+<li><b>Notation clash:</b> course mein $x_i$ = $i$-th <i>data point</i> (poora vector). Kisi point ka $j$-th component likhna ho to $x_i[j]$ ya $(x_i)_j$ likhenge. Upar $x_1,\dots,x_d$ sirf ek single vector $x$ ke components hain.</li>
+</ul>
+<p><b>Meaning in words:</b> mean $\mu$ sab points ka linear combination hai, har point ka weight $\tfrac1n$. <b>Notice that</b> "centre karna" = har point se $\mu$ ghatana — iske baad naye points ka sum zero ho jaata hai.</p>
+<h4>C. Worked examples</h4>
+<div class="box em"><p><b>Example 1 (simple).</b> $a=(2,-1,3),\ b=(0,4,-2)$. $2a-3b$ nikalo.</p>
+<p>Step 1: $2a=(4,-2,6)$. Step 2: $3b=(0,12,-6)$. Step 3: component-wise subtract: $(4-0,\ -2-12,\ 6-(-6))=(4,\,-14,\,12)$.</p></div>
+<div class="box em"><p><b>Example 2 (simple, unknown weights).</b> $(7,-3)=\alpha(1,0)+\beta(2,-1)$ ho to $\alpha,\beta$ kya hain?</p>
+<p>Components alag likho: pehla: $\alpha+2\beta=7$; doosra: $0\cdot\alpha-\beta=-3$. Doosre se $\beta=3$. Pehle mein daalo: $\alpha=7-2\cdot3=1$. Check: $1\cdot(1,0)+3\cdot(2,-1)=(1+6,\,0-3)=(7,-3)$ ✓.</p></div>
+<div class="try"><p class="ttl">✍️ Example 3 (exam-level) — Try first</p>
+<p>$X=\begin{bmatrix}1&amp;3&amp;-1\\2&amp;0&amp;4\end{bmatrix}$. (i) $d$ aur $n$ kya hain aur points kaunse hain? (ii) Mean $\mu$ nikalo. (iii) Centred points likho aur check karo ki unka sum zero hai.</p>
+<p class="note">Pehle khud karo, phir confidence socho: S (Sure) / U (Unsure) / G (Guess).</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<p>(i) $X$ ki size $2\times3$ hai, $d\times n$ convention mein $d=2$ (features), $n=3$ (points). Columns: $x_1=(1,2),\ x_2=(3,0),\ x_3=(-1,4)$.</p>
+<p>(ii) Sum $=(1+3+(-1),\ 2+0+4)=(3,6)$. Mean $\mu=\tfrac13(3,6)=(1,2)$.</p>
+<p>(iii) $x_1-\mu=(0,0)$; $x_2-\mu=(2,-2)$; $x_3-\mu=(-2,2)$. Sum: $(0+2-2,\ 0-2+2)=(0,0)$ ✓.</p>
+<p class="note">Yeh data PCA ke prerequisites (B4) mein dobara aayega.</p></details>
+<div class="box red"><p><b>Non-example:</b> $(1,2)+(3,4,5)$ defined nahi hai — lengths 2 aur 3 alag hain. $2\times3$ matrix ko "3 dimensions ke 2 points" padhna bhi galat hai: woh 2-D ke 3 points hain.</p></div>
+<h4>D. Common mistakes</h4>
+<ul>
+<li>$x_1$ ko "pehla component" aur "pehla data point" dono samajh lena — course mein $x_i$ point hai.</li>
+<li>Columns ki jagah rows padhna ($X$ is $d\times n$).</li>
+<li>Scaling mein sirf pehla component guna karna.</li>
+<li>Centring ke baad sum zero check karna bhool jaana — yeh sabse tez sanity check hai.</li>
+</ul>
+<h4>E. Why PCA / T1 needs this — ML bridge</h4>
+<p><b>Q: Data matrix mein points columns kyun hain?</b><br>A: Isse $XX^T=\sum_ix_ix_i^T$ ($d\times d$, features × features) aur $X^TX$ ($n\times n$, entry $(i,j)=x_i^Tx_j$, points × points) dono seedhe milte hain. PCA pehle wale ko use karta hai, dual PCA aur kernels doosre ko.</p>
+<p><b>Q: Mean ko linear combination ki tarah kyun dekhein?</b><br>A: Kyunki centring ek linear operation ban jaata hai, aur K-means ka mean update bhi wahi hai — bas weights $\tfrac1{|S_k|}$ hain, $\tfrac1n$ nahi.</p>
+</section>
+
+<section data-track="t1-p2">
+<h3>P2 · Dot product</h3>
+<h4>A. Core idea</h4>
+<p>Dot product do vectors ko <b>ek number</b> mein badalta hai: matching components ko guna karo, phir jodo. Geometrically yeh batata hai ki ek vector doosre ki direction mein kitna "failta" hai: positive = lagbhag same direction, zero = perpendicular, negative = ulti direction.</p>
+<h4>B. Notation and operations</h4>
+$$x^Tw=\sum_{j=1}^{d}x_j\,w_j$$
+<ul>
+<li>$x,w\in\mathbb R^d$ — <b>same length</b> $d$. $x^T$ = $x$ ko row ki tarah likhna. Result ek <b>scalar</b> (number) hai.</li>
+<li>Dusre naam: $x\cdot w$, $\langle x,w\rangle$ — sab same cheez.</li>
+<li>Properties: (1) symmetric: $x^Tw=w^Tx$. (2) linear: $(\alpha x+\beta y)^Tw=\alpha\,x^Tw+\beta\,y^Tw$. (3) $x^Tx=\sum_jx_j^2\ge0$, aur $=0$ tabhi jab $x=0$.</li>
+</ul>
+<p><b>Notice that</b> linearity ka matlab: kisi linear combination ke saath dot product, alag-alag dot products ka linear combination hota hai — Example 2 mein yehi use hoga. <b>Important insight:</b> $x^Tx$ vector ki "length ka square" hai — isi se norm (P3) bana hai.</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th></th><th>Inner product $x^Tw$</th><th>Outer product $xw^T$</th></tr></thead>
+<tbody>
+<tr><td>Size</td><td>$(1\times d)(d\times1)=1\times1$</td><td>$(d\times1)(1\times d)=d\times d$</td></tr>
+<tr><td>Result</td><td>ek number</td><td>ek matrix, entry $(i,j)=x_iw_j$</td></tr>
+<tr><td>Kahan aata hai</td><td>PC coordinate, kernel, distance</td><td>Covariance $\tfrac1n\sum x_ix_i^T$ (P5)</td></tr>
+</tbody></table></div>
+<h4>C. Worked examples</h4>
+<div class="box em"><p><b>Example 1 (simple).</b> $x=(3,4,-1),\ w=(2,0,5)$.</p>
+<p>$x^Tw=3\cdot2+4\cdot0+(-1)\cdot5=6+0-5=1$.</p></div>
+<div class="try"><p class="ttl">✍️ Example 2 (exam-level) — Try first</p>
+<p>$x=(1,2),\ w=(3,-1),\ y=(-2,4)$. $x^T(2w-y)$ do tareeke se nikalo: (a) pehle $2w-y$ banake, (b) linearity se.</p>
+<p class="note">Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<p><b>(a) Direct.</b> $2w=(6,-2)$; $2w-y=(6-(-2),\ -2-4)=(8,-6)$. Phir $x^T(8,-6)=1\cdot8+2\cdot(-6)=8-12=-4$.</p>
+<p><b>(b) Linearity.</b> $x^T(2w-y)=2\,(x^Tw)-x^Ty$. $x^Tw=1\cdot3+2\cdot(-1)=1$ aur $x^Ty=1\cdot(-2)+2\cdot4=6$. Isliye $2\cdot1-6=-4$ ✓ — dono tareeke same.</p></details>
+<div class="box red"><p><b>Non-example:</b> $x\in\mathbb R^3,\ w\in\mathbb R^2$ — $x^Tw$ defined nahi (lengths alag). Aur $xw^T$ ek number nahi, matrix hai.</p></div>
+<h4>D. Common mistakes</h4>
+<ul>
+<li>Answer ko vector samajhna — dot product <b>scalar</b> hai.</li>
+<li>Negative components ke saath sign galti ($(-1)\cdot5=-5$).</li>
+<li>$x^Tw$ aur $xw^T$ mix karna.</li>
+<li>"$x^Tw=0\Rightarrow x=0$ ya $w=0$" — galat; nonzero perpendicular vectors ka dot bhi 0 hota hai.</li>
+</ul>
+<h4>E. Why PCA / T1 needs this — ML bridge</h4>
+<p><b>Q: PCA mein point ka "coordinate" kya hota hai?</b><br>A: Point $x$ ka PC $w_k$ par coordinate $x^Tw_k$ ($w_k$ unit norm, $x$ centred). B1 ke pattern table ka "Point ka PC coordinates $(a,b)$" pattern (5 sets) seedha do dot products hai.</p>
+<p><b>Q: Kernel ka dot product se kya rishta hai?</b><br>A: $k(x,y)=\phi(x)^T\phi(y)$ — kernel feature space mein ek dot product hai. Gram matrix ki har entry ek dot product hoti hai.</p>
+</section>
+<section data-track="t1-p3">
+<h3>P3 · Norm, unit vector, distance</h3>
+<h4>A. Core idea</h4>
+<p>Norm = vector ki <b>length</b>: khud se dot karo, phir square root lo. Do points ke beech <b>distance</b> = unke difference vector ki length. <b>Unit vector</b> = length 1 wala vector; kisi bhi nonzero vector ko apni length se divide karo to direction bachti hai aur length 1 ho jaati hai.</p>
+<h4>B. Notation and operations</h4>
+$$\|x\|=\sqrt{x^Tx}=\sqrt{\sum_{j=1}^d x_j^2},\qquad \|x-y\|^2=\|x\|^2-2\,x^Ty+\|y\|^2,\qquad u=\frac{w}{\|w\|}$$
+<ul>
+<li>$\|x\|$ = $x$ ki length; $\|x-y\|$ = points $x,y$ ke beech distance; $u$ = $w$ ki direction mein unit vector ($w\neq0$).</li>
+<li>Properties: $\|\alpha x\|=|\alpha|\,\|x\|$; $\|x\|=0\iff x=0$; triangle inequality $\|x+y\|\le\|x\|+\|y\|$.</li>
+</ul>
+<p><b>Expansion kaise bana (koi step skip nahi):</b> $\|x-y\|^2=(x-y)^T(x-y)=x^Tx-x^Ty-y^Tx+y^Ty$. Dot product symmetric hai ($y^Tx=x^Ty$), isliye middle terms mil kar $-2x^Ty$ ho jaate hain.</p>
+<p><b>Notice that</b> yeh $(a-b)^2=a^2-2ab+b^2$ ka hi vector version hai. <b>Important insight:</b> distance ka square sirf do squared lengths aur ek dot product se bana — yahi wajah hai ki dot products (Gram matrix) se saari distances nikal sakte hain. <b>This is why</b> kernels mein $\|x-y\|^2$ ko $k(x,x)-2k(x,y)+k(y,y)$ likh sakte hain (B13+).</p>
+<h4>C. Worked examples</h4>
+<div class="box em"><p><b>Example 1 (simple).</b> $x=(3,4)$: $\|x\|=\sqrt{9+16}=5$. Unit vector $u=\tfrac15(3,4)=(0.6,\,0.8)$. Check: $\|u\|=\sqrt{0.36+0.64}=1$ ✓.</p></div>
+<div class="box em"><p><b>Example 2 (simple, 3-D).</b> $w=(1,2,2)$: $\|w\|=\sqrt{1+4+4}=3$. $u=(\tfrac13,\tfrac23,\tfrac23)$. Check: $\tfrac19+\tfrac49+\tfrac49=1$ ✓.</p></div>
+<div class="try"><p class="ttl">✍️ Example 3 (exam-level) — Try first</p>
+<p>$x=(2,-1),\ y=(5,3)$. $\|x-y\|^2$ do tareeke se nikalo: (a) seedha difference se, (b) expansion se. Dono match hone chahiye.</p>
+<p class="note">Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<p><b>(a) Direct.</b> $x-y=(2-5,\ -1-3)=(-3,-4)$. $\|x-y\|^2=9+16=25$.</p>
+<p><b>(b) Expansion.</b> $\|x\|^2=4+1=5$; $\|y\|^2=25+9=34$; $x^Ty=2\cdot5+(-1)\cdot3=10-3=7$. Isliye $5-2\cdot7+34=5-14+34=25$ ✓.</p></details>
+<div class="box red"><p><b>Non-example:</b> $\|x+y\|=\|x\|+\|y\|$ hamesha sach nahi. $x=(3,0),\ y=(0,4)$: $\|x+y\|=\|(3,4)\|=5$ par $\|x\|+\|y\|=3+4=7$. Barabari tabhi jab dono ek hi direction mein hon.</p></div>
+<h4>D. Common mistakes</h4>
+<ul>
+<li>$\|x\|^2$ aur $\|x\|$ mix karna (square root bhoolna ya bahut jaldi lena).</li>
+<li>$\|x-y\|^2=\|x\|^2-\|y\|^2$ likhna — beech ka $-2x^Ty$ gayab.</li>
+<li>Normalise karte waqt $\|w\|^2$ se divide karna ya sirf ek component divide karna.</li>
+<li>Zero vector ko normalise karne ki koshish (length 0 se divide).</li>
+</ul>
+<h4>E. Why PCA / T1 needs this — ML bridge</h4>
+<p><b>Q: PCA mein $\|w\|=1$ kyun maangte hain?</b><br>A: Direction ke liye sirf disha matter karti hai. $w$ ko 2 se guna to coordinate $x^Tw$ do guna aur variance $w^TCw$ chaar guna ho jaata hai — bina constraint ke "maximum variance" infinite hota. Unit norm scale fix kar deta hai.</p>
+<p><b>Q: K-means mein norm kahan aata hai?</b><br>A: Objective $F=\sum_i\|x_i-\mu_{z_i}\|^2$ squared distance hai, aur upar wala expansion hi B19 mein dikhayega ki cluster ka mean best centre kyun hai.</p>
+</section>
+
+<section data-track="t1-p4">
+<h3>P4 · Angle, cos θ, orthogonality</h3>
+<h4>A. Core idea</h4>
+<p>Dot product ka ek geometric chehra hai: $x^Tw=\|x\|\,\|w\|\cos\theta$. Isse dot product se angle nikal sakte hain, aur dot $=0$ ka matlab angle $90^\circ$ — vectors <b>perpendicular (orthogonal)</b>. Orthogonal vectors par Pythagoras kaam karta hai.</p>
+<h4>B. Notation and operations</h4>
+$$x^Tw=\|x\|\,\|w\|\cos\theta\quad\Longleftrightarrow\quad\cos\theta=\frac{x^Tw}{\|x\|\,\|w\|},\qquad \|a+b\|^2=\|a\|^2+\|b\|^2+2\,a^Tb$$
+<ul>
+<li>$\theta\in[0^\circ,180^\circ]$ = do <b>nonzero</b> vectors $x,w$ ke beech ka angle.</li>
+<li>Orthogonal: $x\perp w\iff x^Tw=0$. Orthonormal = orthogonal <b>aur</b> dono unit-length.</li>
+<li>$a^Tb=0$ ho to cross term $2a^Tb$ gayab ⇒ $\|a+b\|^2=\|a\|^2+\|b\|^2$ (Pythagoras).</li>
+</ul>
+<p><b>Notice that</b> $\cos\theta\in[-1,1]$, isliye hamesha $|x^Tw|\le\|x\|\,\|w\|$ (Cauchy–Schwarz). Aur $\|a+b\|^2$ ka expansion P3 wale expansion se hi nikalta hai ($b$ ko $-b$ se badlo).</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>$x^Tw$ ka sign</th><th>$\cos\theta$</th><th>Angle</th><th>Matlab</th></tr></thead>
+<tbody>
+<tr><td>$&gt;0$</td><td>positive</td><td>acute ($&lt;90^\circ$)</td><td>lagbhag same direction</td></tr>
+<tr><td>$=0$</td><td>0</td><td>$90^\circ$</td><td>orthogonal</td></tr>
+<tr><td>$&lt;0$</td><td>negative</td><td>obtuse ($&gt;90^\circ$)</td><td>lagbhag ulti direction</td></tr>
+</tbody></table></div>
+<figure class="viz diagram">
+  <p class="vt">Dot product aur Pythagoras, ek hi data par</p>
+  <p class="vs">(a) x = (3, 4) aur w = (5, 0): dot product = x ki w-line par shadow × ‖w‖. (b) x = (3, 0) + (0, 4): do orthogonal tukde, Pythagoras. Scale 50 px = 1 unit. <i>Schematic</i> hand-drawn, numbers exact.</p>
+<svg viewBox="0 0 900 330" role="img" aria-label="Dot product geometry and Pythagoras for orthogonal vectors">
+<defs>
+  <marker id="ahw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#60A5FA"/></marker>
+  <marker id="ahx" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#34D399"/></marker>
+  <marker id="aha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#FBBF24"/></marker>
+</defs>
+<g font-family="Inter,sans-serif">
+<text x="40" y="22" font-size="13.5" font-weight="600" fill="#fff">(a) xᵀw = ‖x‖ ‖w‖ cos θ</text>
+<text x="500" y="22" font-size="13.5" font-weight="600" fill="#fff">(b) a ⟂ b  ⇒  ‖a + b‖² = ‖a‖² + ‖b‖²</text>
+<!-- panel a -->
+<line x1="60" y1="280" x2="360" y2="280" stroke="#3a3a3a"/><line x1="60" y1="280" x2="60" y2="50" stroke="#3a3a3a"/>
+<line x1="60" y1="280" x2="308" y2="280" stroke="#60A5FA" stroke-width="2.4" marker-end="url(#ahw)"/>
+<line x1="60" y1="280" x2="208" y2="82" stroke="#34D399" stroke-width="2.4" marker-end="url(#ahx)"/>
+<line x1="210" y1="80" x2="210" y2="280" stroke="#a3a3a3" stroke-dasharray="5 4"/>
+<line x1="60" y1="292" x2="210" y2="292" stroke="#FBBF24" stroke-width="3"/>
+<path d="M100,280 A40,40 0 0 0 84,248" fill="none" stroke="#d4d4d4"/>
+<text x="106" y="266" font-size="13" fill="#d4d4d4">θ</text>
+<text x="218" y="74" font-size="12.5" fill="#34D399">x = (3, 4),  ‖x‖ = 5</text>
+<text x="262" y="268" font-size="12.5" fill="#60A5FA">w = (5, 0)</text>
+<text x="76" y="312" font-size="12" fill="#FBBF24">shadow = ‖x‖ cos θ = 3</text>
+<text x="224" y="186" font-size="11.5" fill="#a3a3a3">perpendicular</text>
+<text x="224" y="200" font-size="11.5" fill="#a3a3a3">drop</text>
+<text x="240" y="112" font-size="12" fill="#d4d4d4">xᵀw = 3·5 + 4·0 = 15</text>
+<text x="240" y="130" font-size="12" fill="#d4d4d4">‖x‖‖w‖cos θ = 5 · 5 · 0.6 = 15</text>
+<text x="240" y="148" font-size="12" fill="#a3a3a3">cos θ = 15 / 25 = 0.6</text>
+<!-- panel b -->
+<line x1="520" y1="280" x2="740" y2="280" stroke="#3a3a3a"/><line x1="520" y1="280" x2="520" y2="50" stroke="#3a3a3a"/>
+<line x1="520" y1="280" x2="668" y2="280" stroke="#60A5FA" stroke-width="2.4" marker-end="url(#ahw)"/>
+<line x1="520" y1="280" x2="520" y2="82" stroke="#FBBF24" stroke-width="2.4" marker-end="url(#aha)"/>
+<line x1="520" y1="280" x2="668" y2="82" stroke="#34D399" stroke-width="2.4" marker-end="url(#ahx)"/>
+<line x1="670" y1="280" x2="670" y2="82" stroke="#525252" stroke-dasharray="5 4"/>
+<line x1="520" y1="80" x2="668" y2="80" stroke="#525252" stroke-dasharray="5 4"/>
+<path d="M520,268 h12 v12" fill="none" stroke="#d4d4d4"/>
+<text x="574" y="302" font-size="12.5" fill="#60A5FA">a = (3, 0),  ‖a‖² = 9</text>
+<text x="436" y="190" font-size="12.5" fill="#FBBF24">b = (0, 4)</text>
+<text x="436" y="206" font-size="12.5" fill="#FBBF24">‖b‖² = 16</text>
+<text x="612" y="168" font-size="12.5" fill="#34D399">x = a + b</text>
+<text x="690" y="170" font-size="12" fill="#a3a3a3">‖x‖² = 25</text>
+<text x="690" y="190" font-size="12" fill="#a3a3a3">9 + 16 = 25 ✓</text>
+</g>
+</svg>
+  <figcaption><b>Interpretation:</b> (a) w ki direction mein x ka hissa uski shadow hai, length ‖x‖ cos θ = 3; dot product 15 = shadow 3 × ‖w‖ = 5. (b) Jab do tukde perpendicular hon, squared lengths seedhe jud jaati hain. Yeh dono pictures B3 ke projection aur reconstruction error ki neev hain.</figcaption>
+</figure>
+<h4>C. Worked examples</h4>
+<div class="box em"><p><b>Example 1 (simple).</b> $x=(1,2),\ w=(2,-1)$: $x^Tw=1\cdot2+2\cdot(-1)=0$ ⇒ orthogonal.</p></div>
+<div class="box em"><p><b>Example 2 (simple, angle).</b> $x=(1,1),\ w=(1,0)$: $x^Tw=1$, $\|x\|=\sqrt2$, $\|w\|=1$. $\cos\theta=\dfrac{1}{\sqrt2\cdot1}\approx0.7071\Rightarrow\theta=45^\circ$.</p></div>
+<div class="try"><p class="ttl">✍️ Example 3 (exam-level) — Try first</p>
+<p>$t$ ki kaunsi value par $(t,\,2,\,-1)$ aur $(3,\,-1,\,4)$ orthogonal hain? Phir answer check bhi karo.</p>
+<p class="note">Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<p>Orthogonal ⇔ dot $=0$. $\ t\cdot3+2\cdot(-1)+(-1)\cdot4=3t-2-4=3t-6$. $\ 3t-6=0\Rightarrow t=2$.</p>
+<p>Check: $(2,2,-1)^T(3,-1,4)=6-2-4=0$ ✓.</p></details>
+<div class="box em"><p><b>Example 4 (Pythagoras, tricky).</b> $a=(1,0),\ b=(1,1)$. $a+b=(2,1)$ ⇒ $\|a+b\|^2=4+1=5$. Lekin $\|a\|^2+\|b\|^2=1+2=3$. Farak $=2$ $=2a^Tb=2\cdot1$ ✓ — yahan $a,b$ orthogonal <b>nahi</b> hain ($a^Tb=1\neq0$), isliye seedha jodna galat tha.</p></div>
+<h4>D. Common mistakes</h4>
+<ul>
+<li>$\cos$ nikalte waqt calculator degree / radian mode mix karna.</li>
+<li>"Dot $=0$" ko "vector zero hai" samajhna.</li>
+<li>Pythagoras (squared lengths ka sum) bina orthogonality check kiye lagana (Example 4).</li>
+<li>Nonzero orthogonal vectors independent hote hain, par independent vectors orthogonal ho — zaroori nahi ($(1,0)$ aur $(1,1)$ independent hain, orthogonal nahi).</li>
+</ul>
+<h4>E. Why PCA / T1 needs this — ML bridge</h4>
+<p><b>Q: Projection ka residual direction ke perpendicular kyun hota hai?</b><br>A: Direction $w$ ki line par $x$ ka sabse paas wala point woh hai jahan baaki bacha hissa (residual) $w$ ke perpendicular ho. Tab Pythagoras lagta hai: $\|x\|^2=\|\text{proj}\|^2+\|\text{residual}\|^2$, aur unit $w$ ke liye $\|\text{proj}\|^2=(x^Tw)^2$. Yani reconstruction error $=\|x\|^2-(x^Tw)^2$ — <i>preview</i>; poori derivation B3 mein.</p>
+<p><b>Q: PCA ke principal components orthogonal kyun hote hain?</b><br>A: Symmetric matrix ke alag eigenvalues wale eigenvectors orthogonal hote hain (proof B4 / B7 mein). Isse PC coordinates independent axes ki tarah behave karte hain.</p>
+</section>
+<section data-track="t1-p5">
+<h3>P5 · Matrix–vector product, transpose, outer product</h3>
+<h4>A. Core idea</h4>
+<p>Matrix = vectors ko transform karne wali machine. $Ax$ ka matlab: $A$ ke <b>columns ka linear combination</b>, jahan weights $x$ ke components hain. Transpose rows aur columns ulta karta hai. <b>Outer product</b> $xw^T$ ek column aur ek row se poori matrix banata hai.</p>
+<h4>B. Notation and operations</h4>
+$$(Ax)_i=\sum_{j}A_{ij}\,x_j,\qquad Ax=\sum_j x_j\,A_{:,j},\qquad (xw^T)_{ij}=x_i\,w_j,\qquad (AB)^T=B^TA^T$$
+<ul>
+<li>$A\in\mathbb R^{m\times n}$, $x\in\mathbb R^n$ ⇒ $Ax\in\mathbb R^m$. Size rule: $(m\times n)(n\times p)=(m\times p)$ — beech wale $n$ match hone chahiye.</li>
+<li>$A_{:,j}$ = $A$ ka $j$-th column. Transpose: $(A^T)_{ij}=A_{ji}$. Symmetric matrix: $A^T=A$.</li>
+<li>Do key identities: $(ww^T)x=w\,(w^Tx)$ — "$w$ ka scalar multiple" aur $XX^T=\sum_ix_ix_i^T$, $(X^TX)_{ij}=x_i^Tx_j$.</li>
+</ul>
+<p><b>Notice that</b> $(ww^T)x=w(w^Tx)$: matrix $ww^T$ kisi bhi $x$ ko $w$ ki line par la deta hai — yeh projection ka matrix-form hai (B3).</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th></th><th>$XX^T$</th><th>$X^TX$</th></tr></thead>
+<tbody>
+<tr><td>Size ($X$ is $d\times n$)</td><td>$d\times d$</td><td>$n\times n$</td></tr>
+<tr><td>Entry</td><td>$\sum_i x_i[a]\,x_i[b]$ (feature $a$ × feature $b$)</td><td>$x_i^Tx_j$ (point $i$ · point $j$)</td></tr>
+<tr><td>Naam</td><td>(scaled) covariance</td><td>Gram matrix</td></tr>
+<tr><td>Kahan</td><td>PCA (B5–B11)</td><td>Dual PCA, kernels (B12+)</td></tr>
+</tbody></table></div>
+<h4>C. Worked examples</h4>
+<div class="box em"><p><b>Example 1 (simple).</b> $A=\begin{bmatrix}1&amp;2\\0&amp;-1\\3&amp;1\end{bmatrix}$ ($3\times2$), $x=(2,-1)$.</p>
+<p><b>Row view:</b> $(1\cdot2+2\cdot(-1),\ 0\cdot2+(-1)(-1),\ 3\cdot2+1\cdot(-1))=(0,\,1,\,5)$.</p>
+<p><b>Column view:</b> $2\,(1,0,3)-1\,(2,-1,1)=(2,0,6)-(2,-1,1)=(0,1,5)$ ✓ — dono same.</p></div>
+<div class="box em"><p><b>Example 2 (outer product).</b> $w=(1,2)$: $ww^T=\begin{bmatrix}1\cdot1&amp;1\cdot2\\2\cdot1&amp;2\cdot2\end{bmatrix}=\begin{bmatrix}1&amp;2\\2&amp;4\end{bmatrix}$. $x=(3,1)$ par lagao: $(1\cdot3+2\cdot1,\ 2\cdot3+4\cdot1)=(5,10)$. Check: $w^Tx=3+2=5$ aur $5\cdot w=(5,10)$ ✓.</p></div>
+<div class="try"><p class="ttl">✍️ Example 3 (exam-level) — Try first</p>
+<p>$X=\begin{bmatrix}1&amp;3&amp;-1\\2&amp;0&amp;4\end{bmatrix}$ ($d=2,\ n=3$). (i) $XX^T$ aur $X^TX$ ki sizes batao aur dono compute karo. (ii) Dono ke traces compare karo. (iii) Kya dono ke eigenvalues same ho sakte hain? Kyun?</p>
+<p class="note">Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<p><b>(i) Sizes.</b> $XX^T$: $(2\times3)(3\times2)=2\times2$. $X^TX$: $(3\times2)(2\times3)=3\times3$.</p>
+<p>Columns: $x_1=(1,2),\ x_2=(3,0),\ x_3=(-1,4)$.</p>
+<p><b>$XX^T=\sum_ix_ix_i^T$:</b> $x_1x_1^T=\begin{bmatrix}1&amp;2\\2&amp;4\end{bmatrix}$, $x_2x_2^T=\begin{bmatrix}9&amp;0\\0&amp;0\end{bmatrix}$, $x_3x_3^T=\begin{bmatrix}1&amp;-4\\-4&amp;16\end{bmatrix}$. Jodne par $XX^T=\begin{bmatrix}1+9+1&amp;2+0-4\\2+0-4&amp;4+0+16\end{bmatrix}=\begin{bmatrix}11&amp;-2\\-2&amp;20\end{bmatrix}$.</p>
+<p><b>$X^TX$ (entry $x_i^Tx_j$):</b> $x_1^Tx_1=5,\ x_1^Tx_2=3,\ x_1^Tx_3=-1+8=7,\ x_2^Tx_2=9,\ x_2^Tx_3=-3+0=-3,\ x_3^Tx_3=1+16=17$. Isliye $X^TX=\begin{bmatrix}5&amp;3&amp;7\\3&amp;9&amp;-3\\7&amp;-3&amp;17\end{bmatrix}$.</p>
+<p><b>(ii) Traces.</b> $\operatorname{tr}(XX^T)=11+20=31$; $\operatorname{tr}(X^TX)=5+9+17=31$ — barabar (dono $\sum_i\|x_i\|^2$ hain).</p>
+<p><b>(iii) Eigenvalues.</b> $XX^T$ ka characteristic polynomial: $\lambda^2-31\lambda+(11\cdot20-(-2)^2)=\lambda^2-31\lambda+216$. Discriminant $=961-864=97$, isliye $\lambda=\dfrac{31\pm\sqrt{97}}{2}\approx20.424,\ 10.576$. $X^TX$ ($3\times3$) ke eigenvalues code se: $20.424,\ 10.576$ aur $0$. Yaani <b>non-zero eigenvalues same</b>, par $X^TX$ mein ek extra $0$ — kyunki us ki size bhi alag hai aur rank sirf $2$ hai. Eigenvectors same ho hi nahi sakte: ek $\mathbb R^2$ mein, doosra $\mathbb R^3$ mein.</p></details>
+<div class="box red"><p><b>Non-example:</b> $A$ ($3\times2$) ko $x\in\mathbb R^3$ se multiply nahi kar sakte (beech ke sizes $2\neq3$). Aur $(AB)^T=A^TB^T$ <b>galat</b> hai — sahi $B^TA^T$ hai.</p></div>
+<details class="deep"><summary>Deeper: $ww^T$ ko dobara lagane par kya hota hai?</summary>
+<p>$w=(1,2)$ ke liye $ww^T=\begin{bmatrix}1&amp;2\\2&amp;4\end{bmatrix}$. Square karo: $(ww^T)(ww^T)=w\,(w^Tw)\,w^T=5\,ww^T$ — kyunki $w^Tw=1+4=5$. Agar $w$ <b>unit</b> ho ($w^Tw=1$) to $(ww^T)^2=ww^T$: ek baar line par girne ke baad dobara girne se kuch nahi badalta. Yeh B3 mein projection matrix ki pehchaan banegi.</p>
+<p>Bonus: $\operatorname{tr}(ww^T)=\sum_jw_j^2=\|w\|^2$ (self-check Q8).</p></details>
+<h4>D. Common mistakes</h4>
+<ul>
+<li>Size mismatch — multiply karne se pehle $(m\times n)(n\times p)$ check karo.</li>
+<li>$x^Tw$ (number) aur $xw^T$ (matrix) mix karna.</li>
+<li>$(AB)^T=A^TB^T$ likhna.</li>
+<li>$X$ ko $n\times d$ padh lena — is course mein $d\times n$.</li>
+<li>$XX^T$ aur $X^TX$ ko same size / same eigenvectors maan lena.</li>
+</ul>
+<h4>E. Why PCA / T1 needs this — ML bridge</h4>
+<p><b>Q: Covariance matrix, matrix ki bhasha mein, kya hai?</b><br>A: $C=\tfrac1n\sum_ix_ix_i^T=\tfrac1nXX^T$ (centred $X$): har point ke outer product ka average. Entry $(a,b)$ = features $a$ aur $b$ ke products ka average.</p>
+<p><b>Q: "$XX^T$ aur $X^TX$ ke eigenvectors same hain?" ka PYQ pattern kyun baar-baar aata hai?</b><br>A: B1 ke pattern table mein yeh 3 baar hai (jawab: No). Wajah Example 3 mein dikhi: sizes alag ($d\times d$ vs $n\times n$), isliye eigenvectors alag lengths ke; sirf non-zero eigenvalues same. Dual PCA (B12) isi relation par bana hai.</p>
+</section>
+
+<section data-track="t1-check">
+<h3>🧪 T1 prerequisites — mini self-check <span class="tag t-add">[ADDED]</span></h3>
+<p>8 chhote questions, har ek ke saath P-tag. Pehle khud karo; answer collapsible mein hai. Chat mein bhejte waqt: <code>Answer: … | Confidence: S/U/G | Reason: …</code></p>
+<ol>
+<li><p><b>(P2)</b> $x=(2,-3,1),\ w=(4,1,-2)$. $x^Tw=\,?$</p>
+<details class="reveal"><summary>Show answer</summary><p>$2\cdot4+(-3)\cdot1+1\cdot(-2)=8-3-2=\mathbf{3}$.</p></details></li>
+<li><p><b>(P3)</b> Same $x=(2,-3,1)$ ke liye $\|x\|$ aur uski direction ka unit vector?</p>
+<details class="reveal"><summary>Show answer</summary><p>$\|x\|=\sqrt{4+9+1}=\sqrt{14}\approx\mathbf{3.742}$. Unit vector $=\tfrac1{\sqrt{14}}(2,-3,1)\approx(0.535,\,-0.802,\,0.267)$. Check: $0.286+0.643+0.071\approx1$ ✓.</p></details></li>
+<li><p><b>(P4)</b> $t$ kya ho ki $(t,1)\perp(2,-4)$?</p>
+<details class="reveal"><summary>Show answer</summary><p>Dot $=2t+1\cdot(-4)=2t-4=0\Rightarrow t=\mathbf{2}$. Check: $(2,1)^T(2,-4)=4-4=0$ ✓.</p></details></li>
+<li><p><b>(P4)</b> $a=(1,2,2),\ b=(2,3,6)$ ke beech $\cos\theta$?</p>
+<details class="reveal"><summary>Show answer</summary><p>$a^Tb=2+6+12=20$; $\|a\|=\sqrt{1+4+4}=3$; $\|b\|=\sqrt{4+9+36}=7$. $\cos\theta=\dfrac{20}{3\cdot7}=\dfrac{20}{21}\approx\mathbf{0.952}$ (positive ⇒ acute angle).</p></details></li>
+<li><p><b>(P3)</b> $x=(1,2,0),\ y=(3,-1,2)$: $\|x-y\|^2$ direct aur expansion dono se.</p>
+<details class="reveal"><summary>Show answer</summary><p>Direct: $x-y=(-2,3,-2)$, $\|x-y\|^2=4+9+4=\mathbf{17}$. Expansion: $\|x\|^2=5$, $\|y\|^2=9+1+4=14$, $x^Ty=3-2+0=1$ ⇒ $5-2\cdot1+14=17$ ✓.</p></details></li>
+<li><p><b>(P5)</b> $X$ ki size $4\times10$ hai. $XX^T$ aur $X^TX$ ki sizes? Kis ki entry $(i,j)$ = $x_i^Tx_j$ hai?</p>
+<details class="reveal"><summary>Show answer</summary><p>$XX^T$: $(4\times10)(10\times4)=\mathbf{4\times4}$. $X^TX$: $(10\times4)(4\times10)=\mathbf{10\times10}$. Entry $x_i^Tx_j$ <b>$X^TX$</b> ki hai (points × points).</p></details></li>
+<li><p><b>(P4)</b> True ya False: $\|a+b\|^2=\|a\|^2+\|b\|^2$ tabhi aur sirf tabhi jab $a^Tb=0$.</p>
+<details class="reveal"><summary>Show answer</summary><p><b>True.</b> Identity: $\|a+b\|^2=\|a\|^2+\|b\|^2+2a^Tb$. Barabari ke liye extra term $2a^Tb$ ka $0$ hona zaroori aur kaafi hai.</p></details></li>
+<li><p><b>(P5)</b> $u=(\tfrac35,\tfrac45)$. $uu^T$ ka trace kya hai?</p>
+<details class="reveal"><summary>Show answer</summary><p>$uu^T=\begin{bmatrix}9/25&amp;12/25\\12/25&amp;16/25\end{bmatrix}$. Trace $=\tfrac9{25}+\tfrac{16}{25}=\mathbf{1}=u^Tu=\|u\|^2$. Generally $\operatorname{tr}(ww^T)=\|w\|^2$.</p></details></li>
+</ol>
+<p class="note">Saare numerical answers code se verify hue hain.</p>
+</section>
+
+<section data-track="explain-back">
+<h2>✍️ 5. Explain-it-back</h2>
+<div class="try">
+<p class="ttl">Chat mein apne words mein jawab do (2–4 lines):</p>
+<p>"$\|x-y\|^2$ ko $\|x\|^2$, $x^Ty$ aur $\|y\|^2$ se kaise likhte hain? Aur yeh formula K-means ya kernels mein kahan kaam aata hai?"</p>
+<p class="note">Format: <code>Answer: … | Confidence: S/U/G | Reason: …</code></p>
+</div>
+</section>

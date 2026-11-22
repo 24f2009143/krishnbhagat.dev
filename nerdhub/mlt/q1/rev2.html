@@ -1,0 +1,275 @@
+<section data-track="top">
+<p class="muted mono" style="margin:0">B27 · Phase 2 · Topic revision page</p>
+<h1>📄 T2 PCA — Revision &amp; Cheat Sheet</h1>
+<p class="lead">Exam se 1–2 din pehle ke liye: PCA ke saare chhe subtopics (2.1–2.6) ke formulas, conditions, traps, trigger→first-move, [FLAG]s aur ek 8-question quick test ek page par. Yahan se hi poora T2 revise ho jaana chahiye — B4–B12 ke pages kholne ki zaroorat nahi.</p>
+<div class="box">
+<p><b>Is page mein:</b> 1) big picture · 2) cheat sheet · 3) exam pattern digest · 4) mistake log · 5) quick test (8 Q, ≈16 min) · 6) topic-closed checklist (ticks is browser mein save hote hain).</p>
+<p><b>Source:</b> B4–B12 ke published pages (memory cards, pattern toolkits, T2 timed set, flags) se padha hua. Tags: <span class="tag t-src">[SRC]</span> PYQ se · <span class="tag t-add">[ADDED]</span> meri explanation / naya question · <span class="tag t-flag">[FLAG]</span> source error, proof ke saath · <span class="tag t-q">[?]</span> missing / unreadable.</p>
+<p class="note">Bank frequency ≠ exam weightage: neeche ke counts sirf is bank ke hain, exam ki prediction nahi.</p>
+</div>
+</section>
+
+<h2>🖼️ 1. Topic big picture</h2>
+<section data-track="picture">
+<p><b>PCA kyun exist karta hai [ADDED]:</b> data mein $d$ features hain par asli structure kam dimensions mein hota hai. PCA woh orthonormal directions dhundhta hai jin par data ka variance sabse zyada hai — unhi par project karke data ko kam numbers mein likhte hain (compression), aur sabse kam error ke saath wapas bana sakte hain (reconstruction). Unsupervised learning ka pehla tool: koi label nahi chahiye.</p>
+<figure class="viz diagram">
+  <p class="vt">T2 relational map — centring se reconstruction tak, aur dual PCA ka shortcut</p>
+  <p class="vs">Har box ek subtopic hai; arrows = "iska output agle ka input". Dashed = d &gt; n mein alag raasta. <i>Schematic</i> — scale / order of difficulty nahi.</p>
+<svg viewBox="0 0 900 380" role="img" aria-label="T2 map: centre, covariance, PC directions, scores, how many components, reconstruction, with dual PCA shortcut">
+<defs><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#a3a3a3"/></marker></defs>
+<g stroke="#60A5FA" fill="#141c2b">
+<rect x="10" y="40" width="130" height="96" rx="10"/><rect x="160" y="40" width="130" height="96" rx="10"/><rect x="310" y="40" width="130" height="96" rx="10"/>
+<rect x="460" y="40" width="130" height="96" rx="10"/><rect x="610" y="40" width="130" height="96" rx="10"/><rect x="760" y="40" width="130" height="96" rx="10"/>
+</g>
+<g font-size="13" font-weight="600" fill="#fff" text-anchor="middle">
+<text x="75" y="66">Centre</text><text x="225" y="66">2.1 Covariance</text><text x="375" y="66">2.2 PC directions</text><text x="525" y="66">2.3 Scores</text><text x="675" y="66">2.4 How many k?</text><text x="825" y="66">2.5 Reconstruct</text>
+</g>
+<g font-size="11.5" fill="#a3a3a3" text-anchor="middle">
+<text x="75" y="90">x̃ = x − μ</text><text x="75" y="108">(pehle hamesha)</text>
+<text x="225" y="90">C = (1/n) Σ x̃x̃ᵀ</text><text x="225" y="108">Var(u) = uᵀCu</text><text x="225" y="124">tr C = Σλ</text>
+<text x="375" y="90">C = WΛWᵀ</text><text x="375" y="108">wⱼ unit, ⟂</text><text x="375" y="124">λ₁ ≥ … ≥ λ_d ≥ 0</text>
+<text x="525" y="90">z_k = w_kᵀ x̃</text><text x="525" y="108">(w_k unit)</text><text x="525" y="124">Σz² = ‖x̃‖²</text>
+<text x="675" y="90">EVR = λ_k / Σλ</text><text x="675" y="108">CEV(k) ≥ τ</text><text x="675" y="124">rank ≤ min(d, n−1)</text>
+<text x="825" y="90">x̂ = Σ_{j≤k} z_j w_j</text><text x="825" y="108">error = Σ_{j&gt;k} λ_j</text><text x="825" y="124">storage k(d+n)</text>
+</g>
+<g stroke="#a3a3a3" marker-end="url(#a2)"><line x1="140" y1="88" x2="158" y2="88"/><line x1="290" y1="88" x2="308" y2="88"/><line x1="440" y1="88" x2="458" y2="88"/><line x1="590" y1="88" x2="608" y2="88"/><line x1="740" y1="88" x2="758" y2="88"/></g>
+<rect x="260" y="220" width="380" height="110" rx="10" fill="#0f1d17" stroke="#34D399"/>
+<text x="450" y="248" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">2.6 Dual PCA (d &gt; n)</text>
+<text x="450" y="272" text-anchor="middle" fill="#a3a3a3" font-size="11.5">K = XᵀX (n×n), Kβ = λβ, ‖β‖ = 1</text>
+<text x="450" y="290" text-anchor="middle" fill="#a3a3a3" font-size="11.5">w = Xβ/√λ   ·   λ_C = λ_K / n</text>
+<text x="450" y="308" text-anchor="middle" fill="#a3a3a3" font-size="11.5">training score zᵢ = √λ · βᵢ</text>
+<g stroke="#34D399" stroke-dasharray="5 4" marker-end="url(#a2)"><line x1="380" y1="220" x2="375" y2="140"/><line x1="520" y1="220" x2="525" y2="140"/></g>
+<text x="10" y="362" font-size="11.5" fill="#737373">Total variance = tr C = Σλ · average squared reconstruction error (k PCs) = discarded eigenvalues ka jod</text>
+</svg>
+  <figcaption><b>Interpretation:</b> Poora T2 ek chain hai: <code>centre → C → eigen → scores → kitne k → reconstruct</code>. 2.6 koi nayi chain nahi — wahi PCs <code>K = XᵀX</code> ke raaste se milte hain jab <code>d &gt; n</code>.</figcaption>
+</figure>
+<div class="cards">
+<div class="card"><div class="k">Is bank mein T2</div><div class="v">127 marks</div><div class="s">44 scorable Qs · 53 PYQ blocks · har 10/10 paper mein [SRC]</div></div>
+<div class="card"><div class="k">Marks by subtopic</div><div class="v" style="font-size:16px;line-height:1.5">2.1: 36 · 2.5: 25 · 2.3: 24<br>2.2: 23 · 2.4: 10 · 2.6: 9</div><div class="s">[SRC] — count ≠ weightage</div></div>
+</div>
+<div class="box em">
+<p><b>Topic ki "exam story" [ADDED]:</b> "Pehle centre karo, phir $C$ → eigenvalues; kisi bhi PC ka variance $\lambda_k$, coordinate = unit PC ke saath dot, reconstruction error = discarded $\lambda$'s ka jod, aur $d&gt;n$ ho to $X^TX$ ke eigenpair se $w=X\beta/\sqrt\lambda$." Marks <b>centring, unit-norm check aur $n$ ke divide/cancel</b> mein jaate hain.</p>
+</div>
+</section>
+
+<h2>📋 2. Consolidated cheat sheet</h2>
+<section data-track="cheat">
+<h3>Prerequisites (B4) — mean, variance, covariance, eigen</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Concept</th><th>Formula</th><th>When it applies</th><th>Common mix-up</th></tr></thead>
+<tbody>
+<tr><td>Centring</td><td>$\mu=\tfrac1n\sum x_i$, $\tilde x_i=x_i-\mu$</td><td>PCA se pehle, hamesha</td><td>Centre karna bhoolna (uncentred matrix)</td></tr>
+<tr><td>Variance rules</td><td>$\operatorname{Var}=\overline{z^2}-\bar z^2$; $\operatorname{Var}(az+b)=a^2\operatorname{Var}(z)$</td><td>1-D projections</td><td>$b$ ka variance mein aana</td></tr>
+<tr><td>Covariance matrix</td><td>$C=\tfrac1n\sum\tilde x_i\tilde x_i^T=\tfrac1nXX^T-\mu\mu^T$; symmetric, PSD</td><td>Course convention $\tfrac1n$</td><td>$\tfrac1{n-1}$ use karna ($833$ vs $625$)</td></tr>
+<tr><td>Eigen facts</td><td>$\sum\lambda=\operatorname{tr}$, $\prod\lambda=\det$; $A+cI\to\lambda+c$; $kA\to k\lambda$; $A^{-1}\to1/\lambda$</td><td>Shortcut checks</td><td>Eigenvector ka scale/sign alag dekh ke sahi option reject karna</td></tr>
+<tr><td>$2\times2$ eigen</td><td>$\lambda^2-(\operatorname{tr})\lambda+\det=0$; $\begin{bmatrix}a&amp;b\\b&amp;a\end{bmatrix}$ ⇒ $a\pm b$ on $(1,\pm1)$</td><td>Equal diagonals</td><td>$b&lt;0$ ho to $a+b$ ko bada maan lena</td></tr>
+<tr><td>Rank-1 matrix</td><td>$aa^T$: $\lambda=\|a\|^2$ (vector $a$), baaki $0$</td><td>Collinear / single direction</td><td>—</td></tr>
+<tr><td>Rayleigh bound</td><td>$\lambda_{\min}\le u^TAu\le\lambda_{\max}$ ($\|u\|=1$)</td><td>"max / min variance direction"</td><td>Non-unit $u$ lena</td></tr>
+</tbody></table></div>
+
+<h3>2.1 Covariance, eigenvalues, variance along PCs</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Concept</th><th>Formula</th><th>When it applies</th><th>Common mix-up</th></tr></thead>
+<tbody>
+<tr><td>Variance along PC$_k$</td><td>$\lambda_k$</td><td>Centred data, $\tfrac1n$</td><td>$\lambda_1$ vs $\operatorname{tr}C$ vs $C_{jj}$</td></tr>
+<tr><td>Variance along axis $j$</td><td>$C_{jj}$</td><td>"along the $x$-axis / feature $j$"</td><td>Axis variance ko PC variance samajhna</td></tr>
+<tr><td>Variance along any $v$</td><td>$\dfrac{v^TCv}{v^Tv}$</td><td>$v\neq0$ (non-unit chalta hai)</td><td>$v^TCv$ seedha, $\|v\|$ check kiye bina ($\mathbf1^TC\mathbf1$ ≠ variance)</td></tr>
+<tr><td>Total variance</td><td>$\operatorname{tr}C=\sum\lambda=\tfrac1n\sum\|\tilde x_i\|^2$</td><td>"% of total", collinear</td><td>Denominator mein sirf top-$k$</td></tr>
+<tr><td>Collinear points</td><td>rank $1$ ⇒ $\lambda_1=\operatorname{tr}C$, baaki $0$</td><td>"points on a line", mean centred karke</td><td>Mean $\neq0$ par uncentred $\tfrac1n\sum\|x_i\|^2$ nikalna ($43.75$ vs $18.44$)</td></tr>
+<tr><td>PCs = axes</td><td>$C$ diagonal, entries $\ge0$</td><td>"PCs are $e_1,e_2,e_3$"</td><td>Zero entry allowed hai</td></tr>
+<tr><td>Raw data se $C$</td><td>$C=S-\mu\mu^T$, $S=\tfrac1n\sum x_ix_i^T$</td><td>Raw points diye</td><td>Option mein $S$ (uncentred) trap</td></tr>
+<tr><td>Sum of all entries</td><td>$\sum_{jk}C_{jk}=\operatorname{Var}(\sum_jx_j)=\mathbf1^TC\mathbf1$; along $\mathbf1/\sqrt d$: $\tfrac1d\mathbf1^TC\mathbf1$</td><td>"sum of all entries of $C$"</td><td>Trace samajhna</td></tr>
+<tr><td>$A^TA$ vs $AA^T$</td><td>$A^TAv=\lambda v$, $\lambda>0$ ⇒ $u=Av/\sqrt\lambda$ ($AA^T$ ka eigenvector)</td><td>Same nonzero $\lambda$, alag shapes</td><td>"Same eigenvalues" ko "same eigenvectors" banana</td></tr>
+<tr><td>Constraints ⇒ zeros</td><td>#zero $\lambda=$ #independent constraints $=d-\operatorname{rank}C$</td><td>"every point satisfies …"</td><td>Dependent constraints ko alag-alag ginna</td></tr>
+<tr><td>Bounds / formula-$\lambda$</td><td>$\max C_{jj}\le\lambda_1\le\operatorname{tr}C$; $\lambda_i=cr^i$ ($i\ge1$, $r<1$) ⇒ $\lambda_1=cr$</td><td>Eigenvalues index ke formula se</td><td>$\lambda_1$ vs $\sum\lambda$ (P13 ki key)</td></tr>
+</tbody></table></div>
+
+<h3>2.2 PC directions and orthogonality</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Concept</th><th>Formula / rule</th><th>When it applies</th><th>Common mix-up</th></tr></thead>
+<tbody>
+<tr><td>Orthogonality</td><td>$(\lambda_j-\lambda_k)\,w_j^Tw_k=0$ ($C$ symmetric)</td><td>Distinct $\lambda$ ⇒ automatically $\perp$; ties ⇒ eigenspace mein free choice</td><td>"Eigenvectors always orthogonal" — PCA context mein True (orthonormal chuna jaata hai)</td></tr>
+<tr><td>"Could be the $k$-th PC"</td><td>unit length + $\perp$ <b>saare</b> pichhle PCs</td><td>Integer vectors diye hon</td><td>Sirf $w_1$ se dot, length check bhoolna</td></tr>
+<tr><td>$\pm$ pair</td><td>$v$ aur $-v$ dono ya dono nahi</td><td>MSQ: dono saath; MCQ (single): dono galat</td><td>Sirf ek tick karna</td></tr>
+<tr><td>Definition</td><td>$w_k=\arg\max_{\|u\|=1,\,u\perp w_{&lt;k}}u^TCu$</td><td>Conceptual MSQ</td><td>—</td></tr>
+<tr><td>Constraint normal</td><td>$a^T\tilde x_i=0\ \forall i\Rightarrow Ca=0$; $\pm a/\|a\|$ = zero-variance PC</td><td>"every point satisfies $a^Tx=0$"</td><td>Normal ko PC1 samajhna (woh sabse chhota hai)</td></tr>
+<tr><td>Collinear</td><td>PC1 = line direction normalised; $\lambda_2=0$</td><td>Unit-length representative maanga ho</td><td>$L_1$ vs $L_2$ "unit"</td></tr>
+<tr><td>Last PC</td><td>$d-1$ PCs known ⇒ last unique up to sign (3-D: cross product)</td><td>—</td><td>—</td></tr>
+<tr><td>$C=kI$ tie</td><td>$v^TCv=k$ har unit $v$ par</td><td>Cube corners, $\pm$ grid</td><td>Diagonal unequal ho to $\sum v_j^2C_{jj}$</td></tr>
+<tr><td>$C$ vs $K=X^TX$</td><td>$K\alpha=\lambda_K\alpha$ ⇒ $w=X\alpha/\sqrt{\lambda_K}$; $\lambda_C=\lambda_K/n$</td><td>$d\gg n$</td><td>$K$ aur $C$ ke eigenvectors "scalar multiple" samajhna (alag spaces); $X^T$ vs $X$ ulta</td></tr>
+</tbody></table></div>
+
+<h3>2.3 Projection scores and PC coordinates</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Concept</th><th>Formula</th><th>When it applies</th><th>Common mix-up</th></tr></thead>
+<tbody>
+<tr><td>PC coordinate</td><td>$z_k=w_k^T\tilde x$</td><td>$w_k$ unit, PCs orthonormal; "representation in PC system" — order follow karo</td><td>Raw dot bina normalise ($3$ vs $3/\sqrt5$); $a,b$ swap; $w$ ka sign</td></tr>
+<tr><td>Non-unit direction</td><td>$z=u^T\tilde x/\|u\|$</td><td>"unit" nahi likha</td><td>Coefficient $u^Tx/u^Tu$ ya projection vector ko coordinate bolna</td></tr>
+<tr><td>Norm identities</td><td>$\|\tilde x\|^2=\sum_{k=1}^dz_k^2$; $\|r\|^2=\sum_{k&gt;K}z_k^2$</td><td>Discarded part ka size / $c$ nikalna</td><td>$c$ ko $a$ ya $b$ mein mila dena</td></tr>
+<tr><td>Score statistics</td><td>$\tfrac1n\sum_iz_{ik}z_{il}=\lambda_l\delta_{kl}$ (centred)</td><td>Score variance, uncorrelated scores</td><td>—</td></tr>
+<tr><td>Reconstruction from scores</td><td>$\hat x=\sum_{k\le K}z_kw_k=W_KW_K^T\tilde x$</td><td>$K$ PCs retained</td><td>—</td></tr>
+<tr><td>Centring of the point</td><td>point dataset mein hai aur dataset centred ⇒ $\tilde x=x$; warna $x-\mu$</td><td>Raw point + mean diya</td><td>Double centring / no centring</td></tr>
+<tr><td>On-axis shortcut</td><td>$\tilde x=s\,w_1\Rightarrow(z_1,z_2,\dots)=(s,0,\dots)$</td><td>Point PC axis par ho</td><td>—</td></tr>
+<tr><td>Non-orthogonal basis</td><td>$c=U^{-1}\tilde x$ (system solve)</td><td>Basis orthonormal nahi</td><td>$U^T\tilde x$ lena</td></tr>
+<tr><td>Dual scores ($d&gt;n$)</td><td>$z_k(x)=x^TX\alpha_k/\sqrt{\lambda_k}$; training: $\sqrt{\lambda_k}\,\alpha_{k,i}$; score variance $\lambda_k/n$</td><td>$\alpha_k$ unit eigenvector of $X^TX$, centred</td><td>$x_i^T\alpha$ (shape galat), $\sqrt{n\lambda}$; $\sqrt2/2$ ko $1/2$ padhna</td></tr>
+</tbody></table></div>
+
+<h3>2.4 Explained variance, rank, dimension selection</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Concept</th><th>Formula</th><th>When it applies</th><th>Common mix-up</th></tr></thead>
+<tbody>
+<tr><td>Total variance</td><td>$V_{\text{tot}}=\operatorname{tr}C=\sum\lambda_j$</td><td>Centred, $\tfrac1n$</td><td>Denominator mein zero/baaki eigenvalues chhodna</td></tr>
+<tr><td>EVR / CEV</td><td>$\text{EVR}_k=\lambda_k/\sum\lambda$; $\text{CEV}(k)=\sum_{j\le k}\lambda_j/\sum\lambda$</td><td>Eigenvalues descending sort karke</td><td>$\lambda_k$ ko ratio samajhna; unsorted cumulative</td></tr>
+<tr><td>Choosing $k$</td><td>$k^*=\min\{k:\text{CEV}(k)\ge\tau\}\iff$ tail $\le(1-\tau)V_{\text{tot}}$</td><td>"at least 95%"</td><td>$94.2\%$ ko "approx $95\%$" maan lena; $\ge$ vs $>$</td></tr>
+<tr><td>$X^TX$ eigenvalues</td><td>$\lambda_j(X^TX)=n\lambda_j(C)$; ratios same, $n$ cancel</td><td>Proportion maanga ho</td><td>Sirf numerator ko $n$ se bhaagna ($0.1/21$)</td></tr>
+<tr><td>Rank</td><td>#nonzero $\lambda\le\min(d,n-1)$ (centred)</td><td>$d\gg n$</td><td>$d$ ya $n$ ko #components samajhna</td></tr>
+<tr><td>Average error</td><td>$E_k=\sum_{j>k}\lambda_j=(1-\text{CEV})V_{\text{tot}}$</td><td>$\tfrac1n$ convention</td><td>Percent vs decimal format</td></tr>
+</tbody></table></div>
+
+<h3>2.5 Reconstruction, residuals, compression, storage</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Concept</th><th>Formula</th><th>When it applies</th><th>Common mix-up</th></tr></thead>
+<tbody>
+<tr><td>Reconstruction</td><td>$\hat x=W_kW_k^T\tilde x$ (original coordinates: $+\mu$)</td><td>Orthonormal PCs, centred</td><td>Centre kiye bina project</td></tr>
+<tr><td>Residue</td><td>$r=\sum_{j>k}z_jw_j$, $r\perp w_1..w_k$</td><td>Residue-vector options → dot test</td><td>Alag-alag lines ke errors jodna (P2 option 2)</td></tr>
+<tr><td>Error of a point</td><td>$\|r\|^2=\|\tilde x\|^2-\sum_{j\le k}z_j^2$</td><td>Ek point, $k$ PCs</td><td>Captured variance ko error padhna</td></tr>
+<tr><td>Average error</td><td>$E_k=\sum_{j>k}\lambda_j$; single unit line $E(w)=V_{\text{tot}}-w^TCw$</td><td>$X^TX$ ho to $n$ se bhaago</td><td>—</td></tr>
+<tr><td>Zero residue</td><td>$k\ge\operatorname{rank}$ ($\le\min(d,n-1)$); "lie in $r$-dim subspace" ⇒ $r$ PCs, error $0$</td><td>"residues zero after $k$ rounds", column relations</td><td>Rank ko $d$ / $n$ samajhna; "only $r$ eigenvalues" ko exactly $r$ (bina span ke) maan lena</td></tr>
+<tr><td>Storage</td><td>raw $dn$; compressed $k(d+n)$; decrease $\%=100\bigl(1-\tfrac{k(d+n)}{dn}\bigr)$; saves iff $k&lt;\tfrac{dn}{d+n}$</td><td>$n$ points in $\mathbb R^d$, $k$ PCs</td><td>$kn$ ya $kd$ akela; mean jodna jab key na jode</td></tr>
+</tbody></table></div>
+
+<h3>2.6 Dual PCA, Gram matrices, $d&gt;n$</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Concept</th><th>Formula</th><th>When it applies</th><th>Common mix-up</th></tr></thead>
+<tbody>
+<tr><td>Gram matrix</td><td>$K=X^TX$, $K_{ij}=x_i^Tx_j$ ($n\times n$)</td><td>$d>n$ (ya "kernel matrix")</td><td>$XX^T$ ($d\times d$) se confuse</td></tr>
+<tr><td>Eigen link</td><td>$XX^T(X\beta)=\lambda(X\beta)$, $\lambda>0$; $\|X\beta\|^2=\lambda$</td><td>$K\beta=\lambda\beta$</td><td>$X\beta$ ko unit maan lena</td></tr>
+<tr><td>PC from dual</td><td>$w=X\beta/\sqrt\lambda=\sum_i\alpha_ix_i$, $\alpha=\beta/\sqrt\lambda$</td><td>$\|\beta\|=1$ pehle check</td><td>$\lambda$ se divide, $\sqrt\lambda$ se guna, non-unit $\beta$</td></tr>
+<tr><td>Variance</td><td>$\lambda_C=\lambda_K/n$; EVR $=\lambda/\sum\lambda$ ($n$ cancel)</td><td>$C=\tfrac1nXX^T$</td><td>$\lambda_K$ ko variance likhna</td></tr>
+<tr><td>Scores</td><td>training $z_i=\sqrt\lambda\,\beta_i$; new point $z(x)=\sum_j\alpha_j\,x^Tx_j$</td><td>—</td><td>—</td></tr>
+<tr><td>Centred structure</td><td>$K\mathbf1=0$, rank $\le n-1$, $\sum\alpha_i=0$; zero eigenvalues: $C$ mein $\ge d-(n-1)$, $K$ mein $\ge1$</td><td>Centred data</td><td>"Dual hamesha sasta" — sirf $d>n$ par</td></tr>
+</tbody></table></div>
+</section>
+
+<h2>🔑 3. Exam pattern digest</h2>
+<section data-track="digest">
+<h3>Recurring question families [SRC]</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Family</th><th>Times in bank</th><th>Core move</th></tr></thead>
+<tbody>
+<tr><td>Variance along PC1 = largest eigenvalue</td><td>6 IDs</td><td>$C$ banao (centre) → $\lambda_1$; ya $C$ + PC diya to $w^TCw$</td></tr>
+<tr><td>Point ke PC coordinates $(a,b)$</td><td>5 sets</td><td>Unit PCs ke saath alag dot, order mein</td></tr>
+<tr><td>Data $k$-dim subspace ⇒ #nonzero eigenvalues / zero residue</td><td>4</td><td>Rank = independent dimensions</td></tr>
+<tr><td>$XX^T$ vs $X^TX$ eigenvectors same? (No)</td><td>3</td><td>Shapes + $v\mapsto Xv$</td></tr>
+<tr><td>Storage after PCA</td><td>2</td><td>$k(d+n)$ vs $dn$</td></tr>
+<tr><td>PC1 = top eigenvector, max variance (MSQ)</td><td>2</td><td>Rayleigh; $\operatorname{diag}(3,1)$ se options test</td></tr>
+</tbody></table></div>
+<h3>Trigger → first move</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Trigger phrase</th><th>First move</th></tr></thead>
+<tbody>
+<tr><td>"variance along the first PC"</td><td>$C$ ready? nahi to centre → $C$ → char. eq.; $\lambda_1$</td></tr>
+<tr><td>"points lie on a line", "collinear"</td><td>Centre; $\lambda_1=\tfrac1n\sum\|\tilde x_i\|^2$, $\lambda_2=0$</td></tr>
+<tr><td>"along the $x$-axis"</td><td>$C_{11}$ — eigen ki zaroorat nahi</td></tr>
+<tr><td>"which could be the $k$-th PC"</td><td>Length + dot with <b>all</b> previous PCs; $\pm$ pair rule</td></tr>
+<tr><td>"every point satisfies $a^Tx=0$"</td><td>$\pm a/\|a\|$ = zero-variance PC; #zero $\lambda$ = #independent constraints</td></tr>
+<tr><td>"representation / coordinates in PC system"</td><td>Dots with unit PCs, order mein; on-axis check; $C$ ignore (distractor)</td></tr>
+<tr><td>"third PC discarded", $(a,b)$ maanga</td><td>Sirf pehle 2 dots; $c^2=\|\tilde x\|^2-a^2-b^2$ sirf check ke liye</td></tr>
+<tr><td>"capture at least 95%"</td><td>Sort, cumulative, pehla $k$ + $k-1$ fail dikhao</td></tr>
+<tr><td>"eigenvalues of $X^TX$", proportion / variance</td><td>Proportion: $n$ cancel · variance: $\div n$</td></tr>
+<tr><td>"reconstruction error" options</td><td>Project on all $k$ PCs together, subtract once; "alag-alag line" wale options hatao</td></tr>
+<tr><td>"percentage decrease in storage"</td><td>$1-\tfrac{k(d+n)}{dn}$</td></tr>
+<tr><td>"residues zero after $k$ rounds"</td><td>rank $=k$ ⇒ store $k(d+n)$</td></tr>
+<tr><td>"$d>n$", "eigenvector of $X^TX$", "$w_k=\sum\alpha_ix_i$"</td><td>$w=X\beta/\sqrt\lambda$; $\alpha=\beta/\sqrt\lambda$; pehle $\|\beta\|=1$</td></tr>
+<tr><td>"projection of $x_i$ onto $k$-th PC" with $X^TX$</td><td>$x_i^TX\beta/\sqrt\lambda=\sqrt\lambda\beta_i$</td></tr>
+<tr><td>"which matrix maps eigenvectors of $K$ to $C$"</td><td>$X$ (shapes likho)</td></tr>
+<tr><td>Cube / $\pm$ grid, "any unit vector"</td><td>$C=kI$ ⇒ $v^TCv=k$</td></tr>
+</tbody></table></div>
+<div class="box amber">
+<p><b>Top 5 traps (subtopic pages se):</b></p>
+<ol>
+<li><b>Centring skip</b> — uncentred $S$ ya $\tfrac1n\sum\|x_i\|^2$ (2.1 P7: $43.75$ vs $18.44$; P8 option 1, P9).</li>
+<li><b>$\lambda_1$ vs $\operatorname{tr}C$ vs $C_{jj}$</b>, aur $\lambda_K$ ko variance likhna ($n$ se divide bhoolna) / $n$ ka numerator-only cancel.</li>
+<li><b>Normalise na karna</b> — raw dot ($3$ vs $3/\sqrt5$), coefficient $u^Tx/u^Tu$ ko coordinate banana; PC candidates mein length check; dual mein non-unit $\beta$.</li>
+<li><b>$\tfrac1n$ vs $\tfrac1{n-1}$</b> (2.1 P2: $833$ vs $625$) aur threshold boundary ($94.2\%\neq95\%$, "$\ge$").</li>
+<li><b>Storage / rank</b>: $kn$ ya $kd$ akela; rank ko $d$ ya $n$ samajhna; "same eigenvalues" ⇒ "same eigenvectors"; $\pm$ pair mein ek hi tick.</li>
+</ol>
+</div>
+<h3>Method selector [ADDED]</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Question deta hai…</th><th>Use</th></tr></thead>
+<tbody>
+<tr><td>Raw points, generic $\lambda_1$</td><td>Centre → $C$ → $a\pm b$ / char. eq.; collinear ho to norms² ka average</td></tr>
+<tr><td>$C$ + PC diya</td><td>$w^TCw$ (instant)</td></tr>
+<tr><td>Eigenvalue list + threshold / ratio</td><td>Cumulative from top; tail budget agar list lambi</td></tr>
+<tr><td>Orthonormal PCs + point</td><td>Dots (normalise end mein), on-axis shortcut</td></tr>
+<tr><td>Error of a point</td><td>$\|x\|^2-\sum z^2$ (residue vector nahi)</td></tr>
+<tr><td>Subspace / column relations</td><td>Independent dimensions gino; $k=$ rank</td></tr>
+<tr><td>$d>n$ + $X^TX$ data</td><td>Shapes likho → $\beta/\sqrt\lambda$; variance $\div n$</td></tr>
+</tbody></table></div>
+</section>
+
+<h2>🩹 4. Mistake log summary</h2>
+<section data-track="mistakes">
+<div class="box amber">
+<p><b>[FLAG] — source / key errors (proof ke saath) in T2:</b></p>
+<ul>
+<li><b>2.1 P7</b> <span class="tag t-flag">[FLAG]</span> — 2025 Feb 23, Q14 (<code>6406531104791</code>): collinear points, mean $\neq0$. Key $43$–$44$ standard (centred) PCA se match nahi karta. Centred $\tfrac1n$: $18.4375$; centred $\tfrac1{n-1}$: $24.5833$; <b>uncentred $\tfrac1n$: $43.75$</b> (key range mein); uncentred $\tfrac1{n-1}$: $58.33$. Farak exactly $\|\mu\|^2=25.3125$. Sahi concept answer: $18.44$; is paper ki key ne centring chhodi.</li>
+<li><b>2.1 P13</b> <span class="tag t-flag">[FLAG]</span> — 2026 Jul 16, Q11 (<code>6406532158944</code>): $\lambda_i=100\cdot2^{-i}$, $1\le i\le100$. Question "largest eigenvalue" maangta hai ⇒ $\lambda_1=50$; key $100$ ya to total variance ($\approx100$) hai ya index $i=0$ (off-by-one). Answer: $50$.</li>
+<li><b>2.6 P1</b> <span class="tag t-flag">[FLAG]</span> <span class="tag t-q">[?]</span> — 2025 Jul 13: stem ka $\beta$ unit nahi: $\|\beta\|^2=\tfrac{65}{54}\neq1$. Strict-unit $\alpha_2=0.1177$, formula-as-given $0.1291$ — dono $0.12$–$0.13$ range mein, key par asar nahi. Zyada sambhavna: "6" ki jagah "5" (norm exactly $1$).</li>
+</ul>
+</div>
+<div class="box">
+<p><b>[?] — missing / ambiguous in source:</b></p>
+<ul>
+<li><b>2.1 P12</b> — 2026 Jul 16, Q1 (<code>6406532158934</code>): constraint equations file mein nahi; option 2 ka vector $\tfrac1{\sqrt5}(1,1,1,0,\dots)$ ka norm $0.775\neq1$ ⇒ as written koi PC1 nahi ho sakta. Original paper se confirm karna.</li>
+<li><b>2.4 P3</b> — "95% variance $d-1$ eigenvectors se": stem literal padhne par kuch imply nahi karta; key option 2 tabhi theek jab "lagbhag $d-1$ chahiye" padha jaye. Exam mein option 2.</li>
+<li><b>2.5 P1, P8</b> — source mein answer mark nahi; "only four / six nonzero" exactly tabhi jab points subspace ko poora span karein (strictly "at most"). Derived: P1 → 2,3,4; P8 → 2,4. <b>2.5 P3</b> — option 3 mein $x_i^Tx_i$ aur $(x_i^Tw)^2$ ke beech comma (operator nahi); jaisa likha hai waisa judge kiya.</li>
+<li><b>2.6 P2/P3</b> — "Figure 1: Dataset 1" ke points source mein nahi; P3 ka answer sibling keys (P4 $=4.5$, P5 $=0.5$) se eliminate karke; $n=100$ wala hissa 2-D dataset se nahi judta.</li>
+</ul>
+</div>
+<div class="box">
+<p><b>Aapke logged errors:</b> abhi tak koi nahi — <code>needs_repair</code> khaali hai aur T2 par chat mein koi graded answer nahi aaya. Quick test / timed set / checkpoint 1–2 ke answers bhejoge to yahan error-tag ke saath judenge.</p>
+<p><b>Strategy note (key-vs-concept):</b> jahan key aur concept ladte hain (P7, P13), exam mein pehle concept se solve karo, phir dekho option / range kis convention se milti hai — aur [FLAG] jaisa pattern (centring, $\lambda_1$ vs total) yaad rakho.</p>
+</div>
+</section>
+
+<h2>⏱️ 5. Quick revision test</h2>
+<section data-track="test">
+<p><b>Rules:</b> 8 questions · 25 marks · 16 minutes · poore T2 ka mix (2.1–2.6). B12 ke T2 timed set ke patterns par <b>naye numbers</b> (remix) <span class="tag t-add">[ADDED]</span>; answers hidden. Ek hi baithak, notes band, calculator allowed. Chat mein: <span class="mono">RT1: … | RT2: … | Confidence per Q: S/U/G</span></p>
+<ol>
+<li><p><b>RT1 · SA · 3 marks.</b> Points $(1,2),(3,4),(5,6)$. Standard PCA ($\tfrac1n$). Variance along PC1 (2 decimals)?</p></li>
+<li><p><b>RT2 · SA · 3 marks.</b> Centred data in $\mathbb R^5$, $C$ ke eigenvalues $9,5,3,2,1$. Kam se kam kitne PCs se $\ge90\%$ variance? Us $k$ par average squared reconstruction error enter karo.</p></li>
+<li><p><b>RT3 · MSQ · 3 marks.</b> Centred data mein top 2 PCs $w_1=\tfrac13(1,2,2)$, $w_2=\tfrac13(2,1,-2)$. Kaun se vectors third PC ho sakte hain?</p>
+<p>(a) $\tfrac13(2,-2,1)$ &nbsp; (b) $\tfrac13(-2,2,-1)$ &nbsp; (c) $(2,-2,1)$ &nbsp; (d) $\tfrac13(2,2,-1)$</p></li>
+<li><p><b>RT4 · SA · 3 marks.</b> Wahi $w_1,w_2$; point $x=(3,6,3)$ (data centred). Agar $(a,b)$ = pehle 2 PC coordinates (order mein), to $2a-b$?</p></li>
+<li><p><b>RT5 · SA · 3 marks.</b> $n=100$ points in $\mathbb R^{30}$; $k=4$ PCs rakhe. Storage mein percentage decrease (2 decimals)?</p></li>
+<li><p><b>RT6 · SA · 3 marks.</b> $n=4$, centred, $K=X^TX$ ka top eigenvalue $36$, unit eigenvector $\beta=\tfrac12(1,1,-1,-1)$. Third training point ka PC1 score?</p></li>
+<li><p><b>RT7 · MSQ · 4 marks.</b> Centred $X\in\mathbb R^{d\times n}$, $d>n$, $K=X^TX$, $C=\tfrac1nXX^T$. Kaun se sach hain?</p>
+<p>(a) $K$ ka rank $\le n-1$ &nbsp; (b) $K$ ka unit eigenvector $\beta$ ho to $X\beta$ bhi unit hai &nbsp; (c) $C$ ka eigenvalue $=\lambda_K/n$ &nbsp; (d) $K$ aur $C$ ke eigenvectors same hain &nbsp; (e) PC1 par training point $i$ ka score $\sqrt{\lambda}\,\beta_i$ hai</p></li>
+<li><p><b>RT8 · SA · 3 marks.</b> $C=\begin{bmatrix}4&-3\\-3&4\end{bmatrix}$. Direction $v=(1,1)$ (unit nahi) ke along variance?</p></li>
+</ol>
+<details class="reveal"><summary>Show all answers (timer khatam hone ke baad)</summary>
+<p><b>RT1: 5.33.</b> $\mu=(3,4)$; centred $(-2,-2),(0,0),(2,2)$ — collinear ⇒ rank 1, $\lambda_1=\operatorname{tr}C=\tfrac{8+0+8}3=\tfrac{16}3=5.33$. Trap: uncentred $\tfrac1n\sum\|x_i\|^2=30.33$ (mean $\neq0$).</p>
+<p><b>RT2: $k=4$, error $=1$.</b> Total $20$; CEV $=45\%,70\%,85\%,95\%,100\%$. $85\%<90\%$ ($k=3$ fail), $95\%\ge90\%$ ⇒ $k=4$. Error $=\lambda_5=1$.</p>
+<p><b>RT3: (a), (b).</b> $w_1^Tw_2=\tfrac{2+2-4}9=0$ ✓. (a): unit ($\tfrac{4+4+1}9=1$), $\perp w_1$ ($2-4+2=0$), $\perp w_2$ ($4-2-2=0$) ✓. (b) $=-$(a) ⇒ $\pm$ pair, MSQ mein dono sahi. (c) orthogonal par unit nahi (norm $3$). (d) $w_1\cdot(2,2,-1)=2+4-2=4\neq0$ ✗.</p>
+<p><b>RT4: 12.</b> $a=\tfrac{3+12+6}3=7$, $b=\tfrac{6+6-6}3=2$; $2a-b=14-2=12$. (Order swap karne par $2\cdot2-7=-3$.) Check: $a^2+b^2=53\le\|x\|^2=54$ ✓ ($c^2=1$).</p>
+<p><b>RT5: 82.67.</b> Raw $dn=3000$; compressed $k(d+n)=4\cdot130=520$; decrease $=1-\tfrac{520}{3000}=82.67\%$. Trap: $kn=400$ ya $kd=120$ akela.</p>
+<p><b>RT6: −3.</b> $z_3=\sqrt{36}\,\beta_3=6\cdot(-\tfrac12)=-3$. Check: $\|\beta\|=1$ ✓, $\sum\beta_i=0$ (centred) ✓. Variance along PC1 $=36/4=9$.</p>
+<p><b>RT7: (a), (c), (e).</b> (a) $K\mathbf1=0$ centred ke karan. (b) ✗: $\|X\beta\|^2=\beta^TK\beta=\lambda$ ⇒ length $\sqrt\lambda$. (c) ✓. (d) ✗: $\beta\in\mathbb R^n$, $w\in\mathbb R^d$ — alag spaces. (e) ✓ $z_i=x_i^Tw=x_i^TX\beta/\sqrt\lambda=(K\beta)_i/\sqrt\lambda=\sqrt\lambda\beta_i$. Code-verified random centred $X$ par.</p>
+<p><b>RT8: 1.</b> $\dfrac{v^TCv}{v^Tv}=\dfrac{4-3-3+4}{2}=1$. Eigen check: $\lambda=4\pm(-3)\Rightarrow\{1,7\}$; $(1,1)$ ka $\lambda=a+b=1$. Trap: $a+b$ ko bada maan lena ($b<0$) — PC1 yahan $(1,-1)$ hai, variance $7$.</p>
+<p class="note">Scoring: SA = full ya zero; MSQ = saare sahi options, koi galat nahi. 25 mein se 21+ = T2 revision-ready. Saare numerical answers numpy se code-verified. Galtiyan chat mein error-tag ke saath bhejo.</p>
+</details>
+</section>
+
+<h2>✅ 6. Topic-closed checklist</h2>
+<section>
+<p class="note">Har line ke liye: <b>"kya main yeh cold, exam time ke andar, bina hint ke kar sakta/sakti hoon?"</b> Tick tabhi jab quick test / timed set / checkpoint mein sach saabit hua ho. Ticks is browser mein save hote hain.</p>
+<div class="chkrow" data-check="2.1"><b>2.1 Covariance &amp; variance along PCs</b> — raw points se centred $C$, $\lambda_1$ ($a\pm b$ ya char. eq.), collinear shortcut, "sum of entries", zero eigenvalues from constraints; $\lambda_1$ / $\operatorname{tr}C$ / $C_{jj}$ mix nahi.</div>
+<div class="chkrow" data-check="2.2"><b>2.2 PC directions &amp; orthogonality</b> — "could be $k$-th PC" (length + saare dots + $\pm$ rule), constraint normal, $C$ vs $K$ statements.</div>
+<div class="chkrow" data-check="2.3"><b>2.3 Projection scores &amp; coordinates</b> — $(a,b)$ with normalise + order, on-axis shortcut, dual score $x^TX\alpha/\sqrt\lambda$.</div>
+<div class="chkrow" data-check="2.4"><b>2.4 Explained variance &amp; rank</b> — cumulative $k^*$ with $k-1$ fail, $n$ cancel in ratios, rank $\le\min(d,n-1)$.</div>
+<div class="chkrow" data-check="2.5"><b>2.5 Reconstruction &amp; storage</b> — $\|x\|^2-\sum z^2$, residue dot test, subspace ⇒ zero error, $k(d+n)$ percentage.</div>
+<div class="chkrow" data-check="2.6"><b>2.6 Dual PCA</b> — $\alpha=\beta/\sqrt\lambda$ (unit check), $\lambda_C=\lambda_K/n$, training score $\sqrt\lambda\beta_i$, $K$ vs $C$ statements.</div>
+<div class="chkrow" data-check="prereq"><b>T2 prerequisites (B4)</b> — centring, $\operatorname{Var}$ rules, $C=\tfrac1nXX^T-\mu\mu^T$, eigen facts ($\operatorname{tr}$, $\det$, shift/scale), $2\times2$ eigen in 3 lines.</div>
+</section>

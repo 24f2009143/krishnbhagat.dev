@@ -1,0 +1,737 @@
+<style>#content mjx-container:not([display="true"]){display:inline-block;max-width:100%;overflow-x:auto;overflow-y:hidden;vertical-align:middle}#content li,#content p,#content td{overflow-wrap:anywhere}</style>
+<section data-track="intro">
+<p class="muted mono" style="margin:0">B18 · T4 K-means · 4.3 Assignment, distance, geometry + 4.6 Choosing K</p>
+<h1>4.3 Cluster assignment, distance, geometry + 4.6 Choosing K, initialization, limitations</h1>
+<p class="lead">B17 mein humne loop ke dono kadam dekhe. Ab sirf <b>pehle kadam — assignment —</b> ko ek microscope ke neeche rakhte hain: "sabse paas ka centre" ka matlab geometry mein kya hai? Jawab: do centres ke beech ek <b>perpendicular bisector</b> deewar, aur har centre ka ek <b>convex cell</b> (half-planes ka intersection). Is ek picture se kai PYQs ke jawab seedhe nikalte hain: "kaun sa point definitely same cluster mein hai", "kaun se clusters Lloyd kabhi nahi de sakta (rings)", "z⁽⁰⁾ se shuru karke final labels". Doosre hisse (4.6) mein ek baat saaf hogi: <b>F akela K nahi chun sakta</b> (K=n par F=0), aur Lloyd ka final answer <b>initialization par</b> tikta hai.</p>
+<div class="box">
+<p><b>Is build ke PYQs <span class="tag t-src">[SRC]</span></b> — 4.3 (7 IDs) + 4.6 (1 ID) = <b>8 IDs, sab solvable-blocks (P1–P8, kul 24 marks)</b>. C1 (2026 Mar Q16) context block B17 mein aa chuka tha; uske bachche Q17, Q18 yahan hain.</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>#</th><th>Paper · Q</th><th>ID</th><th>Type · marks</th><th>Kya poochha</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td colspan="6"><b>4.3 Cluster assignment, distance, and geometry</b></td></tr>
+<tr><td>P1</td><td>2023 July · Q3</td><td class="mono">640653577730</td><td>MCQ · 4</td><td>4 points, $k=2$, init $(0,0),(4,4)$ — iterations aur final centroids</td><td>Source ne answer mark nahi kiya <span class="tag t-q">[?]</span>; meri reading option 3</td></tr>
+<tr><td>P2</td><td>2023 July · Q7</td><td class="mono">640653577735</td><td>MSQ · 5</td><td>Kaun se clusters Lloyd ($k=2$) se final nahi mil sakte</td><td>Options sirf figures; images nahi <span class="tag t-q">[?]</span> — sirf criterion solve hua</td></tr>
+<tr><td>P3</td><td>2023 October · Q3</td><td class="mono">640653669232</td><td>MCQ · 4</td><td>9 points, $K=3$ — $(2,3)$ doosri iteration mein kahan jaayega</td><td>Key C1 ✓</td></tr>
+<tr><td>P4</td><td>2025 February 23 · Q3</td><td class="mono">6406531104780</td><td>MCQ · 3</td><td>100 points, $K=3$; do points same $C_1$ mein — kaun sa <i>definitely</i></td><td>Key option 3 ✓</td></tr>
+<tr><td>P5</td><td>15 March 2026 · Q17 (parent C1 = Q16)</td><td class="mono">6406531951449</td><td>MCQ · 2</td><td>$z^{(0)}=(1,1,2,2)$ ⇒ final assignment</td><td>Source sirf sahi option dikhata hai: $(1,2,2,1)$ ✓ <span class="tag t-q">[?]</span></td></tr>
+<tr><td>P6</td><td>15 March 2026 · Q18 (parent C1 = Q16)</td><td class="mono">6406531951450</td><td>MCQ · 2</td><td>$z^{(0)}=(1,2,2,1)$ ⇒ final assignment</td><td>Source sirf sahi option dikhata hai: $(1,2,2,1)$ ✓ <span class="tag t-q">[?]</span></td></tr>
+<tr><td>P7</td><td>16 July 2026 · Q3</td><td class="mono">6406532158936</td><td>MCQ · 4</td><td>1-D, $\mu^t=(0,10)$ — $\sum\|x_i-\mu^t_{z_i^{t+1}}\|^2$</td><td>Key 24 ✓</td></tr>
+<tr><td colspan="6"><b>4.6 Choosing K, initialization effects, and limitations</b></td></tr>
+<tr><td>P8</td><td>15 March 2026 · Q2</td><td class="mono">6406531951434</td><td>MCQ · 3</td><td>100 points, $k=2$, init $D_1$ (pehle 50) / $D_2$ — Scenario-1/2 possible?</td><td>Scenarios ke maths values unreadable <span class="tag t-q">[?]</span> — <b>solve nahi kiya</b></td></tr>
+</tbody></table></div>
+<p><b>Bank frequency ≠ exam weightage:</b> 4.3 mein 7 aur 4.6 mein sirf 1 ID hai; yeh bank ka size hai, exam mein "kitne aayenge" nahi.</p>
+<p><b>Tags:</b> <span class="tag t-src">[SRC]</span> PYQ file se · <span class="tag t-add">[ADDED]</span> meri explanation / naya question · <span class="tag t-flag">[FLAG]</span> source error · <span class="tag t-q">[?]</span> unreadable / missing / ambiguous.</p>
+<p><b>B18 notation (B17 ke L1–L12 ke baad, L13–L18):</b>
+L13 cell $V_k=\{x:\|x-\mu_k\|^2\le\|x-\mu_j\|^2\ \forall j\}$ (tie ⇒ chhota index) ·
+L14 bisector of centres $a,b$: $2x^T(b-a)=\|b\|^2-\|a\|^2$, normal $b-a$, midpoint par se guzarti hai ·
+L15 har cell $K-1$ half-planes ka intersection ⇒ <b>convex</b>: $x,y\in V_k\Rightarrow\lambda x+(1-\lambda)y\in V_k$ ·
+L16 labels sirf naam hain: $z=(1,2,2,1)$ aur $(2,1,1,2)$ ek hi partition ·
+L17 fixed-point test: partition tab final hai jab har $x_i$ apne cluster ke mean ke utna hi (ya zyada) paas hai jitna kisi doosre mean ke ·
+L18 "iteration" = ek pass (assign + update); jis pass mein <b>kuch nahi badalta</b>, woh bhi ginti mein aata hai.</p>
+<p><b>Source integrity — 4 notes:</b></p>
+<ol>
+<li><span class="tag t-q">[?]</span> <b>P1:</b> copy mein koi option sahi mark nahi. Meri nikaali hui reading option 3 ($2$ iterations, $(1.5,1),(4.5,3.5)$) hai; iterations ki ginti ka tareeka (L18) P1 mein.</li>
+<li><span class="tag t-q">[?]</span> <b>P2:</b> chaaron options image-based hain aur images is copy mein nahi. Main sirf wahi bata raha hoon jo recoverable hai: kaun si cheezein Lloyd kabhi nahi de sakta (criterion), aur har option ko jaanchne ka tareeka. Kisi image-option ka verdict <i>invent nahi kiya</i>.</li>
+<li><span class="tag t-q">[?]</span> <b>P5/P6 (aur C1):</b> parent ka table adhoora ("visible beginning" — 4 rows), options bhi nahi dikhte, sirf sahi option $(1,2,2,1)$. $z^{(0)}$ mein 4 entries hain, isliye main 4 points maanta hoon — yeh meri inference hai; answer source se consistent hai.</li>
+<li><span class="tag t-q">[?]</span> <b>P8:</b> scenario statements ki values source mein recover nahi hoti; sawal solve nahi hua. 4.6 ka baaki content <span class="tag t-add">[ADDED]</span> explanation hai.</li>
+</ol>
+<p>Koi <span class="tag t-flag">[FLAG]</span> (answer-key error) is build mein nahi mila: P3, P4, P5, P6, P7 ke keys meri calculation se match karte hain; P1/P2/P8 ke keys source mein hain hi nahi. Saare numerical answers (7 solvable PYQs, worked examples, transfer questions, 4.6 ka elbow table) python se code-verified.</p>
+</div>
+</section>
+
+<h2>📘 4.3 Cluster assignment, distance, and geometry</h2>
+
+<section data-track="s43-theory">
+<h3>🔁 Recall warm-up <span class="tag t-add">[ADDED]</span></h3>
+<p class="muted">Pehle khud likho, phir "Show answer" kholo. (B17, B17, B14 se.)</p>
+<div class="box">
+<p><b>R1 (B17, L7/L9).</b> $\arg\min_v\sum_{i=1}^n\|x_i-v\|^2$ kya hai, aur $\arg\min_v\sum_i\|3x_i-2v\|^2$ kya?</p>
+<details class="reveal"><summary>Show answer</summary><p>Pehla: mean $\mu=\frac1n\sum x_i$ (kyunki $\sum\|x_i-v\|^2=\sum\|x_i-\mu\|^2+n\|\mu-v\|^2$). Doosra: $\frac32\mu$ (L9: $\frac ab\mu$ with $a=3,b=2$).</p></details>
+<p><b>R2 (B17, L8).</b> Lloyd ke ek pass mein $F(z^t,\mu^t)$, $F(z^{t+1},\mu^t)$, $F(z^{t+1},\mu^{t+1})$ ka sahi order?</p>
+<details class="reveal"><summary>Show answer</summary><p>$F(z^t,\mu^t)\ge F(z^{t+1},\mu^t)\ge F(z^{t+1},\mu^{t+1})$ — assign step $F$ ko ghatata hai ($z$ badalne par argmin), update step bhi ($\mu$ badalne par mean = minimiser).</p></details>
+<p><b>R3 (B14).</b> $2\times2$ table $\begin{bmatrix}a&b\\b&c\end{bmatrix}$ Gram matrix (kernel table) tab banti hai jab?</p>
+<details class="reveal"><summary>Show answer</summary><p>PSD: $a\ge0$, $c\ge0$ aur $b^2\le ac$ (do arrows jinki lambaai$^2$ $a,c$ hon aur dot product $b$ — $|\cos\theta|\le1$ ka matlab yahi hai).</p></details>
+</div>
+
+<h3>❓ Pretest — pehle bina padhe try karo</h3>
+<div class="box amber">
+<p>Yeh P4 (neeche, 4.3 PYQs mein) hai: <i>100 points par $K=3$ K-means. Points $\begin{bmatrix}0\\1\end{bmatrix}$ aur $\begin{bmatrix}1\\1\end{bmatrix}$ ek hi cluster $C_1$ mein hain. Inme se kaun sa point <b>definitely</b> $C_1$ mein hoga:</i> (1) $(-1,1)$ (2) $(1,2)$ (3) $(0.2,1)$ (4) $(0,0)$?</p>
+<p>Apna answer aur ek line ka reason likh lo (S/U/G confidence ke saath). Solution P4 mein hai — padhne se pehle commit karo; Yahi aadat "attempt cold" hai.</p>
+</div>
+
+<h3>🧭 Position — K-means ke map par yeh kahan hai</h3>
+<ul>
+<li><b>Kya hai:</b> Lloyd ke loop ka pehla kadam (L5), geometry ke chashme se.</li>
+<li><b>Prerequisites:</b> G1 (distance), S2 (assignments + $F$), S3/L12 (nearest-centre region = half-plane — B17 mein), G3 (mean).</li>
+<li><b>Aage kya khulta hai:</b> 4.4 (assign step $F$ ko kyun ghatata hai), 4.5 (K-means++ — distance se probability), 4.6 (K, initialization), aur T7 mein GMM ka E-step — wahi "assignment" par <b>soft</b> (probabilities) version.</li>
+</ul>
+
+<h3>🧠 Intuition — plain language</h3>
+<p>Ek shehar socho jismein $K$ post offices hain (centres). Har ghar (point) apne sabse paas ke post office ko jaata hai. Shehar ka naksha <b>catchment areas</b> mein bat jaata hai: har office ke aas-paas ek ilaaka. Do offices ke beech ke ilaake ko alag karne waali deewar wahi seedhi line hai jo dono ke beech ke raaste ko <b>aadha karti hai aur us par seedhi (perpendicular) khadi hai</b>. Teen offices hon to teen aisi deewarein milti hain, aur har ilaaka ek <i>samtal-kone wala (convex) tukda</i> banta hai — andar koi "dent" ya "chhed" nahi.</p>
+<div class="box em">
+<p><b>Analogy kahan tootti hai:</b> (1) asli post offices ke raaste Euclidean nahi hote; K-means mein distance seedhi line ka hai. (2) Post office ki capacity hoti hai; K-means mein cluster ka size koi cheez nahi. (3) Yahan offices khud bhi hilte hain — har round ke baad apne ilaake ke <i>mean</i> par chale jaate hain (4.2); assignment sirf ek frozen snapshot hai.</p>
+<p><b>Yeh kya NAHI hai:</b> (a) "apne sabse paas ke <i>doosre point</i> ka label le lo" nahi — sirf <i>centres</i> se doori maayne rakhti hai. (b) Soft/probabilistic nahi — har point ka ek hi label (hard). (c) Cluster ke <i>shape</i> ki koi samajh nahi — isliye rings/crescents nahi mil sakte.</p>
+</div>
+
+<h3>📊 Visual intuition</h3>
+<figure class="viz">
+<p class="vt">Visual 1: Do centres, ek bisector, do half-planes <span class="tag t-add">[ADDED]</span></p>
+<p class="vs">Centres $(0,0)$ aur $(4,4)$; points P1 ke $P,Q,R,S$. Plot par kahin bhi click karo: neeche table us jagah se dono centres tak ke $d^2$ dikhayegi aur batayegi kaun jeeta. Schematic nahi — exact geometry.</p>
+<div data-widget="vcells" data-centres="0,0;4,4" data-points="1,1;2,1;4,3;5,4" data-box="-1,-1,7,7"></div>
+<figcaption><b>Interpretation:</b> bisector $x+y=4$ (L14) plane ko do half-planes mein todti hai. $P,Q$ neeche-baayein (cluster 1), $R,S$ upar-daayein (cluster 2). Boundary par click karo to $d^2$ barabar aate hain — wahi tie.</figcaption>
+</figure>
+
+<figure class="viz">
+<p class="vt">Visual 2: Teen centres, convex cells, aur ek segment <span class="tag t-add">[ADDED]</span></p>
+<p class="vs">Centres $(0.5,1),(-1,1),(1,3)$. Segment $(0,1)$–$(1,1)$ ke dono sire cell 1 mein hain. Click karke dekho: segment par kahin bhi ka nearest centre wahi rehta hai.</p>
+<div data-widget="vcells" data-centres="0.5,1;-1,1;1,3" data-points="0,1;1,1" data-seg="0,1;1,1" data-box="-3,-1,4,5"></div>
+<figcaption><b>Interpretation:</b> cell 1 ek convex polygon hai, isliye uske do points ko jodne waala poora segment uske andar rehta hai. Yahi P4 ka pura jawab hai (L15).</figcaption>
+</figure>
+
+<figure class="viz">
+<p class="vt">Visual 3: Lloyd rings ko kyun nahi tod paata <span class="tag t-add">[ADDED]</span></p>
+<p class="vs">Synthetic data: radius 1 par 24 points, radius 3 par 48 points, $k=2$. Maine Lloyd 50 alag random initializations se chalaya aur sabse kam $F$ waala chuna. Python se computed, schematic nahi.</p>
+<div class="diagram"><svg viewBox="0 0 720 340" role="img" aria-label="Two panels with 72 points on two concentric rings. Left: the hoped-for partition inner ring versus outer ring, whose two centroids both sit near the origin. Right: what Lloyd K-means actually returns, a straight-line split of both rings into halves."><text x="170" y="18" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">(a) Jo hum chahte hain: inner ring | outer ring</text><text x="170" y="332" text-anchor="middle" fill="#a3a3a3" font-size="11.5">dono centroids ≈ origin par — alag-alag nahi</text><line x1="20" y1="170" x2="320" y2="170" stroke="#262626"/><line x1="170" y1="30" x2="170" y2="310" stroke="#262626"/><text x="550" y="18" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">(b) Lloyd's asal final: seedhi line se aadha-aadha</text><text x="550" y="332" text-anchor="middle" fill="#a3a3a3" font-size="11.5">har ring do tukdon mein; boundary = perpendicular bisector</text><line x1="400" y1="170" x2="700" y2="170" stroke="#262626"/><line x1="550" y1="30" x2="550" y2="310" stroke="#262626"/><circle cx="208.0" cy="170.0" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="206.7" cy="160.2" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="202.9" cy="151.0" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="196.9" cy="143.1" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="189.0" cy="137.1" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="179.8" cy="133.3" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="170.0" cy="132.0" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="160.2" cy="133.3" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="151.0" cy="137.1" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="143.1" cy="143.1" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="137.1" cy="151.0" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="133.3" cy="160.2" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="132.0" cy="170.0" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="133.3" cy="179.8" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="137.1" cy="189.0" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="143.1" cy="196.9" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="151.0" cy="202.9" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="160.2" cy="206.7" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="170.0" cy="208.0" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="179.8" cy="206.7" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="189.0" cy="202.9" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="196.9" cy="196.9" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="202.9" cy="189.0" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="206.7" cy="179.8" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="283.9" cy="164.3" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="282.1" cy="149.5" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="278.5" cy="135.0" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="273.0" cy="121.2" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="265.8" cy="108.1" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="256.9" cy="96.2" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="246.5" cy="85.5" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="234.8" cy="76.2" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="222.0" cy="68.5" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="208.3" cy="62.6" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="194.0" cy="58.5" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="179.2" cy="56.4" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="164.3" cy="56.1" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="149.5" cy="57.9" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="135.0" cy="61.5" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="121.2" cy="67.0" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="108.1" cy="74.2" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="96.2" cy="83.1" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="85.5" cy="93.5" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="76.2" cy="105.2" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="68.5" cy="118.0" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="62.6" cy="131.7" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="58.5" cy="146.0" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="56.4" cy="160.8" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="56.1" cy="175.7" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="57.9" cy="190.5" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="61.5" cy="205.0" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="67.0" cy="218.8" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="74.2" cy="231.9" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="83.1" cy="243.8" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="93.5" cy="254.5" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="105.2" cy="263.8" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="118.0" cy="271.5" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="131.7" cy="277.4" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="146.0" cy="281.5" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="160.8" cy="283.6" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="175.7" cy="283.9" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="190.5" cy="282.1" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="205.0" cy="278.5" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="218.8" cy="273.0" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="231.9" cy="265.8" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="243.8" cy="256.9" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="254.5" cy="246.5" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="263.8" cy="234.8" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="271.5" cy="222.0" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="277.4" cy="208.3" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="281.5" cy="194.0" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="283.6" cy="179.2" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><path d="M170.0,162.0 L178.0,170.0 L170.0,178.0 L162.0,170.0 z" fill="#34D399" stroke="#fff" stroke-width="1.5"/><text x="182" y="158" fill="#34D399" font-size="11">μ₁≈μ₂≈(0,0)</text><circle cx="588.0" cy="170.0" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="586.7" cy="160.2" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="582.9" cy="151.0" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="576.9" cy="143.1" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="569.0" cy="137.1" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="559.8" cy="133.3" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="550.0" cy="132.0" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="540.2" cy="133.3" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="531.0" cy="137.1" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="523.1" cy="143.1" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="517.1" cy="151.0" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="513.3" cy="160.2" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="512.0" cy="170.0" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="513.3" cy="179.8" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="517.1" cy="189.0" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="523.1" cy="196.9" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="531.0" cy="202.9" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="540.2" cy="206.7" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="550.0" cy="208.0" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="559.8" cy="206.7" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="569.0" cy="202.9" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="576.9" cy="196.9" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="582.9" cy="189.0" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="586.7" cy="179.8" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="663.9" cy="164.3" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="662.1" cy="149.5" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="658.5" cy="135.0" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="653.0" cy="121.2" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="645.8" cy="108.1" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="636.9" cy="96.2" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="626.5" cy="85.5" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="614.8" cy="76.2" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="602.0" cy="68.5" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="588.3" cy="62.6" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="574.0" cy="58.5" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="559.2" cy="56.4" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="544.3" cy="56.1" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="529.5" cy="57.9" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="515.0" cy="61.5" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="501.2" cy="67.0" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="488.1" cy="74.2" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="476.2" cy="83.1" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="465.5" cy="93.5" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="456.2" cy="105.2" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="448.5" cy="118.0" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="442.6" cy="131.7" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="438.5" cy="146.0" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="436.4" cy="160.8" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="436.1" cy="175.7" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="437.9" cy="190.5" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="441.5" cy="205.0" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="447.0" cy="218.8" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="454.2" cy="231.9" r="3.4" fill="#FBBF24" stroke="#0b0b0b" stroke-width=".6"/><circle cx="463.1" cy="243.8" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="473.5" cy="254.5" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="485.2" cy="263.8" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="498.0" cy="271.5" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="511.7" cy="277.4" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="526.0" cy="281.5" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="540.8" cy="283.6" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="555.7" cy="283.9" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="570.5" cy="282.1" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="585.0" cy="278.5" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="598.8" cy="273.0" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="611.9" cy="265.8" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="623.8" cy="256.9" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="634.5" cy="246.5" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="643.8" cy="234.8" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="651.5" cy="222.0" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="657.4" cy="208.3" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="661.5" cy="194.0" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><circle cx="663.6" cy="179.2" r="3.4" fill="#60A5FA" stroke="#0b0b0b" stroke-width=".6"/><line x1="671.8" y1="79.1" x2="428.2" y2="260.9" stroke="#F87171" stroke-width="2" stroke-dasharray="6 4"/><path d="M583.8,207.3 L591.8,215.3 L583.8,223.3 L575.8,215.3 z" fill="#60A5FA" stroke="#fff" stroke-width="1.5"/><path d="M516.2,116.7 L524.2,124.7 L516.2,132.7 L508.2,124.7 z" fill="#FBBF24" stroke="#fff" stroke-width="1.5"/></svg></div>
+<figcaption><b>Interpretation:</b> (a) agar inner ring ek cluster aur outer ring doosra hota, to dono ke centroids origin par aa jaate ($\approx10^{-16}$ door) — har point ke liye $d^2$ barabar, assignment tik hi nahi sakti. (b) Lloyd ka asli final: seedhi line se aadha-aadha (36 + 36 points), jiska $F\approx296.8$ hai, jabki ring-partition ka $F=456.0$.</figcaption>
+</figure>
+
+<h3>📖 Formal version (Formula Protocol)</h3>
+<p>$$z_i^{t+1}=\arg\min_{k\in\{1,\dots,K\}}\ \|x_i-\mu_k^t\|^2\qquad\text{(tie ⇒ sabse chhota }k\text{)}$$</p>
+<p><b>Symbols aur assumptions:</b> $x_i\in\mathbb R^d$ data point; $\mu_k^t\in\mathbb R^d$ iteration $t$ par $k$-th centre; $\|\cdot\|$ Euclidean norm; $K$ centres, sab alag maane ja rahe hain; assignment sirf <i>centres</i> dekhta hai — doosre points ya cluster sizes nahi.</p>
+<p><b>Words mein:</b> har point ko us centre ka label do jo uske sabse paas ho.</p>
+<p><b>Notice that…</b> $\arg\min$ ke liye $\|\cdot\|$ aur $\|\cdot\|^2$ ek hi jawab dete hain (square ek increasing function hai, $\ge0$ par); objective $F$ mein squared hi chalta hai. Aur argmin sirf ek point ke liye alag-alag nikalta hai — poore dataset ko ek saath dekhne ki zaroorat nahi.</p>
+<h4>Do centres ka bisector — poora derivation, koi step chhota nahi</h4>
+<p>Point $x$ centre $a$ ke utna ya zyada paas hai jitna $b$ ke:</p>
+<p>$$\|x-a\|^2\le\|x-b\|^2\iff\|x\|^2-2x^Ta+\|a\|^2\le\|x\|^2-2x^Tb+\|b\|^2\iff 2x^T(b-a)\le\|b\|^2-\|a\|^2.$$</p>
+<p>Pehle $\iff$ mein har side ko expand kiya ($\|x-a\|^2=\|x\|^2-2x^Ta+\|a\|^2$); doosre mein dono taraf se $\|x\|^2$ kat gaya (yahi kaaran hai ki condition $x$ mein <b>linear</b> reh jaati hai); phir saare $x$-terms ek taraf. Barabari $2x^T(b-a)=\|b\|^2-\|a\|^2$ ek hyperplane hai: normal $b-a$, aur midpoint $\frac{a+b}2$ ispar hai (check: $2\cdot\frac{(a+b)^T}{2}(b-a)=\|b\|^2-\|a\|^2$ ✓). Yeh L14 hai.</p>
+<h4>Cell convex kyun hai (L15)</h4>
+<p>Fix $k$. Har $j\ne k$ ke liye $g_j(x)=2x^T(\mu_j-\mu_k)-(\|\mu_j\|^2-\|\mu_k\|^2)$, jo $x$ ka <b>affine</b> function hai. $V_k=\{x:g_j(x)\le0\ \forall j\ne k\}$. Agar $g_j(x)\le0$ aur $g_j(y)\le0$ to $0\le\lambda\le1$ ke liye $g_j(\lambda x+(1-\lambda)y)=\lambda g_j(x)+(1-\lambda)g_j(y)\le0$ (affine function convex combination ko preserve karta hai). Yeh har $j$ ke liye sach hai, isliye $\lambda x+(1-\lambda)y\in V_k$. ∎</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th></th><th>Assignment step (yeh page)</th><th>Update step (B17)</th><th>Soft version (GMM, T7)</th></tr></thead>
+<tbody>
+<tr><td>Kya badalta hai</td><td>labels $z$</td><td>centres $\mu$</td><td>labels ke badle probabilities $\gamma_{ik}$</td></tr>
+<tr><td>Rule</td><td>$\arg\min_k\|x_i-\mu_k\|^2$</td><td>$\mu_k=$ cluster ka mean</td><td>$\gamma_{ik}\propto\pi_kf(x_i\mid k)$</td></tr>
+<tr><td>Geometry</td><td>convex cells, seedhi boundary</td><td>centre cell ke andar ka mean</td><td>boundary dhundli, koi sharp line nahi</td></tr>
+<tr><td>$F$ par asar</td><td>$F$ nahi badhta</td><td>$F$ nahi badhta</td><td>log-likelihood nahi ghatta</td></tr>
+</tbody></table></div>
+<p><b>Chhota worked example:</b> $a=(0,0)$, $b=(4,0)$, $x=(1,3)$. $2x^T(b-a)=2(1\cdot4+3\cdot0)=8$; $\|b\|^2-\|a\|^2=16$; $8\le16$ ⇒ $x$ $a$ ke paas hai. Check: $\|x-a\|^2=1+9=10$, $\|x-b\|^2=9+9=18$ ✓.</p>
+<div class="box em"><p><b>Important insight:</b> cluster ki <i>shape</i> dataset se nahi, centres se tay hoti hai, aur woh hamesha convex hoti hai. Isliye "do points same cluster mein ⇒ unke beech ka segment bhi" aur "rings alag nahi" dono ek hi sach ke do chehre hain.</p>
+<p><b>This is why</b> P4 sirf ek line mein hal ho jaata hai, aur P2 ko figures ke bina bhi criterion se samjha ja sakta hai.</p></div>
+
+<h3>⚙️ How it works — numbered mechanism</h3>
+<ol>
+<li>Centres $\mu_1,\dots,\mu_K$ diye hain (ya $z^{(0)}$ diya ho to pehle us se centres banao: $\mu_k=$ us label ke points ka mean).</li>
+<li>Har point $x_i$ ke liye har centre tak $d^2$ nikalo (ya do-centre waale cases mein L14 ki ek linear inequality).</li>
+<li>Sabse chhota $d^2$ chuno; tie ho to chhota index.</li>
+<li>$z$ likho; cluster lists $C_k=\{i:z_i=k\}$ banao. Labels sirf naam hain (L16).</li>
+<li>Update (B17): har $C_k$ ka naya mean; koi $C_k$ khaali ho to centre wahi rakho (convention).</li>
+<li>Dobara assign karo. Agar $z$ nahi badla to ruko; yeh terminating pass bhi ginti mein aata hai (L18).</li>
+</ol>
+<div class="try"><p class="ttl">✍️ Try it live — P1 ke points par</p>
+<p>Neeche stepper $P,Q,R,S$ par init $(0,0),(4,4)$ se chalta hai. "Next step" dabate jao aur har step ka $F$ aur distance table dekho; pass 2 ke update par "Converged ✓" aayega.</p></div>
+<div data-widget="kmstep" data-points="1,1;2,1;4,3;5,4" data-init="0,0;4,4"></div>
+
+<h3>🧪 Worked examples</h3>
+<h4>WE1 — Simple (1-D)</h4>
+<p>Points $1,2,8,9$; centres $0,10$. $d^2$ to $\mu_1$: $1,4,64,81$; to $\mu_2$: $81,64,4,1$. Argmin: $z=(1,1,2,2)$. $F(z,\mu^t)=1+4+4+1=10$. Update: $\mu_1=1.5,\mu_2=8.5$; $F=0.25+0.25+0.25+0.25=1$. Agla assign: $z$ wahi ⇒ converged. <span class="tag t-add">[ADDED]</span></p>
+<h4>WE2 — Exam-level: tie aur 2-D</h4>
+<p>Points $A=(0,0),B=(2,0),C=(1,3)$; centres $\mu_1=(0,0)$, $\mu_2=(2,0)$. $C$: $d^2$ to $\mu_1=1+9=10$, to $\mu_2=1+9=10$ — <b>tie</b>. L5 ke tie-rule se $z_C=1$. Bisector check: $2x^T(b-a)=2(1\cdot2+3\cdot0)=4$; $\|b\|^2-\|a\|^2=4$; $4\le4$ barabari — $x=C$ boundary par hai ($x=1$ wali seedhi line). $z=(1,2,1)$. <span class="tag t-add">[ADDED]</span></p>
+<h4>WE3 — Tricky: feature scale se assignment badal sakti hai</h4>
+<p>Point $p=(1,0)$; centres $\mu_1=(0,3)$, $\mu_2=(3,0)$. Raw: $d^2(p,\mu_1)=1+9=10$, $d^2(p,\mu_2)=4$ ⇒ $\mu_2$. Ab doosre feature ko $0.1$ se scale karo (jaise cm ko m mein badla): $p'=(1,0)$, $\mu_1'=(0,0.3)$, $\mu_2'=(3,0)$: $d^2=1+0.09=1.09$ vs $4$ ⇒ $\mu_1$. <b>Label badal gaya</b> — Euclidean distance har feature ko barabar tolta hai, isliye units/scale ka asar seedha clusters par padta hai (4.6 mein limitation ke roop mein dobara). <span class="tag t-add">[ADDED]</span></p>
+<h4>Non-example</h4>
+<p>"$x$ ko uske sabse paas ke <i>data point</i> ka label de do" (nearest neighbour) K-means ka assignment <b>nahi</b> hai — K-means sirf centres se doori dekhta hai. Counter: P4 mein $(1,2)$ aur $(0,0)$ bhi $(0,1)$/$(1,1)$ ke bilkul paas hain (doori $1$), phir bhi cluster guaranteed nahi — "paas hona" kaafi nahi; $(0.2,1)$ isliye guaranteed hai ki woh segment ke andar hai (convex cell).</p>
+
+<details class="deep"><summary>🔬 Deeper insight (D3) — edge cases, proofs, connections</summary>
+<h4>1. Tie-rule se bhi convexity bachti hai</h4>
+<p>Agar $x,y$ dono cluster $k$ mein hain to $j\lt k$ ke liye $g_j(x)<0$ aur $g_j(y)<0$ (strict, kyunki tie par chhota index $j$ jeetta), $j>k$ ke liye $\le0$. Strict $\Rightarrow$ strict, $\le0\Rightarrow\le0$ segment par bhi, isliye segment ka har point tie-rule ke baad bhi cluster $k$ mein hi aata hai.</p>
+<h4>2. Final partition ka test (L17)</h4>
+<p>Koi partition $\{C_k\}$ Lloyd ka fixed point tab hai jab har $i$ ke liye $\|x_i-\bar x_{C_{z_i}}\|^2\le\|x_i-\bar x_{C_j}\|^2$ sab $j$ ke liye ($\bar x_C$ = $C$ ka mean). Chhote data par saare partitions enumerate karke fixed points chhaante ja sakte hain: P5/P6 ke 4 points ke saare $7$ partitions mein sirf ek fixed point nikla — wahi jo expected tha. Aur 1-D $\{0,1,2,10,11,12\}$ ke saare $31$ ($k=2$) partitions mein sirf $\{0,1,2\}\mid\{10,11,12\}$ fixed point nikla. <span class="tag t-add">[ADDED]</span> (code se)</p>
+<h4>3. Rings kyun nahi (P2 ki jad)</h4>
+<p>Do conditions toot-ti hain: (a) <b>separability</b> — final cells ek bisector se alag hone chahiye (seedhi line, $d>2$ mein hyperplane); inner ring ko outer ring se koi seedhi line alag nahi karti. (b) <b>fixed point</b> — symmetric rings ke centroid ek hi jagah (origin) par aate hain, isliye distances barabar aur assignment toot jaati hai. Dono alag-alag sach hain; ek hi kaafi hai "cannot be final" kehne ke liye.</p>
+<h4>4. Boundary kitni badi cheez hai</h4>
+<p>$\mathbb R^d$ mein do cells ke beech ki boundary ek (bounded ya unbounded) hyperplane ka hissa hai; $K$ centres ke cells ek <i>Voronoi diagram</i> banate hain. Yeh sab cells convex polyhedra hain.</p>
+<h4>5. Khaali cluster</h4>
+<p>Agar kisi centre ke cell mein koi data point nahi aata to $C_k=\emptyset$ aur mean undefined. Ispar bank ka koi sawaal nahi; convention (centre wahi rakho) B17 jaisa hai.</p>
+<h4>6. Connection</h4>
+<p>Assign step ka $\arg\min$ hi 4.4 mein "$F$ nahi badhta" ka pehla half hai; aur yahi cheez GMM E-step mein $\arg\min$ ki jagah softmax-jaisi weights ban jaati hai (T7).</p>
+</details>
+
+<h3>⚡ PYQ pattern toolkit</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Trigger clue</th><th>Concept</th><th>Pehla move</th></tr></thead>
+<tbody>
+<tr><td>"initial centroids diye, final centroids / kitni iterations"</td><td>Lloyd chalao, L18</td><td>Assign table → update → dobara assign; jab $z$ na badle ruko, terminating pass ginti mein</td></tr>
+<tr><td>"clusters diye, point (x) agli iteration mein kahan"</td><td>L3 + L5</td><td>Pehle clusters se centres (means), phir us ek point ka $d^2$ har centre se</td></tr>
+<tr><td>"$z^{(0)}$ diya hai, final assignment"</td><td>L3, L16, L17</td><td>$z^{(0)}$ se means; assign; aur agar same aaye to fixed point</td></tr>
+<tr><td>"do points same cluster mein, kaun sa <i>definitely</i>"</td><td>L15 convex cell</td><td>Segment / convex hull ke andar waale point chuno; baaki ke liye counterexample centres</td></tr>
+<tr><td>"kaun se clusters Lloyd se final <i>nahi</i> mil sakte" (figure)</td><td>L15 + L17</td><td>Kya ek seedhi line se alag hote hain? Centres kahan aate hain?</td></tr>
+<tr><td>"$\sum\|x_i-\mu^t_{z^{t+1}_i}\|^2$" (naye labels, <i>purane</i> centres)</td><td>$F(z^{t+1},\mu^t)$</td><td>Assign karo, <i>update mat karo</i>, distances jodo</td></tr>
+</tbody></table></div>
+<div class="box amber"><p><b>Common traps:</b> (1) Update ke baad ka $F$ likh dena jab sawaal purane centres maang raha hai (P7). (2) Terminating pass ko ginti mein na lena (P1). (3) Labels ko "same" tabhi maanna jab naam same hon (L16: $(1,2,2,1)\equiv(2,1,1,2)$). (4) Tie ko chhote index se na todna.</p></div>
+</section>
+
+<h2>🎯 4.3 PYQs — P1 se P7</h2>
+
+<section data-track="pyq1">
+<h3>🎯 P1 — Hard K-means, 4 points (2023 July) <span class="tag t-src">[SRC]</span> <span class="tag t-q">[?]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2023 July · Original Q3 · ID <code>640653577730</code> · MCQ · 4 marks · <span class="tag t-src">[SRC]</span></p>
+<p>Consider the following Hard K-means clustering problem with four points: $P(1,1),\ Q(2,1),\ R(4,3),\ S(5,4)$. Consider the number of clusters to be $k=2$ and the initial centroids to be: $C_1=(0,0),\ C_2=(4,4)$. After how many iterations will the algorithm terminate and what will be the final centroids? Use Euclidean distance metric to calculate distance.</p>
+<ol>
+<li>$2,\ (1,1),\ (4,4)$</li>
+<li>$3,\ (1,1),\ (4,4)$</li>
+<li>$2,\ (1.5,1),\ (4.5,3.5)$</li>
+<li>$4,\ (1.5,1),\ (4.5,3.5)$</li>
+</ol>
+<p><span class="tag t-q">[?]</span> Source mein koi option marked correct nahi.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Pass 1 aur pass 2 khud chalao. Phir socho: kya aap terminating pass ko ginti mein laate hain? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> kitne iterations mein terminate, aur final centroids. <b>Given:</b> 4 points, $k=2$, $C_1,C_2$, Euclidean.</li>
+<li><b>Trigger clues:</b> "initial centroids diye", "terminate", "final centroids" ⇒ Lloyd chalao (L5, L6) aur L18 se ginti karo.</li>
+<li><b>Prerequisites:</b> S2, S3, G3 — Procedural. <b>Core principle:</b> terminate jab ek poore pass mein $z$ na badle; final centres = final clusters ke means.</li>
+</ul>
+<h4>2. 🧭 Methods (3 genuinely different)</h4>
+<p><b>M1 General:</b> har pass mein distance table. <b>M2 Shortcut:</b> har pass ke liye do centres ki bisector (L14) — ek linear inequality. <b>M3 Advanced / elimination:</b> final centroids ko data-subsets ke means hona padta hai (L3) — isse options 1, 2 turant kat jaate hain; phir sirf 3 vs 4 (iteration count) check karo.</p>
+<h4>3. 🧮 Working — step-interleaved</h4>
+<p><b>Step A — Pass 1: assign (centres $(0,0),(4,4)$)</b></p>
+<div class="methods">
+<div class="method" data-label="M1 Table"><div class="mh">M1 · $d^2$ table</div>
+<div class="tbl-wrap"><table><thead><tr><th>Point</th><th>to $C_1$</th><th>to $C_2$</th><th>$z$</th></tr></thead><tbody>
+<tr><td>$P(1,1)$</td><td class="num">$1+1=2$</td><td class="num">$9+9=18$</td><td class="num">1</td></tr>
+<tr><td>$Q(2,1)$</td><td class="num">$4+1=5$</td><td class="num">$4+9=13$</td><td class="num">1</td></tr>
+<tr><td>$R(4,3)$</td><td class="num">$16+9=25$</td><td class="num">$0+1=1$</td><td class="num">2</td></tr>
+<tr><td>$S(5,4)$</td><td class="num">$25+16=41$</td><td class="num">$1+0=1$</td><td class="num">2</td></tr>
+</tbody></table></div></div>
+<div class="method" data-label="M2 Bisector"><div class="mh">M2 · L14</div>
+<p>$a=(0,0)$, $b=(4,4)$: $2x^T(b-a)=2(4x_1+4x_2)=8(x_1+x_2)$; $\|b\|^2-\|a\|^2=32$. $C_1$ ke paas $\iff 8(x_1+x_2)\le32\iff x_1+x_2\le4$.</p>
+<p>$P$: $2\le4$ ⇒ 1. $Q$: $3\le4$ ⇒ 1. $R$: $7>4$ ⇒ 2. $S$: $9>4$ ⇒ 2. Wahi $z=(1,1,2,2)$.</p></div>
+</div>
+<p><b>Step B — Update</b> (dono methods mein same, mean hi hai): $C_1=\{P,Q\}$: $\big(\tfrac{1+2}2,\tfrac{1+1}2\big)=(1.5,1)$. $C_2=\{R,S\}$: $\big(\tfrac{4+5}2,\tfrac{3+4}2\big)=(4.5,3.5)$.</p>
+<p><b>Step C — Pass 2: assign (centres $(1.5,1),(4.5,3.5)$)</b></p>
+<div class="methods">
+<div class="method" data-label="M1 Table"><div class="mh">M1 · $d^2$ table</div>
+<div class="tbl-wrap"><table><thead><tr><th>Point</th><th>to $(1.5,1)$</th><th>to $(4.5,3.5)$</th><th>$z$</th></tr></thead><tbody>
+<tr><td>$P$</td><td class="num">$0.25+0=0.25$</td><td class="num">$12.25+6.25=18.5$</td><td class="num">1</td></tr>
+<tr><td>$Q$</td><td class="num">$0.25+0=0.25$</td><td class="num">$6.25+6.25=12.5$</td><td class="num">1</td></tr>
+<tr><td>$R$</td><td class="num">$6.25+4=10.25$</td><td class="num">$0.25+0.25=0.5$</td><td class="num">2</td></tr>
+<tr><td>$S$</td><td class="num">$12.25+9=21.25$</td><td class="num">$0.25+0.25=0.5$</td><td class="num">2</td></tr>
+</tbody></table></div></div>
+<div class="method" data-label="M2 Bisector"><div class="mh">M2 · L14</div>
+<p>$a=(1.5,1)$, $b=(4.5,3.5)$: $b-a=(3,2.5)$. $2x^T(b-a)=6x_1+5x_2$. $\|b\|^2-\|a\|^2=(20.25+12.25)-(2.25+1)=32.5-3.25=29.25$. Condition: $6x_1+5x_2\le29.25\iff3x_1+2.5x_2\le14.625$.</p>
+<p>$P$: $5.5$ ⇒ 1. $Q$: $8.5$ ⇒ 1. $R$: $12+7.5=19.5$ ⇒ 2. $S$: $15+10=25$ ⇒ 2. Wahi $z$.</p></div>
+</div>
+<p><b>Step D — Terminate:</b> pass 2 mein $z=(1,1,2,2)$ pass 1 jaisa hi ⇒ kuch nahi badla ⇒ ruko. Pass 2 ka update bhi wahi $(1.5,1),(4.5,3.5)$ deta hai. <b>Kul $2$ iterations (L18), final centroids $(1.5,1),(4.5,3.5)$</b> ⇒ option 3.</p>
+<div class="method" style="margin:8px 0"><div class="mh">M3 · Option elimination (L3)</div>
+<p>Final centroid = kisi non-empty subset ka mean. Options 1 aur 2 mein $(4,4)$ hai. Data ke $y$-values $1,1,3,4$: mean-$y=4$ tabhi jab subset mein sirf $y=4$ waale points hon, yaani sirf $S=(5,4)$, jiska mean $(5,4)\ne(4,4)$ — koi subset $(4,4)$ nahi deta. Isliye options 1, 2 impossible (code se bhi subsets enumerate karke confirm). Bacha 3 vs 4: Step C se pass 2 par koi badlav nahi ⇒ 4 iterations nahi, 2.</p></div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Table</td><td>Slow (16 distances)</td><td>Low</td><td>Medium — arithmetic slip</td><td>Pehla pass, safe</td></tr>
+<tr><td>M2 Bisector</td><td>Fast (2 linear checks)</td><td>Medium (L14 yaad ho)</td><td>Low</td><td>Do centres, bahut points</td></tr>
+<tr><td>M3 Elimination</td><td>Fastest</td><td>Medium</td><td>Low — par akela 3 vs 4 nahi tod sakta</td><td>MCQ options jaldi chhaantne ke liye</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M3 + ek bisector check. 🏆 <b>BEST EXAM METHOD:</b> M1 pass 1 poora likho, M2 se pass 2 confirm karo; trade-off: M1 lamba, par arithmetic dikhata hai; M2 chhota par formula yaad hona chahiye.</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li>Code: Lloyd 2 passes mein ruka; final means $(1.5,1),(4.5,3.5)$; $F$ assign ke baad pass 1 par $9.0$, update ke baad $1.5$, pass 2 par badlav nahi ✓.</li>
+<li>$F=\sum$ SSE: $\{P,Q\}$: $0.25+0.25=0.5$; $\{R,S\}$: $0.5+0.5=1$; kul $1.5$ ✓.</li>
+</ul>
+<h4>6. ⚠️ Traps</h4>
+<ul><li>Terminating pass ko na ginna ⇒ "1 iteration" (option mein nahi hai).</li>
+<li>Options 1, 2 mein $(4,4)$ initial $C_2$ jaisa dikhta hai ("$C_2$ hila hi nahi") — par final centroid hamesha kisi cluster ka mean hota hai, aur koi subset $(4,4)$ nahi deta.</li>
+<li>Counting convention <span class="tag t-q">[?]</span>: agar koi "badlav waale passes" hi ginta to $1$ aata, jo kisi option mein nahi; isliye convention L18 ($2$) hi chalti hai.</li></ul>
+<p><b>Recognition rule:</b> "terminate hone tak" ⇒ terminating pass bhi ginti mein; final centroids options mein dekh kar pehle yeh poochho ki kya woh subset-means ban sakte hain.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>Points $(0,0),(1,1),(2,0),(5,4),(6,5)$, $k=2$, init $(0,0),(6,6)$. Kitne iterations (L18) aur final centroids? Pass 1 ka $F$ (assign ke baad) bhi batao.</p>
+<details class="reveal"><summary>Show answer</summary><p>Pass 1: $z=(1,1,1,2,2)$, $F=0+2+4+5+1=12$. Update: $\mu_1=(1,\tfrac13)$, $\mu_2=(5.5,4.5)$, $F=\tfrac{11}3\approx3.667$. Pass 2: $z$ wahi ⇒ <b>2 iterations</b>, final $(1,\tfrac13),(5.5,4.5)$ (code-verified).</p></details>
+</details>
+</section>
+
+<section data-track="pyq2">
+<h3>🎯 P2 — Lloyd se kaun se clusters nahi mil sakte (2023 July) <span class="tag t-src">[SRC]</span> <span class="tag t-q">[?]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2023 July · Original Q7 · ID <code>640653577735</code> · MSQ · 5 marks · <span class="tag t-src">[SRC]</span></p>
+<p>Which of the following clusters cannot be obtained as final clusters using Lloyd's algorithm? Assume that Lloyd's algorithm was run on these datasets with $k=2$.</p>
+<p><b>Options are image/plot based</b> (figures pages 7–9): (1) <b>Concentric Circles</b> — two concentric circular clusters. (2) <b>Points on Line and Circle</b> — points arranged on a circle and a horizontal line. (3) <b>Clustering of Concentric Circles</b> — plot showing an alternative clustering of the concentric-circle data. (4) <b>Points on Concentric Circles</b> — plot showing another partition of circular data.</p>
+<p><span class="tag t-q">[?]</span> Yeh chaaron options figures hain, aur original images is copy mein embed nahi hain. Koi option sahi mark nahi.</p>
+</div>
+<div class="box amber"><p><span class="tag t-q">[?]</span> <b>Kya missing hai, kya recoverable.</b> Figures ke bina main kisi option ka verdict nahi de sakta (kaun se points kis cluster mein dikhaye gaye, yeh image mein tha). Jo recoverable hai: <b>criterion</b> (L15, L17) aur ek step-by-step test jo aap original figure par laga sakte hain. Option 1 ka sirf title bacha hai ("two concentric circular clusters"), usse conditional verdict neeche.</p></div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Original figures dekhkar har option ke liye khud poochho: (a) kya ek seedhi line final cluster ko alag kar sakti hai? (b) kya dono cluster ke centroids is partition ko stable rakhte? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution (criterion + test, verdict sirf conditional)</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> kaun se clusterings Lloyd ($k=2$) ka <i>final</i> output nahi ho sakte. <b>Given:</b> 4 figure options (nahi mili).</li>
+<li><b>Trigger clues:</b> "cannot be obtained", "final clusters", "$k=2$" ⇒ final = fixed point (L17) + cells = convex (L15).</li>
+<li><b>Prerequisites:</b> S3, L12–L15. PACER: Conceptual + Evidence.</li>
+</ul>
+<h4>2. 🧭 Methods (2 genuinely different; teesra nahi — kyun: yeh conceptual MSQ hai, calculation nahi)</h4>
+<p><b>M1 Geometry (separability):</b> $k=2$ ke final cells do half-planes hain ⇒ clusters ko ek seedhi line alag karti hai. <b>M2 Fixed-point test (L17):</b> har cluster ka centroid nikaalo, dekho har point apne centroid ke paas hai ya nahi. <b>Option elimination:</b> pehle M1 se (sasta), phir sirf bache hue options par M2.</p>
+<h4>3. 🧮 Working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Separability"><div class="mh">M1 · Seedhi line se alag?</div>
+<ol><li>Clustering ke dono groups $A,B$ lo.</li>
+<li>Kya koi seedhi line (hyperplane) $A$ ko ek taraf aur $B$ ko doosri taraf rakhti hai?</li>
+<li>Agar nahi (jaise $A$ ek ring ke andar band hai aur $B$ usse ghira hua) ⇒ koi bisector (L14) aisa partition de hi nahi sakta ⇒ <b>cannot be final</b>.</li>
+<li>Agar haan ⇒ M2 chalao: shayad possible.</li></ol></div>
+<div class="method" data-label="M2 Fixed point"><div class="mh">M2 · L17 test</div>
+<ol><li>$\bar x_A,\bar x_B$ nikaalo.</li>
+<li>Har point ke liye $\|x-\bar x_{\text{apna}}\|^2\le\|x-\bar x_{\text{doosra}}\|^2$ check karo.</li>
+<li>Koi bhi point doosre centroid ke paas nikla ⇒ yeh partition Lloyd ki ek aur pass mein badlega ⇒ <b>final nahi</b>.</li>
+<li>Sab theek ⇒ partition stable ⇒ final ho sakta hai (kisi initialization se).</li></ol></div>
+</div>
+<p><b>Ring-data par asli computation</b> <span class="tag t-add">[ADDED]</span> (Visual 3, synthetic data): inner ring ($r=1$, 24 pts) aur outer ring ($r=3$, 48 pts) ka "ring partition" — dono centroids origin par ($\approx10^{-16}$), $F=456.0$; M1 pehle hi fail (koi seedhi line inner ko outer se alag nahi karti). Lloyd ka actual best output (50 random starts mein se sabse kam $F$): seedhi line se $36+36$, $F\approx296.8$.</p>
+<h4>4. Option-wise (conditional)</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Option</th><th>Kya maloom</th><th>Verdict</th></tr></thead><tbody>
+<tr><td>1 Concentric Circles — "two concentric circular clusters"</td><td>Sirf title</td><td>Agar clusters = inner ring vs outer ring ⇒ M1 fail ⇒ <b>cannot be final</b> (conditional)</td></tr>
+<tr><td>2 Points on Line and Circle</td><td>Figure nahi</td><td>Image par M1 chalao: agar line circle ke bahar hai aur seedhi line se alag ho sakti hai to M1 pass, ab M2 se confirm karo; agar line circle ko kaat-ti hai (convex hulls milte hain) ⇒ cannot <span class="tag t-q">[?]</span></td></tr>
+<tr><td>3 Clustering of Concentric Circles</td><td>Figure nahi</td><td>Image par M1 + M2 <span class="tag t-q">[?]</span></td></tr>
+<tr><td>4 Points on Concentric Circles</td><td>Figure nahi</td><td>Image par M1 + M2 <span class="tag t-q">[?]</span></td></tr>
+</tbody></table></div>
+<h4>5. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Separability</td><td>Fast (picture dekhna)</td><td>Low</td><td>Medium — "seedhi line" ko aankh se judge karna</td><td>Pehla filter, figure options</td></tr>
+<tr><td>M2 Fixed point</td><td>Slow (centroids + distances)</td><td>Medium</td><td>Low</td><td>M1 ke baad bache doubtful options</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M1. 🏆 <b>BEST EXAM METHOD:</b> M1 se jo kate wo "cannot"; baaki par M2; trade-off: M1 sufficient hai "cannot" ke liye par "can" ke liye nahi (L17 chahiye).</p>
+<h4>6. ✅ Verification</h4>
+<ul>
+<li>1-D check: $\{0,1,2,10,11,12\}$ ke $31$ ($k=2$) partitions mein se sirf $\{0,1,2\}\mid\{10,11,12\}$ L17 test pass karta hai (code) — interleaved partitions kabhi final nahi hote.</li>
+<li>Ring demo: ring partition par ek assign-pass 41 points ko badalta hai (numerically tie-noise ke kaaran), isliye stable nahi ✓.</li>
+</ul>
+<h4>7. ⚠️ Traps</h4>
+<ul><li>"Cluster = ring ke shape ka lagta hai" se jawab dena — figure ka shape nahi, <i>centroid-based separability</i> dekho.</li>
+<li>"Seedhi line se alag ho sakta hai" ko "Lloyd ka final hai" samajhna — L17 alag condition hai.</li>
+<li>$k=2$ ka ye result $k>2$ par bhi convex cells deta hai, par "seedhi line" ki jagah "har pair ke beech ek line".</li></ul>
+<p><b>Recognition rule:</b> "cannot be final" + figure ⇒ (1) kya line se alag? (2) kya centroids stable?</p>
+<h4>8. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>1-D data $\{0,1,2,10,11,12\}$, $k=2$. Kya $\{1,11\}\mid\{0,2,10,12\}$ Lloyd ka final clustering ho sakta hai?</p>
+<details class="reveal"><summary>Show answer</summary><p><b>Nahi.</b> 1-D mein cells intervals hain (L15). Cluster $\{1,11\}$ ke andar $2$ aur $10$ aate hain, par woh doosre cluster mein hain ⇒ convex nahi ⇒ final nahi. Code se bhi: saare $31$ partitions mein ye fixed point nahi.</p></details>
+</details>
+</section>
+
+<section data-track="pyq3">
+<h3>🎯 P3 — $(2,3)$ kahan reassign hoga (2023 October) <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2023 October · Original Q3 · ID <code>640653669232</code> · MCQ · 4 marks · Pages 4–5 · <span class="tag t-src">[SRC]</span></p>
+<p>Consider 9 data points: $(2,3),(1,2),(3,1),(5,6),(7,8),(9,9),(6,7),(10,10),(11,11)$. Suppose we aim to form 3 clusters using the K-means algorithm. After the first iteration: $C_1$: $\{(1,2),(3,1)\}$; $C_2$: $\{(2,3),(5,6),(6,7)\}$; $C_3$: $\{(9,9),(7,8),(10,10),(11,11)\}$. After the second iteration, to which cluster will the data point $(2,3)$ be reassigned?</p>
+<ol><li>C1</li><li>C2</li><li>C3</li><li>It remains in the same cluster as in the first iteration</li></ol>
+<p><b>Answer indicated in source: C1.</b></p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Centres khud bana ke $(2,3)$ ka $d^2$ teeno centres se nikaalo. Dhyaan: $(2,3)$ khud $C_2$ ke mean mein shaamil hai. Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul><li><b>Asked:</b> $(2,3)$ ka naya cluster. <b>Given:</b> teen clusters ke members.</li>
+<li><b>Trigger clues:</b> "after the first iteration" clusters diye ⇒ pehle <b>means</b> (L3), phir ek point ka assign (L5).</li>
+<li><b>Prerequisites:</b> G3, S2, L12 — Procedural. <b>Principle:</b> clusters se centres, centres se nearest.</li></ul>
+<h4>2. 🧭 Methods (2 genuinely different; teesra nahi — sirf ek point poochha gaya, koi aur hal-tareeka naya nahi)</h4>
+<p><b>M1 General:</b> teeno centres, teeno $d^2$. <b>M2 Shortcut:</b> $C_3$ coordinates se bahut door hai ⇒ sirf $C_1$ vs $C_2$ ki L12 inequality.</p>
+<h4>3. 🧮 Working</h4>
+<p><b>Step 1 — centres (dono methods ke liye):</b> $\mu_1=\big(\tfrac{1+3}2,\tfrac{2+1}2\big)=(2,1.5)$. $\mu_2=\big(\tfrac{2+5+6}3,\tfrac{3+6+7}3\big)=(\tfrac{13}3,\tfrac{16}3)$. $\mu_3=\big(\tfrac{9+7+10+11}4,\tfrac{9+8+10+11}4\big)=(\tfrac{37}4,\tfrac{19}2)=(9.25,9.5)$.</p>
+<div class="methods">
+<div class="method" data-label="M1 General"><div class="mh">M1 · teen distances</div>
+<p>$\|(2,3)-\mu_1\|^2=(2-2)^2+(3-1.5)^2=2.25$.</p>
+<p>$\|(2,3)-\mu_2\|^2=(2-\tfrac{13}3)^2+(3-\tfrac{16}3)^2=(\tfrac73)^2+(\tfrac73)^2=\tfrac{98}9\approx10.89$.</p>
+<p>$\|(2,3)-\mu_3\|^2=(2-9.25)^2+(3-9.5)^2=52.5625+42.25=94.8125$.</p>
+<p>Min $=2.25$ ⇒ <b>$C_1$</b>.</p></div>
+<div class="method" data-label="M2 Bisector"><div class="mh">M2 · L12, $C_1$ vs $C_2$</div>
+<p>$a=\mu_1=(2,1.5)$, $b=\mu_2=(\tfrac{13}3,\tfrac{16}3)$. $b-a=(\tfrac73,\tfrac{23}6)$. $2x^T(b-a)=2\big(2\cdot\tfrac73+3\cdot\tfrac{23}6\big)=2\big(\tfrac{14}3+\tfrac{23}2\big)=2\cdot\tfrac{97}6=\tfrac{97}3\approx32.33$.</p>
+<p>$\|b\|^2-\|a\|^2=\tfrac{425}9-6.25=\tfrac{1475}{36}\approx40.97$. $32.33\le40.97$ ⇒ $(2,3)$ $C_1$ ke paas. $C_3$: $d^2=94.8\gg2.25$ ⇒ nahi.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1</td><td>Medium</td><td>Low</td><td>Low</td><td>Sab teen $d^2$ saaf dikhane ke liye</td></tr>
+<tr><td>M2</td><td>Fast</td><td>Medium</td><td>Medium — fractions</td><td>Sirf do centres ke beech faisla</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M2 (ya M1 ke do $d^2$). 🏆 <b>BEST EXAM METHOD:</b> M1 — teeno distances, koi chhoot nahi; trade-off: thoda lamba.</p>
+<h4>5. ✅ Verification</h4>
+<ul><li>Code: $d^2=(2.25,\,10.889,\,94.8125)$; assign ke baad $z=(1,1,1,2,3,3,2,3,3)$ — $(2,3)$ $C_1$ mein ✓ (key se match).</li><li>Exact fractions: $\tfrac{97}3\le\tfrac{1475}{36}$ ✓.</li></ul>
+<h4>6. ⚠️ Traps</h4>
+<ul><li>Centres ke bajaye nearest <i>data point</i> ka cluster lena (nearest-neighbour galti): $(2,3)$ ka sabse paas ka point $(1,2)$ ($d^2=2$) $C_1$ mein hai, isliye yahan coincidentally sahi jawab aata — par method galat hai, kisi aur sawaal mein ulta aa sakta hai.</li>
+<li>$(2,3)$ ko $\mu_2$ ki ginti se bahar karna: tab $\mu_2'=(5.5,6.5)$ aata. Jawab yahan bhi $C_1$ rehta, par centre galat hota; doosre sawaal mein jawab badal sakta hai.</li></ul>
+<p><b>Recognition rule:</b> "cluster diye, point reassign" ⇒ pehle sab means, phir ek hi point ka $d^2$.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>$9$ ki jagah $7$ points: $(0,0),(1,0),(0,1),(6,6),(7,6),(6,7),(3,2)$. Pehli iteration ke baad $C_1=\{(0,0),(1,0),(0,1)\}$, $C_2=\{(6,6),(7,6),(6,7),(3,2)\}$. Doosri iteration mein $(3,2)$ kahan jaayega? Naye centres bhi batao.</p>
+<details class="reveal"><summary>Show answer</summary><p>$\mu_1=(\tfrac13,\tfrac13)$, $\mu_2=(5.5,5.25)$. $d^2(3,2)$: to $\mu_1=\tfrac{89}9\approx9.89$; to $\mu_2=6.25+10.5625=16.8125$ ⇒ <b>$C_1$</b>. Update ke baad $\mu_1=(1,0.75)$, $\mu_2=(\tfrac{19}3,\tfrac{19}3)$ (code-verified).</p></details>
+</details>
+</section>
+
+<section data-track="pyq4">
+<h3>🎯 P4 — Definitely $C_1$ mein kaun (2025 February 23) <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2025 February 23 · Original Q3 · ID <code>6406531104780</code> · MCQ · 3 marks · Pages 4–5 · <span class="tag t-src">[SRC]</span></p>
+<p>K-means clustering is run on a dataset of 100 points with $K=3$. If the points $\begin{bmatrix}0\\1\end{bmatrix}$ and $\begin{bmatrix}1\\1\end{bmatrix}$ are part of the same cluster $C_1$, which of the following points will <b>definitely</b> lie in $C_1$?</p>
+<ol>
+<li>$\begin{bmatrix}-1\\1\end{bmatrix}$</li><li>$\begin{bmatrix}1\\2\end{bmatrix}$</li><li>$\begin{bmatrix}0.2\\1\end{bmatrix}$ <b>[marked correct in source]</b></li><li>$\begin{bmatrix}0\\0\end{bmatrix}$</li>
+</ol>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>(Yahi pretest tha.) Agar aap ne pehle answer likh liya hai to ab sirf reasoning dekho. "Definitely" ka matlab: <i>har</i> sambhav centres-configuration ke liye. Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul><li><b>Asked:</b> kaun sa point guaranteed $C_1$ mein. <b>Given:</b> $a=(0,1)$, $b=(1,1)\in C_1$, $K=3$, 100 points.</li>
+<li><b>Trigger clues:</b> "definitely", "same cluster" ⇒ cell ki convexity (L15). Doosra clue: baaki 98 points aur doosre centres ka koi data nahi ⇒ jawab sirf geometry se aana chahiye.</li>
+<li><b>Prerequisites:</b> S3, L12–L15. PACER: Conceptual. <b>Principle:</b> $V_1$ convex ⇒ $a,b\in V_1\Rightarrow$ segment $[a,b]\subseteq V_1$.</li></ul>
+<h4>2. 🧭 Methods (2 genuinely different; teesra nahi — conceptual MCQ)</h4>
+<p><b>M1 Proof (convex cell):</b> segment ke andar waale point ko L15 se seedha dikhao. <b>M2 Counterexample construction:</b> har galat option ke liye aise centres banao jahan $a,b$ ek cluster mein aur option dusre mein ho.</p>
+<h4>3. 🧮 Working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Convex cell"><div class="mh">M1 · L15</div>
+<ol>
+<li>$C_1$ ka cell $V_1=\{x:g_j(x)\le0,\ j=2,3\}$, jahan $g_j$ affine hai (derivation theory mein).</li>
+<li>$a,b\in V_1$ ⇒ $g_j(a)\le0,\ g_j(b)\le0$.</li>
+<li>$(0.2,1)=0.8\,a+0.2\,b$ (kyunki $0.8\cdot0+0.2\cdot1=0.2$ aur $y$: $0.8+0.2=1$ ✓), $\lambda=0.8$.</li>
+<li>$g_j(0.2,1)=0.8g_j(a)+0.2g_j(b)\le0$ ⇒ $(0.2,1)\in V_1$ ⇒ <b>definitely $C_1$</b>.</li>
+</ol></div>
+<div class="method" data-label="M2 Counterexamples"><div class="mh">M2 · Dusre options kaatna</div>
+<p>Teeno options ke liye centres $\mu_1=(0.5,1)$ + ek doosra $\mu_2$ jisse $a,b\to$ cluster 1 par option $\to$ cluster 2:</p>
+<ul>
+<li>$(-1,1)$: $\mu_2=(-1,1)$. $d^2(a,\mu_1)=0.25\lt d^2(a,\mu_2)=1$ ✓; $d^2(b,\mu_1)=0.25<4$ ✓; $(-1,1)$ khud $\mu_2$ ⇒ cluster 2.</li>
+<li>$(1,2)$: $\mu_2=(1,3)$. $a$: $0.25$ vs $1+4=5$ ✓; $b$: $0.25$ vs $0+4=4$ ✓; $(1,2)$: to $\mu_1=0.25+1=1.25$, to $\mu_2=0+1=1$ ⇒ cluster 2.</li>
+<li>$(0,0)$: $\mu_2=(0,-1)$. $a$: $0.25$ vs $0+4=4$ ✓; $b$: $0.25$ vs $1+4=5$ ✓; $(0,0)$: to $\mu_1=0.25+1=1.25$, to $\mu_2=0+1=1$ ⇒ cluster 2.</li>
+</ul></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Convex cell</td><td>Fast</td><td>Medium (idea chahiye)</td><td>Low</td><td>Aam rule — kisi bhi data size par</td></tr>
+<tr><td>M2 Counterexamples</td><td>Slow (3 constructions)</td><td>Medium</td><td>Low (jab constructions sahi hon)</td><td>Rule yaad na ho / confirmation</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M1 ($0.2$ segment par hai). 🏆 <b>BEST EXAM METHOD:</b> M1; trade-off: M2 se confidence badhta hai par time jaata hai.</p>
+<h4>5. ✅ Verification</h4>
+<ul><li>Code: $163{,}585$ random centre-configurations mein jahan $a,b$ ek cluster mein aaye, $(0.2,1)$ <b>ek baar bhi</b> alag nahi nikla ✓. M2 ke teeno counterexamples ke assignments code se check kiye ✓.</li>
+<li>Tie-rule: D3 (§1) se segment ke andar tie bhi cluster 1 mein hi rehta hai ✓.</li></ul>
+<h4>6. ⚠️ Traps</h4>
+<ul><li>$(1,2)$ ya $(0,0)$ "paas hain isliye pakka" lagna — closeness guarantee nahi (counterexamples upar).</li><li>Maan lena ki $a,b$ ke saath ek <i>aur</i> point bhi hona zaroori hai — nahi, sirf geometry.</li><li>$(−1,1)$ "symmetric" lagta hai, par symmetry ke liye centre ka pata chahiye.</li></ul>
+<p><b>Recognition rule:</b> "same cluster mein A, B — definitely kaun" ⇒ segment $AB$ ya convex hull ke andar ka point.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>$K$-means ($K=2$) mein $(0,0),(4,0),(0,4)$ ek hi cluster mein hain. Kaun se points <b>definitely</b> us cluster mein: (a) $(1,1)$ (b) $(2,2)$ (c) $(3,3)$ (d) $(-1,0)$?</p>
+<details class="reveal"><summary>Show answer</summary><p>Convex hull = triangle $x,y\ge0,\ x+y\le4$. (a) $(1,1)=0.5(0,0)+0.25(4,0)+0.25(0,4)$ ✓ andar. (b) $(2,2)=0.5(4,0)+0.5(0,4)$ ✓ hull ki boundary par — convex combination hai, isliye ✓. (c) $(3,3)$: barycentric weight $-0.5$ ⇒ hull ke bahar ✗ (centres $(1,1),(3.5,3.5)$ se $(3,3)$ doosre cluster mein jaata hai). (d) $(-1,0)$ bahar ✗ (centres $(1,1),(-3,0)$ se alag). <b>Answer: (a) aur (b).</b> Code-verified: $20{,}070$ random trials mein (a),(b) kabhi bahar nahi.</p></details>
+</details>
+</section>
+
+<section data-track="pyq5">
+<h3>🎯 P5 — $z^{(0)}=(1,1,2,2)$ se final assignment (2026 March 15) <span class="tag t-src">[SRC]</span> <span class="tag t-q">[?]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">15 March 2026 · Original Q17 · ID <code>6406531951449</code> · MCQ · 2 marks · parent Q16 (C1, ID <code>6406531951448</code>) · <span class="tag t-src">[SRC]</span></p>
+<p><b>Parent (Q16, B17 mein context ke roop mein):</b> $\mathbb R^2$ mein $k=2$; $i$-th point $(x_i,y_i)$. Source ka visible table: $i=1:(0,0)$, $i=2:(3,0)$, $i=3:(4,1)$, $i=4:(1,1)$. Initial cluster assignments child questions mein.</p>
+<p>Given the initial assignment $z^{(0)}=(1,1,2,2)$, which of the following is the final cluster assignment after running K-means?</p>
+<p><b>Correct option shown in source: $\boxed{(1,2,2,1)}$.</b> <span class="tag t-q">[?]</span> Baaki options source mein nahi dikhte; table sirf 4 rows dikhata hai (adhoora ho sakta hai, par $z^{(0)}$ mein 4 entries hain ⇒ 4 points maane).</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>$z^{(0)}$ se pehle centres, phir assign, phir (agar zaroori ho) update. Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul><li><b>Asked:</b> final $z$. <b>Given:</b> 4 points, $z^{(0)}$, $k=2$.</li>
+<li><b>Trigger clues:</b> $z^{(0)}$ (labels, centres nahi) ⇒ L3 se pehle means; "final" ⇒ stop jab $z$ na badle (L18).</li>
+<li><b>Prerequisites:</b> G3, S2, L12, L16. PACER: Procedural. <b>Principle:</b> $z\to\mu\to z$ loop.</li></ul>
+<h4>2. 🧭 Methods (3 genuinely different)</h4>
+<p><b>M1 General:</b> Lloyd distance tables. <b>M2 Shortcut:</b> bisector L14 se har pass ek inequality. <b>M3 Advanced (L17):</b> chhote data ke saare $7$ partitions ke F aur stability dekho — final woh jo fixed point ho.</p>
+<h4>3. 🧮 Working — step-interleaved</h4>
+<p><b>Step 1 — $z^{(0)}$ se centres:</b> $C_1=\{(0,0),(3,0)\}$ ⇒ $\mu_1=(1.5,0)$. $C_2=\{(4,1),(1,1)\}$ ⇒ $\mu_2=(2.5,1)$.</p>
+<p><b>Step 2 — Pass 1 assign:</b></p>
+<div class="methods">
+<div class="method" data-label="M1 Table"><div class="mh">M1 · $d^2$</div>
+<div class="tbl-wrap"><table><thead><tr><th>Point</th><th>to $\mu_1$</th><th>to $\mu_2$</th><th>$z$</th></tr></thead><tbody>
+<tr><td>$(0,0)$</td><td class="num">$2.25+0=2.25$</td><td class="num">$6.25+1=7.25$</td><td class="num">1</td></tr>
+<tr><td>$(3,0)$</td><td class="num">$2.25+0=2.25$</td><td class="num">$0.25+1=1.25$</td><td class="num">2</td></tr>
+<tr><td>$(4,1)$</td><td class="num">$6.25+1=7.25$</td><td class="num">$2.25+0=2.25$</td><td class="num">2</td></tr>
+<tr><td>$(1,1)$</td><td class="num">$0.25+1=1.25$</td><td class="num">$2.25+0=2.25$</td><td class="num">1</td></tr>
+</tbody></table></div></div>
+<div class="method" data-label="M2 Bisector"><div class="mh">M2 · L14</div>
+<p>$a=(1.5,0)$, $b=(2.5,1)$: $b-a=(1,1)$; $2x^T(b-a)=2(x_1+x_2)$; $\|b\|^2-\|a\|^2=(6.25+1)-2.25=5$. $a$ ke paas $\iff2(x_1+x_2)\le5\iff x_1+x_2\le2.5$.</p>
+<p>$(0,0)$: $0$ ⇒ 1. $(3,0)$: $3>2.5$ ⇒ 2. $(4,1)$: $5$ ⇒ 2. $(1,1)$: $2\le2.5$ ⇒ 1. $z=(1,2,2,1)$.</p></div>
+</div>
+<p><b>Step 3 — Update:</b> $C_1=\{(0,0),(1,1)\}$ ⇒ $(0.5,0.5)$; $C_2=\{(3,0),(4,1)\}$ ⇒ $(3.5,0.5)$.</p>
+<p><b>Step 4 — Pass 2 assign:</b></p>
+<div class="methods">
+<div class="method" data-label="M1 Table"><div class="mh">M1 · $d^2$</div>
+<div class="tbl-wrap"><table><thead><tr><th>Point</th><th>to $(0.5,0.5)$</th><th>to $(3.5,0.5)$</th><th>$z$</th></tr></thead><tbody>
+<tr><td>$(0,0)$</td><td class="num">$0.5$</td><td class="num">$12.5$</td><td class="num">1</td></tr>
+<tr><td>$(3,0)$</td><td class="num">$6.5$</td><td class="num">$0.5$</td><td class="num">2</td></tr>
+<tr><td>$(4,1)$</td><td class="num">$12.5$</td><td class="num">$0.5$</td><td class="num">2</td></tr>
+<tr><td>$(1,1)$</td><td class="num">$0.5$</td><td class="num">$6.5$</td><td class="num">1</td></tr>
+</tbody></table></div></div>
+<div class="method" data-label="M2 Bisector"><div class="mh">M2 · L14</div>
+<p>$a=(0.5,0.5)$, $b=(3.5,0.5)$: $b-a=(3,0)$; $2x^T(b-a)=6x_1$; $\|b\|^2-\|a\|^2=12.5-0.5=12$. $a$ ke paas $\iff6x_1\le12\iff x_1\le2$.</p>
+<p>$x_1=0,3,4,1$ ⇒ $z=(1,2,2,1)$. Wahi.</p></div>
+</div>
+<p><b>Step 5 — Terminate:</b> $z$ nahi badla ⇒ final $z=(1,2,2,1)$ ✓ (source ke sahi option se match).</p>
+<div class="method" style="margin:8px 0"><div class="mh">M3 · Saare partitions (L17)</div>
+<p>4 points ke $k=2$ ke saare $7$ partitions ke centroids bana ke stability check kiya (code): sirf $\{(0,0),(1,1)\}\mid\{(3,0),(4,1)\}$ stable nikla ($F=2$, global minimum). Baaki 6 partitions mein koi na koi point doosre centroid ke paas aa jaata hai ⇒ woh final nahi ho sakte. Isliye jab Lloyd do <i>non-empty</i> clusters ke saath ruke, to yahi partition ($(1,2,2,1)$ ya uska relabel $(2,1,1,2)$) final hoga — P5 ke $z^{(0)}=(1,1,2,2)$ ke liye bhi. <span class="tag t-add">[ADDED]</span> (Dhyaan: har $z^{(0)}$ yahan nahi pahunchta; P6 ke Traps mein ek apvaad.)</p></div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1</td><td>Slow</td><td>Low</td><td>Medium (16 numbers)</td><td>Pehli baar</td></tr>
+<tr><td>M2</td><td>Fast</td><td>Medium</td><td>Low</td><td>Bahut points, do centres</td></tr>
+<tr><td>M3</td><td>Slow by hand (code se easy)</td><td>High</td><td>Low</td><td>Sirf understanding ke liye, exam mein nahi</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M2. 🏆 <b>BEST EXAM METHOD:</b> M2 (do pass); trade-off: formula yaad ho; M1 se ek point verify karna smart.</p>
+<h4>5. ✅ Verification</h4>
+<ul><li>Code: Pass 1 $z=(1,2,2,1)$, means $(0.5,0.5),(3.5,0.5)$, pass 2 $z=(1,2,2,1)$ ⇒ stop ✓.</li><li>Source ke sahi option $(1,2,2,1)$ se match ✓.</li></ul>
+<h4>6. ⚠️ Traps</h4>
+<ul><li>$z^{(0)}$ ko seedha final assignment samajhna ya centres ke bina distance likhna.</li><li>$(1,2,2,1)$ aur $(2,1,1,2)$ ko alag samajhna (L16).</li><li>Table adhoora hai (4 rows) — 5th point ho to jawab badal sakta hai; isliye $z^{(0)}$ ki length 4 se match karna zaroori tha <span class="tag t-q">[?]</span>.</li></ul>
+<p><b>Recognition rule:</b> $z^{(0)}$ mile to pehla kadam update hai, assign nahi.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>1-D points $0,1,5,6$, $k=2$, $z^{(0)}=(1,2,1,2)$. Final assignment aur final centres?</p>
+<details class="reveal"><summary>Show answer</summary><p>$\mu_1=\tfrac{0+5}2=2.5$, $\mu_2=\tfrac{1+6}2=3.5$. Assign: $0\to\mu_1$ ($6.25$ vs $12.25$); $1\to\mu_1$ ($2.25$ vs $6.25$); $5\to\mu_2$ ($6.25$ vs $2.25$); $6\to\mu_2$. $z=(1,1,2,2)$, $\mu=(0.5,5.5)$. Dobara assign: wahi ⇒ <b>final $z=(1,1,2,2)$, centres $0.5,5.5$</b> (code-verified).</p></details>
+</details>
+</section>
+
+<section data-track="pyq6">
+<h3>🎯 P6 — $z^{(0)}=(1,2,2,1)$ se final assignment (2026 March 15) <span class="tag t-src">[SRC]</span> <span class="tag t-q">[?]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">15 March 2026 · Original Q18 · ID <code>6406531951450</code> · MCQ · 2 marks · parent Q16 (C1, ID <code>6406531951448</code>) · <span class="tag t-src">[SRC]</span></p>
+<p>Given the alternate initial assignment $z^{(0)}=(1,2,2,1)$, which of the following is the final cluster assignment after running K-means?</p>
+<p><b>Correct option shown in source: $\boxed{(1,2,2,1)}$.</b> <span class="tag t-q">[?]</span> Baaki options source mein nahi dikhte.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Kya P5 ke baad aapko ek line mein jawab mil jaata hai? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul><li><b>Asked:</b> final $z$ jab $z^{(0)}=(1,2,2,1)$. <b>Given:</b> wahi 4 points (P5).</li><li><b>Trigger:</b> "alternate initial assignment" ⇒ shayad P5 se alag raasta, par L17 ke hisaab se fixed point to nahi?</li><li><b>Prerequisites:</b> L17, L16. PACER: Conceptual + Evidence. <b>Principle:</b> agar $z^{(0)}$ khud fixed point hai to loop ek pass mein ruk jaata hai.</li></ul>
+<h4>2. 🧭 Methods (2 genuinely different; teesra nahi — ek hi partition hai, dusre raste ka naya idea nahi)</h4>
+<p><b>M1 General:</b> Lloyd ek pass (means, assign, compare). <b>M2 Shortcut (L17):</b> P5 ke Step 3 ke means yahi hain — P5 ka Pass-2 table dobara padho.</p>
+<h4>3. 🧮 Working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Lloyd"><div class="mh">M1 · Ek pass</div>
+<ol>
+<li>$z^{(0)}$ se centres: $C_1=\{(0,0),(1,1)\}$ ⇒ $(0.5,0.5)$; $C_2=\{(3,0),(4,1)\}$ ⇒ $(3.5,0.5)$.</li>
+<li>Assign (P5 Step 4 table): $z=(1,2,2,1)$.</li>
+<li>$z$ = $z^{(0)}$ ⇒ kuch nahi badla ⇒ terminate.</li>
+</ol></div>
+<div class="method" data-label="M2 L17"><div class="mh">M2 · Fixed point</div>
+<p>P5 ke Step 3 mein yahi centres $(0.5,0.5),(3.5,0.5)$ aaye the aur Step 4 ne unhi labels ko dohraya. Isliye $z^{(0)}=(1,2,2,1)$ <b>pehle se fixed point</b> hai ⇒ final $=z^{(0)}$ koi iteration chalaye bina.</p></div>
+</div>
+<p>⇒ final $(1,2,2,1)$ ✓.</p>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1</td><td>Medium</td><td>Low</td><td>Low</td><td>Akela sawaal</td></tr>
+<tr><td>M2</td><td>Instant</td><td>Low (P5 yaad ho)</td><td>Low</td><td>Jab pichhla sawaal ka kaam reuse ho sake</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M2. 🏆 <b>BEST EXAM METHOD:</b> M1 (do line ka kaam) — sirf ek pass; trade-off: M2 sirf tab jab pichhla parts ka answer pakka ho.</p>
+<h4>5. ✅ Verification</h4>
+<ul><li>Code: $z^{(0)}=(1,2,2,1)$ ⇒ pass 1 mein $z$ wahi; $F=2$ ✓ (P5 ke code run se match; source key $(1,2,2,1)$ ✓).</li></ul>
+<h4>6. ⚠️ Traps</h4>
+<ul><li>Maan lena ki "alag initial assignment" ka matlab alag final — P5 aur P6 dono ka final ek hi hai (is dataset ka sirf ek non-degenerate stable partition hai: P5 ka M3).</li><li>Ulta bhi galat: "har $z^{(0)}$ se yahi final aata hai". Code se: $z^{(0)}=(1,2,1,2)$ par $\mu_1=\mu_2=(2,0.5)$ ho jaate hain, har point ke liye tie, tie-rule se sab cluster 1 mein, cluster 2 khaali. Label-symmetry tak baaki 6 non-empty starts sab wahi $(1,2,2,1)$ (ya relabel) dete hain. <span class="tag t-add">[ADDED]</span></li><li>Label permutation ko alag answer samajhna (L16).</li></ul>
+<p><b>Recognition rule:</b> "alag initialization" par bhi ek hi final partition mumkin hai jab data mein sirf ek stable partition ho — par har start ke liye pakka nahi; centres coincide ho sakte hain.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>P5 ke transfer wale data $0,1,5,6$ par $z^{(0)}=(1,1,1,2)$ se final assignment batao. Kya yeh $(1,2,1,2)$ wale rastay se milta-julta final deta hai?</p>
+<details class="reveal"><summary>Show answer</summary><p>$\mu_1=\tfrac{0+1+5}3=2$, $\mu_2=6$. Assign: $0\to\mu_1$; $1\to\mu_1$; $5\to\mu_2$ ($9$ vs $1$); $6\to\mu_2$ ⇒ $z=(1,1,2,2)$, $\mu=(0.5,5.5)$, aur dobara wahi ⇒ final $(1,1,2,2)$ — <b>haan, wahi final</b>, jo $(1,2,1,2)$ wale start se aaya tha (code-verified).</p></details>
+</details>
+</section>
+
+<section data-track="pyq7">
+<h3>🎯 P7 — $\sum\|x_i-\mu^t_{z_i^{t+1}}\|^2$ (2026 July 16) <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">16 July 2026 · Original Q3 · ID <code>6406532158936</code> · MCQ · 4 marks · Page 5 · <span class="tag t-src">[SRC]</span></p>
+<p>Consider the one-dimensional dataset $x_1=0,\ x_2=2,\ x_3=6,\ x_4=8$. Suppose K-means is run with $K=2$. At iteration $t$, the centroids are $\mu_1^t=0,\ \mu_2^t=10$. The assignment step produces new assignments $z_i^{t+1}$. Compute $\sum_{i=1}^4\big\|x_i-\mu^t_{z_i^{t+1}}\big\|^2.$</p>
+<ol><li>4</li><li>8</li><li><b>24 [correct]</b></li><li>44</li></ol>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Dhyaan: centre $\mu^t$ hai, naye wale $\mu^{t+1}$ nahi. Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul><li><b>Asked:</b> $F(z^{t+1},\mu^t)$ — naye labels, purane centres. <b>Given:</b> 4 points, $\mu^t=(0,10)$.</li><li><b>Trigger:</b> superscripts $t$ aur $t+1$ alag-alag jagah ⇒ L4/L8 (B17).</li><li><b>Prerequisites:</b> S2, L8 — Procedural + Reference. <b>Principle:</b> assign karo, update mat karo.</li></ul>
+<h4>2. 🧭 Methods (3 genuinely different)</h4>
+<p><b>M1 General:</b> $d^2$ table. <b>M2 Shortcut:</b> 1-D bisector = midpoint threshold ($\tfrac{0+10}2=5$). <b>M3 Bound / elimination:</b> $F(z^{t+1},\mu^t)\ge F(z^{t+1},\mu^{t+1})$ (L8) se lower bound, phir options chhaanto.</p>
+<h4>3. 🧮 Working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Table"><div class="mh">M1 · $d^2$ table</div>
+<div class="tbl-wrap"><table><thead><tr><th>$x$</th><th>to $0$</th><th>to $10$</th><th>$z^{t+1}$</th></tr></thead><tbody>
+<tr><td class="num">0</td><td class="num">0</td><td class="num">100</td><td class="num">1</td></tr>
+<tr><td class="num">2</td><td class="num">4</td><td class="num">64</td><td class="num">1</td></tr>
+<tr><td class="num">6</td><td class="num">36</td><td class="num">16</td><td class="num">2</td></tr>
+<tr><td class="num">8</td><td class="num">64</td><td class="num">4</td><td class="num">2</td></tr>
+</tbody></table></div>
+<p>$F=0+4+16+4=\mathbf{24}$.</p></div>
+<div class="method" data-label="M2 Midpoint"><div class="mh">M2 · Threshold 5</div>
+<p>1-D mein bisector midpoint hai: $x<5\to\mu_1=0$, $x>5\to\mu_2=10$. $0,2\to0$: $0^2+2^2=4$. $6,8\to10$: $(6-10)^2+(8-10)^2=16+4=20$. $F=4+20=\mathbf{24}$.</p></div>
+<div class="method" data-label="M3 Bounds"><div class="mh">M3 · L8 bound</div>
+<p>Naye labels ke saath naye means: $\mu_1^{t+1}=\tfrac{0+2}2=1$, $\mu_2^{t+1}=\tfrac{6+8}2=7$, $F(z^{t+1},\mu^{t+1})=1+1+1+1=4$. L8 se $F(z^{t+1},\mu^t)\ge4$, barabari tabhi jab $\mu^t$ pehle se means ho. Yahan $\mu^t=(0,10)\ne(1,7)$, isliye $F>4$ strictly ⇒ option 1 ($4$) out. Gap identity (L7): $F(z^{t+1},\mu^t)=4+2\cdot(0-1)^2+2\cdot(10-7)^2=4+2+18=24$ ✓.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1</td><td>Medium</td><td>Low</td><td>Low</td><td>Default</td></tr>
+<tr><td>M2</td><td>Fastest (1-D)</td><td>Low</td><td>Low</td><td>1-D data</td></tr>
+<tr><td>M3</td><td>Medium</td><td>Medium (L7/L8 yaad)</td><td>Low</td><td>Cross-check; ek option kaatna</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M2. 🏆 <b>BEST EXAM METHOD:</b> M1 ya M2 plus M3 se cross-check; trade-off: M3 sirf $F$ ke lower bound ke saath ek option hi kaat-ta hai, jawab nahi deta.</p>
+<h4>5. ✅ Verification</h4>
+<ul><li>Code: $D=[[0,100],[4,64],[36,16],[64,4]]$, $z=(1,1,2,2)$, $F_{\text{old}}=24$; update ke baad $\mu=(1,7)$, $F_{\text{new}}=4$ ✓. Key option 3 ($24$) se match.</li></ul>
+<h4>6. ⚠️ Traps</h4>
+<ul><li><b>Option 1 ($4$)</b> = update ke <i>baad</i> ka $F$ (naye means) — sawaal purane $\mu^t$ ka hai.</li><li>Option $8$ aur $44$ — source ne inka kaaran nahi diya; direct computation se dono $24$ nahi dete, isliye woh distractors hain (inka source ka asli intent mujhe maloom nahi <span class="tag t-q">[?]</span>).</li><li>Naye centroids $(1,7)$ nikaal kar $\|x_i-\mu^{t+1}\|^2$ jodna.</li></ul>
+<p><b>Recognition rule:</b> superscripts padho — $F(\text{naye labels},\text{purane centres})$ ka matlab "assign karo, update mat karo".</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>$x=1,3,7,9$; $\mu^t=(0,10)$. Compute (i) $\sum\|x_i-\mu^t_{z_i^{t+1}}\|^2$, (ii) $\sum\|x_i-\mu^{t+1}_{z_i^{t+1}}\|^2$.</p>
+<details class="reveal"><summary>Show answer</summary><p>$z^{t+1}=(1,1,2,2)$. (i) $1+9+9+1=\mathbf{20}$. $\mu^{t+1}=(2,8)$ ⇒ (ii) $1+1+1+1=\mathbf4$. Gap: $20-4=2(0-2)^2+2(10-8)^2=8+8=16$ ✓ (code-verified).</p></details>
+</details>
+</section>
+
+<section data-track="card43">
+<h3>📌 Memory card — 4.3 Assignment, distance, geometry</h3>
+<div class="box em">
+<ul>
+<li><b>Core model:</b> centres ⇒ nearest-centre cells ⇒ partition. Cells = convex polygons/polyhedra.</li>
+<li><b>Backbone chain:</b> $\mu$ ⇒ $d^2$ to each ⇒ $\arg\min$ (tie ⇒ chhota $k$) ⇒ $z$ ⇒ (update) ⇒ repeat jab tak $z$ na badle (terminating pass bhi count).</li>
+<li><b>Formulas + conditions:</b> $z_i=\arg\min_k\|x_i-\mu_k\|^2$ · bisector $2x^T(b-a)=\|b\|^2-\|a\|^2$ · cell convex (L15) · $F(z^{t+1},\mu^t)$ = naye labels, purane centres.</li>
+<li><b>Top 3 traps:</b> (1) purane vs naye centres (P7) (2) terminating pass ka count (P1) (3) labels ka naam vs partition (L16, P5/P6).</li>
+<li><b>Trigger bank:</b> "definitely same cluster" ⇒ convex hull · "cannot be final" ⇒ seedhi line + fixed point · "$z^{(0)}$ diya" ⇒ pehle means.</li>
+<li><b>Method selector:</b> calculation ⇒ table + bisector check · conceptual ⇒ convexity + counterexample.</li>
+<li><b>Spaced review:</b> P1, P3, P4 — 2026-11-13 · P2, P5, P6, P7 — 2026-11-15 · card — 2026-11-19.</li>
+</ul>
+</div>
+<h3>✍️ Explain-it-back</h3>
+<div class="try"><p class="ttl">Chat mein jawab do (4–5 lines, apne words mein)</p>
+<p>"K-means ke do cells ke beech ki boundary kya hoti hai, aur isi se yeh kaise nikalta hai ki (a) do points same cluster mein hon to unke beech ka segment bhi usi mein hota hai, aur (b) concentric rings Lloyd se alag nahi hote?" Format: <span class="mono">Answer: … | Confidence: S/U/G | Reason: …</span></p></div>
+</section>
+
+<h2>📗 4.6 Choosing K, initialization effects, and limitations</h2>
+
+<section data-track="s46-theory">
+<div class="box amber"><p><span class="tag t-q">[?]</span> <b>Is subtopic ka bank mein sirf ek hi PYQ (P8) hai, aur uske scenario statements unreadable hain.</b> Isliye is page ka zyada hissa <span class="tag t-add">[ADDED]</span> explanation hai (bank mein elbow/silhouette jaisa koi PYQ nahi mila — yeh standard K-means practice hai, "bank ka content" nahi). Har number code se verify kiya hai.</p></div>
+
+<h3>🔁 Recall warm-up <span class="tag t-add">[ADDED]</span></h3>
+<div class="box">
+<p><b>R1 (B18).</b> K-means ke har cluster ke region ki shape?</p>
+<details class="reveal"><summary>Show answer</summary><p>Convex (half-planes ka intersection, L15). Isliye rings/crescents nahi.</p></details>
+<p><b>R2 (B17, L8).</b> Lloyd ke dauraan $F$ kabhi badh sakta hai?</p>
+<details class="reveal"><summary>Show answer</summary><p>Nahi: assign step aur update step dono $F$ ko ghatate ya wahi rakhte hain.</p></details>
+<p><b>R3 (B17, L7).</b> Fix kiye hue labels par $\sum_{i\in C}\|x_i-v\|^2$ ko kaun sa $v$ minimise karta hai?</p>
+<details class="reveal"><summary>Show answer</summary><p>$v=$ cluster ka mean $\mu_C$; minimum value $=\sum_{i\in C}\|x_i-\mu_C\|^2$ (SSE).</p></details>
+</div>
+
+<h3>❓ Pretest <span class="tag t-add">[ADDED]</span></h3>
+<div class="box amber"><p>Pretest ke liye PYQ readable nahi, isliye mera sawaal: <i>9 alag-alag points par K-means ka best (global) $F$ jab $k=9$ ho — kya hoga? Aur kya $k=3$ ka best $F$ $k=2$ ke best $F$ se kabhi bada ho sakta hai?</i> Apna jawab aur ek line ka reason likho; solution neeche Formal mein hai.</p></div>
+
+<h3>🧭 Position</h3>
+<ul>
+<li><b>Kya hai:</b> Lloyd ke aas-paas ke sawaal — $K$ kaise chuna jaye, aur kya final answer initialization par tikta hai.</li>
+<li><b>Prerequisites:</b> L4 ($F$), L8 ($F$ monotone per pass), L15 (convex cells), 4.3 ke WE3 (feature scale).</li>
+<li><b>Aage:</b> 4.4 ($F$ ka monotone hona aur convergence — P5 jaisa "$k=1000$ par minimum $F$"), 4.5 (K-means++ — initialization sudharne ki taqneek), aur T7 (GMM — kai K ke liye likelihood).</li>
+</ul>
+
+<h3>🧠 Intuition</h3>
+<p>Ek mohalle mein kitni dukaanein kholein? Dukaan badhane se har ghar ka <b>average chalne ka faasla</b> kam hota jaata hai ($F$ ghatta hai), jab tak har ghar ke paas apni dukaan na ho ($F=0$). Par har dukaan ka kharcha hota hai — jo $F$ ke andar <i>hai hi nahi</i>. "Elbow" woh jagah hai jahan ek aur dukaan kholne par faasla bahut kam ghatta hai.</p>
+<div class="box em">
+<p><b>Analogy kahan tootti hai:</b> $F$ mein dukaan ke kharche ka koi hissa nahi; K-means khud $K$ nahi chunta; $K=n$ par $F=0$ hamesha — par woh koi clustering nahi, sirf copy hai.</p>
+<p><b>Yeh kya NAHI hai:</b> (a) "kam $F$ = behtar clustering" nahi — $k=n$ sabse kam $F$ deta hai aur sabse bekaar hai. (b) Initialization sirf "shuruaat" nahi — final answer badal sakta hai (local minimum). (c) Elbow koi theorem nahi — kabhi saaf mod nahi hota.</p>
+</div>
+
+<h3>📊 Visual intuition</h3>
+<figure class="viz">
+<p class="vt">Visual 1: $F^*(k)$ vs $k$ — 9 points, teen jhund <span class="tag t-add">[ADDED]</span></p>
+<p class="vs">Dataset: $(1,1),(1.5,2),(2,1),(8,8),(8.5,9),(9,8),(15,2),(16,1.5),(16.5,2.5)$. Har $k$ ke liye <b>saare</b> set-partitions enumerate karke exact optimum nikala (Stirling numbers, max $S(9,4)=7770$). Schematic nahi — computed.</p>
+<div class="chart" data-chart='{"type":"vbar","labels":["k=1","k=2","k=3","k=4","k=5","k=6","k=7","k=8","k=9"],"values":[401.78,144.83,4,2.96,2.29,1.63,1,0.5,0],"aria":"Optimal K-means objective for k from 1 to 9 on nine points in three groups; sharp drop until k=3 then flat."}'></div>
+<details class="table-view"><summary>Table view</summary>
+<div class="tbl-wrap"><table><thead><tr><th>$k$</th><th class="num">$F^*(k)$</th><th>Optimal partition (indices 1–9)</th></tr></thead><tbody>
+<tr><td>1</td><td class="num">401.78</td><td>sab ek saath</td></tr>
+<tr><td>2</td><td class="num">144.83</td><td>$\{1,2,3\}\mid\{4,\dots,9\}$</td></tr>
+<tr><td>3</td><td class="num">4.00</td><td>$\{1,2,3\}\mid\{4,5,6\}\mid\{7,8,9\}$</td></tr>
+<tr><td>4</td><td class="num">2.96</td><td>teen jhund mein se ek aur tuta</td></tr>
+<tr><td>9</td><td class="num">0.00</td><td>har point akela</td></tr>
+</tbody></table></div></details>
+<figcaption><b>Interpretation:</b> $k=2\to3$ par $F$ $144.83$ se $4.00$ (lagbhag $97\%$ kam) — saaf elbow $k=3$ par. $k=3\to4$ par sirf $1.04$ ka fark. Aur $k=9$ par $F=0$ — "minimum $F$" kabhi $K$ chunne ka criterion nahi.</figcaption>
+</figure>
+
+<figure class="viz">
+<p class="vt">Visual 2: Do initializations, do alag final answers <span class="tag t-add">[ADDED]</span></p>
+<p class="vs">Rectangle ke 4 points $(0,0),(0,1),(4,0),(4,1)$, $k=2$. Pehle stepper ka init $(0,0),(0,1)$ (upar-neeche ke do centre), doosre ka $(0,0),(4,0)$ (baayein-daayein). "Run to convergence" dabao.</p>
+<div data-widget="kmstep" data-points="0,0;0,1;4,0;4,1" data-init="0,0;0,1"></div>
+<div data-widget="kmstep" data-points="0,0;0,1;4,0;4,1" data-init="0,0;4,0"></div>
+<figcaption><b>Interpretation:</b> pehle init se final centres $(2,0),(2,1)$ aur $F=16$ (har point $4$ door); doosre se $(0,0.5),(4,0.5)$ aur $F=1$. Dono fixed point hain (L17), dono par Lloyd ruk jaata hai — par ek global optimum hai, doosra nahi.</figcaption>
+</figure>
+
+<h3>📖 Formal version</h3>
+<p>$$F^*(k)=\min_{z,\ \mu_1,\dots,\mu_k}\ \sum_{i=1}^n\|x_i-\mu_{z_i}\|^2$$</p>
+<p><b>Symbols:</b> $F^*(k)$ = $k$ clusters ke saath <i>best sambhav</i> (global) objective; $z$ labels, $\mu_j$ centres; minimum saare partitions par. Lloyd ka output sirf ek <i>local</i> minimum hota hai, isliye $F_{\text{Lloyd}}(k)\ge F^*(k)$.</p>
+<p><b>Words mein:</b> $k$ clusters mein jitna kam $F$ ho sakta hai.</p>
+<p><b>Notice that…</b> $F^*(k)$ $k$ ka <b>ghatta hua (non-increasing)</b> function hai aur $F^*(n)=0$.</p>
+<h4>Proof: $F^*(k)\ge F^*(k+1)$ (jab $k\lt n$)</h4>
+<ol>
+<li>$k$ clusters ka ek optimal partition lo. $n>k$ ⇒ pigeonhole se koi cluster $C$ ke $\ge2$ points hain.</li>
+<li>$C$ se ek point $x$ nikaal kar use alag cluster bana do ($k+1$ clusters). Naya $F$: $\mathrm{SSE}(C\setminus\{x\})+\mathrm{SSE}(\{x\})$ $=\mathrm{SSE}(C\setminus\{x\})+0$.</li>
+<li>$\mathrm{SSE}(C)=\min_v\sum_{i\in C}\|x_i-v\|^2\ge\min_v\sum_{i\in C\setminus\{x\}}\|x_i-v\|^2=\mathrm{SSE}(C\setminus\{x\})$ (ek non-negative term hataya).</li>
+<li>⇒ naya $F\le$ purana optimum, to $F^*(k+1)\le F^*(k)$. ∎</li>
+</ol>
+<p><b>$F^*(n)=0$:</b> har point apna cluster ⇒ $\mu=x_i$ ⇒ $\|x_i-\mu\|^2=0$. Agar points repeat hon to $F^*(k)=0$ pehle hi tab hota hai jab $k\ge$ alag-alag points ki ginti.</p>
+<div class="box em"><p><b>Important insight:</b> optimum $F^*$ monotone hai, par Lloyd ka asli run nahi. Alag $k$ ke alag initializations alag local minima par ruk sakte hain, isliye "$F_{\text{Lloyd}}(k)$ hamesha ghatega" <i>guaranteed nahi</i> hai. <b>This is why</b> elbow plot ke liye har $k$ par kai initializations chalake sabse kam $F$ rakhte hain.</p></div>
+
+<h3>⚙️ How it works — elbow (standard practice, bank mein nahi) <span class="tag t-add">[ADDED]</span></h3>
+<ol>
+<li>$k=1,2,\dots,k_{\max}$ ke liye K-means chalao (har $k$ par kai alag initializations, sabse kam $F$ rakho).</li>
+<li>$F$ vs $k$ plot karo.</li>
+<li>Jahan se $F$ ka girna achanak sust ho (mod) — wahi $k$ chuno.</li>
+<li>Mod saaf na ho to domain knowledge ya koi aur criterion dekho. (Silhouette jaisi alag methods bank mein nahi hain — main yahan unhe nahi padha raha.)</li>
+</ol>
+
+<h3>🧪 Worked examples</h3>
+<h4>WE1 — Simple: elbow table padhna</h4>
+<p>Upar ka table: $F^*=401.78,144.83,4.00,2.96,\dots$. Drops: $1\to2$: $256.95$; $2\to3$: $140.83$; $3\to4$: $1.04$; $4\to5$: $0.67$. Drop $k=3$ ke baad achanak chhota ⇒ elbow $k=3$. (Visual 1.) <span class="tag t-add">[ADDED]</span></p>
+<h4>WE2 — Exam-level: initialization se final alag</h4>
+<p>Visual 2. Init A $(0,0),(0,1)$: pass 1 assign: $(0,0)\to\mu_1$; $(0,1)\to\mu_2$; $(4,0)$: $d^2=16$ vs $17$ ⇒ $\mu_1$; $(4,1)$: $17$ vs $16$ ⇒ $\mu_2$. Update: $\mu_1=(2,0)$, $\mu_2=(2,1)$. Pass 2: $(0,0)$: $4$ vs $5$ ⇒ 1; $(0,1)$: $5$ vs $4$ ⇒ 2; $(4,0)$: $4$ vs $5$ ⇒ 1; $(4,1)$: $5$ vs $4$ ⇒ 2 — wahi labels ⇒ ruk gaya. $F=4\cdot4=16$. Init B $(0,0),(4,0)$: pass 1: $z=(1,1,2,2)$; $\mu=(0,0.5),(4,0.5)$; $F=4\cdot0.25=1$. <span class="tag t-add">[ADDED]</span></p>
+<h4>WE3 — Tricky: duplicates</h4>
+<p>Points $\{1,1,5,5\}$, $k=2$: partition $\{1,1\}\mid\{5,5\}$ ⇒ $F=0$ — $k=n=4$ nahi, sirf $k=2$ (alag-alag points ki ginti) par hi $F=0$. <span class="tag t-add">[ADDED]</span></p>
+<h4>Non-example</h4>
+<p>"Sabse kam $F$ waala $k$ chuno" — $k=n$ hamesha jeetega ($F=0$) par koi grouping nahi banti. $F$ kabhi akela $K$-selection criterion nahi.</p>
+
+<details class="deep"><summary>🔬 Deeper insight (D3)</summary>
+<h4>1. Local minima ka geometry</h4>
+<p>Rectangle ka $F=16$ wala partition L17 ke hisaab se stable hai: har point apne centre $(2,0)$/$(2,1)$ se $4$ door aur doosre se $5$. Koi point label nahi badalta ⇒ Lloyd ruk jaata hai, chahe $F=1$ wala partition maujood ho. Isliye "Lloyd converge hota hai" ka matlab "global optimum" nahi (4.4 mein theory).</p>
+<h4>2. Restarts</h4>
+<p>Kai random initializations se chalao, sabse kam $F$ rakho — par $K$-means++ (4.5, B20–B21) restarts ke bina hi spread-out init deta hai.</p>
+<h4>3. Outliers</h4>
+<p>Mean outlier ko sahan nahi karta: $\{0,1,2,3,4\}$ ka mean $2$ hai, par $\{0,1,2,3,4,100\}$ ka $\tfrac{110}6\approx18.33$ — ek point ne centre cluster se bahar kheench liya. <span class="tag t-add">[ADDED]</span></p>
+<h4>4. Scale aur shape</h4>
+<p>4.3 ka WE3 (feature scale se label badal gaya) aur L15 (convex cells ⇒ rings nahi) — yahi do limitations dobara.</p>
+</details>
+
+<h3>⚡ PYQ pattern toolkit</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Trigger clue</th><th>Concept</th><th>Pehla move</th></tr></thead>
+<tbody>
+<tr><td>"kaun sa $k$ minimum objective deta hai" (4.4, B19 mein P)</td><td>$F^*$ non-increasing, $F^*(n)=0$</td><td>Sabse bada $k$ (jab $k=n$ ho to $F=0$)</td></tr>
+<tr><td>"initialization alag, kya final alag?"</td><td>Local minima (L17)</td><td>Chhota counter-example (rectangle jaisa)</td></tr>
+<tr><td>"yeh scenario possible hai?" (P8 jaisa)</td><td>L8 + L15 + L17</td><td>Neeche P8 ki 5-check list</td></tr>
+</tbody></table></div>
+</section>
+
+<h2>🎯 4.6 PYQ — P8</h2>
+<section data-track="pyq8">
+<h3>🎯 P8 — 100 points, $k=2$, initial split $D_1/D_2$ (2026 March 15) <span class="tag t-src">[SRC]</span> <span class="tag t-q">[?]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">15 March 2026 · Original Q2 · ID <code>6406531951434</code> · MCQ · 3 marks · Pages 3–4 · <span class="tag t-src">[SRC]</span></p>
+<p>Consider a clustering problem with <b>100 data-points and two clusters ($k=2$)</b>. As initialization, a subset consisting of the first 50 data-points, $D_1$, is assigned to cluster 1 and the remaining points, $D_2$, to cluster 2. The question gives <b>Scenario-1</b> and <b>Scenario-2</b> configurations and asks which are possible.</p>
+<ol>
+<li>Scenario-1 is possible, but scenario-2 is impossible.</li>
+<li>Scenario-1 is impossible, but scenario-2 is possible.</li>
+<li>Both scenarios are possible.</li>
+<li>Both scenarios are impossible.</li>
+</ol>
+<p><span class="tag t-q">[?]</span> <b>Source note:</b> scenario statements ki kuch mathematical values parsed text/image se recover nahi hoti; source ne bhi unhe invent nahi kiya. Koi option marked nahi.</p>
+</div>
+<div class="box amber"><p><span class="tag t-q">[?]</span> <b>Solve nahi kiya.</b> Jab tak Scenario-1/2 ki asli values na milein, koi option chunna andaaza hoga, jo "never invent" rule ke khilaaf hai. Recoverable: sirf initialization ka structure ($k=2$, $|D_1|=|D_2|=50$, $z^{(0)}$ = pehle 50 ke liye 1, baaki ke liye 2). Neeche ek <b>5-check list</b> hai jo us scenario par laga sakte hain jab original paper saamne ho.</p></div>
+<details class="reveal"><summary>Show — scenarios ko jaanchne ka toolkit (answer nahi)</summary>
+<h4>Jab scenario "yeh state possible hai?" jaisa ho:</h4>
+<ol>
+<li><b>Pehla kadam tay hai.</b> $z^{(0)}$ se $\mu_1=\bar x_{D_1}$, $\mu_2=\bar x_{D_2}$; phir pehla assign inhi centres se. Scenario agar kuch aur "pehla result" kehta hai to impossible.</li>
+<li><b>Cell convex (L15).</b> Koi bhi assign ke baad ke dono clusters ko seedhi line alag karti hai. Scenario mein ek cluster dusre ke andar ghira ho to impossible.</li>
+<li><b>$F$ kabhi nahi badhta (L8).</b> Scenario jisme assign ya update ke baad $F$ badhe, impossible.</li>
+<li><b>Final = fixed point (L17).</b> "Final" kahe aur koi point doosre centroid ke paas ho to impossible.</li>
+<li><b>Points $D_1$ mein hone ka matlab nahi ki wahin rahenge</b> — koi bhi point label badal sakta hai; "pehle 50" sirf $z^{(0)}$ hai.</li>
+</ol>
+<p>Ye checks general hain; inhe Scenario-1/2 ki asli values par laga ke hi jawab milega.</p>
+</details>
+</section>
+
+<section data-track="card46">
+<h3>📌 Memory card — 4.6 Choosing K, init, limitations</h3>
+<div class="box em">
+<ul>
+<li><b>Core model:</b> $F^*(k)$ non-increasing in $k$, $F^*(n)=0$; Lloyd = local minimum, init par depend.</li>
+<li><b>Backbone chain:</b> $k\uparrow\Rightarrow F^*\downarrow\Rightarrow$ elbow (standard practice) $\Rightarrow$ restarts / K-means++ (4.5).</li>
+<li><b>Formulas + conditions:</b> $F^*(k)\ge F^*(k+1)$ for $k\lt n$ (proof: ek point alag karo) · $F^*(k)=0$ jab $k\ge$ distinct points · $F_{\text{Lloyd}}(k)\ge F^*(k)$.</li>
+<li><b>Top 3 traps:</b> (1) kam $F$ ⇒ behtar clustering (2) Lloyd = global optimum (3) har $z^{(0)}$ se wahi final.</li>
+<li><b>Trigger bank:</b> "minimum objective, kaun sa $k$" ⇒ sabse bada · "scenario possible?" ⇒ 5-check list (P8).</li>
+<li><b>Method selector:</b> theory ⇒ monotonicity proof; example ⇒ rectangle counterexample.</li>
+<li><b>Spaced review:</b> 2026-11-15 · 2026-12-03.</li>
+</ul>
+</div>
+<h3>✍️ Explain-it-back</h3>
+<div class="try"><p class="ttl">Chat mein (3–4 lines)</p><p>"Kya $k$ ko $F$ minimise karke chun sakte hain? Aur Lloyd 'converge' hone par global optimum kyun nahi hota?" Format: <span class="mono">Answer: … | Confidence: S/U/G | Reason: …</span></p></div>
+</section>

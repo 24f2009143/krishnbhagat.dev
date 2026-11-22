@@ -1,0 +1,160 @@
+<section data-track="top">
+<p class="muted mono" style="margin:0">B28 · Phase 2 · Topic revision page</p>
+<h1>📄 T6 Convexity &amp; Jensen — Revision &amp; Cheat Sheet</h1>
+<p class="lead">Exam se 1–2 din pehle ke liye: T6 chhota topic hai — convex function, Jensen ki inequality, valid weights ka rule, aur $\ln$ concave hone ka natija jo EM (T7) ki neev hai. Is bank mein T6 ka <b>sirf ek PYQ</b> hai; yeh page us PYQ aur uske natural variants ko ek jagah de deta hai. B25 ka T6 section kholne ki zaroorat nahi honi chahiye.</p>
+<div class="box">
+<p><b>Is page mein:</b> 1) big picture · 2) cheat sheet · 3) exam pattern digest · 4) mistake log · 5) quick test (5 Q, ≈10 min) · 6) topic-closed checklist (ticks is browser mein save hote hain).</p>
+<p><b>Source:</b> B25 ke published page (T6 memory card, toolkit, P1) aur B26 ke final cheat sheet se padha hua; koi naya PYQ-bank line nahi padhi. Tags: <span class="tag t-src">[SRC]</span> PYQ se · <span class="tag t-add">[ADDED]</span> meri explanation / naya question · <span class="tag t-flag">[FLAG]</span> source error · <span class="tag t-q">[?]</span> missing / unreadable.</p>
+<p class="note">Bank frequency ≠ exam weightage: ek PYQ ka matlab yeh nahi ki T6 "kam aayega" ya "zyada aayega".</p>
+</div>
+</section>
+
+<h2>🖼️ 1. Topic big picture</h2>
+<section data-track="picture">
+<p><b>T6 kyun exist karta hai [ADDED]:</b> GMM ke log-likelihood mein $\ln$ ke <i>andar</i> sum hai, isliye MLE ka seedha formula nahi milta. Jensen kehta hai ki concave $\ln$ ke liye "average ka $\ln$" "$\ln$ ka average" se bada hota hai — isse sum ke andar ek <i>lower bound</i> milta hai jise EM baar-baar upar uthata hai. Aur convexity hi batati hai ki regression (T8) mein koi bura local minimum nahi hota.</p>
+<figure class="viz diagram">
+  <p class="vt">Jensen ek chord ke roop mein — f(x) = x² par a = 0.5, b = 2.5, weights ½ aur ½</p>
+  <p class="vs">Blue = function ka graph · amber = chord (do points ko jodti seedhi line) · green = f(average) · red = average of f. <i>Schematic</i> — numbers exact hain, aspect ratio nahi.</p>
+<svg viewBox="0 0 900 340" role="img" aria-label="Parabola x squared with a chord between x=0.5 and x=2.5; at the midpoint x=1.5 the chord (3.25) lies above the curve (2.25), the gap is 1">
+<line x1="80" y1="300" x2="720" y2="300" stroke="#3a3a3a"/>
+<path d="M100.0,300.0 L125.0,299.5 L150.0,298.1 L175.0,295.8 L200.0,292.5 L225.0,288.3 L250.0,283.1 L275.0,277.0 L300.0,270.0 L325.0,262.0 L350.0,253.1 L375.0,243.3 L400.0,232.5 L425.0,220.8 L450.0,208.1 L475.0,194.5 L500.0,180.0 L525.0,164.5 L550.0,148.1 L575.0,130.8 L600.0,112.5 L625.0,93.3 L650.0,73.1 L675.0,52.0 L700.0,30.0" fill="none" stroke="#60A5FA" stroke-width="2.4"/>
+<line x1="200" y1="292.5" x2="600" y2="112.5" stroke="#FBBF24" stroke-width="2"/>
+<circle cx="200" cy="292.5" r="5" fill="#60A5FA"/><circle cx="600" cy="112.5" r="5" fill="#60A5FA"/>
+<line x1="400" y1="300" x2="400" y2="202.5" stroke="#737373" stroke-dasharray="4 4"/>
+<circle cx="400" cy="232.5" r="5" fill="#34D399"/><circle cx="400" cy="202.5" r="5" fill="#F87171"/>
+<line x1="412" y1="232.5" x2="412" y2="202.5" stroke="#fff" stroke-width="1.5"/>
+<text x="200" y="318" text-anchor="middle" fill="#a3a3a3" font-size="11.5">a = 0.5</text>
+<text x="400" y="318" text-anchor="middle" fill="#a3a3a3" font-size="11.5">avg = 1.5</text>
+<text x="600" y="318" text-anchor="middle" fill="#a3a3a3" font-size="11.5">b = 2.5</text>
+<text x="190" y="280" text-anchor="end" fill="#a3a3a3" font-size="11.5">f(a) = 0.25</text>
+<text x="590" y="100" text-anchor="end" fill="#a3a3a3" font-size="11.5">f(b) = 6.25</text>
+<text x="385" y="236" text-anchor="end" fill="#34D399" font-size="12">f(avg) = 2.25</text>
+<text x="385" y="204" text-anchor="end" fill="#F87171" font-size="12">avg of f = 3.25</text>
+<text x="422" y="222" fill="#fff" font-size="12">gap = 1</text>
+<rect x="730" y="60" width="160" height="210" rx="10" fill="#141c2b" stroke="#60A5FA"/>
+<text x="810" y="86" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">Jensen</text>
+<text x="810" y="110" text-anchor="middle" fill="#a3a3a3" font-size="11.5">convex f:</text>
+<text x="810" y="128" text-anchor="middle" fill="#a3a3a3" font-size="11.5">f(avg) ≤ avg of f</text>
+<text x="810" y="156" text-anchor="middle" fill="#a3a3a3" font-size="11.5">gap (x²) = variance</text>
+<text x="810" y="184" text-anchor="middle" fill="#a3a3a3" font-size="11.5">concave (ln): ulta</text>
+<text x="810" y="202" text-anchor="middle" fill="#a3a3a3" font-size="11.5">ln Σ λa ≥ Σ λ ln a</text>
+<text x="810" y="236" text-anchor="middle" fill="#a3a3a3" font-size="11.5">weights ≥ 0, sum = 1</text>
+</svg>
+  <figcaption><b>Interpretation:</b> Chord hamesha graph ke upar ya uspar hoti hai — yahi convexity hai. Do points hi nahi, kitne bhi points aur kisi bhi "probability jaise" weights ke liye yahi sach rehta hai (Jensen); x² ke liye gap variance ke barabar nikalta hai: yahan gap = 3.25 − 2.25 = 1 aur Var = 1.</figcaption>
+</figure>
+<div class="cards">
+<div class="card"><div class="k">Is bank mein T6</div><div class="v">4 marks</div><div class="s">1 PYQ (2026 Jul Q7, MSQ) · key options 2, 5 [SRC]</div></div>
+<div class="card"><div class="k">T6 kahan kaam aata hai</div><div class="v" style="font-size:16px;line-height:1.5">EM ka lower bound (7)<br>MSE convex ⇒ GD (8)</div><div class="s">[ADDED] — bridge, naye formulas nahi</div></div>
+</div>
+<div class="box em">
+<p><b>Topic ki "exam story" [ADDED]:</b> "Weights check karo ($\ge0$ <i>aur</i> sum $=1$), phir function ka type ($f''$ ka sign), phir inequality ki direction — $\ln$ ho to concave, yaani ulta." Marks <b>negative weights aur direction</b> mein jaate hain.</p>
+</div>
+</section>
+
+<h2>📋 2. Consolidated cheat sheet</h2>
+<section data-track="cheat">
+<h3>Convexity and Jensen's inequality</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Concept</th><th>Formula</th><th>When it applies</th><th>Common mix-up</th></tr></thead>
+<tbody>
+<tr><td>Convex</td><td>$f(\lambda x+(1-\lambda)y)\le\lambda f(x)+(1-\lambda)f(y)$, $\lambda\in[0,1]$</td><td>Chord graph ke upar</td><td>Convex ↔ concave ulta padhna</td></tr>
+<tr><td>Concave</td><td>Upar wali inequality ulti ($\ge$); $\ln x$, $\sqrt x$ concave</td><td>—</td><td>"$\ln$ convex hai" maanna</td></tr>
+<tr><td>Second-derivative test</td><td>$f''\ge0\Rightarrow$ convex; $f''\le0\Rightarrow$ concave</td><td>Twice differentiable</td><td>$x^3$ ko convex maanna ($f''=6x$ ka sign badalta hai)</td></tr>
+<tr><td>Valid weights</td><td>$\lambda_i\ge0$ <b>aur</b> $\sum\lambda_i=1$</td><td>Convex combination $\sum\lambda_ia_i$</td><td>Sirf sum $=1$ dekhna (negatives chhoot jaate hain)</td></tr>
+<tr><td>Jensen</td><td>$f$ convex ⇒ $f\Big(\sum_i\lambda_ia_i\Big)\le\sum_i\lambda_if(a_i)$</td><td>"for every convex $f$ and every $a_i$"</td><td>Sirf equal weights ko valid maanna</td></tr>
+<tr><td>Necessity of the rule</td><td>Negative weight ya $\sum\lambda\ne1$ ⇒ counterexample: $f=x^2$ ya $f\equiv\pm1$</td><td>"guarantee" wale options</td><td>—</td></tr>
+<tr><td>Gap for $x^2$</td><td>$\sum\lambda_ia_i^2-\big(\sum\lambda_ia_i\big)^2=\sum\lambda_i(a_i-\bar a)^2$ = variance</td><td>Numeric gap</td><td>—</td></tr>
+<tr><td>Log version</td><td>$\ln\Big(\sum_i\lambda_ia_i\Big)\ge\sum_i\lambda_i\ln a_i$</td><td>$a_i>0$</td><td>$\ln\sum\le\sum\ln$ likhna</td></tr>
+<tr><td>EM form</td><td>$\ln\sum_ka_k\ge\sum_kq_k\ln\dfrac{a_k}{q_k}$, barabari $\iff q_k\propto a_k$</td><td>$q$ ek probability distribution</td><td>Bound tight kab hota hai</td></tr>
+<tr><td>Linear function</td><td>Convex bhi, concave bhi — Jensen mein barabari</td><td>$f(x)=mx+c$</td><td>—</td></tr>
+<tr><td>Local vs global</td><td>Convex ⇒ har local minimum global hai</td><td>MSE (T8) convex; GMM $\ell$ nahi</td><td>"Convex ⇒ koi bhi $\eta$" (T8 trap)</td></tr>
+</tbody></table></div>
+</section>
+
+<h2>🔑 3. Exam pattern digest</h2>
+<section data-track="digest">
+<p class="note">Honest note: bank mein T6 ka ek hi PYQ hai, isliye "recurring family" ka daava nahi kar sakta. Neeche us PYQ ka option-wise verdict hai, aur [ADDED] variants jo isi concept se natural taur par nikalte hain.</p>
+<h3>The one PYQ [SRC]</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Option $(\lambda_1,\lambda_2,\lambda_3)$</th><th>Sum</th><th>Weights $\ge0$?</th><th>Verdict</th><th>Reason / counterexample</th></tr></thead>
+<tbody>
+<tr><td>(1) $(-1,\ 1,\ 1)$</td><td>$1$</td><td>Nahi</td><td>✗</td><td>$f=x^2$, $a=(1,0,0)$: LHS $f(-1)=1$, RHS $=-1$ ⇒ $1\le-1$ galat</td></tr>
+<tr><td>(2) $(0.5,\ 0.25,\ 0.25)$</td><td>$1$</td><td>Haan</td><td>✓</td><td>Valid convex combination</td></tr>
+<tr><td>(3) $(1,\ -1,\ 1)$</td><td>$1$</td><td>Nahi</td><td>✗</td><td>$f=x^2$, $a=(0,1,0)$: LHS $1$, RHS $-1$</td></tr>
+<tr><td>(4) $(10,\ -6,\ -4)$</td><td>$0$</td><td>Nahi</td><td>✗</td><td>$f\equiv1$: LHS $1$, RHS $0$ ⇒ $1\le0$ galat</td></tr>
+<tr><td>(5) $(\tfrac13,\tfrac13,\tfrac13)$</td><td>$1$</td><td>Haan</td><td>✓</td><td>Equal weights — valid</td></tr>
+</tbody></table></div>
+<p>Key (2026 Jul Q7, ID 6406532158940): options 2 aur 5 ✓ — upar ka verdict key se match karta hai.</p>
+<h3>Trigger → first move</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Trigger phrase</th><th>First move</th></tr></thead>
+<tbody>
+<tr><td>"for every convex $f$ … choices of $\lambda$"</td><td>Do check: har $\lambda_i\ge0$? $\sum=1$? Dono haan ⇒ ✓</td></tr>
+<tr><td>"$\ln$ of a sum" vs "sum of $\ln$"</td><td>$\ln$ concave ⇒ $\ln\sum\lambda a\ge\sum\lambda\ln a$</td></tr>
+<tr><td>"which inequality holds for $f=\dots$"</td><td>$f''$ ka sign: $\ge0$ ⇒ $\le$ (convex), $\le0$ ⇒ $\ge$</td></tr>
+<tr><td>Option mein negative weight / sum $\ne1$</td><td>Counterexample: $f=x^2$ ($a=e_i$) ya $f\equiv\pm1$</td></tr>
+<tr><td>"upper bound on $f(c)$, $f$ convex, $f(a)$, $f(b)$ diye"</td><td>$c=\lambda a+(1-\lambda)b$ likho; bound $=\lambda f(a)+(1-\lambda)f(b)$ <span class="tag t-add">[ADDED]</span></td></tr>
+</tbody></table></div>
+<div class="box amber">
+<p><b>Top traps (subtopic page se):</b></p>
+<ol>
+<li><b>Sirf sum $=1$ dekhna</b> — option 1 aur 3 ka sum $1$ hai phir bhi ✗ (negative weight).</li>
+<li><b>Sirf equal weights ko valid maanna</b> — $(0.5,0.25,0.25)$ bhi valid hai.</li>
+<li><b>$\ln$ par inequality ulti likhna</b> — $\ln$ concave hai, isliye "average ka $\ln$" bada: $\ln2.5=0.916$ jabki $\tfrac12\ln2+\tfrac12\ln3=0.896$ (weights $\tfrac12,\tfrac12$ par) — pehla bada.</li>
+</ol>
+</div>
+<h3>Method selector [ADDED]</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Question deta hai…</th><th>Use</th></tr></thead>
+<tbody>
+<tr><td>Weights ke options</td><td>Rule-check ($\ge0$, sum $1$); shak ho to $f=x^2$ ya $f\equiv\pm1$ counterexample</td></tr>
+<tr><td>Kaunsa function / kaunsi direction</td><td>$f''$ ka sign</td></tr>
+<tr><td>Numeric gap</td><td>$x^2$ ke liye variance formula; $\ln$ ke liye dono side compute</td></tr>
+<tr><td>Bound on unknown value</td><td>Chord (convex combination) likho</td></tr>
+</tbody></table></div>
+</section>
+
+<h2>🩹 4. Mistake log summary</h2>
+<section data-track="mistakes">
+<div class="box amber">
+<p><b>[FLAG] — source / key errors in T6:</b> koi nahi. P1 ka key (options 2, 5) mere derivation se match karta hai.</p>
+</div>
+<div class="box">
+<p><b>[?] — missing / ambiguous in source (T6):</b> koi nahi. (T7 ke [?] items T7 page par hain.)</p>
+</div>
+<div class="box">
+<p><b>Aapke logged errors:</b> abhi tak koi nahi — <code>needs_repair</code> khaali hai aur T6 par chat mein koi graded answer nahi aaya (P1 ka explain-it-back chat mein baaki). Bhejoge to yahan error-tag ke saath judenge.</p>
+<p><b>Strategy note:</b> T6 ek bridge topic hai. Isse sabse zyada kaam T7 ke "$\ln$ sum ko nahi todta ⇒ EM kyun" argument mein aata hai — woh ek line yaad rakho.</p>
+</div>
+</section>
+
+<h2>⏱️ 5. Quick revision test</h2>
+<section data-track="test">
+<p><b>Rules:</b> 5 questions · 15 marks (3 each) · 10 minutes. T6 ke concept aur 2026 Jul Q7 ke pattern par <b>naye numbers</b> (remix) <span class="tag t-add">[ADDED]</span>; answers hidden. Ek hi baithak, notes band, calculator allowed. Chat mein: <span class="mono">RT1: … | RT2: … | Confidence per Q: S/U/G</span></p>
+<ol>
+<li><p><b>RT1 · MSQ · 3 marks.</b> $f$ convex hai. Kaun se $(\lambda_1,\lambda_2,\lambda_3)$ har convex $f$ aur har $a_1,a_2,a_3$ ke liye $f(\sum\lambda_ia_i)\le\sum\lambda_if(a_i)$ guarantee karte hain?</p>
+<p>(a) $(0.2,\ 0.3,\ 0.5)$ &nbsp; (b) $(0.6,\ 0.6,\ -0.2)$ &nbsp; (c) $(0.5,\ 0.5,\ 0.5)$ &nbsp; (d) $(1,\ 0,\ 0)$ &nbsp; (e) $(0.25,\ 0.25,\ 0.5)$</p></li>
+<li><p><b>RT2 · SA · 3 marks.</b> $f(x)=x^2$, $a_1=1$, $a_2=5$, weights $\lambda=(0.25,\ 0.75)$. $\sum\lambda_if(a_i)-f(\sum\lambda_ia_i)$ kya hai?</p></li>
+<li><p><b>RT3 · SA · 3 marks.</b> Weights $(0.5,\ 0.25,\ 0.25)$, $a=(1,\ 4,\ 16)$. $\ln\big(\sum\lambda_ia_i\big)-\sum\lambda_i\ln a_i$ (3 decimals)?</p></li>
+<li><p><b>RT4 · MSQ · 3 marks.</b> Kaun se functions ke liye $f(\sum\lambda_ia_i)\le\sum\lambda_if(a_i)$ har valid weights aur har point ke liye sach hai (domain mein)?</p>
+<p>(a) $f(x)=e^x$ on $\mathbb R$ &nbsp; (b) $f(x)=\ln x$ on $x>0$ &nbsp; (c) $f(x)=|x|$ on $\mathbb R$ &nbsp; (d) $f(x)=x^3$ on $\mathbb R$ &nbsp; (e) $f(x)=3x+2$ on $\mathbb R$</p></li>
+<li><p><b>RT5 · SA · 3 marks.</b> $f$ convex hai, $f(2)=3$ aur $f(6)=11$. $f(5)$ ka sabse achha upper bound jo sirf in do values se nikalta hai?</p></li>
+</ol>
+<details class="reveal"><summary>Show all answers (timer khatam hone ke baad)</summary>
+<p><b>RT1: (a), (d), (e).</b> Rule: har $\lambda_i\ge0$ aur sum $1$. (a) $0.2+0.3+0.5=1$ ✓. (b) sum $1$ par $-0.2\lt0$ ✗ (counterexample: $f=x^2$, $a=(0,0,1)$: LHS $f(-0.2)=0.04$, RHS $-0.2$). (c) sum $1.5$ ✗. (d) $(1,0,0)$ valid — dono side $f(a_1)$ ✓. (e) sum $1$ ✓.</p>
+<p><b>RT2: 3.</b> $\sum\lambda f(a)=0.25\cdot1+0.75\cdot25=19$; $\sum\lambda a=0.25+3.75=4$, $f(4)=16$; gap $=19-16=3$. Variance check: $\lambda_1\lambda_2(a_1-a_2)^2=0.1875\times16=3$ ✓. Trap: $f$ ko average karne ke bajay seedha $(1+25)/2=13$ ya $f(3)=9$ (equal weights).</p>
+<p><b>RT3: 0.665.</b> $\sum\lambda a=0.5+1+4=5.5$, $\ln5.5=1.7047$. $\sum\lambda\ln a=0+0.25(1.3863)+0.25(2.7726)=1.0397$. Antar $=0.665\ge0$ ✓ (concave $\ln$ ⇒ pehla bada). Trap: dono side ulat dena.</p>
+<p><b>RT4: (a), (c), (e).</b> (a) $e^x$: $f''=e^x>0$ ✓. (b) $\ln x$ concave ⇒ ulta ✗. (c) $|x|$ convex (triangle inequality) ✓. (d) $x^3$: $f''=6x$ ka sign badalta hai ⇒ convex nahi ✗ (counterexample: $\lambda=(\tfrac12,\tfrac12)$, $a=(-2,0)$: LHS $f(-1)=-1$, RHS $\tfrac12(-8)+\tfrac12(0)=-4$ ⇒ $-1\le-4$ galat). (e) linear ⇒ barabari ✓.</p>
+<p><b>RT5: 9.</b> $5=\lambda\cdot2+(1-\lambda)\cdot6\Rightarrow\lambda=\tfrac14$. Bound: $\tfrac14\cdot3+\tfrac34\cdot11=9$. Trap: weights ulat dene par $\tfrac34\cdot3+\tfrac14\cdot11=5$ aata hai, jo galat hai ($5=\tfrac14\cdot2+\tfrac34\cdot6$, isliye $f(2)$ ka weight $\tfrac14$).</p>
+<p class="note">Scoring: SA = full ya zero; MSQ = saare sahi options, koi galat nahi. 15 mein se 12+ = T6 revision-ready. Saare numerical answers python se code-verified. Galtiyan chat mein error-tag ke saath bhejo.</p>
+</details>
+</section>
+
+<h2>✅ 6. Topic-closed checklist</h2>
+<section>
+<p class="note">Har line ke liye: <b>"kya main yeh cold, exam time ke andar, bina hint ke kar sakta/sakti hoon?"</b> Tick tabhi jab quick test / timed set / checkpoint mein sach saabit hua ho. Ticks is browser mein save hote hain.</p>
+<div class="chkrow" data-check="weights"><b>Jensen weights</b> — $\lambda_i\ge0$ <i>aur</i> sum $1$; negative-weight option ke liye counterexample dena.</div>
+<div class="chkrow" data-check="direction"><b>Convex vs concave</b> — $f''$ ka sign, $\ln$ concave ⇒ $\ln\sum\lambda a\ge\sum\lambda\ln a$, linear = barabari.</div>
+<div class="chkrow" data-check="gap"><b>Numeric gap / bound</b> — $x^2$ ka gap = variance; chord se upper bound.</div>
+<div class="chkrow" data-check="bridge"><b>EM bridge</b> — "$\ln$ ke andar sum" kyun MLE todta hai aur Jensen kya lower bound deta hai (ek line).</div>
+</section>

@@ -1,0 +1,587 @@
+<style>#content mjx-container:not([display="true"]){display:inline-block;max-width:100%;overflow-x:auto;overflow-y:hidden;vertical-align:middle}#content li,#content p,#content td{overflow-wrap:anywhere}</style>
+<section data-track="intro">
+<p class="muted mono" style="margin:0">B21 · T4 K-means · 4.5 K-means++ initialization and selection probabilities — part B (+ ⏱️ T4 timed set)</p>
+<h1>4.5 K-means++ (B) — score rule, ties aur 3rd centre + ⏱️ T4 timed set</h1>
+<p class="lead">B20 mein K-means++ ka engine bana: chune hue centres ⇒ har point ka $D$ (nearest of <i>all</i>) ⇒ score ⇒ probability. Part B mein wahi engine <b>6 aur PYQs</b> par chalta hai, aur teen nayi cheezein saamne aati hain: (1) <b>score rule har paper mein ek jaisa nahi padhna padta</b> ($D^2$ vs $D$ — sawaal ya key se tay hota hai), (2) <b>ties</b> — barabar doori par Lloyd ka final result tie-break par depend kar sakta hai, (3) <b>teesra centre</b> — dusra centre judte hi ranking badal sakti hai. Page ke end mein poore T4 (K-means) ka <b>⏱️ timed set</b> hai.</p>
+<div class="box">
+<p><b>Is build ke IDs <span class="tag t-src">[SRC]</span></b> — roadmap: 4.5 ke 12 IDs mein se <b>baaki 6 IDs</b> (B20 ke baad). Yeh sab solvable PYQs hain (kul 19 marks): <b>C6 ke 2 bachche (P1, P2)</b> + 4 alag PYQs. C6 ka text yahin P1 ke upar dobara diya hai (B20 mein sirf context tha).</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>#</th><th>Paper · Q</th><th>ID</th><th>Type · marks</th><th>Kya poochha</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td>P1</td><td>2024 October 27 · Q15 (parent C6)</td><td class="mono">640653995446</td><td>MCQ · 3</td><td>$k=3$, 7 points, $\mu_1^0=(2,1)$, highest score chuna jaata hai: $\mu_2^0$ kya?</td><td>Key $(2,4)$ ✓</td></tr>
+<tr><td>P2</td><td>2024 October 27 · Q16 (parent C6)</td><td class="mono">640653995447</td><td>MCQ · 4</td><td>$\mu_2$ ke baad: 3rd mean banne ki <b>sabse kam</b> probability kiski</td><td>Key $(2,3)$ ✓</td></tr>
+<tr><td>P3</td><td>2025 February 23 · Q9</td><td class="mono">6406531104786</td><td>SA · 3</td><td>5 points, $K=2$, $\mu_1=(1,1)$, Euclid: sabse kam chance wale point ki probability</td><td>Key $0.07$–$0.11$ ✓ (plain-distance score) <span class="tag t-q">[?]</span></td></tr>
+<tr><td>P4</td><td>2025 July 13 · Q2</td><td class="mono">6406531302385</td><td>MCQ · 2</td><td>K-means++ standard K-means se initialization kaise behtar banata hai</td><td>Key option 2 ✓</td></tr>
+<tr><td>P5</td><td>2025 October 26 · Q4</td><td class="mono">6406531527616</td><td>MSQ · 4</td><td>Square ke 4 corners, $\mu_1=(0,0)$: equal probability, "twice", one-iteration convergence, tie-breaking</td><td>Source ne key mark nahi ki <span class="tag t-q">[?]</span>; meri nikaali: 2, 3, 4</td></tr>
+<tr><td>P6</td><td>2026 March 15 · Q6</td><td class="mono">6406531951438</td><td>SA · 3</td><td>5 points, $k=3$, $\mu_1=(0,0)$, $\mu_2=(1,1)$: $(1,-1)$ ke 3rd centre banne ki probability</td><td>Key $0.5$ ✓ (squared score)</td></tr>
+</tbody></table></div>
+<p><b>Bank frequency ≠ exam weightage:</b> 4.5 ke 12 IDs bank ka size hain; exam mein kitne aayenge yeh nahi.</p>
+<p><b>Tags:</b> <span class="tag t-src">[SRC]</span> PYQ file se · <span class="tag t-add">[ADDED]</span> meri explanation / naya question · <span class="tag t-flag">[FLAG]</span> source mismatch (proof ke saath) · <span class="tag t-q">[?]</span> unreadable / missing / ambiguous. Is build mein koi naya <span class="tag t-flag">[FLAG]</span> nahi — chhape data aur keys mein koi mismatch nahi mila.</p>
+<p><b>Notation (B17 ke L1–L12, B18 ke L13–L18, B19 ke L19–L22, B20 ke L23–L28 ke baad, naye L29–L32 neeche Formal section mein):</b>
+L29 <b>score rule paper-dependent</b> ·
+L30 <b>probability ratio = score ratio</b> ·
+L31 <b>ties</b> (Lloyd mein barabar doori) ·
+L32 <b>iteration-count convention</b>.</p>
+<p><b>Source integrity — 4 notes:</b></p>
+<ol>
+<li><span class="tag t-q">[?]</span> <b>P3:</b> copy sirf "Use Euclidean distance to calculate the distance" kehti hai — probability $\propto D$ ya $\propto D^2$ yeh nahi batati. Accepted range $0.07$–$0.11$ sirf <b>plain-distance rule</b> se milti hai ($1/(1+\sqrt5+\sqrt{10}+\sqrt{17})=0.0950$); $D^2$ rule $1/33=0.0303$ deta hai (range ke bahar). Source ki apni visual note bhi yahi formula likhti hai. Isliye rule key se padha gaya. Figure copy mein nahi hai; 5 points text mein diye hain, wahi use hue.</li>
+<li><span class="tag t-q">[?]</span> <b>P5:</b> source ne koi option mark nahi kiya, aur sawaal likhta hai "score ... distance par based". Statement 1 aur (agar standard $D^2$ rule maanein to) 2 pakke; statement 3 <i>iteration count ki convention</i> par depend karta hai; statement 4 proof se pakka. Isliye jawab "2, 3, 4" meri derivation hai. Dono dependencies P5 mein khol kar dikhayi hain.</li>
+<li><span class="tag t-q">[?]</span> <b>P1, P2 (C6):</b> key aur chhape data bilkul match karte hain. Bas ek note: C6 ka "highest score chuna jaata hai" deterministic rule hai (L27) sirf $\mu_2$ ke liye; P2 mein 3rd mean ke liye "lowest probability" poochha hai — wahan sampling probabilities hi hain.</li>
+<li><span class="tag t-q">[?]</span> <b>P6:</b> sawaal score rule nahi likhta; key $0.5$ squared rule se aati hai (plain-distance se $0.4142$ aata, jo key se match nahi karta). Rule key se padha gaya.</li>
+</ol>
+<p>Saare numerical answers (6 PYQs, worked examples, transfer questions, timed set ke answers) python se exact fractions mein code-verified; interactive widgets ke numbers bhi PYQ answers se cross-check kiye.</p>
+</div>
+</section>
+
+<h2>📘 4.5 K-means++ — part B ka naya theory</h2>
+<section data-track="s45b-theory">
+<h3>🔁 Recall warm-up <span class="tag t-add">[ADDED]</span></h3>
+<p class="muted">Pehle khud likho, phir "Show answer" kholo. (B20, B19, B17 se.)</p>
+<div class="box">
+<p><b>R1 (B20).</b> Centres $(0,0)$ aur $(10,0)$ chune ja chuke hain. Point $(9,0)$ ka 3rd-centre score (squared rule) kya hoga — $81$ ya kuch aur?</p>
+<details class="reveal"><summary>Show answer</summary><p>$D=\min(9,\,1)=1$ (L25: nearest of <i>all</i> chune hue), score $=D^2=1$, $81$ nahi. Sirf $\mu_1$ se doori lene par point ko ghalat bada score mil jaata.</p></details>
+<p><b>R2 (B19).</b> Lloyd ke assign step aur update step — dono mein $F$ kaise badalta hai, aur kyun?</p>
+<details class="reveal"><summary>Show answer</summary><p>Dono mein $F$ <b>badhta nahi</b>. Assign: har point sabse paas wale centre par jaata hai ⇒ uski $\|x-\mu\|^2$ ghatti ya barabar. Update: mean $\sum\|x-v\|^2$ ka minimiser hai (B17), isliye naya centre purane se kharab nahi. Partitions finite hain ⇒ koi configuration dobara nahi aati (L19–L22).</p></details>
+<p><b>R3 (B17).</b> $v^*=\arg\min_v\sum_i\|4x_i-3v\|^2$, jahan $x_i$ ka mean $(3,6)$ hai. $v^*$ kya hai?</p>
+<details class="reveal"><summary>Show answer</summary><p>$\sum\|4x_i-3v\|^2=9\sum\|\tfrac43x_i-v\|^2$, jo $v=\tfrac43\cdot\text{mean}(x)$ par minimum hota hai ⇒ $v^*=\tfrac43(3,6)=(4,8)$. Check: gradient $\sum -6(4x_i-3v)=0\Rightarrow v=\tfrac43\bar x$ ✓.</p></details>
+</div>
+
+<h3>❓ Pretest — pehle bina padhe try karo</h3>
+<div class="box amber">
+<p>Yeh P6 (neeche) hai: <i>Paanch points $(-1,0),(0,0),(1,1),(2,1),(1,-1)$; $k=3$; K-means++ ke pehle do means $\mu_1=(0,0)$, $\mu_2=(1,1)$. $(1,-1)$ ko agla (3rd) centre chunne ki probability kya hai?</i></p>
+<p>Apna answer aur ek line ka reason likh lo (S/U/G confidence ke saath). Solution P6 mein hai — padhne se pehle commit karo.</p>
+</div>
+
+<h3>🧭 Position — part A ke baad kya naya</h3>
+<ul>
+<li><b>Kahan hai:</b> Lloyd ke <i>shuru</i> ka kadam. Part A (B20) mein engine ($D$, score, $s/\sum s$, nearest-of-all, chuna hua ⇒ $0$) aur do dataset-types (1-D line, collinear points) the. Part B uska <i>variations</i> wala hissa hai.</li>
+<li><b>Prerequisites:</b> L23–L28 (B20), Lloyd ka loop aur local fixed point (L17–L22), $D^2$ aur Euclid distance (L5).</li>
+<li><b>Aage kya khulta hai:</b> T4 ka timed set (is page ke end mein), phir T5 (probability: MLE, Bernoulli). K-means++ mein "weights ⇒ probabilities" ki jo aadat bani, wahi T5 mein likelihood ke saath kaam aati hai.</li>
+</ul>
+
+<h3>🧠 Intuition — plain language</h3>
+<p>K-means++ ek <b>lottery</b> hai: har point ko uske score jitne <i>tickets</i> milte hain, ek ticket nikalta hai, uska point agla centre ban jaata hai. Part A ne dikhaya ki door wale points ke zyada tickets hote hain. Part B ke teen naye sawaal:</p>
+<ol>
+<li><b>Tickets kitne?</b> Standard rule mein $D^2$ tickets — doori double ⇒ tickets <b>4 guna</b>. Kuch sawaal (aur unki keys) sirf $D$ tickets maante hain — doori double ⇒ sirf 2 guna. Winner wahi rehta hai, par <i>probability ka number</i> badal jaata hai (WE4).</li>
+<li><b>Ticket-book har baar naya:</b> jaise hi koi naya centre chuna jaata hai, har point ka $D$ (aur tickets) <i>ghat sakte hain</i>, badh nahi sakte (min liya hai). Isliye ranking <b>flip</b> ho sakti hai (WE5) — pehle jo sabse zyada door tha ab sabse kam ho sakta hai.</li>
+<li><b>Tie:</b> jab koi point do centres se barabar doori par ho, to Lloyd ko batana padta hai ki woh kidhar jaaye. Alag tie-break ⇒ alag final centres, aur kabhi alag $F$ bhi (P5, WE6).</li>
+</ol>
+<p><b>Analogy (labelled, <span class="tag t-add">[ADDED]</span>):</b> ghar ke paas kitne dukaan-delivery ke "zone" hain — naya warehouse khulte hi har gali ka "sabse paas wala warehouse" ghat sakta hai, badh nahi sakta. <b>Kahan toot-ti hai:</b> asli K-means++ mein warehouse ki jagah sirf existing data points hoti hain, koi bhi jagah nahi.</p>
+<p><b>Yeh kya NAHI hai:</b> "highest probability" ka matlab "wahi chuna jaayega" nahi hai (sampling hai). Sirf C6 jaise sawaal jo saaf likhte hain "highest score wala point chuna jaata hai" deterministic hain (L27).</p>
+
+<h3>📊 Visual intuition</h3>
+<figure class="viz">
+<p class="vt">Visual 3 — C6 dataset par K-means++ (P1, P2 ka asli data)</p>
+<p class="vs">Schematic: 7 points, $\mu_1^0=(2,1)$ pehle se chuna hua. "Highest score → agla centre" dabao ($\mu_2=(2,4)$), phir dekho ki $(2,3)$ ka gola sabse chhota ho jaata hai — yahi P2 ka jawab hai.</p>
+<div data-widget="kmpp" data-points="0,1;1,0;1,2;2,1;2,3;2,4;3,2" data-start="3"></div>
+<figcaption><b>Interpretation:</b> $\mu_1$ ke baad $(2,4)$ ka score $9$ sabse bada. $\mu_2$ ke baad $(2,3)$ ka $D$ sirf $1$ reh jaata hai (woh $(2,4)$ ke bilkul paas hai) ⇒ score $1$ ⇒ probability $1/11$, sabse kam. Rule button se $D^2$ ↔ $D$ badal kar probabilities ka farq dekho — ranking yahan same rehti hai.</figcaption>
+</figure>
+<figure class="viz">
+<p class="vt">Visual 4 — P3 ka data: plain-distance rule</p>
+<p class="vs">Schematic: 5 points, $\mu_1=(1,1)$. Widget ko "score = D (Euclid)" par rakha hai — yeh wahi rule hai jo P3 ki key se match karta hai.</p>
+<div data-widget="kmpp" data-points="2,5;0,3;2,4;1,1;1,0" data-start="3" data-rule="dist"></div>
+<figcaption><b>Interpretation:</b> $D$ rule mein $(1,0)$ ki probability $\approx9.5\%$ ($1/10.52$). "score = D² (Euclid, standard)" button dabao: wahi point $\approx3.0\%$ ($1/33$) par aa jaata hai. Ranking same, number alag — isliye "probability ka number" poochhne par rule zaroori hai.</figcaption>
+</figure>
+
+<h3>📖 Formal version (Formula Protocol) — naye L29–L32</h3>
+<div class="box em">
+<p><b>L29 — score rule paper-dependent.</b> Standard K-means++: $s_j(x)=D_j(x)^2$, $\Pr(\mu_j=x)=\dfrac{s_j(x)}{\sum_{x'}s_j(x')}$. Par sawaal ka apna rule ho sakta hai ($s=D$, ya Manhattan). Is bank mein: 2024 Jul (P4 of B20) squared ✓ key; 2024 Oct (C6) "squared distance" likha; 2025 Feb (P3 yahan) key plain $D$ se; 2025 Oct (P5) "twice" statement squared se; 2026 Mar (P6) key squared se. Niyam: <b>pehle sawaal ka phrase padho; phir key se check karo; tabhi $D$ ya $D^2$ lagao.</b></p>
+<p><b>Symbols:</b> $D_j(x)=\min_{l\lt j}\|x-\mu_l\|$ (nearest of all chune hue); $s_j$ score; $\mu_j$ $j$-wa centre. <b>Meaning in words:</b> naya centre usi point ke chune jaane ki sambhavna uski "nearest centre se doori" ke hisaab se badhti hai.</p>
+<p><b>L30 — probability ratio = score ratio.</b> Do points $x,y$ ke liye $\dfrac{\Pr(x)}{\Pr(y)}=\dfrac{s(x)}{s(y)}$ — $\sum s$ cancel. $D^2$ rule: ratio $=\left(\dfrac{D_x}{D_y}\right)^2$; $D$ rule: ratio $=\dfrac{D_x}{D_y}$. <b>Notice that…</b> "A ki probability B se do guna" jaise statement ke liye normalise karne ki zaroorat nahi, bas ratio dekho (P5 stmt 2).</p>
+<p><b>L31 — ties.</b> Agar $\|x-\mu_a\|=\|x-\mu_b\|$ ho to assign step ko tie-break rule chahiye (jaise "chhote index wala centre"). Alag tie-breaks alag partition de sakte hain, aur ek hi data par alag <b>final centres</b> aur kabhi alag final $F$ (P5: $F=16/3$ vs $4$). Yeh local-optimum ka ek aur roop hai (L22).</p>
+<p><b>L32 — iteration-count convention.</b> "Kitni iterations mein converge?" ke do padhne ke tareeke: <b>A</b> — aakhri iteration jisme kuch badla (partition ya centres); <b>B</b> — A $+1$ (woh confirming pass jisme kuch nahi badla). Is bank mein 2025 Jul Q3 (B19 P3) aur 2025 Oct Q18 (B19 P6) ki keys A ke saath chalti hain; 2023 Jul Q3 (B18 P1) B ke saath. <b>Options ya key se padho.</b></p>
+<p><b>Important insight:</b> K-means++ ka randomness sirf <i>starting centres</i> mein hai; uske baad Lloyd deterministic hai (tie-break fix ho to). <b>This is why</b> K-means++ ke baad bhi Lloyd chalana padta hai aur global optimum ki guarantee nahi milti.</p>
+</div>
+
+<h3>⚙️ How it works — numbered mechanism (variations ke saath)</h3>
+<ol>
+<li><b>Rule padho:</b> sawaal score rule ($D$/$D^2$, Euclid/Manhattan) ya "highest score chuna jaata hai" likhta hai? Na likha ho to key/standard $D^2$ (L29).</li>
+<li><b>Chune hue centres likho</b> (pehle se diye hue sab, sirf $\mu_1$ nahi).</li>
+<li><b>Har point ka $D$</b> = un sab centres mein se nearest (L25). Chune hue points $\Rightarrow D=0$, score $0$ (L26).</li>
+<li><b>Score</b> $s=D^2$ (ya rule ke hisaab se).</li>
+<li><b>Sawaal ki cheez:</b> sirf ranking? ⇒ step 4 par ruko (L24). Number? ⇒ $\sum s$ nikalo, $s/\sum s$ (L23). Ratio? ⇒ L30.</li>
+<li><b>Agla centre judne par step 3 se dobara</b> (ranking flip ho sakti hai, WE5).</li>
+<li><b>Lloyd tak aao:</b> ties dikhein to tie-break kya hai, aur iteration count ki convention kya hai (L31, L32).</li>
+</ol>
+
+<h3>🧪 Worked examples</h3>
+<div class="box">
+<p><b>WE4 (simple) — $D$ vs $D^2$ ek hi data par.</b> P3 ka data: $(2,5),(0,3),(2,4),(1,1),(1,0)$; $\mu_1=(1,1)$. $D$ (centre se): $\sqrt{17},\sqrt5,\sqrt{10},0,1$.</p>
+<table><thead><tr><th>Rule</th><th>Scores</th><th class="num">$\sum$</th><th class="num">$\Pr(1,0)$</th></tr></thead><tbody>
+<tr><td>$s=D^2$</td><td>$17,\ 5,\ 10,\ 0,\ 1$</td><td class="num">$33$</td><td class="num">$1/33=0.0303$</td></tr>
+<tr><td>$s=D$</td><td>$4.123,\ 2.236,\ 3.162,\ 0,\ 1$</td><td class="num">$10.521$</td><td class="num">$0.0950$</td></tr>
+</tbody></table>
+<p>Ranking dono mein same ($(2,5)\gt(2,4)\gt(0,3)\gt(1,0)$); par $(1,0)$ ka value $3$ guna ka farq. Isi liye P3 ka accepted range ek rule ko hi pakadta hai (code ✓).</p>
+</div>
+<div class="box">
+<p><b>WE5 (exam-level) — dusra centre judte hi ranking flip.</b> 1-D points $0,5,9,12$; $\mu_1=0$. Scores ($D^2$): $0,25,81,144$ ⇒ ranking $12\gt9\gt5$. Ab maan lo $\mu_2=12$ chuna gaya. Naye scores: $5\to\min(25,49)=25$; $9\to\min(81,9)=9$; $12\to0$. Ranking ab $5\gt9$ — pehle $9\gt5$ tha. <b>Flip.</b> Sabak: 3rd centre ke liye sirf $\mu_1$ se doori lena ya purani ranking reuse karna galat hai (code ✓: before $0,25,81,144$; after $0,25,9,0$).</p>
+</div>
+<div class="box">
+<p><b>WE6 (tricky) — tie-break se alag centres.</b> 1-D points $0,2,4$; initial centres $0$ aur $4$. Point $2$ dono se barabar ($d^2=4$).</p>
+<table><thead><tr><th>Tie-break</th><th>Clusters</th><th>Final centres</th><th class="num">Final $F$</th></tr></thead><tbody>
+<tr><td>$2\to$ centre $0$</td><td>$\{0,2\},\{4\}$</td><td>$1,\ 4$</td><td class="num">$(0-1)^2+(2-1)^2+0=2$</td></tr>
+<tr><td>$2\to$ centre $4$</td><td>$\{0\},\{2,4\}$</td><td>$0,\ 3$</td><td class="num">$0+(2-3)^2+(4-3)^2=2$</td></tr>
+</tbody></table>
+<p>Final centres alag, par yahan $F$ barabar ($=2$). P5 mein dono alag aate hain ($16/3$ vs $4$) — isliye "tie-break final centres ko affect karta hai" hamesha sach hai, par "$F$ ko affect karta hai" sirf kuch datasets mein (code ✓).</p>
+</div>
+<div class="box amber">
+<p><b>Non-example:</b> "$\Pr(x)$ sabse zyada hai ⇒ $x$ hi centre banega" — galat (sampling). Aur: "chune hue point ka score $0$ hai isliye woh kabhi nahi chuna jaayega" — sahi, par sirf agle <i>chunav</i> ke liye; woh Lloyd mein centre ka cluster-member banta hi hai.</p>
+</div>
+
+<h3>🔬 Deeper insight (D3)</h3>
+<details class="deep"><summary>Kyun squared? aur $\sum s=F$ ka istemaal</summary>
+<p><b>(a) $\sum s=F$ (L28).</b> Squared rule mein agla centre chunne se pehle $\sum_x D(x)^2$ = abhi ke chune hue centres ke saath nearest-centre assignment ka $F$. P2 mein centres $(2,1),(2,4)$ ke saath $\sum=4+2+2+1+2=11=F$ (code ✓).</p>
+<p><b>(b) Kyun $D^2$?</b> $F$ khud squared distances ka jod hai; $D^2$ se sampling "mushkil se cover hone wale" regions ko zyada tickets deti hai. Ek (syllabus ke bahar) guarantee bhi hai ki K-means++ ka expected $F$ optimum ke $O(\log K)$ factor ke andar rehta hai <span class="tag t-add">[ADDED]</span> — exam ke liye zaroori nahi, bas yaad rakho ki yeh "global optimum" nahi hai.</p>
+<p><b>(c) Duplicate points.</b> Agar do points ke coordinates same hon aur ek centre ban jaaye, to doosre ka $D=0$ ⇒ score $0$ — woh bhi nahi chuna jaayega.</p>
+<p><b>(d) Convention table.</b> $F$ sequence $800,500,400,400,400$ (B19 P3): A ⇒ iteration 3; B ⇒ iteration 4. P5 stmt 3: A ⇒ 1; B ⇒ 2 (neeche).</p>
+</details>
+
+<h3>⚡ PYQ pattern toolkit (part B ke naye triggers)</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Trigger clue</th><th>Concept</th><th>Pehla move</th></tr></thead>
+<tbody>
+<tr><td>"highest score is chosen as $\mu_2$" (deterministic)</td><td>L27</td><td>Sirf $\mu_1$ se $D^2$; max score = $\mu_2$ (P1)</td></tr>
+<tr><td>"lowest probability of being 3rd mean"</td><td>L24, L25</td><td>Dono centres se nearest $D$; min score (P2); ranking flip ho sakti hai</td></tr>
+<tr><td>"probability of ... the least chance / most likely"</td><td>L23, L29</td><td>Rule key se; $\sum s$; $s/\sum s$ (P3, P6)</td></tr>
+<tr><td>"how does K-means++ improve initialization"</td><td>concept</td><td>Centres ko spread karta hai; $K$ nahi chunta, iterations fixed nahi karta, multiple runs ki zaroorat poori nahi hatati (P4)</td></tr>
+<tr><td>"equal probability / twice the probability"</td><td>L30</td><td>Score ratio; $D^2$ rule mein $(D_x/D_y)^2$ (P5)</td></tr>
+<tr><td>"converge in one iteration" / "tie-breaking will affect"</td><td>L31, L32</td><td>Tie wale points dhundo; har tie-break ke liye ek pass; convention options se padho (P5)</td></tr>
+</tbody></table></div>
+<div class="box amber"><p><b>Common traps:</b> (1) 3rd centre ke liye sirf $\mu_1$ se doori (P2, P6). (2) $D$ vs $D^2$ — rule na padhna (P3). (3) "Highest probability" ko "chuna jayega" samajhna. (4) Ties ko ignore karna ya iteration convention maan lena (P5). (5) Key na marked ho to bhi rule ko saath mein check karo — [?] likho.</p></div>
+</section>
+
+<h2>🎯 4.5 PYQs (B)</h2>
+
+<section data-track="pyq1">
+<h3>🎯 P1 — highest score ⇒ $\mu_2^0$ (2024 October) <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px"><b>Context C6</b> · 2024 October 27 · Original Q14 · ID <code>640653995445</code> · Comprehension · 0 marks · <span class="tag t-src">[SRC]</span></p>
+<p>A K-means++ algorithm with $k=3$ is applied to: $(0,1),(1,0),(1,2),(2,1),(2,3),(2,4),(3,2)$. The first cluster mean is chosen as $\mu_1^0=(2,1)$. Suppose the point with the <b>highest score</b> is chosen as the second cluster mean $\mu_2^0$. The following questions use <b>squared distance</b> to calculate the K-means++ scores.</p>
+</div>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2024 October 27 · Original Q15 · ID <code>640653995446</code> · MCQ · 3 marks · <span class="tag t-src">[SRC]</span></p>
+<p>What is $\mu_2^0$?</p>
+<ol><li>$(0,1)$</li><li>$(2,3)$</li><li>$(3,2)$</li><li>$(2,4)$</li></ol>
+<p><b>Answer indicated in source: $(2,4)$.</b></p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Sirf $\mu_1$ chuna hai aur "highest score" wala rule hai — kya yahan probability nikalni padegi? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul><li><b>Asked:</b> $\mu_2^0$. <b>Given:</b> 7 points, $\mu_1^0=(2,1)$, score $=$ squared distance, <i>highest score</i> wala chuna jaata hai.</li>
+<li><b>Trigger clues:</b> "highest score is chosen" ⇒ L27 (deterministic, koi sampling/probability nahi); "squared distance" ⇒ $s=D^2$ (L23, L29).</li>
+<li><b>Prerequisites:</b> L5, L23, L27. PACER: Procedural. <b>Principle:</b> $\mu_2=\arg\max_x\|x-\mu_1\|^2$ — sirf ek chuna hua centre, isliye nearest-of-all ka sawaal hi nahi.</li></ul>
+<h4>2. 🧭 Methods (2 genuinely different)</h4>
+<p><b>M1 General:</b> saare 7 points ka $D^2$ ki table. <b>M2 Shortcut:</b> sirf 4 options ka $D^2$ (squared Euclid se max wahi hai jo sabse door ho).</p>
+<h4>3. 🧮 Working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Poori table"><div class="mh">M1 · saare points</div>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Point</th><th class="num">$(dx,dy)$ from $(2,1)$</th><th class="num">$D^2$</th></tr></thead>
+<tbody>
+<tr><td>$(0,1)$</td><td class="num">$(-2,0)$</td><td class="num">$4$</td></tr>
+<tr><td>$(1,0)$</td><td class="num">$(-1,-1)$</td><td class="num">$2$</td></tr>
+<tr><td>$(1,2)$</td><td class="num">$(-1,1)$</td><td class="num">$2$</td></tr>
+<tr><td>$(2,1)$ centre</td><td class="num">$(0,0)$</td><td class="num">$0$</td></tr>
+<tr><td>$(2,3)$</td><td class="num">$(0,2)$</td><td class="num">$4$</td></tr>
+<tr><td>$(2,4)$</td><td class="num">$(0,3)$</td><td class="num">$9$</td></tr>
+<tr><td>$(3,2)$</td><td class="num">$(1,1)$</td><td class="num">$2$</td></tr>
+</tbody></table></div>
+<p>Max score $=9$, sirf $(2,4)$ par ⇒ $\mu_2^0=(2,4)$ (koi tie nahi).</p></div>
+<div class="method" data-label="M2 Options only"><div class="mh">M2 · sirf options</div>
+<p>$(0,1)\to4$, $(2,3)\to4$, $(3,2)\to2$, $(2,4)\to9$.</p>
+<p>Sabse bada: $9$ ⇒ option 4. Baaki 3 points ke score $\le4\lt9$, isliye na table poori chahiye, na normalise.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1</td><td>Slow</td><td>Low</td><td>Low</td><td>Aage P2 ke liye bhi table chahiye</td></tr>
+<tr><td>M2</td><td>Fast</td><td>Low</td><td>Low (option ke bahar max ho to miss)</td><td>Sirf $\mu_2$ poochha ho</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M2. 🏆 <b>BEST EXAM METHOD:</b> M1 (ya M2 par saare 7 ka check), kyunki isi dataset par P2 aata hai aur wahan poori $D$ list chahiye; trade-off: thoda time.</p>
+<p><b>Distractors:</b> $(0,1)$ aur $(2,3)$ — dono ka score $4$, par $9$ se chhota; $(3,2)$ — sabse chhota ($2$).</p>
+<h4>5. ✅ Verification</h4>
+<ul><li>Code: $D^2=[4,2,2,0,4,9,2]$ ⇒ argmax index $5$ $=(2,4)$ ✓. Plain $D$ ya Manhattan se bhi $(2,4)$ hi sabse door ($3$) ⇒ rule ke bina bhi jawab same.</li></ul>
+<h4>6. ⚠️ Traps</h4>
+<ul><li>"Highest score" ko "highest probability" samajh kar $\sum s$ nikalne lagna (time zaaya).</li>
+<li>$\mu_1$ ko galat padhna (data ka mean $(1.57,1.86)$ lena).</li></ul>
+<p><b>Recognition rule:</b> "highest score is chosen" ⇒ ek hi centre ke liye argmax $D^2$; probability ki zaroorat nahi.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>Points $(0,0),(1,0),(0,1),(4,0),(0,5),(3,3)$; $\mu_1=(0,0)$; score $=D^2$; highest score wala $\mu_2$. $\mu_2$ aur uska score?</p>
+<details class="reveal"><summary>Show answer</summary><p>$D^2=0,1,1,16,25,18$ ⇒ $\mu_2=(0,5)$, score $25$ (code ✓).</p></details>
+</details>
+</section>
+
+<section data-track="pyq2">
+<h3>🎯 P2 — 3rd mean ki sabse kam probability (2024 October) <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2024 October 27 · Original Q16 · ID <code>640653995447</code> · parent C6 (<code>640653995445</code>) · MCQ · 4 marks · <span class="tag t-src">[SRC]</span></p>
+<p>After selecting the second mean, which point has the <b>lowest probability</b> of being chosen as the 3rd cluster mean? Use squared distance to calculate the scores.</p>
+<ol><li>$(1,0)$</li><li>$(2,3)$</li><li>$(3,2)$</li><li>$(1,2)$</li></ol>
+<p><b>Answer: $(2,3)$.</b> <span class="muted">(Context C6 upar P1 mein.)</span></p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>$\mu_2=(2,4)$ (P1 se) hai. 3rd centre ke liye $D$ kis cheez se naapna hai? Agar sirf $\mu_1$ se naapo to kya galti hogi? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul><li><b>Asked:</b> 3rd mean ki <i>lowest</i> probability wala point. <b>Given:</b> centres $\mu_1=(2,1)$, $\mu_2=(2,4)$ (P1), squared score.</li>
+<li><b>Trigger clues:</b> "after selecting the second mean", "lowest probability" ⇒ L25 (nearest of <i>all</i> chune hue) + L24 (ranking).</li>
+<li><b>Prerequisites:</b> L23, L24, L25. PACER: Procedural + Conceptual. <b>Principle:</b> $s_3(x)=\min(\|x-\mu_1\|^2,\|x-\mu_2\|^2)$; sabse chhota $s$ ⇒ sabse kam probability.</li></ul>
+<h4>2. 🧭 Methods (2 genuinely different)</h4>
+<p><b>M1 General:</b> poori table — dono doori, min, $\sum s$, probability. <b>M2 Shortcut:</b> sirf options ke $\min D^2$; ya "$(2,3)$ $\mu_2$ se sirf $1$ door hai" wali elimination.</p>
+<h4>3. 🧮 Working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Poori table"><div class="mh">M1 · table</div>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Point</th><th class="num">$D^2\to\mu_1$</th><th class="num">$D^2\to\mu_2$</th><th class="num">$s=\min$</th><th class="num">$\Pr$</th></tr></thead>
+<tbody>
+<tr><td>$(0,1)$</td><td class="num">$4$</td><td class="num">$13$</td><td class="num">$4$</td><td class="num">$4/11$</td></tr>
+<tr><td>$(1,0)$</td><td class="num">$2$</td><td class="num">$17$</td><td class="num">$2$</td><td class="num">$2/11$</td></tr>
+<tr><td>$(1,2)$</td><td class="num">$2$</td><td class="num">$5$</td><td class="num">$2$</td><td class="num">$2/11$</td></tr>
+<tr><td>$(2,3)$</td><td class="num">$4$</td><td class="num">$1$</td><td class="num">$1$</td><td class="num">$1/11$</td></tr>
+<tr><td>$(3,2)$</td><td class="num">$2$</td><td class="num">$5$</td><td class="num">$2$</td><td class="num">$2/11$</td></tr>
+<tr><td>$(2,1),(2,4)$ centres</td><td class="num">—</td><td class="num">—</td><td class="num">$0$</td><td class="num">$0$</td></tr>
+<tr><td><b>Σ</b></td><td></td><td></td><td class="num">$11$</td><td class="num">$1$</td></tr>
+</tbody></table></div>
+<p>Sabse chhota $s=1$ sirf $(2,3)$ ⇒ lowest probability $=\tfrac1{11}$.</p></div>
+<div class="method" data-label="M2 Elimination"><div class="mh">M2 · options + elimination</div>
+<p>Options ke liye $\min D^2$: $(1,0)\to2$, $(3,2)\to2$, $(1,2)\to2$, $(2,3)\to1$.</p>
+<p>Seedha dekho: $(2,3)$, $\mu_2=(2,4)$ se ek step neeche hai ($D^2=1$, grid par sabse chhoti non-zero doori); baaki teeno apne nearest centre se $D^2=2$ par hain.</p>
+<p>$1\lt2$ ⇒ $(2,3)$ sabse kam.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1</td><td>Slow</td><td>Low</td><td>Low</td><td>Probability value chahiye ya check</td></tr>
+<tr><td>M2</td><td>Fast</td><td>Low</td><td>Medium — nearest-of-all bhool gaye to galat</td><td>"lowest/highest" MCQ</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M2. 🏆 <b>BEST EXAM METHOD:</b> M2 ke saath ek line mein dono $D^2$ ka min likhna; trade-off: tie dikhein to M1 chahiye.</p>
+<p><b>Distractors:</b> $(1,0)$, $(3,2)$, $(1,2)$ — teeno ka $s=2$ (aapas mein barabar), $(2,3)$ ke $1$ se bade.</p>
+<h4>5. ✅ Verification</h4>
+<ul><li>Code (exact fractions): $s=[4,2,2,0,1,0,2]$, $\sum=11$, probabilities $4/11,2/11,2/11,0,1/11,0,2/11$; jod $=1$ ✓. $\sum s=11$ = in do centres ke saath nearest assignment ka $F$ (L28) ✓.</li>
+<li>Plain $D$ rule se bhi $(2,3)$ ka $D=1$ sabse chhota ⇒ jawab rule par depend nahi.</li></ul>
+<h4>6. ⚠️ Traps</h4>
+<ul><li><b>Sirf $\mu_1$ se doori:</b> $(2,3)$ ka $D^2=4$ — woh <i>bada</i> dikhta aur $(1,0),(1,2),(3,2)$ teen-tarfa tie mein sabse chhote — koi unique jawab nahi, galat conclusion. Sirf $\mu_2$ se doori lene par is data mein jawab sahi nikalta, par woh sirf sanyog hai.</li>
+<li>$(2,1)$ ya $(2,4)$ ko option samajhna — woh chune ja chuke, score $0$ (L26), options mein hain hi nahi.</li></ul>
+<p><b>Recognition rule:</b> "3rd mean" ⇒ har point ka $D$ = dono centres mein se chhota.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>P1 ke transfer ko aage badhao: $\mu_1=(0,0)$, $\mu_2=(0,5)$, points wahi $(0,0),(1,0),(0,1),(4,0),(0,5),(3,3)$, score $D^2$. $(4,0)$ ke 3rd centre banne ki probability?</p>
+<details class="reveal"><summary>Show answer</summary><p>$s=0,1,1,16,0,13$ ($(3,3)$: $\min(18,\,9+4=13)=13$), $\sum=31$ ⇒ $16/31\approx0.516$ (code ✓).</p></details>
+</details>
+</section>
+
+<section data-track="pyq3">
+<h3>🎯 P3 — sabse kam chance wale point ki probability (2025 February) <span class="tag t-src">[SRC]</span> <span class="tag t-q">[?]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2025 February 23 · Original Q9 · ID <code>6406531104786</code> · SA · 3 marks · Pages 8–9 · <span class="tag t-src">[SRC]</span></p>
+<p><b>K-means++</b> is run on the following dataset with $K=2$. The plotted points are: $(2,5),\ (0,3),\ (2,4),\ (1,1),\ (1,0)$. The figure shows these five points on a 2D coordinate grid. Use the point $(1,1)$ as the <b>first cluster mean</b>. Then find the probability of the point that has the <b>least chance of being chosen as the second cluster mean</b>. Use <b>Euclidean distance</b> to calculate the distance.</p>
+<p><b>Accepted answer:</b> $0.07$ to $0.11$. <span class="muted">(Source ki visual note: least-probable $(1,0)$, $\approx1/(1+\sqrt5+\sqrt{10}+\sqrt{17})\approx0.095$.)</span></p>
+</div>
+<div class="box amber"><p><span class="tag t-q">[?]</span> <b>Score rule saaf nahi likha.</b> Copy sirf "Euclidean distance" kehti hai. Accepted range $0.07$–$0.11$ <b>plain distance</b> rule se aati hai ($0.0950$); standard $D^2$ rule se $1/33=0.0303$ aata, jo range ke bahar hai. Isliye rule key se padha gaya (L29). Figure copy mein nahi hai; points text mein hain.</p></div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Sabse kam sambhavna wala point pehchano (bina poora table), phir uski probability ka number nikalne ke liye kya chahiye? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul><li><b>Asked:</b> least-likely point ki probability (number). <b>Given:</b> 5 points, $\mu_1=(1,1)$, "Euclidean distance".</li>
+<li><b>Trigger clues:</b> "least chance" ⇒ min score point; "probability" (number) ⇒ $\sum s$ chahiye (L23, L24).</li>
+<li><b>Prerequisites:</b> L23, L24, L29. PACER: Procedural. <b>Principle:</b> $\Pr(x)=s(x)/\sum s$, rule key se: $s=D$.</li></ul>
+<h4>2. 🧭 Methods</h4>
+<p><b>Sirf 1 genuinely different method hai:</b> table + normalise. "Ranking" se sirf <i>kaun</i> sabse kam hai pata chalta hai, number nahi — number ke liye $\sum s$ lazmi hai. Neeche dusra panel ek <b>rule check</b> hai (alag method nahi): yeh dikhata hai ki $D^2$ rule key se kyun match nahi karta.</p>
+<h4>3. 🧮 Working</h4>
+<div class="methods">
+<div class="method" data-label="Table (key rule: D)"><div class="mh">Table · $s=D$</div>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Point</th><th class="num">$(dx,dy)$</th><th class="num">$D$</th></tr></thead>
+<tbody>
+<tr><td>$(2,5)$</td><td class="num">$(1,4)$</td><td class="num">$\sqrt{17}=4.1231$</td></tr>
+<tr><td>$(0,3)$</td><td class="num">$(-1,2)$</td><td class="num">$\sqrt5=2.2361$</td></tr>
+<tr><td>$(2,4)$</td><td class="num">$(1,3)$</td><td class="num">$\sqrt{10}=3.1623$</td></tr>
+<tr><td>$(1,1)$ centre</td><td class="num">$(0,0)$</td><td class="num">$0$</td></tr>
+<tr><td>$(1,0)$</td><td class="num">$(0,-1)$</td><td class="num">$1$</td></tr>
+<tr><td><b>Σ</b></td><td></td><td class="num">$1+\sqrt5+\sqrt{10}+\sqrt{17}=10.5215$</td></tr>
+</tbody></table></div>
+<p>Sabse chhota $D=1$ ⇒ $(1,0)$. $\Pr(1,0)=\dfrac1{10.5215}=\mathbf{0.0950}\in[0.07,0.11]$ ✓.</p></div>
+<div class="method" data-label="Rule check (D²)"><div class="mh">Rule check · $s=D^2$ (alag method nahi)</div>
+<p>$D^2=17,\ 5,\ 10,\ 0,\ 1$, $\sum=33$.</p>
+<p>$\Pr(1,0)=\dfrac1{33}=0.0303$ — range $0.07$–$0.11$ ke <b>bahar</b>.</p>
+<p>Isliye is sawaal ki key $D$ rule maanti hai (L29). Dono rules mein least-likely point $(1,0)$ hi hai.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Approach</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>Table ($D$)</td><td>Medium</td><td>Low</td><td>Medium — radicals ka arithmetic</td><td>Number maanga ho</td></tr>
+<tr><td>Rule check ($D^2$)</td><td>Fast</td><td>Low</td><td>Low</td><td>Key range se rule pehchanna</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> sirf pehchaan ke liye ranking; number ke liye table hi. 🏆 <b>BEST EXAM METHOD:</b> table ($D$ aur $D^2$ dono ek-ek line mein), phir answer-range se rule tay karo; trade-off: dono sums likhne ka thoda extra time.</p>
+<h4>5. ✅ Verification</h4>
+<ul><li>Code: $D$-rule probabilities $=[0.3919,\,0.2125,\,0.3006,\,0,\,0.0950]$ (jod $=1$); $D^2$-rule $=[0.5152,\,0.1515,\,0.3030,\,0,\,0.0303]$. $0.0950$ range mein ✓.</li>
+<li>Widget (Visual 4) mein "score = D (Euclid)" par $(1,0)$ ka probability $9.5\%$ — same ✓.</li></ul>
+<h4>6. ⚠️ Traps</h4>
+<ul><li>Habit se $D^2$ lagana ⇒ $0.0303$ — range se bahar. Hamesha answer-range ya key se rule match karo.</li>
+<li>$\sum$ mein centre $(1,1)$ ko $0$ ki jagah $\sqrt{0}$ ke saath galat jodna (woh $0$ hi hai).</li></ul>
+<p><b>Recognition rule:</b> "probability ka number" + rule nahi likha ⇒ $D$ aur $D^2$ dono nikalo, jo answer range mein aaye wahi rule.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>Points $(0,0),(3,4),(6,8),(1,0)$; $\mu_1=(0,0)$; K-means++ $K=2$. Plain-distance rule ($s=D$) se least-likely point ki probability? Aur $D^2$ rule se?</p>
+<details class="reveal"><summary>Show answer</summary><p>$D=0,5,10,1$, $\sum=16$ ⇒ $(1,0)$ ki probability $1/16=0.0625$. $D^2=0,25,100,1$, $\sum=126$ ⇒ $1/126\approx0.0079$ (code ✓).</p></details>
+</details>
+</section>
+
+<section data-track="pyq4">
+<h3>🎯 P4 — K-means++ initialization kaise behtar banata hai (2025 July) <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2025 July 13 · Original Q2 · ID <code>6406531302385</code> · MCQ · 2 marks · Pages 3–4 · <span class="tag t-src">[SRC]</span></p>
+<p>How does the <b>K-means++ algorithm</b> enhance the initialization process as compared to the standard K-means algorithm?</p>
+<ol>
+<li>It ensures the algorithm converges in a fixed number of iterations.</li>
+<li>It improves centroid initialization by spreading them out, leading to better-separated clusters.</li>
+<li>It automatically calculates the best value of $K$.</li>
+<li>It removes the need to run the algorithm multiple times.</li>
+</ol>
+<p><b>Marked correct in source: option 2.</b></p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>K-means++ Lloyd loop ka kaun sa hissa badalta hai? Har option ko us ek hissa-se jaanch lo. Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul><li><b>Asked:</b> K-means++ standard (random) initialization se kya behtar karta hai. <b>Given:</b> 4 claims.</li>
+<li><b>Trigger clues:</b> "enhance the initialization" ⇒ sirf initialization step badla hai (L23); baaki Lloyd loop wahi.</li>
+<li><b>Prerequisites:</b> L22, L23. PACER: Conceptual. <b>Principle:</b> D² sampling centres ko spread karti hai; $K$ input hai; Lloyd aur randomness bani rehti hai.</li></ul>
+<h4>2. 🧭 Methods (conceptual: 1 method + option elimination)</h4>
+<p>Is conceptual sawaal ka sirf ek natural tareeka hai: har option ko "K-means++ kya badalta hai / kya nahi" se test karna. Doosra tareeka (calculation) yahan lagu nahi.</p>
+<h4>3. 🧮 Working — option-by-option</h4>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Option</th><th>Verdict</th><th>Reason</th></tr></thead>
+<tbody>
+<tr><td>1. Fixed number of iterations</td><td>✗</td><td>Iterations Lloyd ke loop par depend karte hain (data, ties); K-means++ sirf starting point deta hai. Koi fixed count nahi. Hamesha "ensures ... fixed" jaise words par shak karo.</td></tr>
+<tr><td>2. Spreads centres, better-separated clusters</td><td>✓</td><td>Naya centre $D^2$ ke proportion mein chuna jaata hai ⇒ door ke points ki zyada chance ⇒ centres alag-alag jagah girte hain (B20 theory). "Better" typical/expected sense mein; guarantee global optimum ki nahi.</td></tr>
+<tr><td>3. Automatically finds best $K$</td><td>✗</td><td>$K$ algorithm ko <i>input</i> mein diya jaata hai (K-means++ mein "$K$ centres chuno"). Best $K$ chunna alag problem hai (4.6 Choosing K).</td></tr>
+<tr><td>4. Removes need for multiple runs</td><td>✗</td><td>K-means++ randomized hai aur local fixed point (L22) deta hai; alag runs alag $F$ de sakte hain. Behtar starting points se runs ki zaroorat <i>kam</i> hoti hai, <i>khatam</i> nahi.</td></tr>
+</tbody></table></div>
+<h4>4. 📊 Comparison</h4>
+<p>Sirf ek approach (option elimination), isliye method-comparison table ki jagah: ⚡ <b>FASTEST</b> = 🏆 <b>BEST</b>: pehle "absolute" shabd (fixed, automatically, removes the need) wale options hatao, phir bacha hua check karo. Trade-off: koi nahi, 30 second ka kaam.</p>
+<h4>5. ✅ Verification</h4>
+<ul><li>Option 2 ke alawa teeno mein koi na koi "guarantee/automatic" claim hai jo K-means++ ki definition se nahi nikalta ⇒ sirf 2 bachta hai, source key se match ✓.</li></ul>
+<h4>6. ⚠️ Traps</h4>
+<ul><li>Option 4 ko "better init ⇒ ek hi run kaafi" samajhna.</li>
+<li>Option 1: "better init ⇒ jaldi converge" ka typical <i>observation</i> ko <i>guarantee</i> maan lena.</li></ul>
+<p><b>Recognition rule:</b> K-means++ = sirf starting centres ka sampling rule; $K$, iterations ki sankhya aur global optimum — in sab par koi guarantee nahi.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>True/False: K-means++ mein ek baar chuna hua data point dobara centre ke roop mein kabhi nahi chuna jaata (data points ke coordinates alag-alag hain). Reason ek line mein.</p>
+<details class="reveal"><summary>Show answer</summary><p><b>True.</b> Chune hue point ka $D=0$ ⇒ score $0$ ⇒ probability $0$ (L26). Baaki centres sirf un points mein se aate hain jinka score $\gt0$.</p></details>
+</details>
+</section>
+
+<section data-track="pyq5">
+<h3>🎯 P5 — square ke 4 corners: probability, tie-breaking, one iteration (2025 October) <span class="tag t-src">[SRC]</span> <span class="tag t-q">[?]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2025 October 26 · Original Q4 · ID <code>6406531527616</code> · MSQ · 4 marks · Page 5 · <span class="tag t-src">[SRC]</span></p>
+<p>Consider the dataset $(0,0),\ (0,2),\ (2,0),\ (2,2)$. K-means++ is run with $K=2$, with the first cluster center chosen as $(0,0)$. The score of a point $x$ is based on its distance from the initial cluster center. Which statements are correct?</p>
+<ol>
+<li>The points $(0,2),(2,0),(2,2)$ have equal probability of being chosen as the second cluster center.</li>
+<li>The probability of selecting $(2,2)$ as the second cluster center is twice that of selecting $(0,2)$.</li>
+<li>If $(2,2)$ is chosen as the second cluster center, the algorithm will always converge in one iteration.</li>
+<li>The tie-breaking rule will affect the final cluster centers.</li>
+</ol>
+</div>
+<div class="box amber"><p><span class="tag t-q">[?]</span> <b>Source ne koi option mark nahi kiya.</b> Meri derivation: <b>2, 3, 4</b>. Do dependencies: (i) stmt 2 ke liye <i>score rule</i> — standard $D^2$ (L29) mein sach; plain $D$ rule mein ratio $\sqrt2$ aata, "twice" galat. (ii) stmt 3 ke liye <i>iteration convention</i> (L32) — convention A mein sach, B mein galat. Dono neeche dikhaye gaye hain.</p></div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Pehle sirf $(0,2),(2,0),(2,2)$ ke scores likho (D² se). Phir sochkar batao: $\mu_2=(2,2)$ ho to $(0,2)$ aur $(2,0)$ kis centre ke paas jaate hain? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul><li><b>Asked:</b> kaun se 4 statements sach. <b>Given:</b> square ke 4 corners, $\mu_1=(0,0)$, $K=2$.</li>
+<li><b>Trigger clues:</b> "equal probability", "twice" ⇒ L30 (score ratio); "converge in one iteration" ⇒ L32; "tie-breaking" ⇒ L31.</li>
+<li><b>Prerequisites:</b> L23, L30, L31, L32, bisector (B18). PACER: Procedural + Edge case. <b>Principle:</b> $(0,2),(2,0)$ <i>dono</i> $(0,0)$ aur $(2,2)$ se barabar door hain (bisector $x+y=2$).</li></ul>
+<h4>2. 🧭 Methods (2 genuinely different)</h4>
+<p><b>M1 General:</b> scores ki table + har tie-break ke liye Lloyd chalao. <b>M2 Geometry:</b> bisector $x+y=2$ par $(0,2)$ aur $(2,0)$ ka baithna ties ka kaaran batata hai; symmetry se 4 tie-break outcomes seedha dikhte hain.</p>
+<h4>3. 🧮 Working</h4>
+<figure class="viz">
+<p class="vt">Figure — square, centres aur bisector (schematic)</p>
+<p class="vs">$\mu_1=(0,0)$ (blue), $\mu_2=(2,2)$ (amber). Dashed line = bisector $x+y=2$ — $(0,2)$ aur $(2,0)$ is par hain, isliye dono centres se barabar door.</p>
+<svg viewBox="0 0 260 250" style="width:100%;max-width:340px;display:block;background:#141414;border:1px solid #262626;border-radius:8px" role="img" aria-label="Square with corners (0,0),(2,0),(0,2),(2,2); dashed bisector x+y=2 through (2,0) and (0,2); centres at (0,0) and (2,2)">
+<line x1="40" y1="190" x2="180" y2="190" stroke="#3a3a3a"/><line x1="40" y1="190" x2="40" y2="50" stroke="#3a3a3a"/><line x1="40" y1="50" x2="180" y2="50" stroke="#3a3a3a"/><line x1="180" y1="190" x2="180" y2="50" stroke="#3a3a3a"/>
+<line x1="180" y1="190" x2="40" y2="50" stroke="#F87171" stroke-dasharray="6 5" stroke-width="1.6"/>
+<circle cx="40" cy="190" r="9" fill="#60A5FA"/><circle cx="180" cy="50" r="9" fill="#FBBF24"/>
+<circle cx="40" cy="50" r="6" fill="#d4d4d4"/><circle cx="180" cy="190" r="6" fill="#d4d4d4"/>
+<text x="52" y="208" fill="#d4d4d4" font-size="12" font-family="Inter,sans-serif">(0,0) μ₁</text>
+<text x="118" y="42" fill="#d4d4d4" font-size="12" font-family="Inter,sans-serif">(2,2) μ₂</text>
+<text x="6" y="44" fill="#d4d4d4" font-size="12" font-family="Inter,sans-serif">(0,2)</text>
+<text x="186" y="206" fill="#d4d4d4" font-size="12" font-family="Inter,sans-serif">(2,0)</text>
+<text x="118" y="124" fill="#F87171" font-size="11" font-family="Inter,sans-serif" transform="rotate(-45 118 124)">x + y = 2</text>
+</svg>
+<figcaption><b>Interpretation:</b> $\mu_2=(2,2)$ ho to $(0,2)$ aur $(2,0)$ dono bisector par — dono ke liye "dono centres barabar door" (ties). Tie-break ke 4 tareeke hain (har tied point ke 2 options).</figcaption>
+</figure>
+<div class="methods">
+<div class="method" data-label="M1 Scores + Lloyd"><div class="mh">M1 · scores, phir har tie-break</div>
+<p><b>Stmt 1–2 (scores, $\mu_1=(0,0)$, $D^2$):</b></p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Point</th><th class="num">$D^2$</th><th class="num">$\Pr$</th></tr></thead>
+<tbody>
+<tr><td>$(0,2)$</td><td class="num">$4$</td><td class="num">$\tfrac4{16}=\tfrac14$</td></tr>
+<tr><td>$(2,0)$</td><td class="num">$4$</td><td class="num">$\tfrac14$</td></tr>
+<tr><td>$(2,2)$</td><td class="num">$8$</td><td class="num">$\tfrac8{16}=\tfrac12$</td></tr>
+<tr><td><b>Σ</b></td><td class="num">$16$</td><td class="num">$1$</td></tr>
+</tbody></table></div>
+<p>Stmt 1: $\tfrac14,\tfrac14,\tfrac12$ — barabar nahi ⇒ <b>✗</b>.</p>
+<p>Stmt 2: $\tfrac12=2\cdot\tfrac14$ ⇒ <b>✓</b> ($D^2$ rule).</p>
+<p><b>Stmt 3–4 (centres $(0,0),(2,2)$):</b> $(0,2)$: $d^2=4$ aur $4$; $(2,0)$: $4$ aur $4$ ⇒ dono tied. Chaar tie-breaks (pehli iteration ke baad ka haal):</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Tie-break</th><th>Clusters</th><th>Naye centres</th><th class="num">Final $F$</th></tr></thead>
+<tbody>
+<tr><td>(a) dono $\to\mu_1$</td><td>$\{(0,0),(0,2),(2,0)\},\{(2,2)\}$</td><td>$(\tfrac23,\tfrac23),(2,2)$</td><td class="num">$\tfrac{16}3$</td></tr>
+<tr><td>(b) dono $\to\mu_2$</td><td>$\{(0,0)\},\{(0,2),(2,0),(2,2)\}$</td><td>$(0,0),(\tfrac43,\tfrac43)$</td><td class="num">$\tfrac{16}3$</td></tr>
+<tr><td>(c) $(0,2)\to\mu_1,(2,0)\to\mu_2$</td><td>$\{(0,0),(0,2)\},\{(2,0),(2,2)\}$</td><td>$(0,1),(2,1)$</td><td class="num">$4$</td></tr>
+<tr><td>(d) $(0,2)\to\mu_2,(2,0)\to\mu_1$</td><td>$\{(0,0),(2,0)\},\{(0,2),(2,2)\}$</td><td>$(1,0),(1,2)$</td><td class="num">$4$</td></tr>
+</tbody></table></div>
+<p>Har case mein agli assignment check karo (naye centres se):</p>
+<p>(a): $(0,2)$: $d^2$ to $(\tfrac23,\tfrac23)=\tfrac49+\tfrac{16}9=\tfrac{20}9$, to $(2,2)=4$ ⇒ $\mu_1$ ✓ (no change). (b): symmetric ✓. (c): $(0,2)$ to $(0,1)=1$, to $(2,1)=5$ ✓; $(2,0)$ to $(2,1)=1$ ✓. (d): symmetric ✓.</p>
+<p>Stmt 3: har tie-break mein <b>pehli iteration ke baad partition aur centres final</b> — dusri pass mein kuch nahi badalta ⇒ convention A mein "1 iteration" <b>✓</b> (convention B mein 2).</p>
+<p>Stmt 4: final centres chaar alag set ($F$ bhi alag: $\tfrac{16}3$ vs $4$) ⇒ <b>✓</b>.</p></div>
+<div class="method" data-label="M2 Geometry"><div class="mh">M2 · bisector + symmetry</div>
+<p>$\mu_1=(0,0)$, $\mu_2=(2,2)$: bisector $x+y=2$ (midpoint $(1,1)$, normal $(1,1)$).</p>
+<p>$(0,2)$ aur $(2,0)$: $x+y=2$ ⇒ bisector par ⇒ <b>tie</b> (stmt 3, 4 ka asli kaaran). Dono tie ho to 2 options per point ⇒ 4 outcomes.</p>
+<p>Symmetry: ya to dono ek hi taraf (a, b) ya alag (c, d). (a), (b) mein ek cluster 3 points ka ($F=\tfrac{16}3$), (c), (d) mein $2+2$ ($F=4$).</p>
+<p>Stmt 2 ke liye: ratio $\left(\dfrac{D_{(2,2)}}{D_{(0,2)}}\right)^2=\left(\dfrac{2\sqrt2}{2}\right)^2=2$ ✓ (L30).</p>
+<p>Stmt 3: kisi bhi tie-break ke baad naye centres ke liye sab points ke nearest centre wahi rehte hain (upar check) ⇒ ek hi iteration mein sab set (convention A).</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1</td><td>Slow</td><td>Medium</td><td>Low (poora check)</td><td>Stmt 3 ke proof ke liye (4 cases)</td></tr>
+<tr><td>M2</td><td>Fast</td><td>Medium</td><td>Medium — Lloyd confirm karna na bhoolo</td><td>Stmt 1, 2, 4 ke liye</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M2. 🏆 <b>BEST EXAM METHOD:</b> M2 se statements 1, 2, 4, aur stmt 3 ke liye ek tie-break case ka M1 check; trade-off: doosre 3 cases symmetry par chhode.</p>
+<p><b>Statement-wise verdict:</b> 1 ✗ (probabilities $\tfrac14,\tfrac14,\tfrac12$) · 2 ✓ (squared rule; plain $D$ mein ratio $\sqrt2$) · 3 ✓ (convention A; B mein ✗) · 4 ✓. <b>Answer: 2, 3, 4</b> <span class="tag t-q">[?]</span> — plain-$D$ reading mein 3, 4.</p>
+<h4>5. ✅ Verification</h4>
+<ul><li>Code (exact fractions): $D^2$ probabilities $0.25,0.25,0.5$; plain $D$: $0.2929,0.2929,0.4142$ (ratio $\sqrt2$). Chaaron tie-breaks par Lloyd: finals $\{(\tfrac23,\tfrac23),(2,2)\}$, $\{(0,0),(\tfrac43,\tfrac43)\}$, $\{(0,1),(2,1)\}$, $\{(1,0),(1,2)\}$; $F=\tfrac{16}3,\tfrac{16}3,4,4$; sab mein pass 2 mein koi change nahi ✓.</li></ul>
+<h4>6. ⚠️ Traps</h4>
+<ul><li>Stmt 1: "teeno corners barabar door-ish" — $(2,2)$ ki doori $2\sqrt2$ hai, $2$ nahi.</li>
+<li>Stmt 3: "$\mu_2$ chuna ⇒ ek hi pass kaafi" ko bina centres ke update ka check kiye maan lena; ya convention B se "2" gin ke ✗ kar dena (convention paper-dependent, L32).</li>
+<li>Stmt 4: tie hone par "koi farq nahi padta" maan lena.</li></ul>
+<p><b>Recognition rule:</b> symmetric dataset + dono centres diagonal par ⇒ corners bisector par ⇒ ties ⇒ tie-break final result badal sakta hai.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>Square ke corners $(0,0),(0,4),(4,0),(4,4)$; initial centres $(0,0)$ aur $(4,4)$ (K-means++ ne $(4,4)$ chuna). Sab tie-breaks mein final $F$ ki kitni alag values aati hain, aur woh kya hain?</p>
+<details class="reveal"><summary>Show answer</summary><p>Do values: $\tfrac{64}{3}\approx21.33$ (dono tied points ek hi cluster mein) aur $16$ (alag-alag). Pehle square ka $\times4$ scale ($F\propto$ length$^2$) — code ✓: $\tfrac{16}3\cdot4=\tfrac{64}3$, $4\cdot4=16$.</p></details>
+</details>
+</section>
+
+<section data-track="pyq6">
+<h3>🎯 P6 — 3rd centre ki probability, $k=3$ (2026 March) <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">15 March 2026 · Original Q6 · ID <code>6406531951438</code> · SA · 3 marks · Pages 7–8 · <span class="tag t-src">[SRC]</span></p>
+<p>Consider the following five data-points in a clustering problem with <b>three clusters ($k=3$)</b>: $(-1,0),\ (0,0),\ (1,1),\ (2,1),\ (1,-1)$. K-means++ is used to initialize the three means. The first mean is $\mu_1=(0,0)$ and the second mean is $\mu_2=(1,1)$. Find the probability of choosing $(1,-1)$ as the next center.</p>
+<p><b>Accepted answer: 0.5.</b></p>
+</div>
+<div class="box amber"><p><span class="tag t-q">[?]</span> Score rule sawaal mein nahi likha. Key $0.5$ squared rule se aati hai ($2/4$); plain distance se $0.4142$ aata. Rule key se padha gaya (L29).</p></div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Pretest mein jo answer likha tha use yahan se compare karo. Pehle: $(1,-1)$ ke liye $D$ kis centre se? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul><li><b>Asked:</b> $\Pr((1,-1)\text{ is }\mu_3)$. <b>Given:</b> 5 points, $\mu_1=(0,0)$, $\mu_2=(1,1)$.</li>
+<li><b>Trigger clues:</b> "next center" with two already chosen ⇒ L25 (nearest of all); "probability" ⇒ $s/\sum s$ (L23).</li>
+<li><b>Prerequisites:</b> L23, L25, L26. PACER: Procedural. <b>Principle:</b> $\Pr=\dfrac{\min(d_1^2,d_2^2)}{\sum_x\min(d_1^2,d_2^2)}$.</li></ul>
+<h4>2. 🧭 Methods (2 genuinely different)</h4>
+<p><b>M1 General:</b> poori $D^2$ table. <b>M2 Cost view (L28):</b> nearest-assignment ke clusters banao, har cluster ka cost jodo $=\sum s$; phir $s/F$.</p>
+<h4>3. 🧮 Working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Table"><div class="mh">M1 · table</div>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Point</th><th class="num">$D^2\to(0,0)$</th><th class="num">$D^2\to(1,1)$</th><th class="num">$s=\min$</th></tr></thead>
+<tbody>
+<tr><td>$(-1,0)$</td><td class="num">$1$</td><td class="num">$4+1=5$</td><td class="num">$1$</td></tr>
+<tr><td>$(0,0)$ centre</td><td class="num">$0$</td><td class="num">$2$</td><td class="num">$0$</td></tr>
+<tr><td>$(1,1)$ centre</td><td class="num">$2$</td><td class="num">$0$</td><td class="num">$0$</td></tr>
+<tr><td>$(2,1)$</td><td class="num">$4+1=5$</td><td class="num">$1$</td><td class="num">$1$</td></tr>
+<tr><td>$(1,-1)$</td><td class="num">$1+1=2$</td><td class="num">$0+4=4$</td><td class="num">$2$</td></tr>
+<tr><td><b>Σ</b></td><td></td><td></td><td class="num">$4$</td></tr>
+</tbody></table></div>
+<p>$\Pr(1,-1)=\dfrac{2}{4}=\mathbf{0.5}$ ✓.</p></div>
+<div class="method" data-label="M2 Cost view"><div class="mh">M2 · cluster cost ($\sum s=F$)</div>
+<p>Nearest-centre assignment ($\mu_1=(0,0),\mu_2=(1,1)$):</p>
+<p>$\mu_1$ ka cluster: $(-1,0),(0,0),(1,-1)$ — cost $1+0+2=3$.</p>
+<p>$\mu_2$ ka cluster: $(1,1),(2,1)$ — cost $0+1=1$.</p>
+<p>$F=3+1=4=\sum s$. $s(1,-1)=2$ ⇒ $\Pr=\tfrac24=0.5$.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1</td><td>Medium</td><td>Low</td><td>Low</td><td>Hamesha chalta hai</td></tr>
+<tr><td>M2</td><td>Medium</td><td>Medium</td><td>Medium — cluster galat banane par</td><td>Check ke liye</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M1 (5 points par). 🏆 <b>BEST EXAM METHOD:</b> M1, aur M2 se $\sum s=F$ cross-check; trade-off: $20$ second extra.</p>
+<h4>5. ✅ Verification</h4>
+<ul><li>Code (exact): $s=[1,0,0,1,2]$, $\sum=4$, $\Pr(1,-1)=\tfrac12$ ✓ key. Plain $D$ rule: $0.4142$ ✗ key.</li></ul>
+<h4>6. ⚠️ Traps</h4>
+<ul><li><b>Sirf $\mu_1$:</b> $s=1,0,2,5,2$, $\sum=10$ ⇒ $\tfrac{2}{10}=0.2$ ✗. <b>Sirf $\mu_2$:</b> $s=5,2,0,1,4$, $\sum=12$ ⇒ $\tfrac4{12}=0.333$ ✗.</li>
+<li>Chune hue centres $(0,0),(1,1)$ ka score $0$ rakho (L26); unhe dusre centre se doori dekar score mat do.</li></ul>
+<p><b>Recognition rule:</b> "next center" jab $\mu_1,\mu_2$ diye hon ⇒ har point ka min over both, phir normalise.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>Points $(0,0),(2,0),(0,2),(3,3),(6,0)$; $\mu_1=(0,0)$, $\mu_2=(6,0)$; squared rule. $(3,3)$ ke 3rd centre banne ki probability?</p>
+<details class="reveal"><summary>Show answer</summary><p>$s=0,4,4,18,0$ ($(2,0)$: $\min(4,16)=4$; $(0,2)$: $\min(4,40)=4$; $(3,3)$: $\min(18,18)=18$), $\sum=26$ ⇒ $\tfrac{18}{26}=\tfrac9{13}\approx0.692$ (code ✓).</p></details>
+</details>
+</section>
+
+<section data-track="card45b">
+<h3>📌 Memory card — 4.5 K-means++ (A + B)</h3>
+<div class="grid2">
+<div class="box em">
+<p><b>Core model:</b> K-means++ = starting centres ka randomized chunav: $\mu_1$ koi data point; har agla centre uske score ($D^2$, ya sawaal ka rule) ke hisse ke hisaab se; phir wahi Lloyd. Randomness sirf start mein.</p>
+<p><b>Backbone chain:</b> rule padho → chune hue centres → har point ka $D$ (nearest of <i>all</i>) → score → ranking ya $s/\sum s$ → chuna hua $=0$ → dohrao → Lloyd (ties + iteration convention).</p>
+</div>
+<div class="box">
+<p><b>Formulas (with conditions):</b></p>
+<ul>
+<li>$D_j(x)=\min_{l\lt j}\|x-\mu_l\|$; $\Pr(\mu_j=x)=\dfrac{s_j(x)}{\sum_{x'}s_j(x')}$, standard $s=D^2$</li>
+<li>Ratio: $\dfrac{\Pr(x)}{\Pr(y)}=\dfrac{s(x)}{s(y)}$ — $D^2$ mein $(D_x/D_y)^2$</li>
+<li>$\sum s=F$ (squared rule, nearest assignment) · naya centre judne par score ghat-te hain, ranking flip ho sakti hai</li>
+<li>"Highest score chuna jaata hai" ⇒ deterministic (L27)</li>
+<li>Ties ⇒ tie-break final centres badal sakta hai ($F$ kabhi, hamesha nahi)</li>
+</ul>
+</div>
+</div>
+<div class="grid2">
+<div class="box amber">
+<p><b>Top 3 traps:</b> (1) 3rd centre mein sirf $\mu_1$ se doori (nearest-of-all bhoolna; B20 P2/P4, B21 P2/P6). (2) Score rule na padhna — $D$ vs $D^2$ (B21 P3 ki key $D$, P6 ki key $D^2$) aur "highest probability" = "chuna jayega" samajhna. (3) Ties aur iteration-count convention ko ignore karna (P5), ya mismatch par key ko bina data check ke maan lena ([FLAG]).</p>
+</div>
+<div class="box">
+<p><b>Trigger bank:</b> "highest/lowest probability" ⇒ ranking · "probability of $x$" ⇒ $s/\sum s$ · "3rd mean / after second" ⇒ min over both · "highest score chosen" ⇒ argmax · "twice / equal probability" ⇒ score ratio · "closest mean (Euclid)" ⇒ $d^2$ / bisector · "converge in $m$ iterations" ⇒ convention + ties · "enhances initialization" ⇒ spread, no guarantees.</p>
+</div>
+</div>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Method selector — question deta hai…</th><th>Use</th></tr></thead>
+<tbody>
+<tr><td>Ranking: highest / lowest probability</td><td>Nearest-of-all $D$ ki list (normalise mat karo)</td></tr>
+<tr><td>Probability ka number</td><td>Poori table, $\sum s$; rule answer-range/key se</td></tr>
+<tr><td>3rd (ya baad ke) centre</td><td>Har point ka min over chune hue centres; flip ke liye dubara</td></tr>
+<tr><td>"Highest score chuna jaata hai"</td><td>argmax $D^2$ (sirf $\mu_1$); baad ka probability sampling se</td></tr>
+<tr><td>Statements (equal, twice, one iteration, tie-break)</td><td>Score ratio; bisector par ties; har tie-break ek pass</td></tr>
+<tr><td>Concept MCQ (K-means++ vs Lloyd)</td><td>"Sirf initialization badla" test; absolute words hatao</td></tr>
+</tbody></table></div>
+<p class="note"><b>Spaced review (4.5 B):</b> 2026-11-13 (P2, P6) · 2026-11-15 (P1, P3, P4, P5) · 2026-11-19 (memory card) · 2026-12-03 (4.5 B + T4 timed set: TS3, TS5, TS7) — har baar P2/P6 (nearest-of-all), P3 ($D$ vs $D^2$ rule check), P5 (ties + convention), WE5 (ranking flip).</p>
+</section>
+
+<h2>⏱️ T4 timed set <span class="tag t-add">[ADDED]</span></h2>
+<section data-track="timed">
+<div class="box amber">
+<p><b>Rules:</b> 8 questions · 24 marks (3 marks each) · <b>16 minutes</b> (≈2 min / question, exam pace). Timer lagao, calculator allowed, notes band. Answers end mein hidden hain. T4 (K-means, B17–B21) ke patterns par naye questions — source se nahi: Lloyd ek iteration ka $F$, centroid-update minimiser, assignment geometry, monotonicity, K-means++ probability, Choosing $K$, poora Lloyd run, K-means++ ke statements.</p>
+<p class="note">Answers chat mein bhejna ho to: <code>TS1: … | TS2: … | … | Confidence per Q: S/U/G</code></p>
+</div>
+<ol>
+<li><p><b>TS1 · SA · 3 marks.</b> 1-D points $\{1,2,4,9,10\}$, $K=2$, initial means $\mu_1=2$, $\mu_2=9$. Ek full iteration (assign + centroid update) ke baad $F$ (updated means ke saath) kitna? (2 decimals)</p></li>
+<li><p><b>TS2 · SA · 3 marks.</b> $x_1=(1,2),\ x_2=(3,4),\ x_3=(5,6)$. $v^*=\arg\min_v\sum_{i=1}^3\|5x_i-2v\|^2$. $v^*$ ke dono coordinates ka jod?</p></li>
+<li><p><b>TS3 · MSQ · 3 marks.</b> Centres $\mu_1=(0,0)$, $\mu_2=(6,2)$. Kaun se points <b>strictly</b> $\mu_1$ ke zyada paas hain? (a) $(2,3)$ &nbsp; (b) $(3,2)$ &nbsp; (c) $(4,-1)$ &nbsp; (d) $(1,5)$ &nbsp; (e) $(3,1)$</p></li>
+<li><p><b>TS4 · MSQ · 3 marks.</b> Lloyd ke baare mein kaun se sach hain (tie-break fixed)? (a) Assignment step $F$ ko badhata nahi &nbsp; (b) Centroid-update step $F$ ko badhata nahi &nbsp; (c) Final $F$ saare $K$-partitions mein global minimum hota hai &nbsp; (d) Lloyd koi purana partition dobara visit kar sakta hai &nbsp; (e) Pehle $F$ ghat ke baad mein badh sakta hai</p></li>
+<li><p><b>TS5 · SA · 3 marks.</b> 1-D points $0,1,4,6,10$; K-means++ $K=3$; $\mu_1=0$, $\mu_2=6$; squared rule. Point $4$ ke 3rd centre banne ki probability? (3 decimals)</p></li>
+<li><p><b>TS6 · MSQ · 3 marks.</b> Choosing $K$ ke baare mein kaun se sach hain? (a) $F^*(k)$ (best $F$ with $k$ clusters) $k$ ke saath badhta nahi &nbsp; (b) $K=n$ par $F=0$ ho sakta hai &nbsp; (c) Elbow method woh $k$ chunti hai jahan $F^*(k)$ sabse chhota ho &nbsp; (d) $K=3$ par Lloyd ka output hamesha $F^*(3)$ hota hai &nbsp; (e) K-means++ khud best $K$ chun leta hai</p></li>
+<li><p><b>TS7 · SA · 3 marks.</b> Points $(0,0),(2,0),(0,2),(6,6),(8,6),(6,8)$; $K=2$; initial centres $(0,0)$ aur $(6,6)$ (koi ties nahi). Convergence par $F$ kitna? (2 decimals)</p></li>
+<li><p><b>TS8 · MSQ · 3 marks.</b> K-means++ ke baare mein kaun se sach hain? (a) Chuna hua point dobara centre nahi chuna jaata &nbsp; (b) Final clustering ka global optimum hona guaranteed hai &nbsp; (c) Naya centre judne par kisi point ka score badh sakta hai &nbsp; (d) Naya centre judne par points ki probability-ranking badal sakti hai &nbsp; (e) K-means++ ke baad Lloyd chalane ki zaroorat nahi</p></li>
+</ol>
+<details class="reveal"><summary>Show all answers (timer khatam hone ke baad)</summary>
+<p><b>TS1: 5.17.</b> Assign: $1,2,4\to\mu_1=2$ ($4$: $d^2=4$ vs $25$); $9,10\to\mu_2=9$. Update: $\mu_1=\tfrac{7}{3}$, $\mu_2=9.5$. $F=\left(\tfrac43\right)^2+\left(\tfrac13\right)^2+\left(\tfrac53\right)^2+0.25+0.25=\tfrac{16+1+25}{9}+0.5=\tfrac{14}{3}+\tfrac12=\tfrac{31}{6}=\mathbf{5.17}$. Trap: assign-step $F=6$ (purane centres) ya data mean. Code: assign $F=6$, updated $F=31/6$.</p>
+<p><b>TS2: 17.5.</b> $\sum\|5x_i-2v\|^2=4\sum\|\tfrac52x_i-v\|^2$ ⇒ $v^*=\tfrac52\bar x$, $\bar x=(3,4)$ ⇒ $v^*=(7.5,10)$, jod $=\mathbf{17.5}$. Trap: $\bar x$ khud ($7$) ya $\tfrac25\bar x$. Code: numerical minimiser $(7.5,10.0)$ ✓.</p>
+<p><b>TS3: (a), (d).</b> Bisector: $\|x\|^2=\|x-(6,2)\|^2\Rightarrow 12x+4y=40\Rightarrow 3x+y=10$. $3x+y\lt10$ ⇒ $\mu_1$ ke paas: (a) $9\lt10$ ✓, (d) $8\lt10$ ✓. (b) $11$, (c) $11$ ⇒ $\mu_2$ ke paas ✗. (e) $10$ ⇒ <b>tie</b> (strictly nahi) ✗. Code $d^2$ pairs: $(2,3)$: $13,17$; $(3,2)$: $13,9$; $(4,-1)$: $17,13$; $(1,5)$: $26,34$; $(3,1)$: $10,10$.</p>
+<p><b>TS4: (a), (b).</b> (a) har point apne nearest centre par ✓. (b) mean $\sum\|x-v\|^2$ ka minimiser ✓. (c) ✗ local fixed point (L22). (d) ✗ $F$ strictly ghat-ta hai jab partition badalta hai, finite partitions (L19–L22). (e) ✗ $F$ non-increasing.</p>
+<p><b>TS5: 0.190.</b> $D^2$: $1\to1$ (nearest $0$), $4\to\min(16,4)=4$, $10\to\min(100,16)=16$, centres $0$ ⇒ $\sum=21$ ⇒ $\tfrac4{21}=\mathbf{0.190}$. Trap: sirf $\mu_1$: $4\to16$ ($\sum=1+16+100+36=153$) ya sirf $\mu_2$. Code: scores $[0,1,4,0,16]$, $\sum=21$ ✓.</p>
+<p><b>TS6: (a), (b).</b> (a) zyada clusters ⇒ $F^*$ kam ya barabar ✓. (b) har point apna cluster ⇒ $F=0$ ✓. (c) ✗ $F^*$ to $k=n$ par hi minimum; elbow = jahan sudhaar slow ho. (d) ✗ Lloyd local optimum. (e) ✗ $K$ input hai.</p>
+<p><b>TS7: 10.67.</b> Assign: $\{(0,0),(2,0),(0,2)\}\to(0,0)$, baaki teen $\to(6,6)$. Update: $(\tfrac23,\tfrac23)$, $(\tfrac{20}3,\tfrac{20}3)$; agli pass mein koi change nahi. $F=\left(\tfrac89+\tfrac{20}9+\tfrac{20}9\right)\cdot2=\tfrac{48}9\cdot2=\tfrac{32}{3}=\mathbf{10.67}$. Trap: purane centres $(0,0),(6,6)$ ke saath $F=16$ nikalna (update ke baad nahi). Code: $F=32/3$ ✓.</p>
+<p><b>TS8: (a), (d).</b> (a) chuna hua ⇒ $D=0$ ✓. (b) ✗ global optimum guarantee nahi. (c) ✗ $D$ min hai ⇒ score ghat-ta ya same. (d) ✓ WE5: $9\gt5$ se $5\gt9$. (e) ✗ K-means++ sirf start deta hai.</p>
+<p class="note">Scoring: SA = full ya zero; MSQ = saare sahi options, koi galat nahi. 24 mein se 21+ = T4 exam-ready ki taraf; galtiyan chat mein error-tag ke saath bhejo. Saare numerical answers python se code-verified.</p>
+</details>
+</section>
+
+<section data-track="explain-back">
+<h2>✍️ Explain-it-back</h2>
+<div class="try">
+<p class="ttl">Chat mein apne words mein jawab do (3–5 lines):</p>
+<p>"K-means++ mein teesra centre chunte waqt har point ka $D$ kaise tay hota hai aur dusra centre judne par ranking kyun badal sakti hai? Probability ka number poochha ho to $D$ ya $D^2$ kaise tay karoge? Aur Lloyd mein equal-distance (tie) hone par final centres kyun badal sakte hain, aur 'kitni iterations mein converge' ki do conventions kya hain?"</p>
+<p class="note">Format: <code>Answer: … | Confidence: S/U/G | Reason: …</code></p>
+</div>
+</section>
