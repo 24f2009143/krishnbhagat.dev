@@ -1,0 +1,472 @@
+<section data-track="intro">
+<p class="muted mono" style="margin:0">B10 · T2 PCA</p>
+<h1>2.4 Explained variance, rank, dimension selection</h1>
+<p class="lead">Ab tak PCs ke <i>directions</i> aur <i>coordinates</i> dekhe. B10 mein sawaal badalta hai: <b>kitne PCs rakhein?</b> Jawab eigenvalues ke <i>hisse</i> mein hai: har PC total variance ka kitna hissa uthata hai (explained variance ratio), pehle $k$ ka jod kitna hai (cumulative), aur kitne eigenvalues sach mein nonzero hain (rank). Yeh 2.4 chhota subtopic hai — bank mein sirf 4 blocks — par B11 (reconstruction error, storage) aur B12 (dual PCA) dono isi par khade hain.</p>
+<div class="box">
+<p><b>Is build ke PYQs <span class="tag t-src">[SRC]</span></b> — subtopic 2.4 ke saare 4 blocks (file order; 1 context block + 3 questions), total 10 marks. Numbering P1–P4 (2.4 mein kul 4 blocks).</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>#</th><th>Paper · Q</th><th>ID</th><th>Type · marks</th><th>Kya poochha</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td>P1</td><td>2023 October · Q7</td><td class="mono">640653669239</td><td>SA · 4</td><td>50 points in $\mathbb R^5$, covariance eigenvalues $1.7,1.4,0.25,0.20,0.005$; $\ge95\%$ variance ke liye $k$</td><td>Key 4 ✓ (CEV 99.86%)</td></tr>
+<tr><td>P2</td><td>2023 October · Q13</td><td class="mono">640653669242</td><td>Comprehension · 0</td><td>$d\gg n$, $C=\tfrac1nXX^T$, $K=X^TX$ (context; children Q14, Q15 B7 mein solve ho chuke)</td><td>—</td></tr>
+<tr><td>P3</td><td>2023 October · Q16</td><td class="mono">640653669245</td><td>MCQ · 3</td><td>"95% variance $d-1$ eigenvectors se" ka matlab kya (P2 ka child)</td><td>Key option 2; stem <span class="tag t-q">[?]</span> (heuristic)</td></tr>
+<tr><td>P4</td><td>2025 October 26 · Q8</td><td class="mono">6406531527619</td><td>SA · 3</td><td>$X^TX$ ke eigenvalues $10,5,3,2,1$ (baaki 0); PC1 ka explained-variance proportion</td><td>Key 0.45–0.50 ✓ (0.476)</td></tr>
+</tbody></table></div>
+<p><b>Bank frequency ≠ exam weightage:</b> 4 blocks sirf practice ka size hain; isse yeh nahi nikalta ki exam mein itne sawaal aayenge.</p>
+<p><b>Tags:</b> <span class="tag t-src">[SRC]</span> PYQ file se · <span class="tag t-add">[ADDED]</span> meri explanation / naya question · <span class="tag t-flag">[FLAG]</span> source error, proof ke saath · <span class="tag t-q">[?]</span> unreadable / missing / ambiguous. <b>PACER:</b> Procedural · Analogous · Conceptual · Evidence · Reference. Convention $C=\tfrac1n\sum_i\tilde x_i\tilde x_i^T$ ($\tilde x$ = centred point). Source ke 3 keys (P1, P3, P4) mere code-check se match karte hain; koi <span class="tag t-flag">[FLAG]</span> nahi. P3 ka stem <span class="tag t-q">[?]</span> hai (neeche proof ke saath, F15).</p>
+</div>
+</section>
+
+<section data-track="warmup">
+<h2>🔁 Recall warm-up — B4 + B8 + B9 <span class="tag t-add">[ADDED]</span></h2>
+<p>3 chhote sawaal, notes dekhe bina. (Spaced review: T1 aur B4–B7 aaj 2026-11-11 ko due hain; B8, B9 kal 2026-11-12 ko.)</p>
+<ol>
+<li><p><b>(B4 eigen)</b> $C=\begin{bmatrix}2.5&amp;1.5\\1.5&amp;2.5\end{bmatrix}$ ke eigenvalues kya hain? Unka jod $C$ ke kis cheez ke barabar hai?</p>
+<details class="reveal"><summary>Show answer</summary><p>$\det(C-\lambda I)=0$ ⇒ $(2.5-\lambda)^2=1.5^2$ ⇒ $2.5-\lambda=\pm1.5$ ⇒ $\lambda=\mathbf4$ aur $\mathbf1$. Jod $=5=2.5+2.5=\operatorname{tr}(C)$ ✓ (code-verified). Yeh fact aaj ka backbone hai.</p></details></li>
+<li><p><b>(B8 Pythagoras)</b> $w_1=\tfrac1{\sqrt2}(1,1)$, $w_2=\tfrac1{\sqrt2}(-1,1)$, centred point $\tilde x=(3,1)$. $(z_1,z_2)$ aur $z_1^2+z_2^2$?</p>
+<details class="reveal"><summary>Show answer</summary><p>$z_1=\tfrac{3+1}{\sqrt2}=2\sqrt2=\mathbf{2.828}$, $z_2=\tfrac{-3+1}{\sqrt2}=-\sqrt2=\mathbf{-1.414}$. $z_1^2+z_2^2=8+2=10=3^2+1^2$ ✓ (G4; code-verified).</p></details></li>
+<li><p><b>(B9 dual)</b> $d&gt;n$, centred $X$, $n=2$. $K=X^TX$ ka top eigenvalue $12$, unit eigenvector $\alpha=\tfrac1{\sqrt2}(1,-1)$. Training points ke scores aur unka variance (1/n)?</p>
+<details class="reveal"><summary>Show answer</summary><p>H4: $z_i=\sqrt{12}\,\alpha_i=\pm\sqrt6=\pm\mathbf{2.449}$. Variance $=\tfrac{6+6}2=\mathbf6=\lambda_K/n=12/2$ ✓ (H5).</p></details></li>
+</ol>
+</section>
+
+<!-- =========================================================== -->
+<h2>📐 2.4 Explained variance, rank, dimension selection</h2>
+
+<section data-track="pretest">
+<h3>❓ Pretest — cold attempt (solution neeche 🎯 P1 mein)</h3>
+<div class="try">
+<p class="mono" style="margin:0 0 6px">2023 October · Original Q7 · ID <code>640653669239</code> · SA · 4 marks · <span class="tag t-src">[SRC]</span></p>
+<p>Consider a dataset of 50 points, all of which lie in $R^5$. The eigenvalues of the covariance matrix are: $1.7,\ 1.4,\ 0.25,\ 0.20,\ 0.005$. If PCA is run and the top-$k$ principal components are retained, what is a good choice of $k$?</p>
+<p><b>Hint:</b> A good PCA should capture at least 95% of the variance.</p>
+<p class="note">2 minute, bina neeche padhe. Answer + Confidence S / U / G note karo.</p>
+</div>
+</section>
+
+<section data-track="position">
+<h3>🧭 Position — yeh kahan baitha hai</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Peeche (prerequisites)</th><th>Yeh subtopic</th><th>Aage (kya unlock hota hai)</th></tr></thead>
+<tbody><tr>
+<td>B4: variance, covariance, eigenvalues, $\operatorname{tr}C=\sum\lambda$ · B7: variance along PC $j$ $=\lambda_j$ · B8: G4 Pythagoras, G5 score covariance $\lambda_l\delta_{kl}$ · B9: dual $\lambda_K=n\lambda_C$, rank $\le n-1$</td>
+<td>Total variance, explained variance ratio, cumulative variance, threshold se $k$ chunna, rank = nonzero eigenvalues ki ginti</td>
+<td>B11: reconstruction error $=$ discarded eigenvalues ka jod, storage ($k(d+n)$ numbers) · B12: dual PCA mein rank aur Gram matrix · B16: kernel PCA mein centred kernel ke eigenvalues</td>
+</tr></tbody></table></div>
+</section>
+
+<section data-track="intuition">
+<h3>🧠 Intuition — plain language</h3>
+<ul>
+<li><b>Total variance ek "budget" hai.</b> Data kitna phailta hai — sab directions ko milake. PCA is budget ko perpendicular directions mein baant deta hai: PC$_j$ ke hisse mein $\lambda_j$ aata hai. Sab hisse jodo to wapas poora budget milta hai.</li>
+<li><b>Explained variance ratio = hissa ÷ budget.</b> "PC1 ne 48% explain kiya" ka matlab: total phailav ka 48% PC1 ki line par hai.</li>
+<li><b>$k$ chunna = kitna loss afford karoge.</b> "95% chahiye" ka matlab: discard kiye hue chhote eigenvalues ka jod total ka $\le5\%$ ho. Isliye hum <i>sabse chhote</i> eigenvalues pehle discard karte hain.</li>
+<li><b>Discarded variance hi reconstruction error hai.</b> Jo hissa discard hua, wahi average squared error ban jaata hai (B11 mein poora proof; yahan bas J6).</li>
+<li><b>Rank = kitne PCs ke paas sach mein variance hai.</b> Jin directions mein data bilkul flat hai (variance 0), unke eigenvalues 0 hain; unhe rakhne ka koi fayda nahi. Centred $n$ points ke liye zyada se zyada $n-1$ nonzero eigenvalues.</li>
+<li><b>Ratio scale se bachta hai.</b> $C$ ho ya $X^TX$ ($=n\times$ wahi nonzero eigenvalues), hissa ÷ budget same: $n$ cancel ho jaata hai.</li>
+</ul>
+<div class="box em">
+<p><b>Analogy <span class="tag t-add">[ADDED]</span> — ek pizza ke slices.</b> Poora pizza = total variance. PCs sabse bade slice se chhote slice ki taraf: $1.7,\ 1.4,\ 0.25,\ 0.20,\ 0.005$. "95% chahiye" matlab itne bade slices uthao ki pizza ka kam se kam 95% tumhari plate mein ho; bacha hua chhota tukda chhod do.</p>
+<p><b>Analogy kahan tootti hai:</b> (1) Pizza ke slices barabar kaam ke hote hain; variance ka bada hissa "zyada useful" hone ki guarantee nahi — PCA unsupervised hai, label nahi dekhta. (2) Slices ko tum jahan se chaho kaat sakte ho; PCs ka order aur directions data se tay hote hain, koi choice nahi. (3) Pizza mein "95%" koi rule nahi; PCA mein bhi 95% sirf ek convention hai (sawaal mein hint ke roop mein diya gaya).</p>
+</div>
+<div class="box red">
+<p><b>Yeh kya NAHI hai:</b></p>
+<ul>
+<li>"Explained variance ratio $=\lambda_k$" — nahi. Ratio $\lambda_k/\sum_j\lambda_j$ hai; $\lambda_k$ khud variance hai (unit$^2$ mein), ratio unitless.</li>
+<li>"$95\%$ ka matlab $0.95\,d$ components" — nahi. Kitne components lagenge yeh spectrum (eigenvalues ka shape) tay karta hai.</li>
+<li>"$n$ points hain to $n$ components" — nahi. Centred data mein rank $\le n-1$, aur $d$ se bhi bada nahi.</li>
+<li>"Bada explained variance = achhi classification" — nahi. PCA labels nahi dekhta.</li>
+<li>"$X^TX$ ke eigenvalues covariance ke variances hain" — nahi. Woh $n$ guna bade hain; sirf <i>ratio</i> same rehta hai.</li>
+</ul>
+</div>
+</section>
+
+<section data-track="visual">
+<h3>📊 Visual intuition</h3>
+<figure class="viz">
+  <p class="vt">P1 ke eigenvalues: har PC ka hissa (explained variance ratio) <span class="tag t-src">[SRC]</span> data, <span class="tag t-add">[ADDED]</span> ratios</p>
+  <p class="vs">Eigenvalues 1.7, 1.4, 0.25, 0.20, 0.005; total = 3.555. Har bar = λ ÷ 3.555, percent mein. Sab bars ka jod 100%.</p>
+  <div class="chart" data-chart='{"type":"hbar","labels":["PC1  λ = 1.7","PC2  λ = 1.4","PC3  λ = 0.25","PC4  λ = 0.20","PC5  λ = 0.005"],"values":[47.82,39.38,7.03,5.63,0.14],"unit":"%","labelWidth":130,"tips":["1.7 / 3.555 = 47.82%","1.4 / 3.555 = 39.38%","0.25 / 3.555 = 7.03%","0.20 / 3.555 = 5.63%","0.005 / 3.555 = 0.14%"],"aria":"Explained variance ratio of each principal component for the 2023 October eigenvalues"}'></div>
+  <figcaption><b>Interpretation:</b> do bade PCs milke 87.2% le jaate hain, par 95% ke liye kaafi nahi. Teesra PC (7.03%) bhi ginte to 94.23% — 95% se thoda kam; isliye PC4 (5.63%) chahiye. Ek "elbow" dikhta hai PC2 ke baad, par is sawaal ki shart 95% hai, elbow nahi.</figcaption>
+  <details class="table-view"><summary>Table view</summary><div class="tbl-wrap"><table><thead><tr><th>PC</th><th class="num">λ</th><th class="num">Ratio %</th></tr></thead><tbody>
+<tr><td>PC1</td><td class="num">1.7</td><td class="num">47.82</td></tr>
+<tr><td>PC2</td><td class="num">1.4</td><td class="num">39.38</td></tr>
+<tr><td>PC3</td><td class="num">0.25</td><td class="num">7.03</td></tr>
+<tr><td>PC4</td><td class="num">0.20</td><td class="num">5.63</td></tr>
+<tr><td>PC5</td><td class="num">0.005</td><td class="num">0.14</td></tr>
+</tbody></table></div></details>
+</figure>
+
+<figure class="viz">
+  <p class="vt">Wahi data, cumulative variance CEV(k) <span class="tag t-add">[ADDED]</span></p>
+  <p class="vs">Har bar = pehle k PCs ka jod ÷ total, percent mein. 95% ki line k = 3 (94.23) aur k = 4 (99.86) ke beech mein kahin kat'ti hai.</p>
+  <div class="chart" data-chart='{"type":"vbar","labels":["k = 1","k = 2","k = 3","k = 4","k = 5"],"values":[47.82,87.2,94.23,99.86,100],"unit":"%","tips":["1.7 / 3.555","3.1 / 3.555","3.35 / 3.555 = 94.23%, 95% se 0.77 point kam","3.55 / 3.555 = 99.86%, pehla k jo 95% paar karta hai","3.555 / 3.555 = 100%"],"aria":"Cumulative explained variance for k equals 1 to 5"}'></div>
+  <figcaption><b>Interpretation:</b> bars hamesha badhte hain aur last mein 100% par pahunchte hain (sab d PCs). "Kam se kam 95%" ka matlab pehla bar jo 95 ya usse upar ho: k = 4. k = 3 sirf 0.77 point se chook jaata hai.</figcaption>
+  <details class="table-view"><summary>Table view</summary><div class="tbl-wrap"><table><thead><tr><th>k</th><th class="num">Sum of first k λ</th><th class="num">CEV %</th><th>≥ 95%?</th></tr></thead><tbody>
+<tr><td>1</td><td class="num">1.7</td><td class="num">47.82</td><td>No</td></tr>
+<tr><td>2</td><td class="num">3.1</td><td class="num">87.20</td><td>No</td></tr>
+<tr><td>3</td><td class="num">3.35</td><td class="num">94.23</td><td>No</td></tr>
+<tr><td>4</td><td class="num">3.55</td><td class="num">99.86</td><td>Yes</td></tr>
+<tr><td>5</td><td class="num">3.555</td><td class="num">100</td><td>Yes</td></tr>
+</tbody></table></div></details>
+</figure>
+
+<figure class="viz">
+  <p class="vt">Interactive: total variance har angle par baant'ta hai (B4 dataset) <span class="tag t-add">[ADDED]</span></p>
+  <p class="vs">Points (5,3), (1,−1), (4,0), (2,2). θ ko ghumao: "variance along u" aur "avg residual²" dekho. Dono ka jod hamesha tr C = 5 rehta hai. Phir "θ → max" dabao: variance 4, residual 1.</p>
+  <div data-widget="vardir" data-points="5,3;1,-1;4,0;2,2" data-theta="0"></div>
+  <figcaption><b>Interpretation:</b> kisi bhi line u par variance + us line se bacha residual = 5 (total variance). Best line (λ₁ = 4) par 4/5 = 80% explained, 1/5 = 20% loss. Isi 20% ko PC2 (λ₂ = 1) explain karta hai; dono PCs milke 100%. 2-D mein k = 1 chunna matlab 20% loss accept karna.</figcaption>
+</figure>
+
+<figure class="viz">
+  <p class="vt">P4 ke eigenvalues: proportion of variance <span class="tag t-src">[SRC]</span> eigenvalues, <span class="tag t-add">[ADDED]</span> ratios</p>
+  <p class="vs">X^T X ke eigenvalues 10, 5, 3, 2, 1 (baaki 0); total = 21. Bar = λ ÷ 21, percent mein.</p>
+  <div class="chart" data-chart='{"type":"hbar","labels":["PC1  λ = 10","PC2  λ = 5","PC3  λ = 3","PC4  λ = 2","PC5  λ = 1"],"values":[47.62,23.81,14.29,9.52,4.76],"unit":"%","labelWidth":130,"tips":["10 / 21 = 0.4762","5 / 21 = 0.2381","3 / 21 = 0.1429","2 / 21 = 0.0952","1 / 21 = 0.0476"],"aria":"Proportion of variance explained by each of the five nonzero eigenvalues 10, 5, 3, 2, 1"}'></div>
+  <figcaption><b>Interpretation:</b> PC1 ka hissa 47.62% (decimal 0.4762) — P4 ka answer. Zero eigenvalues bars mein nahi dikhte kyunki unka hissa 0 hai, par wahi rank = 5 batate hain.</figcaption>
+  <details class="table-view"><summary>Table view</summary><div class="tbl-wrap"><table><thead><tr><th>PC</th><th class="num">λ</th><th class="num">Ratio</th><th class="num">Ratio %</th></tr></thead><tbody>
+<tr><td>PC1</td><td class="num">10</td><td class="num">0.4762</td><td class="num">47.62</td></tr>
+<tr><td>PC2</td><td class="num">5</td><td class="num">0.2381</td><td class="num">23.81</td></tr>
+<tr><td>PC3</td><td class="num">3</td><td class="num">0.1429</td><td class="num">14.29</td></tr>
+<tr><td>PC4</td><td class="num">2</td><td class="num">0.0952</td><td class="num">9.52</td></tr>
+<tr><td>PC5</td><td class="num">1</td><td class="num">0.0476</td><td class="num">4.76</td></tr>
+<tr><td>Total</td><td class="num">21</td><td class="num">1</td><td class="num">100</td></tr>
+</tbody></table></div></details>
+</figure>
+</section>
+
+<section data-track="formal">
+<h3>📖 Formal version — Formula Protocol</h3>
+$$\text{(J1)}\ \ V_{\text{tot}}=\operatorname{tr}(C)=\sum_{j=1}^{d}\lambda_j=\frac1n\sum_{i=1}^{n}\|\tilde x_i\|^2$$
+$$\text{(J2)}\ \ \text{EVR}_k=\frac{\lambda_k}{\sum_{j=1}^{d}\lambda_j},\qquad \text{CEV}(k)=\frac{\sum_{j=1}^{k}\lambda_j}{\sum_{j=1}^{d}\lambda_j}$$
+$$\text{(J3)}\ \ k^*=\min\{k:\ \text{CEV}(k)\ge\tau\}\iff\sum_{j&gt;k}\lambda_j\le(1-\tau)\,V_{\text{tot}}$$
+$$\text{(J4)}\ \ \lambda_j(X^TX)=n\,\lambda_j(C)\ \Longrightarrow\ \text{EVR}_k\ \text{same from }C\text{ or }X^TX$$
+$$\text{(J5)}\ \ \#\{j:\lambda_j&gt;0\}=\operatorname{rank}(C)=\operatorname{rank}(X)\le\min(d,\,n-1)$$
+$$\text{(J6)}\ \ \frac1n\sum_{i=1}^{n}\|\tilde x_i-\hat x_i\|^2=\sum_{j&gt;k}\lambda_j=\bigl(1-\text{CEV}(k)\bigr)V_{\text{tot}}$$
+<p><b>Symbols aur assumptions:</b></p>
+<ul>
+<li>$X\in\mathbb R^{d\times n}$ — data matrix, columns $x_i$ ($d$ features, $n$ points); dataset <b>centred</b>. $C=\tfrac1nXX^T\in\mathbb R^{d\times d}$ (convention $1/n$, B4).</li>
+<li>$\lambda_1\ge\lambda_2\ge\dots\ge\lambda_d\ge0$ — $C$ ke eigenvalues, <b>descending order</b> mein. $\lambda_j$ = variance along PC$_j$ (B7).</li>
+<li>$V_{\text{tot}}$ — total variance (assume $V_{\text{tot}}&gt;0$). $\tau\in(0,1]$ — threshold (jaise $0.95$). $k^*$ — sabse chhota qualifying $k$.</li>
+<li>$\hat x_i$ — $\tilde x_i$ ka top-$k$ PCs se reconstruction ($\hat x=W_kW_k^T\tilde x$, B8 G6). $\sum_{j&gt;k}$ — $j=k+1,\dots,d$.</li>
+<li>J4: $K=X^TX$ ($n\times n$) ke nonzero eigenvalues $XX^T$ ke nonzero eigenvalues ke barabar hain; $C=\tfrac1nXX^T$ isliye $\lambda_j(K)=n\lambda_j(C)$ (B9). Dono mein zero eigenvalues ki ginti alag ho sakti hai, par nonzero hisse same.</li>
+<li>J5: $X$ centred hai (columns ka jod 0), isliye rank $\le n-1$; aur rank $\le d$ hamesha.</li>
+</ul>
+<p><b>Words mein:</b> J1 — total variance sab eigenvalues ka jod (aur sab points ki squared length ka average). J2 — hissa = eigenvalue ÷ jod; cumulative = pehle $k$ ka jod ÷ jod. J3 — sabse chhota $k$ jahan cumulative threshold paar kare; ya, ulte tareeke se, discarded tail budget $(1-\tau)V_{\text{tot}}$ ke andar ho. J4 — $X^TX$ ya $C$ se ratio same. J5 — nonzero eigenvalues ki ginti = rank. J6 — discarded eigenvalues = average squared reconstruction error.</p>
+<p><b>Notice that…</b> (1) $\text{CEV}(k)$ $k$ ke saath badhta hai aur $\text{CEV}(d)=1$ (aur $\text{CEV}(\text{rank})=1$ bhi). (2) J3 mein "$\ge$" hai, "$&gt;$" nahi — exactly 95% bhi qualify karta hai (Example 3). (3) Ratio mein sirf eigenvalues ka <i>anupaat</i> aata hai, isliye data ko ek hi constant $c$ se scale karne par EVR nahi badalta.</p>
+<div class="tbl-wrap"><table><thead><tr><th>Commonly confused</th><th>EVR$_k$</th><th>CEV$(k)$</th></tr></thead><tbody>
+<tr><td>Kya hai</td><td>Sirf PC$_k$ ka hissa</td><td>PC$_1..$PC$_k$ ka jod</td></tr>
+<tr><td>Kab poochha jaata hai</td><td>"proportion along the first PC"</td><td>"capture at least 95%", "top two PCs ka percentage"</td></tr>
+<tr><td>$k=1$ par</td><td>$=$ CEV$(1)$</td><td>$=$ EVR$_1$</td></tr>
+<tr><td>Range</td><td>$[0,1]$, descending</td><td>$[0,1]$, non-decreasing, last $=1$</td></tr>
+</tbody></table></div>
+<p><b>Small worked example <span class="tag t-add">[ADDED]</span>:</b> $\lambda=(4,1)$ (B4 dataset). $V_{\text{tot}}=5$. $\text{EVR}_1=\tfrac45=0.8$, $\text{EVR}_2=0.2$, $\text{CEV}(1)=0.8$. $k=1$ par discard kiya hua $=\lambda_2=1$ $\Rightarrow$ J6 se average squared error $=1$, jo $0.2\times5=1$ ✓ (code-verified).</p>
+<div class="box em"><p><b>Important insight:</b> "kitne PCs rakhein" ka sawaal sirf eigenvalue spectrum par tika hai — directions $w_j$ ki zaroorat hi nahi. Isliye PYQs mein sirf eigenvalues diye jaate hain.</p>
+<p><b>This is why…</b> P1 aur P4 mein data, points, ya PCs ki jagah sirf eigenvalues diye gaye hain: ek line mein ratio nikal jaata hai.</p></div>
+</section>
+
+<section data-track="how">
+<h3>⚙️ How it works — numbered mechanism</h3>
+<ol>
+<li><b>Eigenvalues kis matrix ke hain?</b> $C$ (covariance) ya $K=X^TX$ (Gram) — likha dekho. Ratio dono se same (J4); absolute variance maange to $K$ wale ko $n$ se bhaago.</li>
+<li><b>Descending order mein likho.</b> Agar list shuffle hai to pehle sort karo; cumulative tabhi sahi hai.</li>
+<li><b>Total nikalo:</b> "baaki sab zero" likha ho to sirf listed eigenvalues ka jod (J1). Poori list dekho; ek bhi chhooti to ratio galat.</li>
+<li><b>Ratio ya cumulative:</b> "proportion along first PC" ⇒ $\lambda_1/V_{\text{tot}}$. "$\ge$ threshold" ⇒ cumulative.</li>
+<li><b>Threshold sawaal:</b> upar se jodte jao, pehla $k$ jahan $\text{CEV}(k)\ge\tau$ — par ek step peeche ($k-1$) bhi fail check karo.</li>
+<li><b>Shortcut (tail budget):</b> $(1-\tau)V_{\text{tot}}$ nikalo; sabse chhote eigenvalues ek-ek karke discard karo jab tak budget na toot'e (J3 ka doosra roop).</li>
+<li><b>Rank:</b> nonzero eigenvalues gino; centred ho to $\le n-1$ aur $\le d$ (J5). $d\gg n$ mein $K$ ($n\times n$) se gino.</li>
+<li><b>Format:</b> decimal maange to decimal ($0.476$), percent nahi; rounding end mein.</li>
+</ol>
+</section>
+
+<section data-track="examples">
+<h3>🧪 Worked examples</h3>
+
+<h4>Example 1 — simple: do eigenvalues <span class="tag t-add">[ADDED]</span></h4>
+<p>B4 dataset ka $C=\begin{bmatrix}2.5&amp;1.5\\1.5&amp;2.5\end{bmatrix}$, eigenvalues $4,1$, $V_{\text{tot}}=\operatorname{tr}C=2.5+2.5=5$. $\text{EVR}=(0.8,\,0.2)$. 95% chahiye to $\text{CEV}(1)=0.8&lt;0.95$ ⇒ $k=2$ (yahan koi compression nahi). 80% chahiye to $k=1$ (code-verified).</p>
+
+<h4>Example 2 — exam-level: zero eigenvalues <span class="tag t-add">[ADDED]</span></h4>
+<p>Bank ke 2.1 ka spectrum $30,10,10,0,0$ ($d=5$; 2024 October 27 · Q7, key 80% top-2). $V_{\text{tot}}=50$. $\text{CEV}=(0.60,\,0.80,\,1.00,\,1.00,\,1.00)$. 95% ke liye $k^*=3$, jo rank ke barabar hai — $k=3$ ke baad kuch nahi bacha (do directions mein data bilkul flat). Isliye "$k$ kitna rakhein" ka upper bound hamesha rank hota hai (code-verified).</p>
+
+<h4>Example 3 — tricky: boundary par exactly threshold <span class="tag t-add">[ADDED]</span></h4>
+<p>Spectrum $6,3,1$, $V_{\text{tot}}=10$, $\tau=0.90$. $\text{CEV}=(0.60,\,0.90,\,1.00)$. $\text{CEV}(2)=0.90$ exactly ⇒ "at least 90%" mein $k^*=2$ (J3 mein $\ge$). Agar "more than 90%" likha hota to $k^*=3$. Exact fractions se check karo ($9/10$); decimal rounding par bharosa mat karo (code-verified).</p>
+
+<h4>Example 4 — non-example: sirf numerator ko $n$ se bhaagna <span class="tag t-add">[ADDED]</span></h4>
+<p>P4 ke eigenvalues ($X^TX$ ke) $10,5,3,2,1$ aur maan lo $n=100$. Galat: "$C$ ka eigenvalue $=10/100=0.1$, to ratio $=0.1/21=0.0048$." Yahan numerator badla par denominator $X^TX$ wala hi rakha. Sahi: dono $C$ mein badlo: $\tfrac{0.1}{0.21}=0.476$, ya dono $K$ mein: $\tfrac{10}{21}=0.476$ (J4). Ek hi matrix ke eigenvalues use karo (code-verified).</p>
+
+<h4>Example 5 — tricky: rank aur $d\gg n$ <span class="tag t-add">[ADDED]</span></h4>
+<p>$d=200$ features, $n=12$ centred points (random data). $C$ ($200\times200$) ke sirf $\mathbf{11}=n-1$ eigenvalues nonzero nikle; $K$ ($12\times12$) ka sabse chhota eigenvalue $\approx3.8\times10^{-14}\approx0$ (centring ki wajah se, B9 Deeper 3). $\text{CEV}(11)=1$. Aur $k=3$ par average squared reconstruction error $=$ discarded eigenvalues ka jod $=114.64$ $=(1-\text{CEV}(3))V_{\text{tot}}$ ✓ (J6; code-verified). Matlab: $d=200$ hone se 200 PCs nahi milte — sirf 11 kaam ke hain.</p>
+
+<h4>Example 6 — tricky: independent features, phir bhi chhota $k$ <span class="tag t-add">[ADDED]</span></h4>
+<p>Do spectra, dono "independent features" ke ($C$ diagonal). (a) $d=21$, sab variances $1$: $\text{CEV}(19)=0.9048$, $\text{CEV}(20)=0.9524$ ⇒ $k^*=20=d-1$. (b) $d=3$, variances $100,1,1$: $\text{CEV}(1)=100/102=0.9804$ ⇒ $k^*=1$. Dono mein features uncorrelated hain, par $k^*$ bilkul alag: $k^*$ ko <i>spectrum ka flat hona</i> tay karta hai, sirf correlation ka na hona nahi. (P3 ke liye zaroori; code-verified.)</p>
+</section>
+
+<section data-track="deeper">
+<h3>🔬 Deeper insight (D3)</h3>
+<details class="deep"><summary>1. J1: $\operatorname{tr}(C)=\sum\lambda_j=\tfrac1n\sum\|\tilde x_i\|^2$ — proof</summary>
+<p>Trace linear hai aur $\operatorname{tr}(ab^T)=b^Ta$: $\operatorname{tr}(C)=\tfrac1n\sum_i\operatorname{tr}(\tilde x_i\tilde x_i^T)$, phir $=\tfrac1n\sum_i\tilde x_i^T\tilde x_i$, phir $=\tfrac1n\sum_i\|\tilde x_i\|^2$. Ab $C=W\Lambda W^T$ ($W$ orthogonal, B4 spectral theorem): $\operatorname{tr}(C)=\operatorname{tr}(W\Lambda W^T)$, $=\operatorname{tr}(\Lambda W^TW)$, $=\operatorname{tr}(\Lambda)=\sum_j\lambda_j$ (cyclic property). B4 dataset: $\tfrac14(\ldots)=5=4+1$ ✓.</p></details>
+<details class="deep"><summary>2. J6: average squared reconstruction error $=\sum_{j&gt;k}\lambda_j$ — proof</summary>
+<p>B8 G3, G4 se: $\tilde x_i=\sum_jz_{ij}w_j$ aur residual $r_i=\tilde x_i-\hat x_i=\sum_{j&gt;k}z_{ij}w_j$ (orthonormal $w_j$) ⇒ $\|r_i\|^2=\sum_{j&gt;k}z_{ij}^2$. Average lo: $\tfrac1n\sum_i\|r_i\|^2=\sum_{j&gt;k}\tfrac1n\sum_iz_{ij}^2=\sum_{j&gt;k}\lambda_j$ (G5: PC$_j$ scores ka variance $\lambda_j$, mean 0). Code-check: $d=200$, $n=12$, $k=3$ aur $k=7$ dono par error aur tail sum barabar nikle (114.64 aur 48.87).</p></details>
+<details class="deep"><summary>3. J5: $\operatorname{rank}\le n-1$ aur $d\gg n$ ka matlab</summary>
+<p>$\operatorname{rank}(XX^T)=\operatorname{rank}(X)$, aur centred $X$ ke columns ka jod $0$ hai, to columns linearly dependent: $X\mathbf 1=0$ ⇒ rank $\le n-1$. $C$ ke nonzero eigenvalues ki ginti $=\operatorname{rank}(X)\le\min(d,n-1)$. $d\gg n$ mein $d$ eigenvalues mein se kam se kam $d-n+1$ zero hain; isliye top $d-1$ eigenvectors <i>hamesha</i> 100% variance rakhte hain (P3 ka [?] yahin se aata hai).</p></details>
+<details class="deep"><summary>4. Ratio kab badalta hai: scaling vs standardisation</summary>
+<p>Poore data ko $c\neq0$ se guna karo: $C\to c^2C$, saare $\lambda_j\to c^2\lambda_j$, ratio same. Par ek <i>feature</i> ko alag scale karo (jaise cm se m) to $C$ ke eigenvalues ka anupaat badal jaata hai, kyunki variance ek axis mein alag se chhoti/badi ho jaati hai. Isi liye features ko standardise karte hain; tab $C$ correlation matrix ban jaata hai, jiska trace $=d$ (har feature variance 1). Bank ke sawaal sab "diya hua $C$/eigenvalues" par chalte hain, isliye yahan zaroorat nahi.</p></details>
+<details class="deep"><summary>5. "$d-1$ eigenvectors lagte hain" kya batata hai (P3 ke liye, code-verified)</summary>
+<p>Maan lo $k=d-2$ components 95% se kam dete hain par $k=d-1$ dete hain. Pehli shart: $\lambda_{d-1}+\lambda_d&gt;0.05V_{\text{tot}}$. Kyunki $\lambda_d\le\lambda_{d-1}$: $2\lambda_{d-1}&gt;0.05V_{\text{tot}}$ ⇒ $\lambda_{d-1}&gt;0.025V_{\text{tot}}$. Isliye pehle $d-1$ eigenvalues <i>har ek</i> $2.5\%$ se bade hain, unka jod $&lt;100\%$ ⇒ $(d-1)\times0.025&lt;1$ ⇒ $d\le40$. Aur $d$ bada ho to koi ek PC dominate nahi kar sakta ($\lambda_1&lt;1-0.025(d-2)$). Yani spectrum <i>flat</i> hai: variance bahut saari directions mein faila hai, koi chhota set sab explain nahi karta ⇒ features ke beech redundancy kam.</p>
+<p><b>Par yeh heuristic hai:</b> $d=3$, spectrum $(0.90,\,0.07,\,0.03)$: $\text{CEV}(1)=0.90&lt;0.95$, $\text{CEV}(2)=0.97$ ⇒ $d-1=2$ lagte hain, phir bhi $\lambda_1=90\%$ ho sakta hai (features kaafi correlated). Aur $d\gg n$ context mein (P2) "$d-1$ eigenvectors se 95%" shart <i>hamesha</i> sach hai (Deeper 3). Isliye P3 mein key "low correlation" literal implication nahi, intended reading hai.</p></details>
+</section>
+
+<section data-track="toolkit">
+<h3>⚡ PYQ pattern toolkit</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Trigger clue</th><th>Concept</th><th>First move</th></tr></thead>
+<tbody>
+<tr><td>"capture at least 95% of the variance", "good choice of $k$", eigenvalues list</td><td>J2–J3 cumulative</td><td>Total nikalo, upar se jodo, pehla $k$ jahan $\ge\tau$; $k-1$ fail check</td></tr>
+<tr><td>"proportion of variance explained along the first PC"</td><td>J2 EVR$_1$</td><td>$\lambda_1/\sum\lambda$, decimal mein</td></tr>
+<tr><td>eigenvalues of $X^TX$ diye, "remaining eigenvalues are zero"</td><td>J4</td><td>Ratio same; denominator = listed ka jod; $n$ mat lagao</td></tr>
+<tr><td>"top two PCs capture what percentage"</td><td>CEV(2)</td><td>Pehle 2 ka jod ÷ total, ×100 agar percent maanga</td></tr>
+<tr><td>"how many nonzero eigenvalues", $d\gg n$, centred</td><td>J5 rank</td><td>$\le\min(d,n-1)$; $K$ se gino</td></tr>
+<tr><td>"95% with $d-1$ eigenvectors implies…"</td><td>Flat spectrum (heuristic)</td><td>Dominant PC nahi ⇒ low redundancy; option 2 type; stem ambiguity note</td></tr>
+</tbody></table></div>
+<p><b>Common traps:</b> (1) $\lambda_k$ ko ratio samajhna; (2) sirf numerator ko $n$ se bhaagna ($0.1/21$); (3) 94.2% ko "approx 95%" maan kar $k=3$ likhna; (4) denominator mein zero/baaki eigenvalues ya top-$k$ ka hi jod lena; (5) eigenvalues ko sort kiye bina cumulative; (6) percent maanga ho decimal likhna, ya decimal maanga ho percent; (7) $d$ ya $n$ ko number of components samajhna.</p>
+</section>
+
+<!-- =========================== PYQs =========================== -->
+<h2>🎯 PYQs — 2.4 (P1–P4)</h2>
+
+<section data-track="pyq1">
+<h3>🎯 P1 — 95% variance ke liye $k$ (2023 October) — pretest yahi tha <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2023 October · Original Q7 · ID <code>640653669239</code> · SA · 4 marks · Page 7 · <span class="tag t-src">[SRC]</span></p>
+<p>Consider a dataset of <b>50 points</b>, all of which lie in $R^5$. The eigenvalues of the covariance matrix are:</p>
+<p>$$1.7,\quad 1.4,\quad 0.25,\quad 0.20,\quad 0.005$$</p>
+<p>If PCA is run and the <b>top-$k$ principal components</b> are retained, what is a good choice of <b>$k$</b>?</p>
+<p><b>Hint:</b> A good PCA should capture at least <b>95% of the variance</b>.</p>
+<p><b>Accepted answer (source):</b> <b>4</b>.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Total nikalo, phir cumulative. $k=3$ par exact kitna % hai? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> sabse chhota $k$ jo kam se kam 95% variance rakhe.</li>
+<li><b>Given:</b> $C$ ke eigenvalues (already descending). $n=50$, $d=5$ — dono is sawaal mein kaam ke nahi (distractor). Eigenvalues seedha covariance ke hain, to $n$ se bhaagna nahi.</li>
+<li><b>Trigger clues:</b> "capture at least 95% of the variance", "top-$k$ retained".</li>
+<li><b>Prerequisites:</b> B4 variance/trace (Procedural), B7 variance along PC $=\lambda$ (Conceptual) · <b>Core principle:</b> J2–J3 (cumulative explained variance).</li>
+</ul>
+<h4>2. 🧭 Methods (2 genuinely different)</h4>
+<p><b>M1 General</b> — upar se cumulative jodo jab tak $\ge95\%$. <b>M2 Shortcut</b> — neeche se: 5% ka loss-budget nikalo, chhote eigenvalues discard karte jao jab tak budget na toot'e. Dono J3 ke do roop hain par chalte alag tareeke se (head-sum vs tail-budget).</p>
+<h4>3. 🧮 Side-by-side working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Cumulative"><div class="mh">M1 · upar se cumulative</div>
+<p><b>Step 1 (total):</b> $1.7+1.4=3.1$; $3.1+0.25=3.35$; $3.35+0.20=3.55$; $3.55+0.005=3.555$.</p>
+<p><b>Step 2 ($k=1$):</b> $1.7/3.555=0.4782$ → 47.82%.</p>
+<p><b>Step 3 ($k=2$):</b> $3.1/3.555=0.8720$ → 87.20%.</p>
+<p><b>Step 4 ($k=3$):</b> $3.35/3.555=0.9423$ → 94.23% $&lt;95\%$ ✗.</p>
+<p><b>Step 5 ($k=4$):</b> $3.55/3.555=0.9986$ → 99.86% $\ge95\%$ ✓.</p>
+<p><b>Step 6:</b> pehla qualifying $k=\mathbf4$.</p></div>
+<div class="method" data-label="M2 Tail budget"><div class="mh">M2 · neeche se loss-budget</div>
+<p><b>Step 1:</b> total $=3.555$ (upar jaisa). Allowed loss $=0.05\times3.555=0.17775$.</p>
+<p><b>Step 2:</b> sabse chhota eigenvalue discard: $0.005\le0.17775$ ✓ ⇒ $k=4$ chalta hai.</p>
+<p><b>Step 3:</b> agla chhota bhi discard: $0.005+0.20=0.205$ ⇒ $0.205&gt;0.17775$ ✗ ⇒ $k=3$ nahi chalta.</p>
+<p><b>Step 4:</b> $k=4$ chalta hai, $k=3$ nahi ⇒ $\mathbf4$.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Cumulative</td><td>Medium (5 divisions)</td><td>Low</td><td>Low</td><td>Hamesha; saare CEV dikhte hain</td></tr>
+<tr><td>M2 Tail budget</td><td>Fast (2 additions)</td><td>Medium</td><td>Medium (budget sahi na bana to)</td><td>Jab list lambi ho aur tail chhoti</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M2. 🏆 <b>BEST EXAM METHOD:</b> M1 — har $k$ ka %, ek dum check-able; trade-off: M2 jaldi hai par total aur budget dono sahi chahiye, aur 4 marks ke SA mein galti ka cost bada hai.</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li><b>Reconstruction error (J6):</b> $k=4$ par discarded $=0.005$ ($0.14\%$ of $3.555$); $k=3$ par $0.205$ ($5.77\%$ $&gt;5\%$). Dono M2 ke saath match (code-verified).</li>
+<li><b>Dono taraf se same:</b> $1-0.9423=0.0577=0.205/3.555$ ✓.</li>
+<li><b>Source key:</b> $4$ ✓.</li>
+</ul>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>$k=3$: 94.23% ko "lagbhag 95%" maan lena. Hint "at least 95%" hai, lagbhag nahi.</li>
+<li>$k=2$: "do bade eigenvalues" ya elbow se; 87.2% 95% nahi hai.</li>
+<li>Ratio mein $n=50$ ya $d=5$ lagana; ya $1.7$ se bhaagna.</li>
+<li>Jod mein arithmetic slip: $3.1+0.25=3.35$ (pehle 3 ka jod) aur $3.35+0.20=3.55$ (pehle 4 ka) ko mix kar dena.</li>
+</ul>
+<p><b>Recognition rule:</b> "at least $\tau$ variance" + eigenvalues ⇒ cumulative sum, pehla $\ge\tau$; $k-1$ fail dikhao.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>$C$ ke eigenvalues $8,\,4,\,2,\,1,\,0.5,\,0.5$. (a) 90% ke liye smallest $k$? (b) 95% ke liye? (c) (b) wale $k$ par average squared reconstruction error?</p>
+<details class="reveal"><summary>Show answer</summary><p>Total $=16$. CEV (percent) $=50,\ 75,\ 87.5,$ $93.75,\ 96.875,\ 100$. (a) $87.5&lt;90\le93.75$ ⇒ $k=\mathbf4$. (b) $93.75&lt;95\le96.875$ ⇒ $k=\mathbf5$. (c) $k=5$ par discarded $=\lambda_6=\mathbf{0.5}$ ($3.125\%$ of $16$). Compare: $k=4$ par $1.0$ ($6.25\%$) (code-verified).</p></details>
+</details>
+</section>
+
+<section data-track="pyq2">
+<h3>🎯 P2 — $d\gg n$ context: $C=\tfrac1nXX^T$, $K=X^TX$ (2023 October) <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2023 October · Original Q13 · ID <code>640653669242</code> · Comprehension · 0 marks · Pages 11–12 · <span class="tag t-src">[SRC]</span></p>
+<p>Suppose we have a dataset/data matrix $X\in R^{d\times n}$ where: $d$ = number of features, $n$ = number of samples, $d\gg n$. Data is centered. The representative line is given by the unit vector $w$, pointing in the direction of the line. In all cases, maximize $f(w)=w^TCw$ where $C=\frac1nXX^T$ is the covariance matrix. The kernel matrix is $K=X^TX$. Based on this data, answer the subquestions.</p>
+<p><b>Children (same paper):</b> Q14 (<code>640653669243</code>, MSQ) aur Q15 (<code>640653669244</code>, MCQ) — dono B7 mein solve ho chuke hain. Q16 (<code>640653669245</code>) neeche P3 hai.</p>
+</div>
+<p>Context block mein khud koi sawaal nahi (0 marks), isliye solution format lagu nahi. Par yeh setup 2.4 ke liye teen kaam ki cheezein deta hai:</p>
+<ol>
+<li><b>Rank chhota hai.</b> $C$ ka size $d\times d$ hai par centred data ke $n$ points ki wajah se nonzero eigenvalues $\le n-1$ (J5). $d=200$, $n=12$ example (Example 5) mein exactly 11 nikle.</li>
+<li><b>Ratio $K$ se nikalo.</b> $K$ ($n\times n$) ke nonzero eigenvalues $=n\times$ $C$ ke nonzero eigenvalues (J4); EVR same. Code-check: $C$ aur $K$ se top-11 ratios barabar nikle.</li>
+<li><b>Top $d-1$ eigenvectors se hamesha 100%.</b> Kyunki nonzero eigenvalues $\le n-1\le d-1$ (jab $d\gg n$). Yeh P3 ke stem ko samajhne ki chaabi hai.</li>
+</ol>
+<div class="try"><p class="ttl">✍️ Chhota apna check <span class="tag t-add">[ADDED]</span></p><p>$d=2000$, $n=30$, centred. $C$ ke kitne eigenvalues nonzero ho sakte hain (maximum)? $K$ ke kitne eigenvalues zero hain (minimum)?</p></div>
+<details class="reveal"><summary>Show answer</summary><p>$C$: zyada se zyada $n-1=\mathbf{29}$ nonzero (J5). $K$ ($30\times30$): $K\mathbf 1=0$ (B9 Deeper 3) ⇒ kam se kam $\mathbf1$ eigenvalue zero. $\text{CEV}(29)=1$: 29 PCs mein poora variance. $2000$ features hone se $2000$ useful PCs nahi milte.</p></details>
+</section>
+
+<section data-track="pyq3">
+<h3>🎯 P3 — "95% variance $d-1$ eigenvectors se" ka matlab (2023 October) <span class="tag t-src">[SRC]</span> <span class="tag t-q">[?]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2023 October · Original Q16 · ID <code>640653669245</code> · MCQ · 3 marks · Page 13 · parent Q13 (<code>640653669242</code>, P2) · <span class="tag t-src">[SRC]</span></p>
+<p>Suppose that <b>95% of the variance of the data is captured using $d-1$ eigenvectors</b>. This implies that:</p>
+<ol>
+<li>The features are highly correlated (or dependent).</li>
+<li>The features have low correlation (or independent).</li>
+</ol>
+<p><b>Answer indicated in source:</b> option 2 — the features have low correlation (or independent).</p>
+</div>
+<div class="box amber">
+<p><b>Source status <span class="tag t-q">[?]</span> (F15):</b> stem literal padhne par kuch imply nahi karta (proof Method 2 mein). Key option 2 tab hi theek baithti hai jab stem ko "95% ke liye lagbhag $d-1$ eigenvectors <i>chahiye</i>" padha jaye. Exam mein option 2 hi likhna; neeche dono reading ke saath proof hai. Stem mein koi wording badli nahi gayi.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Socho: agar features bahut correlated hon, to 95% variance ke liye kitne PCs lagenge — bahut ya kam? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> "95% variance $d-1$ eigenvectors se" ka correlation ke baare mein kya matlab.</li>
+<li><b>Given:</b> sirf yeh ek shart; koi spectrum nahi. Parent P2 mein $d\gg n$ aur centred data.</li>
+<li><b>Trigger clues:</b> "95% variance", "$d-1$ eigenvectors", "highly correlated vs low correlation".</li>
+<li><b>Prerequisites:</b> J3, J5, Deeper 5 (Conceptual + Evidence) · <b>Core principle:</b> kitne PCs lagte hain yeh spectrum ki flatness batata hai; correlated features ≈ ek dominant eigenvalue.</li>
+</ul>
+<h4>2. 🧭 Methods (2; conceptual MCQ ⇒ 1–2 + option elimination)</h4>
+<p><b>M1 Intended reading</b> — "$\approx d-1$ components <i>chahiye</i>" maan kar spectrum ka shape dekho. <b>M2 Literal reading</b> — shart ko jaisi likhi hai waisi lo aur dono options ko counter-example se test karo. Dono ka nateeja alag hai; isi liye <span class="tag t-q">[?]</span>.</p>
+<h4>3. 🧮 Side-by-side working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Needs d−1"><div class="mh">M1 · "$\approx d-1$ chahiye" ⇒ flat spectrum</div>
+<p><b>Step 1:</b> $d-2$ components 95% se kam, $d-1$ components $\ge95\%$ maano.</p>
+<p><b>Step 2:</b> pehli shart: $\lambda_{d-1}+\lambda_d&gt;0.05V_{\text{tot}}$; $\lambda_d\le\lambda_{d-1}$ ⇒ $\lambda_{d-1}&gt;0.025V_{\text{tot}}$ (Deeper 5).</p>
+<p><b>Step 3:</b> pehle $d-1$ eigenvalues har ek $2.5\%$ se bade ⇒ variance bahut saari directions mein faila hai, koi chhota set dominate nahi karta.</p>
+<p><b>Step 4:</b> option 1 (highly correlated) ka matlab hota hai ek ya do dominant eigenvalues, jo Step 3 ke ulta hai ⇒ hataya.</p>
+<p><b>Step 5:</b> bacha option 2 ⇒ $\mathbf2$ (key se match).</p></div>
+<div class="method" data-label="M2 Literal test"><div class="mh">M2 · literal shart + counter-example</div>
+<p><b>Step 1:</b> shart "95% $d-1$ eigenvectors se capture" $\Leftrightarrow\text{CEV}(d-1)\ge0.95$, i.e. $\lambda_d\le0.05V_{\text{tot}}$.</p>
+<p><b>Step 2 (option 1 test):</b> $d=2$, unit variances, correlation $0.98$: eigenvalues $1.98,\,0.02$ ⇒ $\text{CEV}(1)=0.99\ge0.95$. Shart sach, features highly correlated ⇒ shart option 2 ko force nahi karti.</p>
+<p><b>Step 3 (option 2 test):</b> $d=21$ independent unit-variance features: $\text{CEV}(20)=0.9524\ge0.95$ ⇒ shart sach, features independent. Is spectrum se option 1 bhi force nahi hota.</p>
+<p><b>Step 4:</b> P2 ke context ($d\gg n$) mein shart <i>hamesha</i> sach (rank $\le n-1\le d-1$), to koi bhi option imply nahi hota. Literal reading se koi answer nahi nikalta; intended reading (M1) hi key tak le jaati hai.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Intended reading</td><td>Fast (3 lines)</td><td>Medium</td><td>Low (key tak pahunchta hai)</td><td>Exam answer</td></tr>
+<tr><td>M2 Literal + counter-example</td><td>Slow</td><td>High</td><td>Low</td><td>Samajhna ki stem kyun ambiguous hai</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST</b> / 🏆 <b>BEST EXAM METHOD:</b> M1 ("$d-1$ chahiye" ⇒ flat spectrum ⇒ low correlation); trade-off: yeh heuristic hai (Deeper 5 ka $d=3$ example), pakka implication nahi.</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li><b>Option 1 vs spectrum:</b> $\rho=0.98$ ke 2 features ka PC1 $=99\%$ (eigenvalues $1.98$, $0.02$; code-verified) — ek PC dominate ⇒ kam $k$, $d-1$ nahi <i>chahiye</i> (jab $d$ bada ho).</li>
+<li><b>Flat example:</b> $d=21$ equal variances: $k^*=20=d-1$ (19 par 90.48%, 20 par 95.24%; code-verified).</li>
+<li><b>Random test:</b> hazaaron random spectra (d 3–59) mein jahan "$d-1$ chahiye" tha, har baar $\lambda_{d-1}&gt;0.025V_{\text{tot}}$ nikla; sabse bada $d$ jo mila 33 (bound $d\le40$ ke andar) (code-verified).</li>
+<li><b>Source key:</b> option 2 — M1 se match; M2 se sirf yeh ki stem ambiguous hai.</li>
+</ul>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>"95% sirf $d-1$ eigenvectors se" ko "kam components kaafi" padh kar option 1 (high correlation) chunna. Phrase ka maksad ulta hai: $d-1$ <i>zyada</i> hain.</li>
+<li>"independent" ko "uncorrelated, to hamesha flat spectrum" maan lena. Independent features alag variances ke saath ek dominant PC de sakte hain ($100,1,1$ ⇒ $k^*=1$).</li>
+<li>$d$ ko hi "number of components needed" samajhna ya $d-1$ ko 95% ka multiplier.</li>
+</ul>
+<p><b>Recognition rule:</b> "$\approx$ saare components chahiye" ⇒ spectrum flat ⇒ low redundancy/correlation; "ek-do components kaafi" ⇒ high correlation.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>Do dataset, dono mein features independent (uncorrelated). (a) $d=21$, saari variances $1$. (b) $d=3$, variances $100,\,1,\,1$. Har ek mein 95% ke liye smallest $k$? Isse "independent ⇒ bahut components chahiye" ke baare mein kya seekha?</p>
+<details class="reveal"><summary>Show answer</summary><p>(a) $\text{CEV}(19)=19/21=0.9048&lt;0.95$, $\text{CEV}(20)=20/21=0.9524\ge0.95$ ⇒ $k=\mathbf{20}$. (b) $\text{CEV}(1)=100/102=0.9804\ge0.95$ ⇒ $k=\mathbf1$. Seekh: independence akela kaafi nahi; <b>variances ka barabar/flat hona</b> $k$ ko bada banata hai (code-verified).</p></details>
+</details>
+</section>
+
+<section data-track="pyq4">
+<h3>🎯 P4 — $X^TX$ ke eigenvalues $10,5,3,2,1$: PC1 ka proportion (2025 October 26) <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2025 October 26 · Original Q8 · ID <code>6406531527619</code> · SA · 3 marks · Page 8 · <span class="tag t-src">[SRC]</span></p>
+<p>The first five eigenvalues of $X^TX$ are: $10,\ 5,\ 3,\ 2,\ 1$ and all remaining eigenvalues are zero. What is the proportion of variance explained along the <b>first principal component</b>? Enter the answer correct to two decimal places.</p>
+<p><b>Accepted answer (source):</b> 0.45 to 0.50.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Denominator kya hoga jab "baaki sab zero" ho? Decimal ya percent? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> $\text{EVR}_1$, 2 decimal places mein.</li>
+<li><b>Given:</b> $X^TX$ (Gram matrix $K$) ke eigenvalues, covariance ke nahi; baaki sab zero.</li>
+<li><b>Trigger clues:</b> "proportion of variance explained", "first principal component", "remaining eigenvalues are zero".</li>
+<li><b>Prerequisites:</b> J2, J4 ($n$ cancel), B9 ($\lambda_K=n\lambda_C$) (Procedural + Conceptual) · <b>Core principle:</b> $\text{EVR}_1=\lambda_1/\sum_j\lambda_j$.</li>
+</ul>
+<h4>2. 🧭 Methods (1 genuine; why)</h4>
+<p>Sirf ek real method hai: ratio. $C$ ke eigenvalues se ($n$ se bhaag kar) ya $1-\text{tail}$ se karna usi ratio ke roop hain, naye tareeke nahi; unhe Verification mein check ki tarah rakha hai.</p>
+<h4>3. 🧮 Working (steps)</h4>
+<p><b>Step 1 (total):</b> $10+5=15$; $15+3=18$; $18+2=20$; $20+1=21$. Baaki eigenvalues 0, to total $=21$.</p>
+<p><b>Step 2:</b> $\text{EVR}_1=\tfrac{10}{21}$.</p>
+<p><b>Step 3:</b> $\tfrac{10}{21}=0.47619\ldots$ ⇒ <b>0.48</b> (2 d.p.).</p>
+<p><b>Step 4:</b> range $0.45$–$0.50$ ke andar ✓.</p>
+<h4>4. 📊 Comparison</h4>
+<p>Ek hi method; speed ~20 second, difficulty low, error risk: denominator aur $n$ wali galti. ⚡ <b>FASTEST</b> / 🏆 <b>BEST EXAM METHOD:</b> seedha ratio.</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li><b>Sab ratios jodo:</b> $\tfrac{10+5+3+2+1}{21}=1$ ✓ (shares: $47.62,23.81,14.29,9.52,4.76$ %).</li>
+<li><b>$C$ se (koi bhi $n$):</b> $n=100$ lo: $\lambda_C=0.1,0.05,0.03,0.02,0.01$, total $0.21$ ⇒ $\tfrac{0.1}{0.21}=0.4762$ ✓ ($n$ cancel).</li>
+<li><b>Tail se:</b> $1-\tfrac{5+3+2+1}{21}=1-\tfrac{11}{21}=\tfrac{10}{21}$ ✓.</li>
+<li><b>Source key:</b> $0.476\in[0.45,0.50]$ ✓ (code-verified).</li>
+</ul>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>Sirf numerator ko $n$ se bhaagna: $0.1/21=0.0048$ ✗ (Example 4).</li>
+<li>Percent likhna ($47.62$) jabki "0.45 to 0.50" decimal range hai ✗.</li>
+<li>Denominator mein top-1 ya top-2 hi lena ($10/15=0.67$) ✗.</li>
+<li>$X^TX$ ke eigenvalues ko "variances" bol dena: woh $n$ guna bade hain; ratio ke liye theek, absolute ke liye nahi.</li>
+</ul>
+<p><b>Recognition rule:</b> "proportion of variance along PC$_j$" ⇒ $\lambda_j$ ÷ <i>us hi matrix ke saare eigenvalues ka jod</i>; "baaki zero" ⇒ listed ka jod.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>$X^TX$ ke nonzero eigenvalues $9,\,4,\,2,\,1$ (baaki 0), $n=50$. (a) PC2 ka proportion? (b) Top-2 PCs ka cumulative proportion? (c) $C$ ka largest eigenvalue?</p>
+<details class="reveal"><summary>Show answer</summary><p>Total $=16$. (a) $4/16=\mathbf{0.25}$. (b) $(9+4)/16=\mathbf{0.8125}$. (c) $\lambda_C=\lambda_K/n=9/50=\mathbf{0.18}$ (code-verified).</p></details>
+</details>
+</section>
+
+<section data-track="memory">
+<h2>📌 Memory card — 2.4 explained variance, rank, dimension selection</h2>
+<div class="grid2">
+<div class="box em">
+<p><b>Core model:</b> total variance $=\sum\lambda_j$; PC$_j$ ka hissa $\lambda_j/\sum\lambda$; $k$ chunna $=$ pehla $k$ jahan cumulative $\ge\tau$; rank $=$ nonzero eigenvalues ki ginti.</p>
+<p><b>Backbone chain:</b> kis matrix ke eigenvalues → descending → total (baaki zero?) → ratio/cumulative → pehla $k$ + $k-1$ fail check → decimal/percent format.</p>
+</div>
+<div class="box">
+<p><b>Formulas (with conditions):</b></p>
+<ul>
+<li>$V_{\text{tot}}=\operatorname{tr}C=\sum_j\lambda_j$ — $1/n$ convention, centred</li>
+<li>$\text{EVR}_k=\lambda_k/\sum\lambda$, $\text{CEV}(k)=\sum_{j\le k}\lambda_j/\sum\lambda$ — descending order</li>
+<li>$k^*=\min\{k:\text{CEV}(k)\ge\tau\}$ ⟺ tail $\le(1-\tau)V_{\text{tot}}$ — "$\ge$", not "$&gt;$"</li>
+<li>$\lambda_j(X^TX)=n\lambda_j(C)$ — ratio same; ek hi matrix use karo</li>
+<li>rank $\le\min(d,n-1)$ — centred data</li>
+<li>avg sq. reconstruction error $=\sum_{j&gt;k}\lambda_j$ — $1/n$ convention</li>
+</ul>
+</div>
+</div>
+<div class="grid2">
+<div class="box amber">
+<p><b>Top 3 traps:</b> (1) numerator ko $n$ se bhaaga par denominator nahi; (2) 94.2% ko 95% maan lena / "$\ge$" vs "$&gt;$" boundary; (3) percent vs decimal, ya denominator mein poora jod nahi.</p>
+</div>
+<div class="box">
+<p><b>Trigger bank:</b> "at least 95% variance, choose $k$" → cumulative · "proportion along first PC" → $\lambda_1/\sum$ · "eigenvalues of $X^TX$" → $n$ cancel · "$d\gg n$, nonzero eigenvalues" → $\le n-1$ · "$d-1$ eigenvectors capture 95%" → flat spectrum (heuristic, [?]).</p>
+</div>
+</div>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Method selector — question deta hai…</th><th>Use</th></tr></thead>
+<tbody>
+<tr><td>Eigenvalue list + threshold</td><td>Cumulative from top; $k-1$ fail dikhao</td></tr>
+<tr><td>List lambi, tail chhoti</td><td>Tail budget $(1-\tau)V_{\text{tot}}$</td></tr>
+<tr><td>Eigenvalues of $X^TX$, ratio maanga</td><td>Seedha ratio, $n$ mat lagao</td></tr>
+<tr><td>Absolute variance, $K$ ke eigenvalues diye</td><td>$\lambda_C=\lambda_K/n$</td></tr>
+<tr><td>Kitna error discard se</td><td>Tail sum (J6), phir B11</td></tr>
+<tr><td>Rank / zero eigenvalues ki ginti</td><td>$\le\min(d,n-1)$; $K$ se gino</td></tr>
+</tbody></table></div>
+<p class="note"><b>Spaced review (2.4):</b> 2026-11-12 · 2026-11-14 · 2026-11-18 · 2026-12-02 — har baar P1 (CEV, $k=3$ vs $4$), P4 (n cancel, decimal), Example 3 (boundary $\ge$), Example 6 (independent par bhi $k^*=1$), Deeper 2 (J6 proof), P3 ka M1/M2 fark.</p>
+</section>
+
+<section data-track="explain-back">
+<h2>✍️ Explain-it-back</h2>
+<div class="try">
+<p class="ttl">Chat mein apne words mein jawab do (3–5 lines):</p>
+<p>"'$X^TX$ ke eigenvalues diye hain, PC1 ka proportion batao' mein hum $n$ se kyun nahi bhaagte, aur P1 mein $k=3$ (94.23%) kyun fail hota hai jabki number 95 ke itna paas hai? Discarded eigenvalues ka reconstruction error se kya rishta hai?"</p>
+<p class="note">Format: <code>Answer: … | Confidence: S/U/G | Reason: …</code></p>
+</div>
+</section>

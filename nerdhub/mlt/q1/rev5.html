@@ -1,0 +1,228 @@
+<section data-track="top">
+<p class="muted mono" style="margin:0">B28 · Phase 2 · Topic revision page</p>
+<h1>📄 T5 Probability, MLE &amp; Bayes — Revision &amp; Cheat Sheet</h1>
+<p class="lead">Exam se 1–2 din pehle ke liye: T5 ke teen subtopics — 5.1 Bernoulli MLE, 5.2 distributions ka likelihood aur MLE (Exponential, Poisson, Pareto, do-hypothesis), 5.3 Beta prior → posterior (mean, mode) — ke saare formulas, traps, trigger→first-move, [FLAG]/[?] aur ek 8-question quick test ek page par. B22–B24 kholne ki zaroorat nahi honi chahiye.</p>
+<div class="box">
+<p><b>Is page mein:</b> 1) big picture · 2) cheat sheet · 3) exam pattern digest · 4) mistake log · 5) quick test (8 Q, ≈16 min) · 6) topic-closed checklist (ticks is browser mein save hote hain).</p>
+<p><b>Source:</b> B22–B24 ke published pages (memory cards, toolkits, flags, T5 timed set) aur B26 ke final cheat sheet se padha hua; koi naya PYQ-bank line nahi padhi. Tags: <span class="tag t-src">[SRC]</span> PYQ se · <span class="tag t-add">[ADDED]</span> meri explanation / naya question · <span class="tag t-flag">[FLAG]</span> source error, proof ke saath · <span class="tag t-q">[?]</span> missing / unreadable.</p>
+<p class="note">Bank frequency ≠ exam weightage: neeche ke counts sirf is bank ke hain.</p>
+</div>
+</section>
+
+<h2>🖼️ 1. Topic big picture</h2>
+<section data-track="picture">
+<p><b>T5 kyun exist karta hai [ADDED]:</b> baaki poore course (GMM, regression) ka ek hi sawaal hai — "data dekh kar model ka knob $\theta$ kaise chunein?" T5 iska pehla jawab hai: woh $\theta$ chuno jisse dekha hua data sabse zyada probable lage (MLE). Doosra jawab: data se pehle ki apni belief (prior) ko data ke saath milao (posterior). Aage T7 ka M-step isi MLE recipe ka weighted version hai.</p>
+<figure class="viz diagram">
+  <p class="vt">T5 relational map — ek recipe, teen jagah</p>
+  <p class="vs">Blue = recipe ke kadam · green = subtopic jahan woh recipe use hoti hai. <i>Schematic</i> — dependency ka order, scale nahi.</p>
+<svg viewBox="0 0 900 360" role="img" aria-label="T5 map: data and model feed a likelihood, whose maximiser is the MLE; this splits into 5.1 Bernoulli, 5.2 distributions, and 5.3 Bayesian Beta posterior">
+<defs><marker id="a5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#a3a3a3"/></marker></defs>
+<rect x="10" y="30" width="170" height="90" rx="10" fill="none" stroke="#737373" stroke-dasharray="5 4"/>
+<text x="95" y="60" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">Data</text>
+<text x="95" y="82" text-anchor="middle" fill="#a3a3a3" font-size="11.5">0/1 tosses ya numbers</text>
+<text x="95" y="100" text-anchor="middle" fill="#a3a3a3" font-size="11.5">x₁ … xₙ</text>
+<rect x="220" y="30" width="190" height="90" rx="10" fill="#141c2b" stroke="#60A5FA"/>
+<text x="315" y="60" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">Model f(x; θ)</text>
+<text x="315" y="82" text-anchor="middle" fill="#a3a3a3" font-size="11.5">i.i.d. · ek anjaan knob θ</text>
+<text x="315" y="100" text-anchor="middle" fill="#a3a3a3" font-size="11.5">support padho (x ≥ 0, x ≥ 1 …)</text>
+<rect x="450" y="30" width="210" height="90" rx="10" fill="#141c2b" stroke="#60A5FA"/>
+<text x="555" y="60" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">Likelihood → log-likelihood</text>
+<text x="555" y="82" text-anchor="middle" fill="#a3a3a3" font-size="11.5">L = ∏ f(xᵢ;θ)</text>
+<text x="555" y="100" text-anchor="middle" fill="#a3a3a3" font-size="11.5">ℓ = Σ ln f  (hamesha sum)</text>
+<rect x="700" y="30" width="190" height="90" rx="10" fill="#141c2b" stroke="#60A5FA"/>
+<text x="795" y="60" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">MLE θ̂</text>
+<text x="795" y="82" text-anchor="middle" fill="#a3a3a3" font-size="11.5">ℓ′ = 0 ⇒ θ̂</text>
+<text x="795" y="100" text-anchor="middle" fill="#a3a3a3" font-size="11.5">verify ℓ″ &lt; 0, range, boundary</text>
+<g stroke="#a3a3a3" marker-end="url(#a5)"><line x1="180" y1="75" x2="218" y2="75"/><line x1="410" y1="75" x2="448" y2="75"/><line x1="660" y1="75" x2="698" y2="75"/></g>
+<path d="M795 120 L795 160 L145 160 L145 198" stroke="#a3a3a3" fill="none" marker-end="url(#a5)"/>
+<path d="M450 160 L450 198" stroke="#a3a3a3" fill="none" marker-end="url(#a5)"/>
+<path d="M795 160 L795 198" stroke="#a3a3a3" fill="none" marker-end="url(#a5)"/>
+<rect x="10" y="200" width="270" height="140" rx="10" fill="#0f1d17" stroke="#34D399"/>
+<text x="145" y="228" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">5.1 Bernoulli MLE</text>
+<text x="145" y="252" text-anchor="middle" fill="#a3a3a3" font-size="11.5">p̂ = k/n  (k = #ones)</text>
+<text x="145" y="272" text-anchor="middle" fill="#a3a3a3" font-size="11.5">counts ↔ fraction · label p = P(?)</text>
+<text x="145" y="292" text-anchor="middle" fill="#a3a3a3" font-size="11.5">pooling: counts jodo, estimates nahi</text>
+<text x="145" y="312" text-anchor="middle" fill="#a3a3a3" font-size="11.5">geometric: (1−p)^(t−1) p</text>
+<rect x="310" y="200" width="280" height="140" rx="10" fill="#0f1d17" stroke="#34D399"/>
+<text x="450" y="228" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">5.2 Distributions</text>
+<text x="450" y="252" text-anchor="middle" fill="#a3a3a3" font-size="11.5">Exponential λ̂ = 1/x̄ (n/Σx)</text>
+<text x="450" y="272" text-anchor="middle" fill="#a3a3a3" font-size="11.5">Poisson λ̂ = x̄ (freq table: Σcv/Σc)</text>
+<text x="450" y="292" text-anchor="middle" fill="#a3a3a3" font-size="11.5">Pareto θ̂ = n/Σ ln x</text>
+<text x="450" y="312" text-anchor="middle" fill="#a3a3a3" font-size="11.5">finite Θ: L(θ₁) vs L(θ₂)</text>
+<rect x="620" y="200" width="270" height="140" rx="10" fill="none" stroke="#737373" stroke-dasharray="5 4"/>
+<text x="755" y="228" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">5.3 Bayes: Beta prior</text>
+<text x="755" y="252" text-anchor="middle" fill="#a3a3a3" font-size="11.5">posterior ∝ likelihood × prior</text>
+<text x="755" y="272" text-anchor="middle" fill="#a3a3a3" font-size="11.5">Beta(α,β) → Beta(α+k, β+n−k)</text>
+<text x="755" y="292" text-anchor="middle" fill="#a3a3a3" font-size="11.5">mean (α′/(α′+β′)) · mode · MLE</text>
+<text x="755" y="312" text-anchor="middle" fill="#a3a3a3" font-size="11.5">sawaal ka shabd tay karta hai kaun</text>
+</svg>
+  <figcaption><b>Interpretation:</b> Teeno subtopics ek hi chain hain — <code>model → L → ℓ → ℓ′ = 0</code>. 5.1 mein model Bernoulli hai, 5.2 mein koi aur density, aur 5.3 mein likelihood ke saath prior bhi multiply hota hai.</figcaption>
+</figure>
+<div class="cards">
+<div class="card"><div class="k">Is bank mein T5</div><div class="v">60 marks</div><div class="s">19 solvable PYQs (23 IDs, 4 comprehension passages) · 2023 Jul–2025 Oct ke 8 papers [SRC]</div></div>
+<div class="card"><div class="k">Marks by subtopic</div><div class="v" style="font-size:16px;line-height:1.5">5.3: 24 · 5.1: 19 · 5.2: 17</div><div class="s">[SRC] — count ≠ weightage</div></div>
+</div>
+<div class="box em">
+<p><b>Topic ki "exam story" [ADDED]:</b> "Pehle label padho ($p=P(?)$), phir data ko counts mein todo, phir formula ($k/n$, $1/\bar x$, $\bar x$, $n/\sum\ln x$) — ya Beta mein counts jodo — aur sawaal ka shabd dekho: MLE, mean, ya mode?" Marks <b>label, counts aur "mean vs mode vs MLE"</b> ke shabdon mein jaate hain, calculus mein nahi.</p>
+</div>
+</section>
+
+<h2>📋 2. Consolidated cheat sheet</h2>
+<section data-track="cheat">
+<h3>T5 prerequisites + 5.1 Bernoulli model and MLE</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Concept</th><th>Formula</th><th>When it applies</th><th>Common mix-up</th></tr></thead>
+<tbody>
+<tr><td>Bernoulli</td><td>$P(X=x;p)=p^x(1-p)^{1-x}$, $p=P(X=1)$; $E[X]=p$</td><td>0/1 data</td><td>$p$ ka label ($P(1)$ vs $P(A)$)</td></tr>
+<tr><td>i.i.d. product</td><td>$P(x_1,\dots,x_n;\theta)=\prod_iP(x_i;\theta)$</td><td>Independent, same $\theta$</td><td>Product ki jagah sum</td></tr>
+<tr><td>Likelihood vs probability</td><td>$L(\theta)$ = data fixed, $\theta$ badalta; $\theta$ par area $\ne1$</td><td>—</td><td>$L$ ko distribution samajhna</td></tr>
+<tr><td>Likelihood (Bernoulli)</td><td>$L(p)=p^k(1-p)^{n-k}$, $k=\sum x_i$ = #ones</td><td>$n$ points, $k$ ones</td><td>—</td></tr>
+<tr><td>MLE</td><td>$\ell=k\ln p+(n-k)\ln(1-p)$; $\ell'=0\Rightarrow\hat p=\dfrac kn$</td><td>$0\lt k\lt n$</td><td>Derivative sahi, par label ulta</td></tr>
+<tr><td>Boundary</td><td>$k=0\Rightarrow\hat p=0$; $k=n\Rightarrow\hat p=1$</td><td>All zeros / all ones</td><td>Calculus chalana (interior mein $\ell'\ne0$)</td></tr>
+<tr><td>Counts back</td><td>ones $=n\hat p$; zeros $=n(1-\hat p)$</td><td>"MLE $0.3$, $100$ points, kitne zeros?"</td><td>Ones/zeros ya A/B ki adla-badli</td></tr>
+<tr><td>Pooling</td><td>$\hat p=\dfrac{\text{total successes}}{\text{total trials}}$</td><td>Ek hi coin, do experiments</td><td>Do estimates ka average</td></tr>
+<tr><td>Geometric</td><td>$P(T=t)=(1-p)^{t-1}p$ ⇒ $t-1$ tails + $1$ head</td><td>"toss until first head"</td><td>Success toss ginna bhoolna</td></tr>
+<tr><td>Invariance</td><td>MLE of $g(p)$ $=g(\hat p)$, jaise $1-\hat p$</td><td>Doosra label / odds</td><td>—</td></tr>
+<tr><td>Concavity</td><td>$\ell''(\hat p)=-\dfrac n{\hat p(1-\hat p)}\lt0$ (interior)</td><td>Max verify</td><td>—</td></tr>
+</tbody></table></div>
+
+<h3>5.2 Likelihood and MLE for distributions</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Concept</th><th>Formula</th><th>When it applies</th><th>Common mix-up</th></tr></thead>
+<tbody>
+<tr><td>General recipe</td><td>$L=\prod f(x_i;\theta)$, $\ell=\sum\ln f(x_i;\theta)$, $\hat\theta=\arg\max\ell$</td><td>i.i.d.</td><td>Log-likelihood ke options mein $\prod$ ya bina-$\ln$ expression chunna</td></tr>
+<tr><td>Exponential</td><td>$f=\lambda e^{-\lambda x}$, $x\ge0$; $\ell=n\ln\lambda-\lambda\sum x$; $\hat\lambda=\dfrac n{\sum x}=\dfrac1{\bar x}$</td><td>Waiting time, non-negative</td><td>Mean $\bar x$ ko rate maanna</td></tr>
+<tr><td>Poisson</td><td>$f=\dfrac{e^{-\lambda}\lambda^x}{x!}$; $\ell=-n\lambda+(\sum x)\ln\lambda-\sum\ln x!$; $\hat\lambda=\bar x$</td><td>Non-negative integers</td><td>$\ln x!$ derivative mein ghayab — usse $\hat\lambda$ nahi badalta</td></tr>
+<tr><td>Frequency table</td><td>$n=\sum c_j$, $\sum x=\sum c_jv_j$; $\hat\lambda=\dfrac{\sum c_jv_j}{\sum c_j}$</td><td>Value $v_j$, count $c_j$ di ho</td><td>Distinct values ki ginti se divide karna</td></tr>
+<tr><td>Pareto ($x_m=1$)</td><td>$f=\theta x^{-\theta-1}$, $x\ge1$; $\ell=n\ln\theta-(\theta+1)\sum\ln x$; $\hat\theta=\dfrac n{\sum\ln x}$</td><td>$\theta>1$</td><td>$\sum x_i$ ya $\log_{10}$ lena; $\hat\theta>1$ check bhoolna</td></tr>
+<tr><td>Finite $\Theta$</td><td>$L(\theta_1)$ vs $L(\theta_2)$; $\hat\theta=\theta_1\iff\sum_i\ln\dfrac{f(x_i;\theta_1)}{f(x_i;\theta_2)}\gt0$</td><td>Do hi candidate densities</td><td>Calculus; labels ulat ($\theta=-1\leftrightarrow5x^4$)</td></tr>
+<tr><td>Concavity</td><td>$\ell''=-\dfrac n{\lambda^2}$ (Exp), $-\dfrac{\sum x}{\lambda^2}$ (Poisson), $-\dfrac n{\theta^2}$ (Pareto)</td><td>Unique max verify</td><td>—</td></tr>
+<tr><td>Gaussian <span class="tag t-add">[ADDED]</span></td><td>$\hat\mu=\bar x$, $\hat\sigma^2=\dfrac1n\sum(x-\bar x)^2$</td><td>5.x PYQs mein nahi aaya; GMM M-step (7.4) ka building block</td><td>$n-1$ se divide</td></tr>
+</tbody></table></div>
+
+<h3>5.3 Beta priors, posterior updates, mean and mode</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Concept</th><th>Formula</th><th>When it applies</th><th>Common mix-up</th></tr></thead>
+<tbody>
+<tr><td>Beta density</td><td>$f(p)=\dfrac{p^{\alpha-1}(1-p)^{\beta-1}}{B(\alpha,\beta)}$, $0\lt p\lt1$; Beta(1,1) = Uniform</td><td>$\alpha,\beta>0$</td><td>$B(\alpha,\beta)$ sirf normaliser hai ($p$ se free)</td></tr>
+<tr><td>Moments</td><td>mean $\dfrac{\alpha}{\alpha+\beta}$ · mode $\dfrac{\alpha-1}{\alpha+\beta-2}$ · var $\dfrac{\alpha\beta}{(\alpha+\beta)^2(\alpha+\beta+1)}$</td><td>Mode sirf $\alpha,\beta>1$</td><td>Mean mein $\alpha/\beta$ ya $\alpha/(\alpha+\beta-2)$</td></tr>
+<tr><td>Bayes</td><td>posterior $\propto L(p)\cdot\pi(p)$</td><td>Prior diya ho</td><td>—</td></tr>
+<tr><td>Conjugate update</td><td>Beta$(\alpha,\beta)$ + $k$ ones, $n-k$ zeros ⇒ Beta$(\alpha+k,\ \beta+n-k)$; sanity $\alpha'+\beta'=\alpha+\beta+n$</td><td>Bernoulli data</td><td>Ones $\to\beta$, zeros $\to\alpha$, ya $\beta+n$</td></tr>
+<tr><td>Posterior mean</td><td>$\dfrac{\alpha+k}{\alpha+\beta+n}=w\cdot\dfrac\alpha{\alpha+\beta}+(1-w)\dfrac kn$, $w=\dfrac{\alpha+\beta}{\alpha+\beta+n}$</td><td>"expected value of the posterior"</td><td>MLE / prior mean / mode likhna</td></tr>
+<tr><td>MAP (mode)</td><td>$\dfrac{\alpha+k-1}{\alpha+\beta+n-2}$; Beta(1,1) par $=k/n=$ MLE</td><td>$\alpha',\beta'>1$</td><td>Mean aur mode ko ek samajhna</td></tr>
+<tr><td>Counts back</td><td>$k=\alpha_{post}-\alpha_{prior}$; $n-k=\beta_{post}-\beta_{prior}$</td><td>Prior aur posterior dono diye</td><td>—</td></tr>
+<tr><td>Skew rule</td><td>$\alpha\lt\beta$ ⇒ right-skew ⇒ mean mode ke daayein</td><td>Beta plot + mean/mode lines</td><td>—</td></tr>
+</tbody></table></div>
+</section>
+
+<h2>🔑 3. Exam pattern digest</h2>
+<section data-track="digest">
+<h3>Recurring question families [SRC]</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Family</th><th>IDs in bank</th><th>Core move</th></tr></thead>
+<tbody>
+<tr><td>Counts ↔ fraction: "MLE $\hat p$, $n$ points, kitne zeros / type B?" (5.1 P1–P4; 5.3 P1 posterior se)</td><td>5</td><td>Label tay karo, $n\hat p$ ya $n(1-\hat p)$; counts-back = Beta ke $\alpha,\beta$ ka antar</td></tr>
+<tr><td>Pooling / geometric (5.1 P5)</td><td>1</td><td>Heads aur total tosses jodo; $\hat p=S/(S+F)$</td></tr>
+<tr><td>Log-likelihood MCQ (5.2 P1, P3)</td><td>2</td><td>Sirf $\sum\ln f$ wala option</td></tr>
+<tr><td>Numeric MLE: Exponential, Poisson table, Pareto (5.2 P2, P4, P6)</td><td>3</td><td>Formula + 3-decimal intermediate logs</td></tr>
+<tr><td>Finite $\Theta$ comparison (5.2 P5, MSQ 5 marks)</td><td>1</td><td>$\prod5x_i^4$ vs $1$ — ya $\sum\ln$</td></tr>
+<tr><td>Beta posterior: distribution / mean (5.3 P2, P4–P8)</td><td>6</td><td>Counts jodo, phir shabd (mean / mode / MLE)</td></tr>
+<tr><td>Beta plot, mean vs mode (5.3 P3)</td><td>1</td><td>Dono numbers nikalo; skew rule</td></tr>
+</tbody></table></div>
+<h3>Trigger → first move</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Trigger phrase</th><th>First move</th></tr></thead>
+<tbody>
+<tr><td>"MLE of $p$ is … how many zeros / ones?"</td><td>$\hat p=k/n$; pehle likho $p=P(\cdot)$; phir poochhe label par badlo</td></tr>
+<tr><td>"toss until first head", "give the coin to your friend"</td><td>Geometric $(1-p)^{t-1}p$; heads aur tosses pool karo</td></tr>
+<tr><td>"all zeros / all ones"</td><td>Boundary — calculus mat chalao</td></tr>
+<tr><td>"log-likelihood of this dataset" + options</td><td>$\prod$ aur bina-$\ln$ options pehle reject</td></tr>
+<tr><td>"$\lambda e^{-\lambda x}$", "waiting time"</td><td>$\hat\lambda=n/\sum x=1/\bar x$</td></tr>
+<tr><td>"$e^{-\lambda}\lambda^x/x!$", frequency table</td><td>$\hat\lambda=\sum c_jv_j/\sum c_j$</td></tr>
+<tr><td>"$\theta x^{-\theta-1}$", "$x\ge1$", Pareto</td><td>$\hat\theta=n/\sum\ln x_i$ (natural log); $\hat\theta>1$ check</td></tr>
+<tr><td>"$\theta=-1$ ya $\theta=1$", do densities</td><td>$L(\theta_1)$ vs $L(\theta_2)$</td></tr>
+<tr><td>"prior and posterior are Beta … how many zeros/ones"</td><td>$\beta_{post}-\beta_{prior}$ = zeros; $\alpha_{post}-\alpha_{prior}$ = ones; $n$ se check</td></tr>
+<tr><td>"posterior mean", "expected value of the posterior"</td><td>$\dfrac{\alpha'}{\alpha'+\beta'}$ — MLE ya mode nahi</td></tr>
+<tr><td>"What is the posterior?" + options</td><td>Add karo; Bernoulli / swapped / prior-bhoole options hatao</td></tr>
+<tr><td>Beta plot + "mean" / "mode" lines</td><td>Dono numbers; right-skew ⇒ mean mode ke daayein</td></tr>
+<tr><td>Do alag priors, ek data</td><td>Har option ko mean ya mode ke roop mein pehchaano</td></tr>
+</tbody></table></div>
+<div class="box amber">
+<p><b>Top 5 traps (subtopic pages se):</b></p>
+<ol>
+<li><b>Label / ones–zeros ulta</b> — $p=P(A)$ ya $P(1)$? 5.1 P1–P4 isi par tike hain (agar $p=P(x=0)$ hota to $30$ aate, $70$ nahi).</li>
+<li><b>Pooling ki jagah averaging</b>, aur geometric mein success toss ya $t-1$ failures galat ginna (5.1 P5: $\tfrac19=0.111$).</li>
+<li><b>Exponential: mean ko rate maanna</b>; log-likelihood options mein $\prod$ / bina-$\ln$; frequency table mein $n=\sum c_j$; Pareto mein $\sum x_i$ ya $\log_{10}$.</li>
+<li><b>Beta update</b> — ones $\to\alpha$, zeros $\to\beta$; poora $n$ ($\beta+n$) mat jodo (5.3 P2 ka galat $0.25$ isi se aata hai).</li>
+<li><b>Mean vs mode vs MLE vs prior mean</b> — 5.3 P5 mein chaaron paas hain: $0.600$ (mean), $0.611$ (mode), $0.615$ (MLE), $0.571$ (prior mean). Shabd padho.</li>
+</ol>
+</div>
+<h3>Method selector [ADDED]</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Question deta hai…</th><th>Use</th></tr></thead>
+<tbody>
+<tr><td>Count ↔ fraction</td><td>$\hat p=k/n$ + invariance ($1-\hat p$)</td></tr>
+<tr><td>Known distribution ka MLE</td><td>Formula (Exp / Poisson / Pareto); naya ho to poori 5-step recipe</td></tr>
+<tr><td>Log-likelihood options</td><td>Shape elimination: $\sum\ln f$ only</td></tr>
+<tr><td>Do candidate densities</td><td>Likelihood compare; calculus nahi</td></tr>
+<tr><td>Beta posterior</td><td>Add ($\alpha+k$, $\beta+n-k$); phir mean / mode / MLE ka formula; bound check (mean prior mean aur MLE ke beech)</td></tr>
+</tbody></table></div>
+</section>
+
+<h2>🩹 4. Mistake log summary</h2>
+<section data-track="mistakes">
+<div class="box amber">
+<p><b>[FLAG] — source / key errors (proof ke saath) in T5:</b></p>
+<ul>
+<li><b>5.3 P2</b> <span class="tag t-flag">[FLAG]</span> — 2023 Oct Q9 (ID 640653669240): $50$ users, $15$ converted, prior Beta(3,4) ⇒ posterior Beta$(3+15,\ 4+35)=$ Beta(18,39), mean $\dfrac{18}{57}=0.316$. Bank ka accepted range $0.2$–$0.3$ is value ko exclude karta hai. Range ka beech $0.25=\dfrac{18}{72}$ ek galat update ($\beta+n=4+50=54$) se aata hai. Dono dikhaye gaye; source silently nahi badla. (Final cheat sheet mein F8.)</li>
+</ul>
+</div>
+<div class="box">
+<p><b>[?] — missing / ambiguous in source (T5):</b></p>
+<ul>
+<li><b>5.1 P1 / P2</b> (2023 Jul Q10, Oct Q5): sawaal "$p$" ka matlab nahi likhta; $p=P(x=1)$ standard convention hai aur keys ($70$, $140$) isi se consistent. <b>5.1 P5</b> (2025 Feb Q10): "five times" ki literal reading ($\tfrac19=0.111$); doosri reading ($\tfrac1{10}=0.10$) bhi accepted range $0.10$–$0.12$ mein hai, to range dono ko alag nahi kar paati.</li>
+<li><b>5.2 P1</b> (2024 Feb Q13): options ke saath koi correct-marked nahi; mera derived answer option 4. <b>5.2 context passages</b> (Q12, Q19) 0-mark hain. <b>5.2 P5</b>: tie case ($\prod5x_i^4=1$) poochha nahi gaya.</li>
+<li><b>5.3 P3</b> (2024 Feb Q16): sawaal plot par tika hai, image copy mein nahi; sirf numbers (mean $2/7$, mode $1/5$) recover hue. <b>5.3 P8</b> (2025 Oct Q5): koi key marked nahi; mera options 1 aur 4 (option 4 ka "$0.034$" asal $0.03465$ ka truncation hai).</li>
+</ul>
+</div>
+<div class="box">
+<p><b>Aapke logged errors:</b> abhi tak koi nahi — <code>needs_repair</code> khaali hai aur T5 par chat mein koi graded answer nahi aaya (checkpoint 4 / T5 timed set ke answers abhi baaki). Bhejoge to yahan error-tag ke saath judenge.</p>
+<p><b>Strategy note:</b> T5 mein sirf ek [FLAG] hai, par kai jagah key ka range bahut chauda hai (5.3 P7: $0.10$–$0.11$ mein MLE $0.10$ bhi aa jaata hai). Exam mein concept se answer nikalo, range par bharosa mat karo.</p>
+</div>
+</section>
+
+<h2>⏱️ 5. Quick revision test</h2>
+<section data-track="test">
+<p><b>Rules:</b> 8 questions · 24 marks (3 each) · 16 minutes · poore T5 ka mix. B24 ke T5 timed set ke patterns par <b>naye numbers</b> (remix) <span class="tag t-add">[ADDED]</span>; answers hidden. Ek hi baithak, notes band, calculator allowed. Chat mein: <span class="mono">RT1: … | RT2: … | Confidence per Q: S/U/G</span></p>
+<ol>
+<li><p><b>RT1 · SA · 3 marks.</b> Ek dataset mein $120$ points hain, har point type A ya type B. Bernoulli model mein $p=P(\text{type A})$ hai aur $\hat p_{MLE}=0.45$. Type B ke kitne points hain?</p></li>
+<li><p><b>RT2 · SA · 3 marks.</b> Aap ek coin $3$ baar toss karte hain: koi head nahi. Phir dost usi coin ko head aane tak toss karta hai aur use $4$ tosses lagte hain (T, T, T, H). $p=P(\text{head})$ ka MLE (3 decimals)?</p></li>
+<li><p><b>RT3 · SA · 3 marks.</b> Exponential model $f(x;\lambda)=\lambda e^{-\lambda x}$, $x\ge0$. Data $\{1,\ 2,\ 3,\ 6\}$. $\hat\lambda_{MLE}$ (3 decimals)?</p></li>
+<li><p><b>RT4 · SA · 3 marks.</b> Poisson model. $30$ points: value $0$ aaya $6$ baar, $1$ aaya $9$ baar, $2$ aaya $9$ baar, $4$ aaya $6$ baar. $\hat\lambda_{MLE}$ (2 decimals)?</p></li>
+<li><p><b>RT5 · SA · 3 marks.</b> Pareto ($x_m=1$) with $f(x;\theta)=\theta x^{-\theta-1}$, $x\ge1$. Data $\{1.5,\ 2,\ 1.2,\ 3\}$. $\hat\theta_{MLE}$ (3 decimals, natural log)?</p></li>
+<li><p><b>RT6 · SA · 3 marks.</b> Do candidate densities $[0,1]$ par: $\theta=1$: $f=1$; $\theta=2$: $f=2x$. Data $\{0.9,\ 0.8,\ 0.3\}$. $\hat\theta_{MLE}$ kya hai (1 ya 2)? Kyun?</p></li>
+<li><p><b>RT7 · SA · 3 marks.</b> Prior Beta(2,5). Data mein $40$ points, $14$ ones. Posterior mean (3 decimals)?</p></li>
+<li><p><b>RT8 · MSQ · 3 marks.</b> Prior Beta(1,1); $20$ points mein $5$ ones. Kaun se statements sach hain?</p>
+<p>(a) Posterior Beta(6,16) hai &nbsp; (b) Posterior mean $=0.25=$ MLE &nbsp; (c) Posterior mode $=0.25$ &nbsp; (d) Beta(1,1) prior koi pseudo-count nahi jodta &nbsp; (e) Likelihood $L(p)$ $p$ par ek probability distribution hai ($\int_0^1L\,dp=1$)</p></li>
+</ol>
+<details class="reveal"><summary>Show all answers (timer khatam hone ke baad)</summary>
+<p><b>RT1: 66.</b> Type B $=n(1-\hat p)=120\times0.55=66$. Trap: $120\times0.45=54$ (A ki ginti).</p>
+<p><b>RT2: 0.143.</b> Pehle experiment: $3$ tails. Dost: $(1-p)^3p$. Total $L=(1-p)^6p$ ⇒ heads $1$, tosses $7$ ⇒ $\hat p=\tfrac17=0.143$. Trap: dono estimates ka average ($0$ aur $\tfrac14$ ⇒ $0.125$), ya dost ke $4$ tosses mein se success toss na ginna. Code: numerical maximiser $0.142857$ ✓.</p>
+<p><b>RT3: 0.333.</b> $\hat\lambda=n/\sum x=4/12=0.333$ ($=1/\bar x$, $\bar x=3$). Trap: $\bar x=3$ ko rate likhna.</p>
+<p><b>RT4: 1.70.</b> $\sum x=0\cdot6+1\cdot9+2\cdot9+4\cdot6=51$, $n=\sum c=30$ ⇒ $\tfrac{51}{30}=1.70$. Trap: $\tfrac{51}4=12.75$ (distinct values se divide).</p>
+<p><b>RT5: 1.681.</b> $\sum\ln x=0.4055+0.6931+0.1823+1.0986=2.3795$ ⇒ $\hat\theta=\tfrac4{2.3795}=1.681$ ($>1$ ✓). Code: numerical maximiser $1.680993$ ✓. Trap: $\log_{10}$ ya $\sum x$.</p>
+<p><b>RT6: $\hat\theta=2$.</b> $L(2)=\prod2x_i=8\times0.9\times0.8\times0.3=1.728\gt1=L(1)$; equivalently $\sum\ln(2x_i)=0.547\gt0$. Trap: label ulat dena ($\theta=1\leftrightarrow f=2x$).</p>
+<p><b>RT7: 0.340.</b> Posterior Beta$(2+14,\ 5+26)=$ Beta(16,31); mean $\tfrac{16}{47}=0.340$. Bound check: prior mean $0.286$ aur MLE $0.35$ ke beech ✓. Trap: $\beta+n$ ⇒ $\tfrac{16}{61}=0.262$; mode $\tfrac{15}{45}=0.333$; MLE $0.35$.</p>
+<p><b>RT8: (a), (c).</b> (a) Beta$(1+5,\ 1+15)=$ Beta(6,16) ✓. (b) ✗ posterior mean $\tfrac6{22}=0.273$; $0.25$ mode/MLE hai. (c) ✓ mode $\tfrac{5}{20}=0.25$ (Beta(1,1) par MAP $=$ MLE). (d) ✗ Beta(1,1) ek "1 one + 1 zero" pseudo-count jaisa hai. (e) ✗ $L$ ka $p$ par area $1$ nahi hota (data par probability hai, $p$ par nahi).</p>
+<p class="note">Scoring: SA = full ya zero; MSQ = saare sahi options, koi galat nahi. 24 mein se 20+ = T5 revision-ready. Saare numerical answers python se code-verified. Galtiyan chat mein error-tag ke saath bhejo.</p>
+</details>
+</section>
+
+<h2>✅ 6. Topic-closed checklist</h2>
+<section>
+<p class="note">Har line ke liye: <b>"kya main yeh cold, exam time ke andar, bina hint ke kar sakta/sakti hoon?"</b> Tick tabhi jab quick test / timed set / checkpoint mein sach saabit hua ho. Ticks is browser mein save hote hain.</p>
+<div class="chkrow" data-check="5.1"><b>5.1 Bernoulli MLE</b> — label tay karna, $\hat p=k/n$, counts ↔ fraction, pooling, geometric, boundary.</div>
+<div class="chkrow" data-check="5.2"><b>5.2 Distributions ka MLE</b> — log-likelihood ka shape, Exponential $1/\bar x$, Poisson (frequency table), Pareto $n/\sum\ln x$, finite $\Theta$ comparison.</div>
+<div class="chkrow" data-check="5.3"><b>5.3 Beta posterior</b> — $(\alpha+k,\ \beta+n-k)$, counts-back, mean vs mode vs MLE, skew rule, do priors ek data.</div>
+<div class="chkrow" data-check="prereq"><b>T5 prerequisites (B22)</b> — Bernoulli / geometric, i.i.d. product, likelihood vs probability, $\ln$ ka sum, Bayes setup.</div>
+</section>

@@ -1,0 +1,620 @@
+<style>#content mjx-container:not([display="true"]){display:inline-block;max-width:100%;overflow-x:auto;overflow-y:hidden;vertical-align:middle}#content li,#content p,#content td{overflow-wrap:anywhere}</style>
+<section data-track="intro">
+<p class="muted mono" style="margin:0">B23 · T5 Probability, MLE &amp; Bayes · subtopic 5.2 · Likelihood and MLE for probability distributions</p>
+<h1>5.2 Likelihood &amp; MLE for distributions — Exponential, Poisson, Pareto aur ek do-hypothesis model</h1>
+<p class="lead">B22 mein sirf ek model tha (Bernoulli) aur MLE "fraction" nikla. 5.2 mein wahi 5-step recipe naye models par chalti hai: <b>likelihood → log → derivative → solve → verify</b>. Har model ka apna "shape" aata hai: Exponential $\hat\lambda=1/\bar x$, Poisson $\hat\lambda=\bar x$, Pareto $\hat\theta=n/\sum\ln x_i$. Aur ek PYQ (Oct 2024) mein $\theta$ sirf do values le sakta hai — wahan calculus nahi, seedha do likelihoods ki tulna hoti hai.</p>
+<div class="box">
+<p><b>Is build ke PYQs <span class="tag t-src">[SRC]</span></b> — subtopic 5.2 mein <b>8 IDs</b> hain: <b>2 comprehension context blocks</b> (0 marks, sirf passage) + <b>6 solvable PYQs (P1–P6), kul 17 marks</b>. Teen distributions (Exponential, Poisson, Pareto) + ek do-value hypothesis.</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>#</th><th>Paper · Q</th><th>ID</th><th>Type · marks</th><th>Kya poochha</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td colspan="6"><b>5.2 Likelihood and MLE for probability distributions</b></td></tr>
+<tr><td>ctx</td><td>2024 February · Q12</td><td class="mono">640653738042</td><td>Comprehension · 0</td><td>6 non-negative iid points, density $\lambda e^{-\lambda x}$ ($x\ge0$)</td><td>Passage (P1, P2 ka context)</td></tr>
+<tr><td>P1</td><td>2024 February · Q13</td><td class="mono">640653738043</td><td>MCQ · 2</td><td>Is dataset ka log-likelihood kaun sa expression hai?</td><td>Bank mein key marked nahi <span class="tag t-q">[?]</span>; mera derived answer: option 4</td></tr>
+<tr><td>P2</td><td>2024 February · Q14</td><td class="mono">640653738044</td><td>SA · 2</td><td>$x=1,\dots,6$ ke liye $\lambda$ ka MLE (3 d.p.)</td><td>Key 0.25–0.35; mera $0.2857$ ✓</td></tr>
+<tr><td>ctx</td><td>2024 July 07 · Q19</td><td class="mono">640653829518</td><td>Comprehension · 0</td><td>$n$ non-negative integers, Poisson PMF $e^{-\lambda}\lambda^x/x!$</td><td>Passage (P3, P4 ka context)</td></tr>
+<tr><td>P3</td><td>2024 July 07 · Q20</td><td class="mono">640653829519</td><td>MCQ · 2.5</td><td>Poisson dataset ka log-likelihood?</td><td>Option 1 marked ✓</td></tr>
+<tr><td>P4</td><td>2024 July 07 · Q21</td><td class="mono">640653829520</td><td>SA · 2.5</td><td>25 points ka frequency table ⇒ Poisson $\lambda$ ka MLE</td><td>Key 2.52 ✓</td></tr>
+<tr><td>P5</td><td>2024 October 27 · Q6</td><td class="mono">640653995449</td><td>MSQ · 5</td><td>$\theta\in\{-1,1\}$, densities $5x^4$ aur $1$: $\prod5x_i^4$ vs $1$ aur $\hat\theta_{MLE}$</td><td>Key options 1 aur 4 ✓</td></tr>
+<tr><td>P6</td><td>2025 July 13 · Q10</td><td class="mono">6406531302394</td><td>SA · 3</td><td>Pareto, 5 observations, $\hat\theta_{MLE}$ (3 d.p.)</td><td>Key 1.147–1.150; mera $1.1485$ ✓</td></tr>
+</tbody></table></div>
+<p><b>Bank frequency ≠ exam weightage:</b> 5.2 mein 8 IDs hain, par yeh sirf practice ki range batata hai (kaun-kaun se models aaye), "kitna aayega" nahi.</p>
+<p><b>Tags:</b> <span class="tag t-src">[SRC]</span> PYQ file se · <span class="tag t-add">[ADDED]</span> meri explanation / naya question · <span class="tag t-flag">[FLAG]</span> source error, proof ke saath · <span class="tag t-q">[?]</span> unreadable / missing / ambiguous. <b>PACER:</b> Procedural · Analogous · Conceptual · Evidence · Reference.</p>
+<p><b>B23 notation (L41–L48)</b> — B22 ke $L33$–$L40$ ke baad:
+L41 general recipe: i.i.d. data ⇒ $L(\theta)=\prod_if(x_i;\theta)$, $\ell(\theta)=\sum_i\ln f(x_i;\theta)$, $\hat\theta=\arg\max L=\arg\max\ell$ ($f$ = density ya PMF) ·
+L42 Exponential: $f=\lambda e^{-\lambda x}$, $x\ge0$ ⇒ $\ell=n\ln\lambda-\lambda\sum x_i$, $\hat\lambda=\dfrac n{\sum x_i}=\dfrac1{\bar x}$ ·
+L43 Poisson: $f=\dfrac{e^{-\lambda}\lambda^x}{x!}$ ⇒ $\ell=-n\lambda+\big(\sum x_i\big)\ln\lambda-\sum\ln x_i!$, $\hat\lambda=\bar x$ ·
+L44 Pareto ($x_m=1$): $f=\theta x^{-\theta-1}$, $x\ge1$, $\theta&gt;1$ ⇒ $\ell=n\ln\theta-(\theta+1)\sum\ln x_i$, $\hat\theta=\dfrac n{\sum\ln x_i}$ ·
+L45 frequency table (value $v_j$, count $c_j$): $n=\sum_jc_j$, $\sum_ix_i=\sum_jc_jv_j$ ·
+L46 finite parameter set $\{\theta_1,\theta_2\}$: dono likelihoods nikaalo, bada jeetta hai; $\hat\theta=\theta_1\iff\sum_i\ln\dfrac{f(x_i;\theta_1)}{f(x_i;\theta_2)}&gt;0$ ·
+L47 log-likelihood hamesha ek <b>sum</b> hai (log of product) — product ya bina-log wale options reject ·
+L48 concavity: $\ell''=-n/\lambda^2$ (Exp), $-\sum x_i/\lambda^2$ (Poisson), $-n/\theta^2$ (Pareto), sab $&lt;0$ ⇒ stationary point unique global max.
+(Pichhle builds ke $L1$–$L40$ B12–B22 mein.)</p>
+<p><b>Source integrity — 3 notes, koi <span class="tag t-flag">[FLAG]</span> nahi:</b></p>
+<ol>
+<li><span class="tag t-q">[?]</span> <b>P1 (Q13):</b> is bank mein options ke saath koi correct-answer marking nahi hai (baaki PYQs mein aksar hoti hai). Maine answer khud derive kiya: option 4. Derivation aur numerical check P1 mein.</li>
+<li><b>Context blocks</b> (Q12, Q19) 0-mark parent passages hain; unke apne koi sawaal nahi. Unka wording child PYQs ke upar box mein diya gaya hai.</li>
+<li><b>P5 (Q6):</b> yahan $\theta=-1$ aur $\theta=1$ sirf do <i>labels</i> hain (har label ek alag density), parameter continuous knob nahi. Tie case ($\prod5x_i^4=1$ exactly) poochha nahi gaya; main sirf $&gt;1$ aur $&lt;1$ ko judge karta hoon (D6 mein tie ka zikr).</li>
+</ol>
+<p>Saare numerical answers (6 PYQs, worked examples, transfer questions) python se code-verified; likelihood-explorer widget (naya, <code>mlecurve</code>) ka logic alag se test kiya.</p>
+</div>
+</section>
+
+<h2>5.2 Likelihood and MLE for probability distributions</h2>
+
+<section data-track="warm52">
+<h3>🔁 Recall warm-up (pichhle builds se, chat mein mat bhejo — khud check karo)</h3>
+<div class="try"><p class="ttl">W1 · B22 (5.1)</p><p>Bernoulli data: $n=40$ points, $14$ ones. (a) MLE $\hat p$? (b) $\ell'(p)=0$ likh kar solve karo.</p>
+<details class="reveal"><summary>Show answer</summary><p>(a) $\hat p=\dfrac{14}{40}=\mathbf{0.35}$. (b) $\ell(p)=14\ln p+26\ln(1-p)$, $\ell'(p)=\dfrac{14}p-\dfrac{26}{1-p}=0\Rightarrow14(1-p)=26p\Rightarrow p=\dfrac{14}{40}$. <b>Aaj ka link:</b> 5.2 mein bhi yahi 5 steps hain — sirf $f(x;\theta)$ badalta hai.</p></details></div>
+<div class="try"><p class="ttl">W2 · B22 (5.1 trap)</p><p>Ek hi coin: experiment 1 mein 10 tosses, 3 heads; experiment 2 mein 5 tosses, 2 heads. (a) Pooled MLE of $p$? (b) Dono estimates ka average kya deta hai?</p>
+<details class="reveal"><summary>Show answer</summary><p>(a) Pooled: $\dfrac{3+2}{10+5}=\dfrac5{15}=\mathbf{\tfrac13}\approx0.333$. (b) Average: $\dfrac{0.3+0.4}2=0.35$ — <b>galat</b> (alag $n$ ka dhyan nahi rakha). <b>Aaj ka link:</b> i.i.d. data ka $\ell$ <i>sum</i> hota hai (L47), isliye counts jodte hain, estimates nahi.</p></details></div>
+<div class="try"><p class="ttl">W3 · B19 (4.4)</p><p>Lloyd's algorithm mein $F$ (K-means objective) har pass ke baad kaise badalta hai? Kya woh kabhi badh sakta hai?</p>
+<details class="reveal"><summary>Show answer</summary><p><b>Kabhi nahi badhta (non-increasing).</b> Assignment step: har point apne nearest centre par jaata hai ⇒ $F$ ghatta ya barabar. Update step: mean hi minimiser hai ⇒ $F$ ghatta ya barabar. <b>Aaj ka link (preview):</b> MLE bhi "optimise karo" hai ($\max\ell=\min(-\ell)$); GMM/EM mein (B25–B26) $\ell$ har iteration non-decreasing rahegi.</p></details></div>
+</section>
+
+<section data-track="pretest52">
+<h3>❓ Pretest — pehle bina padhe try karo</h3>
+<div class="try"><p class="ttl">Ek PYQ, cold attempt (galat hona bilkul theek hai)</p>
+<p>2024 February · Q14 (parent Q12: six non-negative iid points, density $f(x;\lambda)=\lambda e^{-\lambda x}$ for $x\ge0$): You are given the actual values of these observations: $x_1=1,\ x_2=2,\ x_3=3,\ x_4=4,\ x_5=5,\ x_6=6$. What is the maximum likelihood estimate for $\lambda$? Enter your answer correct to three decimal places.</p>
+<p class="note">Do minute lagao, jawab aur confidence (S/U/G) khud likh lo. Poora solution neeche <b>P2</b> mein hai (is PYQ ka tag <span class="tag t-src">[SRC]</span>).</p></div>
+</section>
+
+<section data-track="pos52">
+<h3>🧭 Position — yeh kahan baithta hai</h3>
+<ul>
+<li><b>Pichhla:</b> 5.1 (B22) mein Bernoulli MLE = fraction. Wahan model itna simple tha ki "recipe" ka bas ek rasta dikha. 5.2 mein recipe ko <b>generalise</b> karte hain.</li>
+<li><b>Prerequisites:</b> T5 module (B22) — G2 (i.i.d. ⇒ product), G3 ($\ln$, derivative), S3 (recipe); aur 5.1 ka pooling / boundary vichaar.</li>
+<li><b>Yeh kya unlock karta hai:</b> 5.3 (B24) — Beta prior: posterior $\propto L(\theta)\times$ prior, yaani yahi likelihood ek naye factor ke saath. Aage T7 (GMM): likelihood $\prod_i\sum_k\pi_kf_k(x_i)$ ban jaata hai, jahan "log of sum" ki wajah se closed form nahi milta ⇒ EM <span class="tag t-add">[ADDED]</span>.</li>
+</ul>
+</section>
+
+<section data-track="intu52">
+<h3>🧠 Intuition — plain language</h3>
+<p>Ab data 0/1 nahi hai — waiting times (Exponential), counts (Poisson), "heavy-tailed" sizes (Pareto). Har model ek <b>family of curves</b> $f(x;\theta)$ hai aur $\theta$ ek knob hai. Knob ki har position ek "kahani" hai ki data kaise bana. Likelihood $L(\theta)=\prod_if(x_i;\theta)$ bataata hai ki <b>poora observed data</b> us kahani ke andar kitna "expected" lagta hai. MLE woh knob position hai jis par data sabse kam surprising lagta hai.</p>
+<p>Recipe wahi rehti hai; model badalne par sirf algebra badalti hai. Aur ek surprise: har model ka MLE ek "natural" function of data hai — Exponential mein $1/\bar x$, Poisson mein $\bar x$, Pareto mein $n/\sum\ln x_i$ — kyunki har model data ko ek alag "scale" (sum, sum of logs) par padhta hai.</p>
+<div class="box">
+<p><b>Analogy (labelled): detective aur suspects <span class="tag t-add">[ADDED]</span></b> — har $\theta$ ek suspect ki kahani hai. $L(\theta)$ = "yeh kahani poore saboot (saara data) ko kitna achhe se explain karti hai." MLE = woh kahani jisme saboot sabse kam coincidence lagte hain. <b>Yeh kahan toot-ta hai:</b> (i) detective suspects ko pehle se jaanti hai/maanti hai (prior); MLE koi prior nahi use karta — woh 5.3 (Bayes) mein aata hai; (ii) suspect ki "total probability 1" hoti hai, par $L(\theta)$ ka $\theta$ par area $1$ nahi hota; (iii) detective ke paas bahut kam suspects hote hain, yahan $\theta$ ek continuum hai (sirf P5 mein do hi).</p>
+</div>
+<div class="box amber">
+<p><b>Yeh kya NAHI hai:</b></p>
+<ul>
+<li>$\hat\lambda=0.2857$ ka matlab "$\lambda=0.2857$ hone ki probability" <b>nahi</b> (S2, B22).</li>
+<li>MLE hamesha "sample mean" <b>nahi</b> hota: Poisson mein $\bar x$ hai, par Exponential mein $1/\bar x$ aur Pareto mein $n/\sum\ln x_i$ (WE4).</li>
+<li>Log-likelihood "likelihood of log data" <b>nahi</b> hai — $\ln$ <i>function</i> (likelihood) par lagta hai, data par nahi (Pareto mein $\ln x_i$ dikhta hai, par woh $\ln f$ ke andar se aata hai).</li>
+<li>Likelihood mein density $f(x;\theta)$ ki value $1$ se bhi badi ho sakti hai (jaise $5x^4$ at $x=0.95$ $\approx4.07$) — yeh galti nahi, density probability nahi hai (D1).</li>
+</ul>
+</div>
+</section>
+
+<section data-track="vis52">
+<h3>📊 Visual intuition</h3>
+<figure class="viz">
+  <p class="vt">Visual 1: One-parameter MLE explorer <span class="tag t-add">[ADDED]</span></p>
+  <p class="vs">Model chuno (Exponential / Poisson / Pareto), data likho (comma se alag), phir probe slider chalao. Do views: relative likelihood $L/L(\hat\theta)$ aur log-likelihood $\ell$. Exact formulas se draw hota hai (schematic nahi). Default data = P2 ka dataset ($x=1,\dots,6$); P4 aur P6 ka dataset "Poisson" / "Pareto" button se load hota hai.</p>
+  <div data-widget="mlecurve" data-model="exp" data-mode="log"></div>
+  <figcaption><b>Interpretation:</b> peak hamesha formula wale $\hat\theta$ par hai (table mein dekho: $1/\bar x$, $\bar x$, $n/\sum\ln x_i$). Table ki "$\ell''$" row hamesha negative aati hai — curve ulte bowl jaisa (concave) hai, isliye ek hi maximum. Models badalo: curve ka <i>shape</i> ek jaisa hai, sirf width badalti hai (Visual 3).</figcaption>
+</figure>
+<figure class="viz diagram">
+  <p class="vt">Visual 2: P5 ka faisla — har point ek "vote" deta hai <span class="tag t-add">[ADDED]</span></p>
+  <p class="vs">P5 mein $L(\theta=-1)=\prod5x_i^4$ aur $L(\theta=1)=1$. Dono ka ratio ka log $\sum_i\ln(5x_i^4)$ hai, yaani har point ek number "$\ln(5x^4)$" deta hai. Curve exact formula se draw kiya gaya hai; ek example sample ke chaar points upar mark hain.</p>
+  <svg viewBox="0 0 720 310" role="img" aria-label="Per point vote ln of 5 x to the fourth against x, crossing zero at 0.669; an example sample of four points sums to a negative number so theta hat equals plus one"><line x1="64" x2="700" y1="228.0" y2="228.0" stroke="#262626"/><text x="58" y="232.0" text-anchor="end" font-size="11" fill="#a3a3a3">-4</text><line x1="64" x2="700" y1="160.0" y2="160.0" stroke="#262626"/><text x="58" y="164.0" text-anchor="end" font-size="11" fill="#a3a3a3">-2</text><line x1="64" x2="700" y1="92.0" y2="92.0" stroke="#3a3a3a"/><text x="58" y="96.0" text-anchor="end" font-size="11" fill="#a3a3a3">0</text><line x1="64" x2="700" y1="24.0" y2="24.0" stroke="#262626"/><text x="58" y="28.0" text-anchor="end" font-size="11" fill="#a3a3a3">2</text><text x="64.0" y="278" text-anchor="middle" font-size="11" fill="#a3a3a3">0</text><text x="191.2" y="278" text-anchor="middle" font-size="11" fill="#a3a3a3">0.2</text><text x="318.4" y="278" text-anchor="middle" font-size="11" fill="#a3a3a3">0.4</text><text x="445.6" y="278" text-anchor="middle" font-size="11" fill="#a3a3a3">0.6</text><text x="572.8" y="278" text-anchor="middle" font-size="11" fill="#a3a3a3">0.8</text><text x="700.0" y="278" text-anchor="middle" font-size="11" fill="#a3a3a3">1</text><text x="382" y="296" text-anchor="middle" font-size="12" fill="#d4d4d4">x (ek data point, 0 &lt; x &lt; 1)</text><text x="14" y="143" text-anchor="middle" font-size="12" fill="#d4d4d4" transform="rotate(-90 14 143)">ln(5x⁴) = ln f(x|θ=−1) − ln f(x|θ=1)</text><rect x="489.3" y="24" width="210.7" height="68.0" fill="#10B981" fill-opacity=".10"/><rect x="64" y="92.0" width="425.3" height="170.0" fill="#FBBF24" fill-opacity=".08"/><text x="497.3" y="38" font-size="11.5" fill="#34D399">x &gt; 0.669: θ = −1 ko vote (+)</text><text x="72" y="254" font-size="11.5" fill="#FBBF24">x &lt; 0.669: θ = +1 ko vote (−)</text><path d="M127.6,262.0L129.0,262.0L130.5,262.0L131.9,262.0L133.3,262.0L134.8,262.0L136.2,262.0L137.6,262.0L139.0,262.0L140.5,262.0L141.9,262.0L143.3,262.0L144.8,262.0L146.2,262.0L147.6,262.0L149.1,262.0L150.5,262.0L151.9,262.0L153.4,262.0L154.8,262.0L156.2,262.0L157.7,262.0L159.1,262.0L160.5,262.0L161.9,262.0L163.4,262.0L164.8,262.0L166.2,262.0L167.7,262.0L169.1,262.0L170.5,262.0L172.0,262.0L173.4,262.0L174.8,262.0L176.3,262.0L177.7,262.0L179.1,262.0L180.5,262.0L182.0,262.0L183.4,262.0L184.8,262.0L186.3,261.5L187.7,260.0L189.1,258.4L190.6,256.8L192.0,255.3L193.4,253.8L194.9,252.3L196.3,250.8L197.7,249.4L199.2,247.9L200.6,246.5L202.0,245.1L203.4,243.7L204.9,242.3L206.3,240.9L207.7,239.5L209.2,238.2L210.6,236.9L212.0,235.5L213.5,234.2L214.9,232.9L216.3,231.7L217.8,230.4L219.2,229.1L220.6,227.9L222.0,226.6L223.5,225.4L224.9,224.2L226.3,223.0L227.8,221.8L229.2,220.6L230.6,219.4L232.1,218.3L233.5,217.1L234.9,216.0L236.4,214.8L237.8,213.7L239.2,212.6L240.6,211.5L242.1,210.4L243.5,209.3L244.9,208.2L246.4,207.2L247.8,206.1L249.2,205.0L250.7,204.0L252.1,203.0L253.5,201.9L255.0,200.9L256.4,199.9L257.8,198.9L259.3,197.9L260.7,196.9L262.1,195.9L263.5,194.9L265.0,194.0L266.4,193.0L267.8,192.0L269.3,191.1L270.7,190.1L272.1,189.2L273.6,188.3L275.0,187.3L276.4,186.4L277.9,185.5L279.3,184.6L280.7,183.7L282.1,182.8L283.6,181.9L285.0,181.0L286.4,180.2L287.9,179.3L289.3,178.4L290.7,177.6L292.2,176.7L293.6,175.8L295.0,175.0L296.5,174.2L297.9,173.3L299.3,172.5L300.8,171.7L302.2,170.9L303.6,170.0L305.0,169.2L306.5,168.4L307.9,167.6L309.3,166.8L310.8,166.0L312.2,165.3L313.6,164.5L315.1,163.7L316.5,162.9L317.9,162.1L319.4,161.4L320.8,160.6L322.2,159.9L323.6,159.1L325.1,158.4L326.5,157.6L327.9,156.9L329.4,156.2L330.8,155.4L332.2,154.7L333.7,154.0L335.1,153.3L336.5,152.5L338.0,151.8L339.4,151.1L340.8,150.4L342.2,149.7L343.7,149.0L345.1,148.3L346.5,147.6L348.0,146.9L349.4,146.3L350.8,145.6L352.3,144.9L353.7,144.2L355.1,143.6L356.6,142.9L358.0,142.2L359.4,141.6L360.9,140.9L362.3,140.3L363.7,139.6L365.1,139.0L366.6,138.3L368.0,137.7L369.4,137.0L370.9,136.4L372.3,135.8L373.7,135.1L375.2,134.5L376.6,133.9L378.0,133.3L379.5,132.6L380.9,132.0L382.3,131.4L383.7,130.8L385.2,130.2L386.6,129.6L388.0,129.0L389.5,128.4L390.9,127.8L392.3,127.2L393.8,126.6L395.2,126.0L396.6,125.4L398.1,124.8L399.5,124.3L400.9,123.7L402.4,123.1L403.8,122.5L405.2,122.0L406.6,121.4L408.1,120.8L409.5,120.3L410.9,119.7L412.4,119.1L413.8,118.6L415.2,118.0L416.7,117.5L418.1,116.9L419.5,116.4L421.0,115.8L422.4,115.3L423.8,114.7L425.2,114.2L426.7,113.7L428.1,113.1L429.5,112.6L431.0,112.1L432.4,111.5L433.8,111.0L435.3,110.5L436.7,110.0L438.1,109.4L439.6,108.9L441.0,108.4L442.4,107.9L443.9,107.4L445.3,106.9L446.7,106.4L448.1,105.8L449.6,105.3L451.0,104.8L452.4,104.3L453.9,103.8L455.3,103.3L456.7,102.8L458.2,102.3L459.6,101.9L461.0,101.4L462.5,100.9L463.9,100.4L465.3,99.9L466.7,99.4L468.2,98.9L469.6,98.5L471.0,98.0L472.5,97.5L473.9,97.0L475.3,96.5L476.8,96.1L478.2,95.6L479.6,95.1L481.1,94.7L482.5,94.2L483.9,93.7L485.3,93.3L486.8,92.8L488.2,92.4L489.6,91.9L491.1,91.4L492.5,91.0L493.9,90.5L495.4,90.1L496.8,89.6L498.2,89.2L499.7,88.7L501.1,88.3L502.5,87.8L504.0,87.4L505.4,87.0L506.8,86.5L508.2,86.1L509.7,85.6L511.1,85.2L512.5,84.8L514.0,84.3L515.4,83.9L516.8,83.5L518.3,83.0L519.7,82.6L521.1,82.2L522.6,81.8L524.0,81.3L525.4,80.9L526.8,80.5L528.3,80.1L529.7,79.7L531.1,79.2L532.6,78.8L534.0,78.4L535.4,78.0L536.9,77.6L538.3,77.2L539.7,76.8L541.2,76.4L542.6,76.0L544.0,75.5L545.5,75.1L546.9,74.7L548.3,74.3L549.7,73.9L551.2,73.5L552.6,73.1L554.0,72.7L555.5,72.3L556.9,71.9L558.3,71.6L559.8,71.2L561.2,70.8L562.6,70.4L564.1,70.0L565.5,69.6L566.9,69.2L568.3,68.8L569.8,68.4L571.2,68.1L572.6,67.7L574.1,67.3L575.5,66.9L576.9,66.5L578.4,66.1L579.8,65.8L581.2,65.4L582.7,65.0L584.1,64.6L585.5,64.3L587.0,63.9L588.4,63.5L589.8,63.2L591.2,62.8L592.7,62.4L594.1,62.0L595.5,61.7L597.0,61.3L598.4,61.0L599.8,60.6L601.3,60.2L602.7,59.9L604.1,59.5L605.6,59.1L607.0,58.8L608.4,58.4L609.8,58.1L611.3,57.7L612.7,57.4L614.1,57.0L615.6,56.6L617.0,56.3L618.4,55.9L619.9,55.6L621.3,55.2L622.7,54.9L624.2,54.5L625.6,54.2L627.0,53.9L628.4,53.5L629.9,53.2L631.3,52.8L632.7,52.5L634.2,52.1L635.6,51.8L637.0,51.5L638.5,51.1L639.9,50.8L641.3,50.4L642.8,50.1L644.2,49.8L645.6,49.4L647.1,49.1L648.5,48.8L649.9,48.4L651.3,48.1L652.8,47.8L654.2,47.4L655.6,47.1L657.1,46.8L658.5,46.5L659.9,46.1L661.4,45.8L662.8,45.5L664.2,45.2L665.7,44.8L667.1,44.5L668.5,44.2L669.9,43.9L671.4,43.5L672.8,43.2L674.2,42.9L675.7,42.6L677.1,42.3L678.5,41.9L680.0,41.6L681.4,41.3L682.8,41.0L684.3,40.7L685.7,40.4L687.1,40.1L688.6,39.7L690.0,39.4L691.4,39.1L692.8,38.8L694.3,38.5L695.7,38.2L697.1,37.9L698.6,37.6L700.0,37.3" fill="none" stroke="#60A5FA" stroke-width="2.4"/><line x1="489.3" x2="489.3" y1="24" y2="262" stroke="#a3a3a3" stroke-dasharray="4 4"/><text x="483.3" y="86.0" text-anchor="end" font-size="11" fill="#d4d4d4">x* = 5^(−1/4) ≈ 0.669</text><circle cx="668.2" cy="44.3" r="5" fill="#fff" stroke="#60A5FA" stroke-width="2"/><text x="676.2" y="36.3" text-anchor="start" font-size="11" fill="#e5e5e5">x=0.95: +1.40</text><circle cx="636.4" cy="51.6" r="5" fill="#fff" stroke="#60A5FA" stroke-width="2"/><text x="644.4" y="43.6" text-anchor="start" font-size="11" fill="#e5e5e5">x=0.9: +1.19</text><circle cx="318.4" cy="161.9" r="5" fill="#fff" stroke="#60A5FA" stroke-width="2"/><text x="310.4" y="177.9" text-anchor="end" font-size="11" fill="#e5e5e5">x=0.4: -2.06</text><circle cx="382.0" cy="131.5" r="5" fill="#fff" stroke="#60A5FA" stroke-width="2"/><text x="374.0" y="147.5" text-anchor="end" font-size="11" fill="#e5e5e5">x=0.5: -1.16</text><text x="696" y="207.6" text-anchor="end" font-size="12" fill="#fff">Example sample: kul Σ = -0.627 &lt; 0 ⇒ Π 5xᵢ⁴ = 0.534 &lt; 1 ⇒ θ̂ = +1</text></svg>
+  <figcaption><b>Interpretation:</b> $x&gt;0.669$ wale points $\theta=-1$ ko vote dete hain, chhote $x$ wale $\theta=+1$ ko — aur chhote $x$ ka vote <i>bahut</i> bhaari hota hai (curve neeche tezi se girta hai). Example mein do bade points ($0.95,\ 0.9$) milkar $+2.59$ dete hain, par do chhote ($0.4,\ 0.5$) $-3.22$ — isliye total $-0.627&lt;0$ aur $\hat\theta=+1$.</figcaption>
+</figure>
+<figure class="viz diagram">
+  <p class="vt">Visual 3: teeno PYQ datasets ka log-likelihood ek hi "shape" ka hai <span class="tag t-add">[ADDED]</span></p>
+  <p class="vs">$x$-axis par $r=\theta/\hat\theta$, $y$-axis par $\ell(\theta)-\ell(\hat\theta)$. Teeno curves $c\,(\ln r-r+1)$ hain, jahan $c$: Exponential P2 mein $n=6$, Pareto P6 mein $n=5$, Poisson P4 mein $\sum x_i=63$. Exact formula (D3); $-10$ se neeche ka hissa kaata gaya hai.</p>
+  <svg viewBox="0 0 720 310" role="img" aria-label="Relative log-likelihood curves for the three PYQ datasets plotted against theta over theta hat: all share the shape c times (ln r minus r plus 1), narrow for the Poisson data with c equal 63 and wide for the exponential and Pareto data with c equal 6 and 5"><line x1="64" x2="700" y1="262.0" y2="262.0" stroke="#262626"/><text x="58" y="266.0" text-anchor="end" font-size="11" fill="#a3a3a3">-10</text><line x1="64" x2="700" y1="215.6" y2="215.6" stroke="#262626"/><text x="58" y="219.6" text-anchor="end" font-size="11" fill="#a3a3a3">-8</text><line x1="64" x2="700" y1="169.2" y2="169.2" stroke="#262626"/><text x="58" y="173.2" text-anchor="end" font-size="11" fill="#a3a3a3">-6</text><line x1="64" x2="700" y1="122.8" y2="122.8" stroke="#262626"/><text x="58" y="126.8" text-anchor="end" font-size="11" fill="#a3a3a3">-4</text><line x1="64" x2="700" y1="76.4" y2="76.4" stroke="#262626"/><text x="58" y="80.4" text-anchor="end" font-size="11" fill="#a3a3a3">-2</text><line x1="64" x2="700" y1="30.0" y2="30.0" stroke="#262626"/><text x="58" y="34.0" text-anchor="end" font-size="11" fill="#a3a3a3">0</text><text x="64.0" y="278" text-anchor="middle" font-size="11" fill="#a3a3a3">0</text><text x="170.0" y="278" text-anchor="middle" font-size="11" fill="#a3a3a3">0.5</text><text x="276.0" y="278" text-anchor="middle" font-size="11" fill="#a3a3a3">1</text><text x="382.0" y="278" text-anchor="middle" font-size="11" fill="#a3a3a3">1.5</text><text x="488.0" y="278" text-anchor="middle" font-size="11" fill="#a3a3a3">2</text><text x="594.0" y="278" text-anchor="middle" font-size="11" fill="#a3a3a3">2.5</text><text x="700.0" y="278" text-anchor="middle" font-size="11" fill="#a3a3a3">3</text><text x="382" y="296" text-anchor="middle" font-size="12" fill="#d4d4d4">r = θ / θ̂  (probe parameter ÷ MLE)</text><text x="14" y="146" text-anchor="middle" font-size="12" fill="#d4d4d4" transform="rotate(-90 14 146)">ℓ(θ) − ℓ(θ̂)</text><line x1="276.0" x2="276.0" y1="30" y2="262" stroke="#34D399" stroke-dasharray="4 4"/><text x="281.0" y="256" font-size="11" fill="#34D399">MLE (r = 1)</text><path d="M178.8,256.4L180.6,246.3L182.3,236.6L184.1,227.2L185.8,218.1L187.6,209.3L189.3,200.7L191.1,192.5L192.8,184.6L194.6,176.9L196.3,169.5L198.1,162.3L199.9,155.4L201.6,148.8L203.4,142.4L205.1,136.2L206.9,130.2L208.6,124.5L210.4,118.9L212.1,113.6L213.9,108.5L215.7,103.6L217.4,98.9L219.2,94.3L220.9,90.0L222.7,85.8L224.4,81.9L226.2,78.1L227.9,74.4L229.7,71.0L231.4,67.7L233.2,64.5L235.0,61.5L236.7,58.7L238.5,56.0L240.2,53.5L242.0,51.1L243.7,48.9L245.5,46.8L247.2,44.8L249.0,43.0L250.7,41.3L252.5,39.7L254.3,38.3L256.0,36.9L257.8,35.7L259.5,34.7L261.3,33.7L263.0,32.9L264.8,32.1L266.5,31.5L268.3,31.0L270.1,30.6L271.8,30.3L273.6,30.1L275.3,30.0L277.1,30.0L278.8,30.1L280.6,30.3L282.3,30.6L284.1,31.0L285.8,31.5L287.6,32.1L289.4,32.8L291.1,33.5L292.9,34.4L294.6,35.3L296.4,36.3L298.1,37.4L299.9,38.6L301.6,39.9L303.4,41.2L305.1,42.7L306.9,44.2L308.7,45.7L310.4,47.4L312.2,49.1L313.9,50.9L315.7,52.8L317.4,54.7L319.2,56.8L320.9,58.8L322.7,61.0L324.5,63.2L326.2,65.5L328.0,67.8L329.7,70.2L331.5,72.7L333.2,75.3L335.0,77.9L336.7,80.5L338.5,83.3L340.2,86.0L342.0,88.9L343.8,91.8L345.5,94.7L347.3,97.8L349.0,100.8L350.8,104.0L352.5,107.1L354.3,110.4L356.0,113.7L357.8,117.0L359.6,120.4L361.3,123.9L363.1,127.3L364.8,130.9L366.6,134.5L368.3,138.1L370.1,141.8L371.8,145.6L373.6,149.4L375.3,153.2L377.1,157.1L378.9,161.0L380.6,165.0L382.4,169.0L384.1,173.1L385.9,177.2L387.6,181.3L389.4,185.5L391.1,189.8L392.9,194.0L394.6,198.4L396.4,202.7L398.2,207.1L399.9,211.6L401.7,216.1L403.4,220.6L405.2,225.1L406.9,229.7L408.7,234.4L410.4,239.1L412.2,243.8L414.0,248.5L415.7,253.3L417.5,258.1" fill="none" stroke="#FBBF24" stroke-width="2.4"/><path d="M80.5,256.9L82.3,244.0L84.0,232.3L85.8,221.8L87.5,212.2L89.3,203.3L91.1,195.1L92.8,187.5L94.6,180.5L96.3,173.8L98.1,167.6L99.8,161.8L101.6,156.3L103.3,151.1L105.1,146.2L106.8,141.5L108.6,137.1L110.4,132.9L112.1,128.8L113.9,125.0L115.6,121.3L117.4,117.8L119.1,114.5L120.9,111.3L122.6,108.2L124.4,105.2L126.2,102.4L127.9,99.7L129.7,97.1L131.4,94.5L133.2,92.1L134.9,89.8L136.7,87.5L138.4,85.4L140.2,83.3L141.9,81.3L143.7,79.3L145.5,77.4L147.2,75.6L149.0,73.9L150.7,72.2L152.5,70.5L154.2,69.0L156.0,67.4L157.7,65.9L159.5,64.5L161.2,63.1L163.0,61.8L164.8,60.5L166.5,59.3L168.3,58.0L170.0,56.9L171.8,55.7L173.5,54.6L175.3,53.6L177.0,52.6L178.8,51.6L180.6,50.6L182.3,49.7L184.1,48.8L185.8,47.9L187.6,47.1L189.3,46.3L191.1,45.5L192.8,44.7L194.6,44.0L196.3,43.3L198.1,42.6L199.9,41.9L201.6,41.3L203.4,40.7L205.1,40.1L206.9,39.5L208.6,39.0L210.4,38.5L212.1,38.0L213.9,37.5L215.7,37.0L217.4,36.6L219.2,36.1L220.9,35.7L222.7,35.3L224.4,34.9L226.2,34.6L227.9,34.2L229.7,33.9L231.4,33.6L233.2,33.3L235.0,33.0L236.7,32.7L238.5,32.5L240.2,32.2L242.0,32.0L243.7,31.8L245.5,31.6L247.2,31.4L249.0,31.2L250.7,31.1L252.5,30.9L254.3,30.8L256.0,30.7L257.8,30.5L259.5,30.4L261.3,30.4L263.0,30.3L264.8,30.2L266.5,30.1L268.3,30.1L270.1,30.1L271.8,30.0L273.6,30.0L275.3,30.0L277.1,30.0L278.8,30.0L280.6,30.0L282.3,30.1L284.1,30.1L285.8,30.1L287.6,30.2L289.4,30.3L291.1,30.3L292.9,30.4L294.6,30.5L296.4,30.6L298.1,30.7L299.9,30.8L301.6,30.9L303.4,31.1L305.1,31.2L306.9,31.3L308.7,31.5L310.4,31.7L312.2,31.8L313.9,32.0L315.7,32.2L317.4,32.4L319.2,32.5L320.9,32.7L322.7,33.0L324.5,33.2L326.2,33.4L328.0,33.6L329.7,33.8L331.5,34.1L333.2,34.3L335.0,34.6L336.7,34.8L338.5,35.1L340.2,35.3L342.0,35.6L343.8,35.9L345.5,36.2L347.3,36.5L349.0,36.7L350.8,37.0L352.5,37.3L354.3,37.7L356.0,38.0L357.8,38.3L359.6,38.6L361.3,38.9L363.1,39.3L364.8,39.6L366.6,40.0L368.3,40.3L370.1,40.7L371.8,41.0L373.6,41.4L375.3,41.7L377.1,42.1L378.9,42.5L380.6,42.9L382.4,43.2L384.1,43.6L385.9,44.0L387.6,44.4L389.4,44.8L391.1,45.2L392.9,45.6L394.6,46.0L396.4,46.5L398.2,46.9L399.9,47.3L401.7,47.7L403.4,48.2L405.2,48.6L406.9,49.0L408.7,49.5L410.4,49.9L412.2,50.4L414.0,50.8L415.7,51.3L417.5,51.7L419.2,52.2L421.0,52.7L422.7,53.1L424.5,53.6L426.2,54.1L428.0,54.6L429.7,55.0L431.5,55.5L433.3,56.0L435.0,56.5L436.8,57.0L438.5,57.5L440.3,58.0L442.0,58.5L443.8,59.0L445.5,59.5L447.3,60.0L449.1,60.6L450.8,61.1L452.6,61.6L454.3,62.1L456.1,62.6L457.8,63.2L459.6,63.7L461.3,64.2L463.1,64.8L464.8,65.3L466.6,65.9L468.4,66.4L470.1,67.0L471.9,67.5L473.6,68.1L475.4,68.6L477.1,69.2L478.9,69.8L480.6,70.3L482.4,70.9L484.1,71.5L485.9,72.0L487.7,72.6L489.4,73.2L491.2,73.8L492.9,74.3L494.7,74.9L496.4,75.5L498.2,76.1L499.9,76.7L501.7,77.3L503.5,77.9L505.2,78.5L507.0,79.1L508.7,79.7L510.5,80.3L512.2,80.9L514.0,81.5L515.7,82.1L517.5,82.7L519.2,83.3L521.0,83.9L522.8,84.6L524.5,85.2L526.3,85.8L528.0,86.4L529.8,87.1L531.5,87.7L533.3,88.3L535.0,89.0L536.8,89.6L538.6,90.2L540.3,90.9L542.1,91.5L543.8,92.1L545.6,92.8L547.3,93.4L549.1,94.1L550.8,94.7L552.6,95.4L554.3,96.0L556.1,96.7L557.9,97.4L559.6,98.0L561.4,98.7L563.1,99.3L564.9,100.0L566.6,100.7L568.4,101.3L570.1,102.0L571.9,102.7L573.6,103.3L575.4,104.0L577.2,104.7L578.9,105.4L580.7,106.0L582.4,106.7L584.2,107.4L585.9,108.1L587.7,108.8L589.4,109.5L591.2,110.1L593.0,110.8L594.7,111.5L596.5,112.2L598.2,112.9L600.0,113.6L601.7,114.3L603.5,115.0L605.2,115.7L607.0,116.4L608.7,117.1L610.5,117.8L612.3,118.5L614.0,119.2L615.8,119.9L617.5,120.7L619.3,121.4L621.0,122.1L622.8,122.8L624.5,123.5L626.3,124.2L628.0,124.9L629.8,125.7L631.6,126.4L633.3,127.1L635.1,127.8L636.8,128.6L638.6,129.3L640.3,130.0L642.1,130.7L643.8,131.5L645.6,132.2L647.4,132.9L649.1,133.7L650.9,134.4L652.6,135.1L654.4,135.9L656.1,136.6L657.9,137.4L659.6,138.1L661.4,138.8L663.1,139.6L664.9,140.3L666.7,141.1L668.4,141.8L670.2,142.6L671.9,143.3L673.7,144.1L675.4,144.8L677.2,145.6L678.9,146.3L680.7,147.1L682.5,147.8L684.2,148.6L686.0,149.4L687.7,150.1L689.5,150.9L691.2,151.6L693.0,152.4L694.7,153.2L696.5,153.9L698.2,154.7L700.0,155.5" fill="none" stroke="#34D399" stroke-width="2.4"/><path d="M75.3,260.7L77.0,244.8L78.8,231.1L80.5,219.0L82.3,208.3L84.0,198.6L85.8,189.8L87.5,181.8L89.3,174.4L91.1,167.6L92.8,161.3L94.6,155.4L96.3,149.9L98.1,144.7L99.8,139.8L101.6,135.2L103.3,130.9L105.1,126.8L106.8,122.9L108.6,119.2L110.4,115.7L112.1,112.4L113.9,109.2L115.6,106.1L117.4,103.2L119.1,100.4L120.9,97.7L122.6,95.2L124.4,92.7L126.2,90.3L127.9,88.1L129.7,85.9L131.4,83.8L133.2,81.8L134.9,79.8L136.7,77.9L138.4,76.1L140.2,74.4L141.9,72.7L143.7,71.1L145.5,69.5L147.2,68.0L149.0,66.6L150.7,65.1L152.5,63.8L154.2,62.5L156.0,61.2L157.7,60.0L159.5,58.8L161.2,57.6L163.0,56.5L164.8,55.4L166.5,54.4L168.3,53.4L170.0,52.4L171.8,51.4L173.5,50.5L175.3,49.7L177.0,48.8L178.8,48.0L180.6,47.2L182.3,46.4L184.1,45.6L185.8,44.9L187.6,44.2L189.3,43.6L191.1,42.9L192.8,42.3L194.6,41.7L196.3,41.1L198.1,40.5L199.9,40.0L201.6,39.4L203.4,38.9L205.1,38.4L206.9,38.0L208.6,37.5L210.4,37.1L212.1,36.6L213.9,36.2L215.7,35.8L217.4,35.5L219.2,35.1L220.9,34.8L222.7,34.4L224.4,34.1L226.2,33.8L227.9,33.5L229.7,33.3L231.4,33.0L233.2,32.7L235.0,32.5L236.7,32.3L238.5,32.1L240.2,31.9L242.0,31.7L243.7,31.5L245.5,31.3L247.2,31.2L249.0,31.0L250.7,30.9L252.5,30.8L254.3,30.7L256.0,30.6L257.8,30.5L259.5,30.4L261.3,30.3L263.0,30.2L264.8,30.2L266.5,30.1L268.3,30.1L270.1,30.0L271.8,30.0L273.6,30.0L275.3,30.0L277.1,30.0L278.8,30.0L280.6,30.0L282.3,30.1L284.1,30.1L285.8,30.1L287.6,30.2L289.4,30.2L291.1,30.3L292.9,30.3L294.6,30.4L296.4,30.5L298.1,30.6L299.9,30.7L301.6,30.8L303.4,30.9L305.1,31.0L306.9,31.1L308.7,31.2L310.4,31.4L312.2,31.5L313.9,31.7L315.7,31.8L317.4,32.0L319.2,32.1L320.9,32.3L322.7,32.5L324.5,32.6L326.2,32.8L328.0,33.0L329.7,33.2L331.5,33.4L333.2,33.6L335.0,33.8L336.7,34.0L338.5,34.2L340.2,34.4L342.0,34.7L343.8,34.9L345.5,35.1L347.3,35.4L349.0,35.6L350.8,35.9L352.5,36.1L354.3,36.4L356.0,36.6L357.8,36.9L359.6,37.2L361.3,37.4L363.1,37.7L364.8,38.0L366.6,38.3L368.3,38.6L370.1,38.9L371.8,39.2L373.6,39.5L375.3,39.8L377.1,40.1L378.9,40.4L380.6,40.7L382.4,41.0L384.1,41.4L385.9,41.7L387.6,42.0L389.4,42.3L391.1,42.7L392.9,43.0L394.6,43.4L396.4,43.7L398.2,44.1L399.9,44.4L401.7,44.8L403.4,45.1L405.2,45.5L406.9,45.9L408.7,46.2L410.4,46.6L412.2,47.0L414.0,47.3L415.7,47.7L417.5,48.1L419.2,48.5L421.0,48.9L422.7,49.3L424.5,49.7L426.2,50.1L428.0,50.5L429.7,50.9L431.5,51.3L433.3,51.7L435.0,52.1L436.8,52.5L438.5,52.9L440.3,53.3L442.0,53.8L443.8,54.2L445.5,54.6L447.3,55.0L449.1,55.5L450.8,55.9L452.6,56.3L454.3,56.8L456.1,57.2L457.8,57.6L459.6,58.1L461.3,58.5L463.1,59.0L464.8,59.4L466.6,59.9L468.4,60.3L470.1,60.8L471.9,61.3L473.6,61.7L475.4,62.2L477.1,62.7L478.9,63.1L480.6,63.6L482.4,64.1L484.1,64.5L485.9,65.0L487.7,65.5L489.4,66.0L491.2,66.5L492.9,66.9L494.7,67.4L496.4,67.9L498.2,68.4L499.9,68.9L501.7,69.4L503.5,69.9L505.2,70.4L507.0,70.9L508.7,71.4L510.5,71.9L512.2,72.4L514.0,72.9L515.7,73.4L517.5,73.9L519.2,74.4L521.0,75.0L522.8,75.5L524.5,76.0L526.3,76.5L528.0,77.0L529.8,77.6L531.5,78.1L533.3,78.6L535.0,79.1L536.8,79.7L538.6,80.2L540.3,80.7L542.1,81.3L543.8,81.8L545.6,82.3L547.3,82.9L549.1,83.4L550.8,83.9L552.6,84.5L554.3,85.0L556.1,85.6L557.9,86.1L559.6,86.7L561.4,87.2L563.1,87.8L564.9,88.3L566.6,88.9L568.4,89.4L570.1,90.0L571.9,90.6L573.6,91.1L575.4,91.7L577.2,92.2L578.9,92.8L580.7,93.4L582.4,93.9L584.2,94.5L585.9,95.1L587.7,95.6L589.4,96.2L591.2,96.8L593.0,97.4L594.7,97.9L596.5,98.5L598.2,99.1L600.0,99.7L601.7,100.3L603.5,100.8L605.2,101.4L607.0,102.0L608.7,102.6L610.5,103.2L612.3,103.8L614.0,104.4L615.8,105.0L617.5,105.5L619.3,106.1L621.0,106.7L622.8,107.3L624.5,107.9L626.3,108.5L628.0,109.1L629.8,109.7L631.6,110.3L633.3,110.9L635.1,111.5L636.8,112.1L638.6,112.7L640.3,113.3L642.1,113.9L643.8,114.6L645.6,115.2L647.4,115.8L649.1,116.4L650.9,117.0L652.6,117.6L654.4,118.2L656.1,118.8L657.9,119.5L659.6,120.1L661.4,120.7L663.1,121.3L664.9,121.9L666.7,122.6L668.4,123.2L670.2,123.8L671.9,124.4L673.7,125.1L675.4,125.7L677.2,126.3L678.9,126.9L680.7,127.6L682.5,128.2L684.2,128.8L686.0,129.5L687.7,130.1L689.5,130.7L691.2,131.4L693.0,132.0L694.7,132.6L696.5,133.3L698.2,133.9L700.0,134.6" fill="none" stroke="#60A5FA" stroke-width="2.4"/><line x1="450" x2="474" y1="38" y2="38" stroke="#FBBF24" stroke-width="3"/><text x="480" y="42" font-size="11.5" fill="#e5e5e5">Poisson, P4 (c = Σxᵢ = 63)</text><line x1="450" x2="474" y1="55" y2="55" stroke="#34D399" stroke-width="3"/><text x="480" y="59" font-size="11.5" fill="#e5e5e5">Exponential, P2 (c = n = 6)</text><line x1="450" x2="474" y1="72" y2="72" stroke="#60A5FA" stroke-width="3"/><text x="480" y="76" font-size="11.5" fill="#e5e5e5">Pareto, P6 (c = n = 5)</text></svg>
+  <figcaption><b>Interpretation:</b> peak sabka $r=1$ par hai; $c$ jitna bada, curve utna patla (kam-se-kam jagah jahan $\ell$ peak ke paas rehta hai). P4 ka $c=63$ hai, isliye uska $\hat\lambda=2.52$ bahut "pakka" hai; P2/P6 ka $c\approx5$–$6$ chhota hai, to un ke estimate kaafi dhile hain.</figcaption>
+</figure>
+</section>
+
+<section data-track="formal52">
+<h3>📖 Formal version (Formula Protocol)</h3>
+
+<h4>Block 1 — general recipe (L41)</h4>
+$$L(\theta)=\prod_{i=1}^{n}f(x_i;\theta),\qquad \ell(\theta)=\ln L(\theta)=\sum_{i=1}^{n}\ln f(x_i;\theta),\qquad \hat\theta=\arg\max_{\theta}\ell(\theta).$$
+<p><b>Symbols:</b> $x_1,\dots,x_n$ = observed data; $f(x;\theta)$ = density (continuous data) ya PMF (discrete data), $\theta$ = anjaan parameter; $\ell$ = log-likelihood. <b>Assumption:</b> $x_i$ independent aur identically distributed (G2).</p>
+<p><b>Words mein:</b> har point ek factor $f(x_i;\theta)$ deta hai; saare factors multiply (independence). $\ln$ lene se product <b>sum</b> ban jaata hai, aur $\ln$ increasing hai, isliye $\arg\max L=\arg\max\ell$.</p>
+<p><b>Notice that…</b> jo bhi term $\theta$ par depend nahi karta (jaise Poisson ka $-\ln x_i!$) woh $\ell$ mein rehta hai, par $\hat\theta$ nikaalte waqt derivative mein ghayab ho jaata hai.</p>
+
+<h4>Block 2 — Exponential (L42)</h4>
+$$f(x;\lambda)=\lambda e^{-\lambda x}\ (x\ge0)\ \Rightarrow\ \ell(\lambda)=n\ln\lambda-\lambda\sum_i x_i,\quad \ell'(\lambda)=\frac n\lambda-\sum_ix_i=0\ \Rightarrow\ \hat\lambda=\frac{n}{\sum_ix_i}=\frac1{\bar x}.$$
+<p><b>Symbols:</b> $\lambda&gt;0$ = rate (events per unit time); $\bar x=\frac1n\sum x_i$ = sample mean. <b>Assumption:</b> sab $x_i\ge0$, $\sum x_i&gt;0$.</p>
+<p><b>Words mein:</b> Exponential ka mean $1/\lambda$ hota hai; data ka mean $\bar x$ us mean ka estimate hai, isliye rate ka estimate uska reciprocal.</p>
+<p><b>Notice that…</b> $\ell''(\lambda)=-n/\lambda^2&lt;0$ har $\lambda&gt;0$ par ⇒ concave ⇒ yeh stationary point unique global max (L48).</p>
+
+<h4>Block 3 — Poisson (L43, L45)</h4>
+$$f(x;\lambda)=\frac{e^{-\lambda}\lambda^{x}}{x!}\ \Rightarrow\ \ell(\lambda)=\sum_i\big[-\lambda+x_i\ln\lambda-\ln(x_i!)\big]=-n\lambda+\Big(\sum_ix_i\Big)\ln\lambda-\sum_i\ln x_i!,\qquad \hat\lambda=\frac{\sum_ix_i}{n}=\bar x.$$
+<p><b>Symbols:</b> $x_i\in\{0,1,2,\dots\}$ = counts; $\lambda&gt;0$ = mean (aur variance) count. <b>Assumption:</b> counts i.i.d. Poisson($\lambda$). <b>Frequency table (L45):</b> agar value $v_j$ $c_j$ baar aaye to $n=\sum_jc_j$ aur $\sum_ix_i=\sum_jc_jv_j$.</p>
+<p><b>Words mein:</b> Poisson ka mean $\lambda$ hi hai, isliye sample mean seedha $\lambda$ ka estimate banta hai.</p>
+<p><b>Notice that…</b> Exponential mein $\bar x$ ka reciprocal aaya, Poisson mein $\bar x$ khud — kyunki mean ka role alag hai ($1/\lambda$ vs $\lambda$). $-\ln x_i!$ term $\lambda$ se free hai, par $\ell$ ke jawab (option) mein zaroor dikhta hai (P3).</p>
+
+<h4>Block 4 — Pareto (L44)</h4>
+$$f(x;\theta)=\theta x^{-\theta-1}\ (x\ge1,\ \theta&gt;1)\ \Rightarrow\ \ell(\theta)=n\ln\theta-(\theta+1)\sum_i\ln x_i,\quad \ell'(\theta)=\frac n\theta-\sum_i\ln x_i=0\ \Rightarrow\ \hat\theta=\frac{n}{\sum_i\ln x_i}.$$
+<p><b>Symbols:</b> $\theta$ = tail index (bada $\theta$ ⇒ patli tail); $x_i\ge1$ (minimum value $x_m=1$). <b>Assumption:</b> $\sum\ln x_i&gt;0$ aur result $\hat\theta&gt;1$ hona chahiye (warna constraint toot-ta hai, D5).</p>
+<p><b>Words mein:</b> $\ln x_i$ data ka "scale-free" roop hai; $\theta$ ka estimate "average $\ln x$" ka reciprocal hai.</p>
+<p><b>Notice that…</b> $\ell''(\theta)=-n/\theta^2&lt;0$; aur Pareto MLE bilkul Exponential MLE ki tarah hai, bas data $\ln x_i$ par (D5).</p>
+
+<h4>Block 5 — do-value parameter set (L46) — P5 ka case</h4>
+$$\Theta=\{-1,\,1\},\quad L(-1)=\prod_i5x_i^4,\quad L(1)=\prod_i1=1\quad\Rightarrow\quad \hat\theta_{MLE}=\begin{cases}-1,&amp;\prod_i5x_i^4\gt1\\ 1,&amp;\prod_i5x_i^4\lt1\end{cases}$$
+<p><b>Symbols:</b> $\theta$ sirf $-1$ ya $+1$ ho sakta hai; $-1$ ↔ density $5x^4$, $+1$ ↔ density $1$ ($0&lt;x&lt;1$). <b>Assumption:</b> sab $x_i\in(0,1)$ (warna dono likelihood $0$).</p>
+<p><b>Words mein:</b> do hi candidates hain — dono likelihood nikaalo aur bade ko chuno. Derivative ki koi zaroorat nahi (parameter continuous hai hi nahi).</p>
+<p><b>Notice that…</b> log mein yeh $\sum_i\ln(5x_i^4)\gtrless0$ banta hai, yaani har point ka ek "vote" (Visual 2).</p>
+
+<h4>Block 6 — log-likelihood ke options kaise pehchaanein (L47)</h4>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Expression ka shape</th><th>Kya hai</th><th>Log-likelihood?</th></tr></thead>
+<tbody>
+<tr><td>$\prod_if(x_i;\theta)$</td><td>Likelihood $L$ (bina $\ln$)</td><td>Nahi</td></tr>
+<tr><td>$\sum_if(x_i;\theta)$</td><td>Densities ka sum — koi standard meaning nahi</td><td>Nahi</td></tr>
+<tr><td>$\prod_i\big[\ln f(x_i;\theta)\big]$</td><td>Logs ka <i>product</i> — meaningless</td><td>Nahi</td></tr>
+<tr><td>$\sum_i\ln f(x_i;\theta)$</td><td>Logs ka sum</td><td><b>Haan</b></td></tr>
+</tbody></table></div>
+<p><b>Small worked example:</b> Exponential, data $\{1,2,3\}$, $\lambda=0.5$: $\ell(0.5)=3\ln0.5-0.5\cdot6=-2.0794-3=-5.0794$ (code ✓). Direct check: $\ln\big(\prod0.5e^{-0.5x_i}\big)=3\ln0.5-0.5(1+2+3)=-5.0794$ ✓.</p>
+<div class="box em"><p><b>Important insight:</b> teeno distributions ke liye MLE recipe ek hi hai — sirf do chaar line ka algebra badalta hai. Aur $\ell''&lt;0$ ka matlab "stationary point = answer" bina extra check ke (is range mein).</p></div>
+<p><b>This is why</b> P2, P4, P6 sirf "recipe ka plug-in" hain, P1/P3 "log-likelihood ka shape" pehchaanne ke hain, aur P5 ek alag sawaal hai jisme parameter set finite hai (calculus lagana hi nahi).</p>
+</section>
+
+<section data-track="how52">
+<h3>⚙️ How it works — numbered mechanism</h3>
+<ol>
+<li><b>Model aur support padho:</b> $f(x;\theta)$ kya hai, $x$ ka range aur $\theta$ ka range (jaise Pareto: $x\ge1$, $\theta&gt;1$).</li>
+<li><b>Data ko summarise karo:</b> $n$ ginti; sufficient quantity — Exponential mein $\sum x_i$, Poisson mein $\sum x_i$ (frequency table ho to $\sum c_jv_j$), Pareto mein $\sum\ln x_i$.</li>
+<li><b>Likelihood likho:</b> $L=\prod f(x_i;\theta)$ — ya seedha $\ell=\sum\ln f$ (L41).</li>
+<li><b>$\ln f$ simplify karo</b> aur sum andar le jao: Exponential $\ln\lambda-\lambda x$; Poisson $-\lambda+x\ln\lambda-\ln x!$; Pareto $\ln\theta-(\theta+1)\ln x$.</li>
+<li><b>Differentiate:</b> $\ell'(\theta)$ nikaalo ($\theta$-free terms ghayab).</li>
+<li><b>Zero karo, solve karo:</b> $\hat\theta$ = formula (L42–L44).</li>
+<li><b>Verify:</b> $\ell''&lt;0$; $\hat\theta$ support ke andar hai? (Pareto: $\hat\theta&gt;1$); boundary / non-differentiable case to nahi? (WE3).</li>
+<li><b>Jawab ko sawaal ki bhasha mein padho:</b> rate ya mean? decimals kitne? Intermediate logs <b>kam se kam 3 decimal</b> tak rakho (P6 ka trap).</li>
+</ol>
+<p><b>Finite parameter set (P5):</b> steps 3 ke baad seedha compare — $L(\theta_1)$ vs $L(\theta_2)$ (L46); steps 5–6 chhoot jaate hain.</p>
+<p><b>Exam fast path:</b> Exponential ⇒ $n/\sum x$; Poisson ⇒ $\sum c_jv_j/\sum c_j$; Pareto ⇒ $n/\sum\ln x$; "log-likelihood" MCQ ⇒ sirf sum-of-$\ln f$ wala option.</p>
+</section>
+
+<section data-track="we52">
+<h3>🧪 Worked examples (simple → exam-level → tricky + non-example)</h3>
+
+<div class="box">
+<h4>WE1 · simple — Exponential, 3 points <span class="tag t-add">[ADDED]</span></h4>
+<p>Data $\{1,2,3\}$, $f=\lambda e^{-\lambda x}$. MLE?</p>
+<p><b>Step 1:</b> $n=3$, $\sum x_i=6$. <b>Step 2:</b> $\ell(\lambda)=3\ln\lambda-6\lambda$. <b>Step 3:</b> $\ell'(\lambda)=\dfrac3\lambda-6=0\Rightarrow\hat\lambda=\dfrac36=\mathbf{0.5}$. <b>Step 4:</b> $\ell''=-\dfrac3{\lambda^2}&lt;0$ ✓.</p>
+<p><b>Check (code ✓):</b> $\ell(0.5)=-5.0794$, $\ell(1)=-6.0000$, $\ell(1/3)=-5.2958$ — $0.5$ dono se upar hai.</p>
+</div>
+
+<div class="box">
+<h4>WE2 · exam-level — Poisson, frequency table <span class="tag t-add">[ADDED]</span></h4>
+<p>Value $0,1,2,3$ ke counts $4,6,7,3$. $\hat\lambda$ aur $\ell''(\hat\lambda)$?</p>
+<p><b>Step 1 (L45):</b> $n=4+6+7+3=20$; $\sum x_i=0\cdot4+1\cdot6+2\cdot7+3\cdot3=0+6+14+9=29$. <b>Step 2:</b> $\ell(\lambda)=-20\lambda+29\ln\lambda-\text{const}$. <b>Step 3:</b> $\ell'(\lambda)=-20+\dfrac{29}\lambda=0\Rightarrow\hat\lambda=\dfrac{29}{20}=\mathbf{1.45}$. <b>Step 4:</b> $\ell''(\hat\lambda)=-\dfrac{29}{1.45^2}=\mathbf{-13.79}$ (code ✓) $&lt;0$.</p>
+</div>
+
+<div class="box amber">
+<h4>WE3 · tricky / counterexample — jahan derivative recipe fail ho jaati hai <span class="tag t-add">[ADDED]</span></h4>
+<p>Uniform$(0,\theta)$: $f(x;\theta)=\dfrac1\theta$ for $0\le x\le\theta$, warna $0$. Data $\{1.2,\ 0.4,\ 2.0,\ 0.9\}$. $\hat\theta$?</p>
+<p><b>Step 1:</b> Agar $\theta\lt\max x_i=2.0$ to koi $x_i$ support ke bahar ⇒ $L(\theta)=0$. <b>Step 2:</b> $\theta\ge2.0$ par $L(\theta)=\theta^{-4}$, jo <i>ghatta hai</i>. <b>Step 3:</b> $\ell'(\theta)=-\dfrac4\theta\neq0$ kahin bhi — derivative-zero recipe ka koi jawab nahi. Maximum <b>support ke kinare</b> $\theta=2.0$ par hai ⇒ $\hat\theta=\max x_i=\mathbf{2.0}$.</p>
+<p><b>Check (code ✓):</b> $L(1.9)=0$, $L(2.0)=0.0625$, $L(2.5)=0.0256$, $L(3.0)=0.0123$. <b>Seekh:</b> "$\ell'=0$ solve karo" hamesha kaam nahi karta; pehle $L$ ka shape dekho (monotone? support-dependent?). Yeh syllabus ke bahar ka limit-case hai, sirf recipe ki hadd dikhane ke liye; bank ke 5.2 mein nahi aaya.</p>
+</div>
+
+<div class="box red">
+<h4>WE4 · non-example — "MLE = sample mean" hamesha nahi <span class="tag t-add">[ADDED]</span></h4>
+<p>Exponential data $\{1,2,3,4,5,6\}$ (P2 wala): sample mean $\bar x=\dfrac{21}6=3.5$.</p>
+<p>❌ <b>Galat:</b> "$\hat\lambda=3.5$" — yeh <i>mean</i> hai, <i>rate</i> nahi. Check: $\ell(3.5)=6\ln3.5-3.5\cdot21=-65.98$, jabki $\ell(1/3.5)=-13.52$ (code ✓) — bahut kam.</p>
+<p>✅ <b>Sahi:</b> $\hat\lambda=1/\bar x=1/3.5=0.2857$. Poisson mein ulta: $\hat\lambda=\bar x$ (P4: $63/25=2.52$). <b>Rule:</b> pehle poocho "parameter mean hai ya mean ka reciprocal?" Exponential: mean $=1/\lambda$; Poisson: mean $=\lambda$.</p>
+</div>
+</section>
+
+<section data-track="deep52">
+<h3>🔬 Deeper insight (D3 — collapsible)</h3>
+
+<details class="deep"><summary>D1 · Density ≠ probability — $f(x)$ $1$ se bada ho sakta hai</summary>
+<p>Continuous data mein $f(x;\theta)$ <i>density</i> hai: $P(x\le X\le x+\varepsilon)\approx f(x;\theta)\,\varepsilon$ chhote $\varepsilon$ ke liye. $P5$ mein $f(0.95\mid\theta=-1)=5\cdot0.95^4=4.07&gt;1$ — bilkul theek, kyunki $[0,1]$ par $\int5x^4dx=1$. Likelihood ke liye hamen sirf ratio chahiye ($L(\theta_1)/L(\theta_2)$), jisme $\varepsilon^n$ cancel ho jaata hai — isliye density ki value seedha product mein daalna jaayaz hai.</p>
+</details>
+
+<details class="deep"><summary>D2 · Concavity ek-ek model ke liye (L48)</summary>
+<p>Exponential: $\ell''=-\dfrac n{\lambda^2}$. Poisson: $\ell'=-n+\dfrac S\lambda$, $\ell''=-\dfrac S{\lambda^2}$ ($S=\sum x_i&gt;0$). Pareto: $\ell''=-\dfrac n{\theta^2}$. Teeno har valid parameter par negative ⇒ $\ell$ strictly concave ⇒ jo bhi $\ell'=0$ ka solution hai woh unique global maximum hai (zaroorat nahi ki alag se boundary check karo, jab tak solution allowed range ke andar ho). Numbers: P2 par $-73.5$, P4 par $-9.92$, P6 par $-3.79$ (code ✓).</p>
+</details>
+
+<details class="deep"><summary>D3 · Teeno ek hi shape — $\ell(\theta)-\ell(\hat\theta)=c\,(\ln r-r+1)$ <span class="tag t-add">[ADDED]</span></summary>
+<p>$r=\theta/\hat\theta$. Exponential: $\ell(\lambda)-\ell(\hat\lambda)=n\ln r-S(\lambda-\hat\lambda)$ aur $\hat\lambda S=n$ ⇒ $=n(\ln r-r+1)$. Poisson: $=S\ln r-n(\lambda-\hat\lambda)$ aur $n\hat\lambda=S$ ⇒ $=S(\ln r-r+1)$. Pareto: $=n\ln r-S_{\ln}(\theta-\hat\theta)$ aur $\hat\theta S_{\ln}=n$ ⇒ $=n(\ln r-r+1)$. Isliye $c=n$ (Exp, Pareto) ya $c=\sum x_i$ (Poisson), aur $\ell''(\hat\theta)=-c/\hat\theta^2$. (Identity teeno datasets ke liye $r=0.5,\ 2$ par code-verified.) Matlab: "kitna data" ek hi number $c$ mein simat jaata hai — jitna bada $c$, utna patla peak (Visual 3).</p>
+</details>
+
+<details class="deep"><summary>D4 · Rate vs mean — invariance (L40) ka ek aur use <span class="tag t-add">[ADDED]</span></summary>
+<p>Exponential ko mean $\mu=1/\lambda$ se parametrise karo: $f=\dfrac1\mu e^{-x/\mu}$. Tab $\ell(\mu)=-n\ln\mu-\dfrac{\sum x_i}\mu$, $\ell'=-\dfrac n\mu+\dfrac{\sum x_i}{\mu^2}=0\Rightarrow\hat\mu=\bar x$. Invariance se $\hat\lambda=1/\hat\mu=1/\bar x$ — wahi jo seedha nikla. Yaani "sample mean" mean parameter ka MLE hai; rate ka MLE uska reciprocal.</p>
+</details>
+
+<details class="deep"><summary>D5 · Pareto ↔ Exponential, aur constraint $\theta&gt;1$ <span class="tag t-add">[ADDED]</span></summary>
+<p>Agar $X$ Pareto($\theta$) hai ($x_m=1$) to $Y=\ln X$ ke liye $P(Y&gt;t)=P(X&gt;e^t)=\int_{e^t}^\infty\theta x^{-\theta-1}dx=e^{-\theta t}$, yaani $Y\sim\text{Exponential}(\theta)$. Isliye Pareto MLE = Exponential MLE $\ln$-data par: $\hat\theta=1/\bar y$ (P6: $1/0.870725=1.14847$ ✓ code). <b>Constraint:</b> P6 mein $\theta&gt;1$ chahiye aur $\hat\theta=1.1485$ sirf $0.148$ upar hai. Agar $\sum\ln x_i\ge n$ ho to $\hat\theta\le1$ aata hai; $\ell'=\dfrac n\theta-S_{\ln}&lt;0$ saare $\theta&gt;1$ par ⇒ $\ell$ ghat-ta hi ghatta hai, supremum $\theta\to1^+$ par jo allowed nahi — "MLE exist nahi karta" (jaise data $\{e^2,e^2,e^2\}$: $\hat\theta=3/6=0.5&lt;1$).</p>
+</details>
+
+<details class="deep"><summary>D6 · P5 ko geometric mean ke roop mein padho; tie aur support <span class="tag t-add">[ADDED]</span></summary>
+<p>$\hat\theta=-1\iff\prod5x_i^4&gt;1\iff n\ln5+4\sum\ln x_i&gt;0\iff\Big(\prod x_i\Big)^{1/n}&gt;5^{-1/4}\approx0.669$. Yaani <b>geometric mean</b> $0.669$ se bada ho to $\theta=-1$, chhota ho to $\theta=+1$. Example sample $(0.95,0.9,0.4,0.5)$: GM $=0.643&lt;0.669$ ⇒ $\hat\theta=+1$ (Visual 2 ke saath consistent ✓ code). Yeh "log-ratio vote" M1 ko dobara padhna hai (alag method nahi). <b>Tie:</b> $\prod5x_i^4=1$ par $L(-1)=L(1)$ ⇒ MLE unique nahi. <b>Support:</b> agar koi $x_i\notin(0,1)$ ho to dono likelihood $0$ — sawaal ye assume karta hai ki data inme se ek density se aaya hai.</p>
+</details>
+
+<details class="deep"><summary>D7 · Aage ka rasta: mixture aur prior (B24–B26 preview) <span class="tag t-add">[ADDED]</span></summary>
+<p>(i) <b>Prior:</b> 5.3 mein posterior $\propto L(\theta)\times\text{prior}(\theta)$; flat prior par posterior ka mode MLE ke barabar hota hai (B22 ke D8 ka seedha vistaar). (ii) <b>Mixture:</b> GMM mein $L(\theta)=\prod_i\sum_k\pi_kf_k(x_i)$; $\ln$ ab sum ke <i>bahar</i> ka product nahi todta ($\ln\sum\ne\sum\ln$), isliye $\ell'=0$ ka closed form nahi milta ⇒ EM (B25–B26). Yaani 5.2 ki recipe "i.i.d. ek model" par kaam karti hai; mixture par nahi.</p>
+</details>
+</section>
+
+<section data-track="tool52">
+<h3>⚡ PYQ pattern toolkit</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Trigger clue</th><th>Concept</th><th>Pehla move</th></tr></thead>
+<tbody>
+<tr><td>"log-likelihood of this dataset" + options mein $\prod$, $\sum$, $\ln$ ka mix</td><td>L41, L47</td><td>Sirf $\sum\ln f(x_i;\theta)$ wala option; $\prod$ aur bina-$\ln$ options pehle reject</td></tr>
+<tr><td>"$\lambda e^{-\lambda x}$", "non-negative", "waiting time", "MLE for $\lambda$"</td><td>Exponential, L42</td><td>$\hat\lambda=n/\sum x_i=1/\bar x$ — mean ka <b>reciprocal</b></td></tr>
+<tr><td>"non-negative integers", "$e^{-\lambda}\lambda^x/x!$", frequency table</td><td>Poisson, L43, L45</td><td>$\hat\lambda=\sum c_jv_j/\sum c_j$; $\ln x!$ term derivative mein ghayab</td></tr>
+<tr><td>"$\theta x^{-\theta-1}$", "$x\ge1$", "Pareto"</td><td>L44</td><td>$\hat\theta=n/\sum\ln x_i$; natural log, 3-decimal intermediate; $\hat\theta&gt;1$ check</td></tr>
+<tr><td>"$\theta=-1$ ya $\theta=1$", do densities, "$\prod\dots&lt;1$ / $&gt;1$"</td><td>L46 (finite $\Theta$)</td><td>$L(\theta_1)$ vs $L(\theta_2)$ compare karo; calculus nahi</td></tr>
+</tbody></table></div>
+<p><b>Common traps:</b> likelihood aur log-likelihood mix; Exponential mein mean ($\bar x$) ko rate samajhna; Poisson frequency table mein distinct values ki ginti se divide karna ($n=\sum c_j$ hona chahiye); Pareto mein $\sum x_i$ ya $\log_{10}$ lena; P5 mein sign/label ulat dena ($\theta=-1\leftrightarrow5x^4$).</p>
+</section>
+
+<h2>🎯 5.2 PYQs — P1 to P6</h2>
+<p class="muted">Har PYQ ka format: original wording → Try first → Decode → Methods → side-by-side working → comparison → verification → traps → transfer question. Jahan sirf 1–2 genuinely alag raaste hain (MCQ log-likelihood, frequency-table mean), wahan maine teesra raasta nahi ginwaya; kyun, har PYQ mein likha hai.</p>
+
+<section data-track="pyq1">
+<h3>🎯 P1 — Exponential ka log-likelihood (2024 February Q13) <span class="tag t-src">[SRC]</span> <span class="tag t-q">[?]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2024 February · Original Q13 · ID <code>640653738043</code> · MCQ · 2 marks · parent Q12 (<code>640653738042</code>) · <span class="tag t-src">[SRC]</span></p>
+<p><b>Context (parent Q12):</b> Assume that you have a dataset of six points $(x_1,x_2,x_3,x_4,x_5,x_6)$ all of which are non-negative. You hypothesize that the data points are iid random variables with the following density: $f(x;\lambda)=\lambda e^{-\lambda x}$ for $x\ge0$, and $0$ for $x&lt;0$.</p>
+<p>What is the log-likelihood of this dataset under this distribution? $\ln$ represents the natural logarithm or $\log_e$.</p>
+<ol>
+<li>$\displaystyle\prod_{i=1}^{6}\lambda e^{-\lambda x_i}$</li>
+<li>$\displaystyle\sum_{i=1}^{6}\lambda e^{-\lambda x_i}$</li>
+<li>$\displaystyle\prod_{i=1}^{6}\left(\ln(\lambda)-\lambda x_i\right)$</li>
+<li>$\displaystyle\sum_{i=1}^{6}\left(\ln(\lambda)-\lambda x_i\right)$</li>
+</ol>
+<p><span class="tag t-q">[?]</span> Is bank mein koi option correct-marked nahi hai. Neeche maine derive kiya: <b>option 4</b>.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Pehle likho: iid ke liye $L$ kya hota hai, phir $\ln$ lagao. Do options mein $\prod$ hai, do mein $\sum$ — kaun sa $\ln$ ke baad bachega? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> $\ell(\lambda)$ ka expression. <b>Given:</b> $n=6$ iid, density $\lambda e^{-\lambda x}$, $x\ge0$.</li>
+<li><b>Trigger clues:</b> "log-likelihood" + options mein $\prod/\sum$ aur $\ln$ ka mix. <b>Prerequisites:</b> G2 (iid ⇒ product), G3 ($\ln$ of product = sum of $\ln$) — Procedural + Conceptual. <b>Core principle:</b> L41, L47.</li>
+</ul>
+<h4>2. 🧭 Methods (2 genuinely different)</h4>
+<p><b>M1 General:</b> likelihood likho, phir $\ln$ lo. <b>M2 Shortcut (option elimination):</b> sirf <i>shape</i> dekh kar — log-likelihood = sum of $\ln f(x_i)$. Teesra rasta nahi: numerical spot-check sirf verification hai (neeche), alag solution method nahi.</p>
+<h4>3. 🧮 Working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Derive"><div class="mh">M1 · Likelihood → $\ln$ (General)</div>
+<p><b>Step 1:</b> iid ⇒ $L(\lambda)=\prod_{i=1}^{6}\lambda e^{-\lambda x_i}$ (yeh option 1 hai — likelihood, log nahi).</p>
+<p><b>Step 2:</b> $\ell=\ln L=\sum_{i=1}^{6}\ln\!\big(\lambda e^{-\lambda x_i}\big)$ (product ka $\ln$ = sum).</p>
+<p><b>Step 3:</b> $\ln\!\big(\lambda e^{-\lambda x_i}\big)=\ln\lambda+\ln e^{-\lambda x_i}=\ln\lambda-\lambda x_i$.</p>
+<p><b>Step 4:</b> $\ell(\lambda)=\sum_{i=1}^{6}\big(\ln\lambda-\lambda x_i\big)=6\ln\lambda-\lambda\sum x_i$ ⇒ <b>option 4</b>.</p></div>
+<div class="method" data-label="M2 Eliminate"><div class="mh">M2 · Shape se option elimination (Shortcut)</div>
+<p><b>Opt 1</b> $\prod\lambda e^{-\lambda x_i}$: yeh $L$ hai, $\ln$ laga hi nahi ⇒ ❌.</p>
+<p><b>Opt 2</b> $\sum\lambda e^{-\lambda x_i}$: densities ka sum — na $L$, na $\ell$ ⇒ ❌.</p>
+<p><b>Opt 3</b> $\prod(\ln\lambda-\lambda x_i)$: har term sahi hai, par $\ln$ ke baad product nahi, <i>sum</i> aata hai ⇒ ❌.</p>
+<p><b>Opt 4</b> $\sum(\ln\lambda-\lambda x_i)$: sum, har term $\ln f(x_i)$ ⇒ ✅.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Derive</td><td>Medium (40 s)</td><td>Low</td><td>Low</td><td>Jab options ajeeb hon</td></tr>
+<tr><td>M2 Eliminate</td><td>Fastest (10 s)</td><td>Low</td><td>Medium — option 3 jaisa "almost-right" fasa sakta hai</td><td>Exam MCQ</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M2. 🏆 <b>BEST EXAM METHOD:</b> M2 se option 4 chuno, phir M1 ka Step 3 ek line mein check karo — trade-off: option 3 ke $\ln\lambda-\lambda x_i$ wale terms bilkul sahi dikhte hain, isliye sirf terms nahi, <i>$\prod$ vs $\sum$</i> bhi dekho.</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li>Code: $\lambda=0.7$, $x=(1,2,0.5)$: $\ln\big(\prod\lambda e^{-\lambda x_i}\big)=-3.5200$ aur option 4 ka value $=-3.5200$ ✓ (option 3 ka product alag number deta hai).</li>
+<li>Source key bank mein nahi hai <span class="tag t-q">[?]</span>; derivation aur numerical check dono option 4 par agree karte hain.</li>
+</ul>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>Option 1 chuna (yeh <i>likelihood</i> hai, $\ln$ ke bina).</li>
+<li>Option 3: $\prod$ aur $\ln$ ka milaap — log ke baad sum aana chahiye.</li>
+<li>Option 2: $\sum\lambda e^{-\lambda x_i}$ "natural dikhta" hai par kisi cheez ka $\ln$ nahi hai.</li>
+</ul>
+<p><b>Recognition rule:</b> "log-likelihood" ⇒ $\sum_i\ln f(x_i;\theta)$; agar option mein $\prod$ ya $\ln$ missing ho to reject.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>Density $f(x;\theta)=\theta x^{\theta-1}$ for $0&lt;x&lt;1$, $\theta&gt;0$; iid data $x_1,\dots,x_n$. (a) $\ell(\theta)$? (b) $\hat\theta$ for $n=3$, $x=(0.5,0.6,0.7)$?</p>
+<details class="reveal"><summary>Show answer</summary><p>(a) $\ell(\theta)=\sum\big[\ln\theta+(\theta-1)\ln x_i\big]=n\ln\theta+(\theta-1)\sum\ln x_i$. (b) $\ell'=\dfrac n\theta+\sum\ln x_i=0\Rightarrow\hat\theta=-\dfrac n{\sum\ln x_i}=-\dfrac3{-1.5606}=\mathbf{1.9223}$ (grid-search $1.9223$ ✓ code).</p></details>
+</details>
+</section>
+
+<section data-track="pyq2">
+<h3>🎯 P2 — Exponential MLE for $x=1,\dots,6$ (2024 February Q14) <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2024 February · Original Q14 · ID <code>640653738044</code> · SA · 2 marks · parent Q12 (<code>640653738042</code>) · <span class="tag t-src">[SRC]</span></p>
+<p>(Context: wahi Q12 — six non-negative iid points, density $\lambda e^{-\lambda x}$.) You are given the actual values of these observations: $x_1=1,\ x_2=2,\ x_3=3,\ x_4=4,\ x_5=5,\ x_6=6$. What is the maximum likelihood estimate for $\lambda$? Enter your answer correct to three decimal places.</p>
+<p><b>Accepted answer (source):</b> 0.25 to 0.35</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Pehle likho: $\ell(\lambda)$, phir $\ell'=0$. Aur: jawab mean hoga ya mean ka reciprocal? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> $\hat\lambda_{MLE}$. <b>Given:</b> $n=6$, $x=1,\dots,6$, Exponential.</li>
+<li><b>Trigger clues:</b> "maximum likelihood estimate" + $\lambda e^{-\lambda x}$ + actual values. <b>Prerequisites:</b> S3 (recipe), P1 ka $\ell$ — Procedural. <b>Core principle:</b> L42.</li>
+</ul>
+<h4>2. 🧭 Methods (3 genuinely different)</h4>
+<p><b>M1 General:</b> calculus se derive. <b>M2 Shortcut:</b> $\hat\lambda=1/\bar x$ yaad se. <b>M3 Advanced:</b> mean $\mu=1/\lambda$ se parametrise karke $\hat\mu=\bar x$, phir invariance (D4, L40). Numerical grid-search sirf verification hai.</p>
+<h4>3. 🧮 Working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Calculus"><div class="mh">M1 · Derive (General)</div>
+<p><b>Step 1:</b> $n=6$, $\sum x_i=1+2+3+4+5+6=21$.</p>
+<p><b>Step 2:</b> $\ell(\lambda)=6\ln\lambda-21\lambda$.</p>
+<p><b>Step 3:</b> $\ell'(\lambda)=\dfrac6\lambda-21=0\Rightarrow\lambda=\dfrac6{21}$.</p>
+<p><b>Step 4:</b> $\hat\lambda=\dfrac27=\mathbf{0.2857}\approx0.286$. $\ell''=-\dfrac6{\lambda^2}=-73.5&lt;0$ ✓.</p></div>
+<div class="method" data-label="M2 1/mean"><div class="mh">M2 · $\hat\lambda=1/\bar x$ (Shortcut)</div>
+<p><b>Step 1:</b> $\bar x=\dfrac{21}6=3.5$.</p>
+<p><b>Step 2:</b> $\hat\lambda=\dfrac1{\bar x}=\dfrac1{3.5}$.</p>
+<p><b>Step 3:</b> $=\dfrac27=\mathbf{0.2857}\approx0.286$.</p></div>
+<div class="method" data-label="M3 Mean param"><div class="mh">M3 · Mean se parametrise (Advanced)</div>
+<p><b>Step 1:</b> $f=\dfrac1\mu e^{-x/\mu}$, $\mu=1/\lambda$.</p>
+<p><b>Step 2:</b> $\ell(\mu)=-6\ln\mu-\dfrac{21}\mu$; $\ell'=-\dfrac6\mu+\dfrac{21}{\mu^2}=0\Rightarrow\hat\mu=\dfrac{21}6=3.5$.</p>
+<p><b>Step 3:</b> invariance: $\hat\lambda=\dfrac1{\hat\mu}=\dfrac1{3.5}=\mathbf{0.2857}$.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Calculus</td><td>Slow (1 min)</td><td>Medium</td><td>Low</td><td>Recipe pakki karna</td></tr>
+<tr><td>M2 $1/\bar x$</td><td>Fastest (10 s)</td><td>Low</td><td>Medium — mean aur rate ka confusion</td><td>Exam</td></tr>
+<tr><td>M3 Mean param</td><td>Medium</td><td>Higher</td><td>Low</td><td>Samajhna ki $\bar x$ <i>mean</i> ka MLE hai</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M2. 🏆 <b>BEST EXAM METHOD:</b> M2, last step mein "rate = 1/mean" likh do — trade-off: speed ke saath reciprocal ki ek line zaroori hai.</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li>Code: grid-argmax of $6\ln\lambda-21\lambda$ $=0.285714$ ✓. $\ell(0.2857)=-13.5166$, $\ell(0.5)=-14.6589$, $\ell(3.5)=-65.98$.</li>
+<li>Source range $0.25$–$0.35$ ✓ ($0.2857$ andar). Answer 3 d.p. mein: $0.286$.</li>
+</ul>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>$\hat\lambda=3.5$ (mean ko rate samajhna) — $\ell(3.5)=-65.98$ bahut kam (WE4).</li>
+<li>$\sum x_i$ ki jagah $\sum x_i^2$ ya $n$ galat lena.</li>
+<li>$21/6=3.5$ nikal kar wahin ruk jaana.</li>
+</ul>
+<p><b>Recognition rule:</b> "$\lambda e^{-\lambda x}$, MLE of $\lambda$" ⇒ $n/\sum x$; answer hamesha mean ka reciprocal.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>Exponential, data $\{0.5,\ 1.5,\ 2,\ 4\}$. (a) $\hat\lambda$? (b) Same data par $\ell(\hat\lambda)$ aur $\ell(1)$ (natural log)?</p>
+<details class="reveal"><summary>Show answer</summary><p>(a) $n=4$, $\sum x_i=8$ ⇒ $\hat\lambda=\dfrac48=\mathbf{0.5}$. (b) $\ell(\lambda)=4\ln\lambda-8\lambda$: $\ell(0.5)=4\ln0.5-4=\mathbf{-6.7726}$, $\ell(1)=0-8=\mathbf{-8}$ ⇒ $0.5$ behtar. (Code ✓.)</p></details>
+</details>
+</section>
+
+<section data-track="pyq3">
+<h3>🎯 P3 — Poisson ka log-likelihood (2024 July Q20) <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2024 July 07 · Original Q20 · ID <code>640653829519</code> · MCQ · 2.5 marks · parent Q19 (<code>640653829518</code>) · <span class="tag t-src">[SRC]</span></p>
+<p><b>Context (parent Q19):</b> Consider a dataset of $n$ data-points, all of which are non-negative integers. The data-points are modeled using a Poisson distribution whose PMF is $f(x;\lambda)=\dfrac{e^{-\lambda}\lambda^x}{x!}$, $\lambda&gt;0$.</p>
+<p>Find the log-likelihood of the dataset under this distribution.</p>
+<ol>
+<li>$\displaystyle\sum_{i=1}^{n}\big[-\lambda+x_i\log\lambda-\log(x_i!)\big]$</li>
+<li>$\displaystyle\prod_{i=1}^{n}\frac{e^{-\lambda}\lambda^{x_i}}{x_i!}$</li>
+<li>$\displaystyle\sum_{i=1}^{n}\big[-\lambda+\lambda\log x_i-\log(x_i!)\big]$</li>
+<li>$\displaystyle\prod_{i=1}^{n}\big[-\lambda+x_i\log\lambda-\log(x_i!)\big]$</li>
+</ol>
+<p><b>Source indication:</b> Option 1 marked correct.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>$\ln\big(e^{-\lambda}\lambda^x/x!\big)$ khud simplify karo. Phir dekho kis option mein $\prod$ hai aur kis mein base/exponent ulte hain. Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> Poisson $\ell(\lambda)$. <b>Given:</b> PMF $e^{-\lambda}\lambda^x/x!$, $n$ iid counts.</li>
+<li><b>Trigger clues:</b> "log-likelihood" + Poisson. <b>Prerequisites:</b> G3 ($\ln$ rules: $\ln(ab)=\ln a+\ln b$, $\ln a^b=b\ln a$) — Procedural + Conceptual. <b>Core principle:</b> L41, L43, L47.</li>
+</ul>
+<h4>2. 🧭 Methods (2 genuinely different)</h4>
+<p><b>M1 General:</b> $\ln$ ko term-by-term simplify. <b>M2 Shortcut:</b> option elimination (shape + $\ln a^b$ rule). Teesra rasta nahi — numerical check verification hai.</p>
+<h4>3. 🧮 Working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Derive"><div class="mh">M1 · Simplify $\ln f$ (General)</div>
+<p><b>Step 1:</b> $\ln f(x_i;\lambda)=\ln e^{-\lambda}+\ln\lambda^{x_i}-\ln(x_i!)$.</p>
+<p><b>Step 2:</b> $\ln e^{-\lambda}=-\lambda$; $\ln\lambda^{x_i}=x_i\ln\lambda$.</p>
+<p><b>Step 3:</b> $\ln f=-\lambda+x_i\ln\lambda-\ln(x_i!)$.</p>
+<p><b>Step 4:</b> $\ell=\sum_{i=1}^{n}\big[-\lambda+x_i\ln\lambda-\ln(x_i!)\big]$ ⇒ <b>option 1</b>.</p></div>
+<div class="method" data-label="M2 Eliminate"><div class="mh">M2 · Option elimination (Shortcut)</div>
+<p><b>Opt 2</b> $\prod\frac{e^{-\lambda}\lambda^{x_i}}{x_i!}$: yeh $L$ hai, $\ln$ nahi ⇒ ❌.</p>
+<p><b>Opt 4</b> $\prod[\ \dots\ ]$ jisme logs hain: logs ka <i>product</i> ⇒ ❌ (log-likelihood sum hota hai).</p>
+<p><b>Opt 3</b> $\sum[-\lambda+\lambda\log x_i-\dots]$: $\ln\lambda^{x}=x\ln\lambda$, $\lambda\ln x$ nahi; saath mein $x_i=0$ par $\ln0$ undefined ⇒ ❌.</p>
+<p><b>Opt 1</b> sum + $x_i\log\lambda$ + $-\log x_i!$ ⇒ ✅.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Derive</td><td>Medium (45 s)</td><td>Low</td><td>Low</td><td>Pehli baar</td></tr>
+<tr><td>M2 Eliminate</td><td>Fastest (10 s)</td><td>Low</td><td>Medium — option 3 (swap) fasa sakta hai</td><td>Exam MCQ</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M2. 🏆 <b>BEST EXAM METHOD:</b> M2 + ek line M1: "$\ln\lambda^{x}=x\ln\lambda$" — trade-off: option 3 ka swap sirf is ek rule se pakda jaata hai.</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li>Code: $\lambda=1.3$, $x=(2,0,3)$: $\ln\prod\text{pmf}=-5.0731$ aur option 1 $=-5.0731$ ✓. Option 3 $x=0$ par $\ln0$ ⇒ NaN/undefined ✓.</li>
+<li>Source: option 1 marked ✓.</li>
+</ul>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>$x_i\ln\lambda$ ki jagah $\lambda\ln x_i$ (base-exponent ulte).</li>
+<li>$-\ln(x_i!)$ ko "$\lambda$-free hai" soch kar hata dena — $\ell$ ke expression mein woh rehta hai, sirf $\hat\lambda$ nikaalte waqt ghayab hota hai.</li>
+<li>Option 2/4 mein $\prod$.</li>
+</ul>
+<p><b>Recognition rule:</b> PMF ka $\ln$ lo, sum lagao; exponent bahar aata hai ($\ln a^b=b\ln a$).</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>Poisson, $n=3$, data $(1,0,2)$. $\ell(\lambda)$ poora expression likho aur $\hat\lambda$ nikaalo.</p>
+<details class="reveal"><summary>Show answer</summary><p>$\ln(1!)+\ln(0!)+\ln(2!)=0+0+\ln2$. $\ell(\lambda)=-3\lambda+3\ln\lambda-\ln2$ ($\sum x_i=3$). $\ell'=-3+\dfrac3\lambda=0\Rightarrow\hat\lambda=\mathbf1=\bar x=\tfrac33$. (Code ✓.)</p></details>
+</details>
+</section>
+
+<section data-track="pyq4">
+<h3>🎯 P4 — Poisson MLE, 25 points ka frequency table (2024 July Q21) <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2024 July 07 · Original Q21 · ID <code>640653829520</code> · SA · 2.5 marks · parent Q19 (<code>640653829518</code>) · <span class="tag t-src">[SRC]</span></p>
+<p>(Context: wahi Q19 — Poisson PMF, non-negative integer data.) A dataset contains 25 data-points. The value $x_i$ and its frequency are given in a table: value $0$ appears $1$ time, value $1$ appears $4$ times, value $2$ appears $6$ times, value $3$ appears $9$ times, value $4$ appears $5$ times. Find the maximum likelihood estimate of the Poisson parameter $\lambda$.</p>
+<div class="tbl-wrap"><table><thead><tr><th>value $v$</th><th class="num">0</th><th class="num">1</th><th class="num">2</th><th class="num">3</th><th class="num">4</th></tr></thead><tbody><tr><td>frequency $c$</td><td class="num">1</td><td class="num">4</td><td class="num">6</td><td class="num">9</td><td class="num">5</td></tr></tbody></table></div>
+<p><b>Accepted answer (source):</b> 2.52</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Pehle likho: $n$ kya hai aur $\sum x_i$ kya? ($n$ distinct values ki ginti hai ya kul points ki?) Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> $\hat\lambda_{MLE}$. <b>Given:</b> frequency table; kul $n=25$.</li>
+<li><b>Trigger clues:</b> "Poisson", "frequency", "MLE". <b>Prerequisites:</b> S3 + L45 (frequency-weighted sums) — Procedural. <b>Core principle:</b> L43, L45.</li>
+</ul>
+<h4>2. 🧭 Methods (2 genuinely different)</h4>
+<p><b>M1 General:</b> frequency form mein $\ell$ likh kar derivative. <b>M2 Shortcut:</b> $\hat\lambda=\bar x$ (frequency-weighted mean). Teesra rasta nahi: grid-search verification hai.</p>
+<h4>3. 🧮 Working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Derive"><div class="mh">M1 · $\ell$ se derive (General)</div>
+<p><b>Step 1 (L45):</b> $n=1+4+6+9+5=25$.</p>
+<p><b>Step 2:</b> $\sum x_i=0\cdot1+1\cdot4+2\cdot6+3\cdot9+4\cdot5=0+4+12+27+20=63$.</p>
+<p><b>Step 3:</b> $\ell(\lambda)=-25\lambda+63\ln\lambda-\text{const}$.</p>
+<p><b>Step 4:</b> $\ell'(\lambda)=-25+\dfrac{63}\lambda=0\Rightarrow\hat\lambda=\dfrac{63}{25}=\mathbf{2.52}$. $\ell''=-\dfrac{63}{\lambda^2}=-9.92&lt;0$ ✓.</p></div>
+<div class="method" data-label="M2 Weighted mean"><div class="mh">M2 · Frequency-weighted mean (Shortcut)</div>
+<p><b>Step 1:</b> $\hat\lambda=\bar x=\dfrac{\sum c_jv_j}{\sum c_j}$ (L43).</p>
+<p><b>Step 2:</b> $=\dfrac{0\cdot1+1\cdot4+2\cdot6+3\cdot9+4\cdot5}{25}$.</p>
+<p><b>Step 3:</b> $=\dfrac{63}{25}=\mathbf{2.52}$.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Derive</td><td>Slow</td><td>Medium</td><td>Low</td><td>Samajhna ki mean kyun</td></tr>
+<tr><td>M2 Weighted mean</td><td>Fastest (20 s)</td><td>Low</td><td>Medium — weights bhoolna / distinct-value se divide karna</td><td>Exam</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M2. 🏆 <b>BEST EXAM METHOD:</b> M2, par numerator aur denominator dono table se likho — trade-off: 30 second zyada, par weights ki galti se bacha leta hai.</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li>Code: grid-argmax $=2.5200$ ✓; $\ell(2.52)=-40.9467$, $\ell(2)=-42.5067$, $\ell(3)=-41.9624$ (dono kam).</li>
+<li>Source key $2.52$ ✓ (exact).</li>
+</ul>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>Unweighted mean $(0+1+2+3+4)/5=2$ — frequencies ignore ki.</li>
+<li>$63/5$ (distinct values se divide) $=12.6$ ✗; $n=25$ hai.</li>
+<li>$1/\bar x$ (Exponential wala) $=0.397$ ✗.</li>
+</ul>
+<p><b>Recognition rule:</b> "frequency table + Poisson" ⇒ $\hat\lambda=\sum c_jv_j/\sum c_j$.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>Poisson, value $0,1,2,3,4$ ke counts $2,5,8,3,2$. $\hat\lambda$?</p>
+<details class="reveal"><summary>Show answer</summary><p>$n=2+5+8+3+2=20$; $\sum x_i=0+5+16+9+8=38$ ⇒ $\hat\lambda=\dfrac{38}{20}=\mathbf{1.9}$ (code ✓).</p></details>
+</details>
+</section>
+
+<section data-track="pyq5">
+<h3>🎯 P5 — do hi $\theta$ values: $\prod5x_i^4$ vs $1$ (2024 October Q6) <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2024 October 27 · Original Q6 · ID <code>640653995449</code> · MSQ · 5 marks · <span class="tag t-src">[SRC]</span></p>
+<p>Let $X_1,X_2,\ldots,X_n$ be i.i.d. samples with parameter $\theta$, following one of these PDFs: for $\theta=-1$: $f(x|\theta)=5x^4$ for $0&lt;x&lt;1$ (else $0$); for $\theta=1$: $f(x|\theta)=1$ for $0&lt;x&lt;1$ (else $0$). We want to find the maximum likelihood estimate of $\theta$. Which statements are true?</p>
+<ol>
+<li>If $\prod_{i=1}^{n}5x_i^4&lt;1$, then $\hat\theta_{MLE}=1$.</li>
+<li>If $\prod_{i=1}^{n}5x_i^4&gt;1$, then $\hat\theta_{MLE}=1$.</li>
+<li>If $\prod_{i=1}^{n}5x_i^4&lt;1$, then $\hat\theta_{MLE}=-1$.</li>
+<li>If $\prod_{i=1}^{n}5x_i^4&gt;1$, then $\hat\theta_{MLE}=-1$.</li>
+</ol>
+<p><b>Source marking:</b> Options 1 and 4.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Pehle likho: $L(-1)$ kya hai aur $L(1)$ kya? Phir har option ko judge karo (reason ke saath). Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> kaun se implications sach hain. <b>Given:</b> $\theta\in\{-1,1\}$, do densities, $n$ iid samples in $(0,1)$.</li>
+<li><b>Trigger clues:</b> "MLE of $\theta$" + sirf <i>do</i> candidate densities + options mein $\prod\gtrless1$. <b>Prerequisites:</b> G2, S3, L46 — Procedural + Conceptual. <b>Core principle:</b> finite parameter set ⇒ compare likelihoods (L46); calculus nahi.</li>
+</ul>
+<h4>2. 🧭 Methods (2 genuinely different)</h4>
+<p><b>M1 General:</b> $L(-1)$ aur $L(1)$ seedha compare karo. <b>M2 Shortcut (extreme samples):</b> do extreme samples par dekho kaun jeetta hai, aur contradict karne wale options kaat do. Log-ratio ($\sum\ln(5x_i^4)$) wala view M1 ka hi dusra roop hai (D6), alag method nahi.</p>
+<h4>3. 🧮 Working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Compare L"><div class="mh">M1 · $L(-1)$ vs $L(1)$ (General)</div>
+<p><b>Step 1:</b> $L(-1)=\prod_{i=1}^{n}5x_i^4$ (sab $x_i\in(0,1)$).</p>
+<p><b>Step 2:</b> $L(1)=\prod_{i=1}^{n}1=1$.</p>
+<p><b>Step 3:</b> MLE woh $\theta$ jiska $L$ bada ho.</p>
+<p><b>Step 4:</b> $\prod5x_i^4&gt;1\Rightarrow L(-1)&gt;L(1)\Rightarrow\hat\theta=-1$. $\prod5x_i^4&lt;1\Rightarrow L(-1)&lt;L(1)\Rightarrow\hat\theta=+1$.</p>
+<p><b>Step 5 (har option):</b> Opt 1 ($&lt;1\Rightarrow+1$) ✅ · Opt 2 ($&gt;1\Rightarrow+1$) ❌ · Opt 3 ($&lt;1\Rightarrow-1$) ❌ · Opt 4 ($&gt;1\Rightarrow-1$) ✅.</p></div>
+<div class="method" data-label="M2 Extremes"><div class="mh">M2 · Extreme samples (Shortcut)</div>
+<p><b>Step 1:</b> Sab $x_i$ lagbhag $1$: $5x_i^4\approx5&gt;1$ ⇒ $\prod\gg1$ aur $\theta=-1$ ki density ($\approx5$) $\theta=1$ ki ($1$) se bhari ⇒ $\hat\theta=-1$.</p>
+<p><b>Step 2:</b> Sab $x_i$ chhote (jaise $0.1$): $5x_i^4=0.0005\ll1$ ⇒ $\prod\ll1$ aur $\theta=1$ jeetta hai.</p>
+<p><b>Step 3:</b> "$\prod&gt;1\to-1$" (opt 4) aur "$\prod&lt;1\to+1$" (opt 1) sahi; opt 2, 3 in extremes ke khilaaf ⇒ ❌.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Compare $L$</td><td>Medium (1 min)</td><td>Low</td><td>Low — har option reason ke saath</td><td>MSQ (poora proof)</td></tr>
+<tr><td>M2 Extremes</td><td>Fastest (20 s)</td><td>Low</td><td>Medium — "extreme" se general sach nahi banta</td><td>Sanity check</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M2. 🏆 <b>BEST EXAM METHOD:</b> M1 — MSQ mein har option ko pakka reason chahiye, aur M1 ek hi comparison se chaaron options ek saath nipta deta hai; M2 sirf cross-check ke liye.</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li>Code: sample $(0.9,0.8,0.95)$: $\prod5x_i^4=27.36&gt;1$ ⇒ $\hat\theta=-1$ (opt 4 ka case); $(0.3,0.5,0.4)$: $\prod=0.00162&lt;1$ ⇒ $\hat\theta=+1$ (opt 1 ka case).</li>
+<li>Code: 2000 random samples (size 1–7, $x\in(0,1)$): brute-force $\arg\max$ of $\{L(-1),L(1)\}$ rule se hamesha match ✓.</li>
+<li>Source options 1 aur 4 ✓.</li>
+</ul>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>Sign/label ulat dena: $\theta=-1\leftrightarrow5x^4$ (bada density tab jab $x$ bada ho).</li>
+<li>$L(1)=0$ samajhna — nahi, $f(x|\theta=1)=1$ hai, isliye $L(1)=1$.</li>
+<li>$\theta$ par derivative lene ki koshish — $\theta$ sirf do values leta hai.</li>
+<li>Tie ($\prod=1$) poochha nahi gaya; waisa case MLE non-unique hota hai (D6).</li>
+</ul>
+<p><b>Recognition rule:</b> finite parameter set ⇒ likelihoods compare; $\prod$ ka $1$ se compare = do-hypothesis decision.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>$\theta=0$: $f=1$ on $(0,1)$; $\theta=1$: $f=3x^2$ on $(0,1)$. Sample $(0.9,\ 0.5,\ 0.6)$. $\hat\theta$? Aur geometric-mean threshold kya hai?</p>
+<details class="reveal"><summary>Show answer</summary><p>$L(1)=\prod3x_i^2=2.43\times0.75\times1.08=\mathbf{1.968}&gt;1=L(0)$ ⇒ $\hat\theta=\mathbf1$. Threshold: $\prod3x_i^2&gt;1\iff\text{GM}&gt;3^{-1/2}=0.577$; sample GM $=0.27^{1/3}=0.646&gt;0.577$ ✓ consistent (code ✓).</p></details>
+</details>
+</section>
+
+<section data-track="pyq6">
+<h3>🎯 P6 — Pareto MLE, 5 observations (2025 July Q10) <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2025 July 13 · Original Q10 · ID <code>6406531302394</code> · SA · 3 marks · <span class="tag t-src">[SRC]</span></p>
+<p>Let $X_1,X_2,\ldots,X_n$ be an i.i.d. sample drawn from a Pareto distribution with PDF $f(x\mid\theta)=\theta x^{-\theta-1}$, $x\ge1$, $\theta&gt;1$. Given the sample of 5 observations: $X=\{2.5,\ 1.8,\ 3.2,\ 2.0,\ 2.7\}$. What is the maximum likelihood estimator of $\theta$? Enter the answer correct to three decimal places.</p>
+<p><b>Accepted answer (source):</b> 1.147 to 1.150</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Pehle likho: $\ln f$, phir $\ell(\theta)$, $\ell'(\theta)=0$. Aur: $\hat\theta>1$ check kyun zaroori hai? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> $\hat\theta_{MLE}$ (3 d.p.). <b>Given:</b> $n=5$, Pareto, $\theta&gt;1$, $x\ge1$.</li>
+<li><b>Trigger clues:</b> "maximum likelihood estimator" + naya density ($\theta x^{-\theta-1}$) + 3-decimal range tight ($1.147$–$1.150$). <b>Prerequisites:</b> G3 (natural $\ln$, derivative), S3 — Procedural. <b>Core principle:</b> L44.</li>
+</ul>
+<h4>2. 🧭 Methods (2 genuinely different)</h4>
+<p><b>M1 General:</b> $\ell$ derive karke $\hat\theta=n/\sum\ln x_i$. <b>M2 Advanced:</b> $Y=\ln X\sim\text{Exponential}(\theta)$ (D5) ⇒ P2 wali formula $1/\bar y$. Teesra rasta nahi — numerical grid verification hai.</p>
+<h4>3. 🧮 Working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Derive"><div class="mh">M1 · Seedha derive (General)</div>
+<p><b>Step 1:</b> $\ln f=\ln\theta-(\theta+1)\ln x$.</p>
+<p><b>Step 2:</b> $\ell(\theta)=5\ln\theta-(\theta+1)\sum\ln x_i$; $\ell'(\theta)=\dfrac5\theta-\sum\ln x_i=0$.</p>
+<p><b>Step 3 (natural logs):</b> $\ln2.5=0.916291$, $\ln1.8=0.587787$, $\ln3.2=1.163151$, $\ln2.0=0.693147$, $\ln2.7=0.993252$.</p>
+<p><b>Step 4:</b> $\sum\ln x_i=4.353627$.</p>
+<p><b>Step 5:</b> $\hat\theta=\dfrac5{4.353627}=\mathbf{1.14847}\approx1.148$. $\ell''=-\dfrac5{\theta^2}=-3.79&lt;0$ ✓; $\hat\theta&gt;1$ ✓.</p></div>
+<div class="method" data-label="M2 via Exponential"><div class="mh">M2 · $\ln X\sim\text{Exp}(\theta)$ (Advanced)</div>
+<p><b>Step 1:</b> $P(\ln X&gt;t)=P(X&gt;e^t)=\displaystyle\int_{e^t}^\infty\theta x^{-\theta-1}dx=e^{-\theta t}$ ⇒ $\ln X\sim\text{Exp}(\theta)$.</p>
+<p><b>Step 2:</b> Exponential MLE (P2): $\hat\theta=\dfrac1{\bar y}$, $\bar y=\dfrac15\sum\ln x_i$.</p>
+<p><b>Step 3:</b> $\bar y=\dfrac{4.353627}5=0.870725$ ⇒ $\hat\theta=\dfrac1{0.870725}=\mathbf{1.14847}$.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Derive</td><td>Medium (2 min, logs ke saath)</td><td>Medium</td><td>Low</td><td>Exam</td></tr>
+<tr><td>M2 via Exponential</td><td>Medium</td><td>Higher</td><td>Low</td><td>Connection samajhna (P2 ↔ P6)</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M1 (formula yaad ho to seedha $n/\sum\ln x$). 🏆 <b>BEST EXAM METHOD:</b> M1 — trade-off: M2 sundar hai par extra step; exam mein M1 se jaldi aur sidha.</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li>Code: grid-argmax over $\theta&gt;1$ $=1.14847$ ✓; $1/\text{mean}(\ln x)=1.14847$ ✓ (M1 = M2).</li>
+<li>$\ell(\hat\theta)=-8.6615$ vs $\ell(1.0)=-8.7073$ vs $\ell(2)=-9.5951$ — $\hat\theta$ sabse upar.</li>
+<li>Source range $1.147$–$1.150$ ✓.</li>
+</ul>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>$\sum x_i$ ($=12.2$) ya $\sum x_i^{-1}$ use karna: $5/12.2=0.410$ ✗ (aur $\theta&gt;1$ tod-ta hai).</li>
+<li>$\log_{10}$ (calculator ka "log"): $\sum\log_{10}x_i=1.8908$ ⇒ $2.644$ ✗; yahan natural $\ln$ chahiye.</li>
+<li><b>Rounding:</b> logs 2 decimal par ($4.35$) ⇒ $1.149$ (abhi range mein); 1 decimal par ($4.4$) ⇒ $1.136$ ✗ range ke bahar. Intermediate logs $\ge3$ decimal.</li>
+<li>$\hat\theta&gt;1$ check bhoolna (D5).</li>
+</ul>
+<p><b>Recognition rule:</b> naya density + "MLE" ⇒ poori recipe: $\ln f\to\sum\to\ell'=0\to$ range check; Pareto ka $\hat\theta=n/\sum\ln x_i$.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>Pareto ($x\ge1$, $\theta&gt;1$), data $\{1.5,\ 2,\ 4\}$. $\hat\theta$ (3 d.p.)?</p>
+<details class="reveal"><summary>Show answer</summary><p>$\sum\ln x_i=0.4055+0.6931+1.3863=2.4849$; $\hat\theta=\dfrac3{2.4849}=\mathbf{1.207}$ ($1.2073$; $&gt;1$ ✓) (code ✓).</p></details>
+</details>
+</section>
+
+<section data-track="mem52">
+<h3>📌 Memory card — 5.2 Likelihood &amp; MLE for distributions</h3>
+<div class="box em">
+<ul>
+<li><b>Core model:</b> i.i.d. data, ek knob $\theta$; $L=\prod f(x_i;\theta)$, $\ell=\sum\ln f$; MLE = $\arg\max\ell$. $L$ probability nahi (area $\ne1$), $\ell$ hamesha <b>sum</b>.</li>
+<li><b>Backbone chain:</b> model + support padho → data summarise ($n$, $\sum x$ ya $\sum\ln x$) → $\ln f$ simplify → $\ell'=0$ → $\hat\theta$ → verify ($\ell''&lt;0$, range, boundary) → jawab sawaal ki bhasha mein.</li>
+<li><b>Formulas (conditions):</b> Exponential $\hat\lambda=n/\sum x=1/\bar x$ ($x\ge0$) · Poisson $\hat\lambda=\bar x$ ($x\in\mathbb N_0$; frequency table: $\sum c_jv_j/\sum c_j$) · Pareto $\hat\theta=n/\sum\ln x$ ($x\ge1$, valid iff $\hat\theta&gt;1$) · finite $\Theta$: compare $L(\theta_1)$ vs $L(\theta_2)$ · shape: $\ell(\theta)-\ell(\hat\theta)=c(\ln r-r+1)$.</li>
+<li><b>Top 3 traps:</b> (1) mean ko rate maan lena (Exponential: $1/\bar x$); (2) log-likelihood ke options mein $\prod$ ya bina-$\ln$ expression chun lena; (3) Pareto mein $\sum x_i$ / $\log_{10}$ / 1-decimal logs, ya $\hat\theta>1$ check bhoolna.</li>
+<li><b>Trigger bank:</b> "log-likelihood of this dataset" · "$\lambda e^{-\lambda x}$" · "$e^{-\lambda}\lambda^x/x!$ + frequency" · "$\theta x^{-\theta-1}$" · "$\theta=-1$ or $\theta=1$".</li>
+<li><b>Method selector:</b> options mein $\ell$ ⇒ shape elimination; known family ⇒ formula (L42–L44); finite $\Theta$ ⇒ compare $L$; kuch alag (uniform, boundary) ⇒ $L$ ka shape dekho, calculus mat chalao.</li>
+<li><b>Spaced review (due):</b> 2026-11-13 P5/P6 (5.2) · 2026-11-15 P1–P4 · 2026-11-19 5.2 memory card · 2026-12-03 5.2 + T5 prerequisites.</li>
+</ul>
+</div>
+</section>
+
+<section data-track="eib52">
+<h3>✍️ Explain-it-back — 5.2 (chat mein jawab do)</h3>
+<div class="try"><p>Chat mein 3–5 lines: (a) Exponential mein MLE $1/\bar x$ aur Poisson mein $\bar x$ kyun — dono mein "mean" ka role kya hai? (b) P5 mein derivative kyun nahi lagaya, aur sahi decision rule kya hai? (c) "Log-likelihood" wale MCQ mein sabse pehle kaun se options reject karte ho aur kyun?</p>
+<p><b>Checkpoint question <span class="tag t-add">[ADDED]</span>:</b> Pareto ($x\ge1$, $\theta&gt;1$), data $\{e,\ e,\ e^2,\ e^3\}$. Unconstrained formula $n/\sum\ln x_i$ kya deta hai, aur kya woh is sawaal ka MLE hai? (Format mein jawab do.)</p>
+<p class="note">Format: <code>Answer: … | Confidence: S/U/G | Reason: …</code></p></div>
+</section>

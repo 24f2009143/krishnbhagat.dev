@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MLT Study Platform</title>
+<link rel="stylesheet" href="vendor/katex/katex.min.css">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/courses.css">
+<link rel="stylesheet" href="css/q1.css">
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/theme2.css">
+<link rel="stylesheet" href="css/shell.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header id="top">
+  <button id="btn-menu" class="icon" aria-label="Toggle topic menu" title="Topics">&#9776;</button>
+  <a id="brand" href="#hub"><b>MLT</b><span class="bname">Study notes</span></a>
+  <form id="search-form" role="search"><input id="search-input" type="search" placeholder="Search all notes and PYQs" aria-label="Search all notes and PYQs" autocomplete="off"><button type="submit" class="icon" aria-label="Search">&#128269;</button></form>
+  <nav id="top-actions" aria-label="Study tools">
+    <a class="chip nav" href="#practice" id="btn-practice" title="Adaptive practice planner">Practice next</a>
+    <a class="chip nav" href="#mock" id="btn-mock" title="Timed mock test">Mock test</a>
+    <a class="chip nav" href="#cheat" id="btn-cheat" title="Cheatsheet and exam revision">Cheatsheet</a>
+    <a class="chip nav" href="#plan" id="btn-plan" title="Study plan: 1 hour, 1 day or 1 week">Plan</a>
+    <a class="chip nav" href="#cards" id="btn-cards" title="Flashcards">Cards</a>
+    <a class="chip nav" href="#glossary" id="btn-gloss" title="Glossary of terms">Glossary</a>
+    <a class="chip nav" href="#mistakes" id="btn-mistakes" title="Mistake review">Mistakes <span id="mistake-count"></span></a>
+    <span class="util">
+    <button id="btn-tags" class="chip" title="Show or hide the source tags such as [ADDED]" aria-pressed="false">Tags</button>
+    <button id="btn-formulas" class="chip" title="Open the formula drawer">&#402;(x)</button>
+    <button id="btn-sync" class="chip" hidden title="Sign in with Google to sync your progress">Sign in</button>
+    <button id="btn-large" class="chip" title="Larger text" aria-label="Larger text" aria-pressed="false">A+</button>
+    <button id="btn-theme" class="chip" title="Light or dark" aria-label="Switch between light and dark"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+    <button id="btn-reset" class="chip" title="Reset progress" aria-label="Reset progress"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg></button>
+    </span>
+  </nav>
+</header>
+<div id="storage-note" hidden>Browser storage is blocked here, so your progress lasts only for this session.</div>
+<div id="layout">
+  <aside id="side" aria-label="Topics and sections"></aside>
+  <main id="main" tabindex="-1"></main>
+</div>
+<aside id="drawer" aria-label="Formula drawer" hidden></aside>
+<div id="modal" hidden></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script src="vendor/katex/katex.min.js"></script>
+<script src="vendor/katex/auto-render.min.js"></script>
+<script src="js/manifest.js"></script>
+<script src="js/counts.js"></script>
+<script src="js/guide-data.js"></script>
+<script src="js/guide-data2.js"></script>
+<script src="js/guide.js"></script>
+<script src="js/study-data.js"></script>
+<script src="js/study.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/courses.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/merge.js"></script>
+<script src="js/sync.js"></script>
+</body>
+</html>

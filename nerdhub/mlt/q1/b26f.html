@@ -1,0 +1,235 @@
+<style>#content mjx-container:not([display="true"]){display:inline-block;max-width:100%;overflow-x:auto;overflow-y:hidden;vertical-align:middle}#content li,#content p,#content td{overflow-wrap:anywhere}</style>
+<section data-track="intro">
+<p class="muted mono" style="margin:0">B26F · Final cheat sheet (T1–T8) + weak-areas page</p>
+<h1>Final cheat sheet aur weak-areas</h1>
+<p class="lead">Yeh page <b>revision</b> ke liye hai, pehli baar sikhne ke liye nahi. Cheat Sheet v1 (B2) ko B3–B26 ke <b>confirmed conventions</b> ke saath patch kiya gaya hai; jahan v1 se kuch badla hai wahan <span class="tag t-add">[PATCHED]</span> likha hai. Sab entries <span class="tag t-add">[ADDED]</span> hain (meri likhi, code se verify ki hui); PYQ se aayi cheezein <span class="tag t-src">[SRC]</span> se mark hain.</p>
+<p class="note">Print ya PDF ke liye toolbar ka "Print / PDF" dabao.</p>
+<p><b>Conventions (is page ke liye):</b> $X\in\mathbb R^{d\times n}$ (har column ek point); $\mathbf 1_n=\tfrac1n\mathbf1\mathbf1^T$; Gram eigenvalues ko $\nu$ likha hai (mean $\mu$ se alag).</p>
+</section>
+
+<section data-track="conv">
+<h2>1 · Course ke confirmed conventions (PYQ keys se)</h2>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Cheez</th><th>Convention</th><th>Saboot / jahan dekha</th></tr></thead>
+<tbody>
+<tr><td>Covariance</td><td>$C=\frac1n\sum x_ix_i^T$ (centred data)</td><td>F6/F7: $1/n$ se keys ka match (B6)</td></tr>
+<tr><td>Centring</td><td>PCA se pehle mean ghatao; uncentred se alag answer</td><td>F6: $18.44$ vs uncentred $43.75$</td></tr>
+<tr><td>PCA storage</td><td>$k(d+n)$ numbers, mean store nahi</td><td>2025 Jul Q11: $5\cdot1050=5250$; 2025 Feb Q8: $1-\frac{5\cdot1020}{20000}=74.5\%$</td></tr>
+<tr><td>Dual PCA eigenvalue</td><td>$C$ ka eigenvalue $=\nu/n$ ($\nu$ = $X^TX$ ka)</td><td>2025 Jul/Oct dual PCA sawaal (B12)</td></tr>
+<tr><td>Kernel PCA variance</td><td>$\nu/n$ (centred $K^c$ ka eigenvalue ÷ $n$)</td><td>2024 Jul Q5: $10/100=0.1$</td></tr>
+<tr><td>K-means++ probability</td><td>Default $D^2/\sum D^2$; <b>par</b> 2025 Feb Q9 ki key plain $D$ (ya $D$) se hi bani hai: $\frac1{1+\sqrt5+\sqrt{10}+\sqrt{17}}=0.095$ (key $0.07$–$0.11$)</td><td>2024 Jul Q8: $D^2$ se $0.25$ ✓; F2/F3: bank ka kuch hissa key se alag. Question ka wording padho.</td></tr>
+<tr><td>Bernoulli $p$</td><td>$p=P(x=1)$; Beta posterior mein $\alpha\mathrel{+}=\#$ones</td><td>2023 Jul Q11: Beta(10,5)→Beta(30,45), 60 points ⇒ 40 zeros</td></tr>
+<tr><td>M-step $\sigma^2$</td><td>Naye $\mu_k$ par: $\sum\gamma(x-\mu_{\text{new}})^2/N_k$ (spherical $d$-dim ⇒ denominator $d\,N_k$)</td><td>B26 7.4 (code ✓: $d=2$ example $0.5$)</td></tr>
+<tr><td>Responsibility</td><td>$\gamma\in[0,1]$; $>1$ ho to source error</td><td>F9 ($\lambda=2.5$), F10</td></tr>
+<tr><td>Regression</td><td>$X$ $d\times n$, $\hat y=w^Tx$ (bias nahi), $\nabla\text{MSE}=\frac2nX(X^Tw-y)$</td><td>2025 Jul Q16–Q18; options $y=x_1-2x_2$ jaise</td></tr>
+<tr><td>GD condition</td><td>$0<\eta<2/L$; $\eta=2/L$ oscillation</td><td>B26 8.2 (code ✓)</td></tr>
+</tbody></table></div>
+</section>
+
+<section data-track="cs">
+<h2>2 · Consolidated cheat sheet</h2>
+
+<h3>T1 · Linear Algebra</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Item</th><th>Formula</th><th>Condition / note</th></tr></thead>
+<tbody>
+<tr><td>Scalar projection of $x$ on $w$</td><td>$\dfrac{x^Tw}{\|w\|}$</td><td>Signed length. Unit $w$: $x^Tw$.</td></tr>
+<tr><td>Vector projection</td><td>$\dfrac{x^Tw}{w^Tw}w$</td><td>Denominator $\|w\|^2$ (square!).</td></tr>
+<tr><td>Residual</td><td>$r=x-\text{proj}$, $r^Tw=0$</td><td>Hamesha direction se orthogonal.</td></tr>
+<tr><td>Squared reconstruction error</td><td>$\|x\|^2-\dfrac{(x^Tw)^2}{w^Tw}$</td><td>Pythagoras.</td></tr>
+<tr><td>Squared distance</td><td>$\|x-y\|^2=\|x\|^2-2x^Ty+\|y\|^2$</td><td>K-means, kernels, GMM sab jagah.</td></tr>
+</tbody></table></div>
+
+<h3>T2 · PCA</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Item</th><th>Formula</th><th>Condition / note</th></tr></thead>
+<tbody>
+<tr><td>Centre + covariance</td><td>$x_i\leftarrow x_i-\mu$; $C=\frac1nXX^T$</td><td><span class="tag t-add">[PATCHED]</span> $1/n$ confirmed (F6/F7). $\frac1{n-1}$ ho to eigenvalues $\frac n{n-1}$ guna.</td></tr>
+<tr><td>PCs</td><td>$Cw=\lambda w,\ \|w\|=1$; PC$_k$ = $k$-th largest $\lambda$</td><td>$C$ symmetric PSD; eigenvectors orthogonal; $\pm w$ dono valid.</td></tr>
+<tr><td>Variance along unit $w$</td><td>$w^TCw$; max $=\lambda_1$</td><td>Unit-norm zaroori. Cube $\{\pm1\}^3$: har direction par $1$.</td></tr>
+<tr><td>Score</td><td>$x^Tw_k$</td><td>Centred $x$.</td></tr>
+<tr><td>Explained ratio</td><td>$\dfrac{\sum_{j\le k}\lambda_j}{\sum_j\lambda_j}$</td><td>Total variance $=\text{tr}(C)$ (F7: $\lambda_1\ne$ total).</td></tr>
+<tr><td>Rank-$k$ error</td><td>$\sum_{j>k}\lambda_j$ (avg squared, $1/n$)</td><td>Data $k$-dim subspace mein ⇒ $\le k$ nonzero eigenvalues; $k$ PCs par residue $0$.</td></tr>
+<tr><td>Rank bound</td><td>$\text{rank}(C)\le\min(d,n-1)$</td><td>Centring se ek rank kam.</td></tr>
+<tr><td>Dual PCA ($d>n$)</td><td>$X^TXv=\nu v$; $w=\dfrac{Xv}{\sqrt\nu}$; eig($C$)$=\nu/n$</td><td>$XX^T$ aur $X^TX$ ke nonzero eigenvalues same; eigenvectors alag.</td></tr>
+<tr><td>Storage</td><td>$k(d+n)$ vs $dn$</td><td><span class="tag t-add">[PATCHED]</span> Mean store nahi (5250; 74.5%).</td></tr>
+</tbody></table></div>
+
+<h3>T3 · Kernels</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Item</th><th>Formula</th><th>Condition / note</th></tr></thead>
+<tbody>
+<tr><td>Kernel, Gram</td><td>$k=\phi(x)^T\phi(y)$; $K_{ij}=k(x_i,x_j)$</td><td>Linear: $K=X^TX$.</td></tr>
+<tr><td>Valid kernel</td><td>$K$ symmetric aur PSD</td><td>Sirf symmetric kaafi nahi.</td></tr>
+<tr><td>Polynomial / Gaussian</td><td>$(x^Ty+c)^p,\ c\ge0$; $e^{-\|x-y\|^2/2\sigma^2}$</td><td>Gaussian: $k(x,x)=1$. $(1+x^Ty)^4$ at $(1,-1),(2,1)$: $16$ ✓.</td></tr>
+<tr><td>Closure</td><td>$k_1+k_2,\ ak_1\ (a\ge0),\ k_1k_2,\ f(x)f(y),\ e^{k_1}$ valid</td><td>$k_1-k_2$, $-k_1$ nahi; $|x-y|$ nahi.</td></tr>
+<tr><td>Feature count</td><td>$(x^Ty+c)^p$ on $\mathbb R^d$: $\binom{d+p}{p}$</td><td><span class="tag t-add">[PATCHED]</span> $d=4,p=3$: $35$ ✓.</td></tr>
+<tr><td>Centred Gram</td><td>$K^c=K-\mathbf1_nK-K\mathbf1_n+\mathbf1_nK\mathbf1_n$</td><td>Kernel PCA se pehle.</td></tr>
+<tr><td>Kernel PCA</td><td>$K^cv=\nu v$; variance $\nu/n$; score $\sqrt{\nu_k}v_k[i]$</td><td>Linear kernel ⇒ ordinary PCA. Components $d$ se zyada ho sakte hain.</td></tr>
+</tbody></table></div>
+
+<h3>T4 · K-means</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Item</th><th>Formula / rule</th><th>Condition / note</th></tr></thead>
+<tbody>
+<tr><td>Objective</td><td>$F=\sum\|x_i-\mu_{z_i}\|^2$</td><td>Squared distance.</td></tr>
+<tr><td>Lloyd</td><td>Assign (argmin), update (plain mean)</td><td>Pehle sab assign, tab update.</td></tr>
+<tr><td>Monotonicity</td><td>$F$ non-increasing har step</td><td>Finite steps; local minimum; init par depend (7.5).</td></tr>
+<tr><td>K-means++</td><td>$P(x)=\dfrac{D(x)^2}{\sum D^2}$</td><td><span class="tag t-add">[PATCHED]</span> Default $D^2$; 2025 Feb Q9 plain $D$. Chosen point ki prob $0$.</td></tr>
+<tr><td>Choosing $K$</td><td>$F$ $K$ ke saath ghatta hai; $K=n$ par $0$</td><td>Sirf $F$ se $K$ nahi.</td></tr>
+<tr><td>$\arg\min_v\sum\|ax_i-bv\|^2$</td><td>$v^*=\frac ab\bar x$</td><td>2026 Jul Q2: $\frac32\bar x$.</td></tr>
+</tbody></table></div>
+
+<h3>T5 · Probability, MLE, Bayes</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Item</th><th>Formula</th><th>Condition / note</th></tr></thead>
+<tbody>
+<tr><td>MLE recipe</td><td>$\ell=\sum\ln f$; $\ell'=0$</td><td>i.i.d.</td></tr>
+<tr><td>Bernoulli</td><td>$\hat p=\#\text{ones}/n$</td><td>$p=P(x=1)$.</td></tr>
+<tr><td>Gaussian</td><td>$\hat\mu=\bar x$, $\hat\sigma^2=\frac1n\sum(x-\bar x)^2$</td><td>$n$ se divide.</td></tr>
+<tr><td>Poisson</td><td>$\hat\lambda=\bar x$</td><td>Freq table: $\sum xf/\sum f$ ($2.52$ ✓).</td></tr>
+<tr><td>Exponential</td><td>$\hat\lambda=n/\sum x$</td><td>pdf $\lambda e^{-\lambda x}$.</td></tr>
+<tr><td>Pareto ($x_m=1$)</td><td>$\hat\theta=n/\sum\ln x_i$</td><td><span class="tag t-add">[PATCHED]</span> pdf $\theta x^{-\theta-1}$, $x\ge1$: $1.1485$ ✓ (key $1.147$–$1.150$).</td></tr>
+<tr><td>Beta–Bernoulli</td><td>Beta$(\alpha+h,\beta+t)$</td><td>Mean $\frac\alpha{\alpha+\beta}$; mode $\frac{\alpha-1}{\alpha+\beta-2}$ ($\alpha,\beta>1$).</td></tr>
+</tbody></table></div>
+
+<h3>T6 · Convexity</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Item</th><th>Formula</th><th>Condition / note</th></tr></thead>
+<tbody>
+<tr><td>Convex</td><td>$f(\lambda a+(1-\lambda)b)\le\lambda f(a)+(1-\lambda)f(b)$</td><td>$f''\ge0$.</td></tr>
+<tr><td>Jensen</td><td>$f(\sum\lambda_ja_j)\le\sum\lambda_jf(a_j)$</td><td>$\lambda_j\ge0$, $\sum=1$ (negative ya sum$\ne1$ ✗).</td></tr>
+<tr><td>Log version</td><td>$\ln(\sum\lambda_ja_j)\ge\sum\lambda_j\ln a_j$</td><td>$\ln$ concave; EM ke $\ell$ ka bound.</td></tr>
+<tr><td>Local vs global</td><td>Convex ⇒ local $=$ global</td><td>Regression MSE convex; GMM $\ell$ nahi.</td></tr>
+</tbody></table></div>
+
+<h3>T7 · GMM + EM</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Item</th><th>Formula</th><th>Condition / note</th></tr></thead>
+<tbody>
+<tr><td>Mixture density</td><td>$p(x)=\sum\pi_k\mathcal N(x|\mu_k,\sigma_k^2)$</td><td>$\pi\ge0$, $\sum\pi=1$.</td></tr>
+<tr><td>Log-likelihood</td><td>$\sum_i\ln\sum_k\pi_kf_k(x_i)$</td><td>Sum ke andar $\ln$ nahi todta ⇒ EM.</td></tr>
+<tr><td>E-step</td><td>$\gamma_k^i=\dfrac{\pi_kf_k(x_i)}{\sum_j\pi_jf_j(x_i)}$</td><td>$\gamma\in[0,1]$, $\sum_k\gamma_k^i=1$. 2 comps: $\gamma_1=\sigma(\ln\text{odds})$.</td></tr>
+<tr><td>M-step</td><td>$N_k=\sum\gamma$; $\pi_k=N_k/n$; $\mu_k=\sum\gamma x/N_k$; $\sigma_k^2=\sum\gamma(x-\mu_k)^2/N_k$</td><td><span class="tag t-add">[PATCHED]</span> Naya $\mu_k$ use; spherical $d$-dim: denominator $dN_k$.</td></tr>
+<tr><td>Ratios</td><td>$\gamma_1/\pi_1=f(x|1)/p(x)$; $\sum_{k\ge2}\gamma_k=1-\gamma_1$</td><td>$p(x)$ do numbers se nahi (2026 Jul Q9).</td></tr>
+<tr><td>EM vs Lloyd</td><td>Soft vs hard; $\pi,\sigma^2$ bhi seekhta; $\gamma\to\{0,1\}$ ⇒ Lloyd</td><td>$\ell\uparrow$, $F\downarrow$; dono local, init-sensitive, $K$-sensitive.</td></tr>
+</tbody></table></div>
+
+<h3>T8 · Regression</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Item</th><th>Formula</th><th>Condition / note</th></tr></thead>
+<tbody>
+<tr><td>Model, loss</td><td>$\hat y=w^Tx$; MSE $=\frac1n\sum(w^Tx_i-y_i)^2$</td><td>Bias nahi (course). Sum $=n\cdot$MSE.</td></tr>
+<tr><td>Gradient</td><td>$\frac2nX(X^Tw-y)$</td><td>Sum loss ka $2X(\cdot)$.</td></tr>
+<tr><td>Closed form</td><td>$XX^Tw=Xy$; $w^*=(XX^T)^{-1}Xy$</td><td>Invertible chahiye. $L\ge0$: exact fit ⇒ MSE $0$ ⇒ best fit.</td></tr>
+<tr><td>GD</td><td>$w\leftarrow w-\eta\nabla$</td><td><span class="tag t-add">[PATCHED]</span> $0<\eta<2/L$, $L=\frac2n\lambda_{\max}(XX^T)$; $\eta=2/L$ oscillation; $>2/L$ diverge. Rate $\max|1-\eta\lambda_j|$.</td></tr>
+<tr><td>SGD</td><td>Ek point ka gradient</td><td>Constant $\eta$ par noise-floor; global-min "guaranteed" ✗; exact-fit data par converge.</td></tr>
+</tbody></table></div>
+</section>
+
+<section data-track="trig">
+<h2>3 · Trigger → first move</h2>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Question mein yeh dikhe</th><th>Pehla kadam</th></tr></thead>
+<tbody>
+<tr><td>"variance along PC1" / "max variance direction"</td><td>Centred covariance ka largest eigenvalue; total se mix mat karo.</td></tr>
+<tr><td>"coordinates on PC1, PC2"</td><td>$x^Tw_k$ (unit eigenvectors).</td></tr>
+<tr><td>"how many nonzero eigenvalues" / "$k$-dim subspace"</td><td>Rank of centred data ($\le\min(d,n-1)$).</td></tr>
+<tr><td>"is $k(x,y)$ a valid kernel"</td><td>Closure rules, ya $2\times2$ Gram ka eigenvalue/determinant.</td></tr>
+<tr><td>"final centres / objective after convergence"</td><td>Assign → mean → repeat; phir $F$.</td></tr>
+<tr><td>"probability next centre is $p$"</td><td>Nearest-centre distance ($D^2$ default); normalise.</td></tr>
+<tr><td>"MLE of …" / "posterior with Beta prior"</td><td>Log-likelihood ka derivative $0$; $\alpha\mathrel{+}=h,\beta\mathrel{+}=t$.</td></tr>
+<tr><td>"responsibility / came from cluster $k$"</td><td>$\pi_kf_k(x)$, phir normalise.</td></tr>
+<tr><td>"after the M-step" with $\lambda$ list</td><td>$N=\sum\lambda$; $\pi=N/n$; $\mu=\sum\lambda x/N$.</td></tr>
+<tr><td>"EM vs Lloyd", "global optimum", "init sensitivity"</td><td>Dono local, init/K-sensitive; absolute words par shak.</td></tr>
+<tr><td>"fit linear model" / "MSE" / "learning rate"</td><td>Option plug-test ya $XX^Tw=Xy$; $\eta$ ko $2/L$ se compare.</td></tr>
+</tbody></table></div>
+</section>
+
+<section data-track="traps">
+<h2>4 · Top traps (topic-wise)</h2>
+<ul>
+<li><b>T1:</b> $\|w\|^2$ se divide; non-unit $w$ ko unit maan lena.</li>
+<li><b>T2:</b> Centring bhoolna; $\frac1n$ vs $\frac1{n-1}$; $\lambda_1$ vs total variance; storage mein mean ginna.</li>
+<li><b>T3:</b> "symmetric ⇒ valid" ✗; $k_1-k_2$; kernel PCA se pehle centring; $d$ se zyada components.</li>
+<li><b>T4:</b> $D$ vs $D^2$; ek ek point par update; $F$ se $K$ chunna; converge $\ne$ global optimum.</li>
+<li><b>T5:</b> MLE variance $\frac1n$; $p=P(x=1)$ ka direction; Beta mean vs mode; prior ke $\alpha,\beta$ bhoolna.</li>
+<li><b>T6:</b> Jensen mein weights non-negative + sum $1$; concave par ulti inequality.</li>
+<li><b>T7:</b> Hard count ($\gamma\ge0.5$) vs soft weight; naya $\mu$ vs purana $\mu$ $\sigma^2$ mein; EM ke $\ell\uparrow$ ko global max samajhna.</li>
+<li><b>T8:</b> $X^TX$ vs $XX^T$; sum vs mean; "$\eta$ koi bhi"; SGD "guaranteed"; $\eta=2/L$ ko convergent maanna.</li>
+</ul>
+</section>
+
+<section data-track="weak">
+<h2>5 · Weak-areas page</h2>
+<div class="box amber">
+<p><b>Honest status:</b> abhi tak tumhara koi <i>demonstrated chat answer</i> graded nahi hua (<code>needs_repair</code> khali hai), isliye main kisi topic ko "weak" ya "mastered" <b>nahi</b> likh sakta. Neeche ki list <b>source/ambiguity flags</b> aur <b>spaced-review dates</b> ki hai, tumhari galtiyon ki nahi. Jab tum <code>Answer: … | Confidence: S/U/G | Reason: …</code> dena shuru karoge, tab yahi page real weak areas se update hoga.</p>
+</div>
+
+<h3>5.1 Source flags registry <span class="tag t-flag">[FLAG]</span></h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>#</th><th>Question ID</th><th>Issue</th><th>Build</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td>F1</td><td class="mono">640653995448</td><td>Distance table sum $8$; key $6$ = $F$ after mean update</td><td>B17</td><td>Open</td></tr>
+<tr><td>F2</td><td class="mono">640653669234</td><td>Highest probability $(13,13)$, not $(10,10)$</td><td>B20</td><td>Open</td></tr>
+<tr><td>F3</td><td class="mono">640653669235</td><td>Closest mean $(3,3)$, not $(10,10)$</td><td>B20</td><td>Open</td></tr>
+<tr><td>F4</td><td class="mono">640653577736</td><td>$ab=180$ as given; $60$ if value is $-1$ <span class="tag t-q">[?]</span></td><td>B19</td><td>Open</td></tr>
+<tr><td>F5</td><td class="mono">6406531527625</td><td>$C_2$ mean $(2.5,-1.5)$ vs marked $(1.5,-1.5)$ <span class="tag t-q">[?]</span></td><td>B19</td><td>Open</td></tr>
+<tr><td>F6</td><td class="mono">6406531104791</td><td>Centred $\lambda_1=18.44$; key $43.75$ uncentred</td><td>B6</td><td>Open</td></tr>
+<tr><td>F7</td><td class="mono">6406532158944</td><td>$\lambda_1=50$; key $100$ = total variance</td><td>B6</td><td>Open</td></tr>
+<tr><td>F8</td><td class="mono">640653669240</td><td>Posterior mean $18/57=0.316$, outside $0.2$–$0.3$</td><td>B24</td><td>Open</td></tr>
+<tr><td>F9</td><td class="mono">640653995450</td><td>Responsibility $2.5$ invalid; formula on printed numbers $=1.5628$, in key range</td><td>B26</td><td>Open (proved in 7.4 P3)</td></tr>
+<tr><td>F10</td><td class="mono">6406531527629</td><td>Density rows $x=10,20$ inconsistent; index unreadable <span class="tag t-q">[?]</span></td><td>B25</td><td>Open</td></tr>
+<tr><td>F11</td><td class="mono">6406531104779</td><td>Expressions (1) and (3) identical <span class="tag t-q">[?]</span></td><td>B17</td><td>Open</td></tr>
+<tr><td>F12</td><td>Spec roadmap</td><td>"B26 = 10 PYQs" vs actual $9$ IDs ($8$ solvable + 1 context); total $162$ closes</td><td>B26</td><td><b>Resolved</b></td></tr>
+</tbody></table></div>
+
+<h3>5.2 [?] items (key / reading missing) — B25, B26</h3>
+<ul>
+<li><span class="tag t-q">[?]</span> 7.1 Q7: $\lambda$ index missing · 7.1 Q13 context: $\sigma=20$ likely $x_3=20$ · 7.2 Q14, Q20: options missing · 7.3 Q22: options 3 aur 4 identical (B25).</li>
+<li><span class="tag t-q">[?]</span> <b>P5</b> (2025 Jul Q7): koi key marked nahi; mera $\{2,4,5\}$ (1–3 pakke; 4, 5 course-reading). (B26)</li>
+<li><span class="tag t-q">[?]</span> <b>P8</b> (2025 Jul Q8): koi key marked nahi; mera $\{1,4\}$ (1–3 pakke; 4 course-reading). (B26)</li>
+<li><span class="tag t-q">[?]</span> <b>P6/P7</b>: stem ka "$y=wx$" asal mein $w^Tx$. Key par asar nahi. (B26)</li>
+<li class="muted">Pehle ke builds (B3–B24) ke [?] tags unke apne pages par hain; yahan dobara nahi ginaye.</li>
+</ul>
+
+<h3>5.3 Convention-trap table (jahan keys ek-doosre se alag lagti hain) <span class="tag t-add">[ADDED]</span></h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Jahan atakne ka chance</th><th>Check karo</th></tr></thead>
+<tbody>
+<tr><td>Covariance eigenvalue alag aa raha hai</td><td>Centred? $1/n$ ya $1/(n-1)$?</td></tr>
+<tr><td>K-means++ probability key se match nahi</td><td>$D$ ya $D^2$? Squared likha hai?</td></tr>
+<tr><td>Responsibility $>1$ ya sum $\ne1$</td><td>Source typo ho sakta hai: printed numbers par formula lagao aur flag karo.</td></tr>
+<tr><td>MSE ka number $n$ guna</td><td>Sum ya mean?</td></tr>
+<tr><td>GD "converge" ya nahi</td><td>$\eta$ vs $2/L$; $L$ mein $2/n$.</td></tr>
+</tbody></table></div>
+
+<h3>5.4 Spaced review (abhi due list)</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Item</th><th>Due</th></tr></thead>
+<tbody>
+<tr><td>7.3 P8, P9; 7.4 P1, P2 (E-step/M-step basics)</td><td>2026-11-13</td></tr>
+<tr><td>7.5 P5; 8.1 P6, P7; 8.2 P8</td><td>2026-11-13</td></tr>
+<tr><td>7.3 P5, P6, P7, P10</td><td>2026-11-15</td></tr>
+<tr><td>7.3, 7.4, 7.5, 8.1, 8.2 memory cards</td><td>2026-11-19</td></tr>
+<tr><td>7.3 + T7 prerequisites; 7.5 + T7; 8.2 + T8 prerequisites</td><td>2026-12-03</td></tr>
+</tbody></table></div>
+</section>
+
+<section data-track="topicclosed">
+<h2>6 · Topic-closed checklist (khud tick karo)</h2>
+<p>Har line: "kya main yeh <b>bina hint, exam time mein</b> kar sakta hoon?" Tick sirf tab jab sach mein ho; yeh tumhare browser mein save hota hai (dusre device par sync nahi).</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Topic</th><th>Cold test</th><th>Practice jahan</th></tr></thead>
+<tbody>
+<tr><td>T1</td><td>Projection, residual, reconstruction error</td><td><a href="#b03">B3</a></td></tr>
+<tr><td>T2</td><td>Covariance, PCs, explained variance, storage, dual PCA</td><td><a href="#b05">B5</a>–<a href="#b12">B12</a></td></tr>
+<tr><td>T3</td><td>Valid kernel, feature map, kernel PCA</td><td><a href="#b13">B13</a>–<a href="#b16">B16</a></td></tr>
+<tr><td>T4</td><td>Lloyd, objective, K-means++</td><td><a href="#b17">B17</a>–<a href="#b21">B21</a></td></tr>
+<tr><td>T5</td><td>MLE, Beta posterior</td><td><a href="#b22">B22</a>–<a href="#b24">B24</a></td></tr>
+<tr><td>T6</td><td>Jensen weights check</td><td><a href="#b25">B25</a></td></tr>
+<tr><td>T7</td><td>E-step, M-step, EM vs Lloyd</td><td><a href="#b25">B25</a>, <a href="#b26">B26</a></td></tr>
+<tr><td>T8</td><td>Normal equations, MSE, GD condition</td><td><a href="#b26">B26</a></td></tr>
+</tbody></table></div>
+<p class="note">Spec ke hisaab se Phase 2 (B27, B28) mein har topic ka alag Revision & Cheat Sheet page banega; yeh page uske pehle ka consolidated version hai.</p>
+</section>

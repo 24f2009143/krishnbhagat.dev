@@ -1,0 +1,1387 @@
+<style>#content mjx-container:not([display="true"]){display:inline-block;max-width:100%;overflow-x:auto;overflow-y:hidden;vertical-align:middle}#content li,#content p,#content td{overflow-wrap:anywhere}</style>
+<section data-track="intro">
+<p class="muted mono" style="margin:0">B26 · T7 GMM/EM (7.4 M-step, 7.5 EM vs Lloyd) + T8 Regression (prerequisites, 8.1 MSE, 8.2 Gradient descent) + ⏱️ final timed test + 🧩 Checkpoint 5</p>
+<h1>EM ka doosra half (M-step), EM vs Lloyd, Regression — aur final tests</h1>
+<p class="lead">B25 mein E-step ne har point ko <b>soft weights</b> $\gamma_k^i$ diye ("yeh point component $k$ se kitna aaya"). Ab <b>M-step</b> in weights ko <b>fractional counts</b> maan kar parameters dobara nikalta hai: weighted count $\to\pi_k$, weighted mean $\to\mu_k$, weighted variance $\to\sigma_k^2$ — yani T5 ka MLE, bas har point ka vote $\gamma$ jitna hai. Phir 7.5 mein EM aur Lloyd (T4) ki seedhi tulna. Phir <b>T8 Regression</b>: squared loss, normal equations, gradient descent — ek aur model jahan "loss minimise karo" ka matlab hai. End mein <b>⏱️ final timed test</b> aur <b>🧩 Checkpoint 5</b> (poora syllabus T1–T8). <b>Final cheat sheet aur weak-areas page</b> alag nav entry (<b>B26F</b>) mein hain, taaki exam ke time seedha khul sakein.</p>
+<div class="box">
+<p><b>Is build ke PYQs <span class="tag t-src">[SRC]</span></b> — 4 subtopics, <b>9 IDs</b>: <b>1 comprehension context block</b> (0 marks) + <b>8 solvable PYQs (P1–P8), kul 24 marks</b>. Roadmap ne B26 ke liye "10 PYQs" likha tha; asli ginti <b>9</b> hai (neeche source note 5) — ab 162 ke total mein koi gap nahi.</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>#</th><th>Paper · Q</th><th>ID</th><th>Type · marks</th><th>Kya poochha</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td colspan="6"><b>7.4 · M-step and parameter updates</b> (4 IDs)</td></tr>
+<tr><td>P1</td><td>2023 October · Q8</td><td class="mono">640653669241</td><td>SA · 4</td><td>5 points ke $\lambda_k^i=0.3,0.1,0.5,0.5,0.3$; M-step ke baad $\pi_k$ (2 d.p.)</td><td>Key 0.3–0.4; mera $0.34$ ✓</td></tr>
+<tr><td>P2</td><td>2024 July 07 · Q6</td><td class="mono">640653829510</td><td>SA · 3</td><td>100 points, 3 comps, $\pi=(0.3,0.5,0.2)$; $\lambda_1^p+\lambda_3^p=0.2$ ⇒ component 2 ne $x_p$ banaya, uski probability?</td><td>Key 0.8; mera $0.8$ ✓</td></tr>
+<tr><td>P3</td><td>2024 October 27 · Q9</td><td class="mono">640653995450</td><td>SA · 4</td><td>$x=(1,1.2,2,1.5,0.5)$, $\lambda_k=(0.3,0.1,2.5,0.6,0.8)$; M-step ke baad $\mu_k$</td><td>Key 1.50–1.60; mera $1.5628$ ✓ <span class="tag t-flag">[FLAG]</span> (F9: $\lambda=2.5&gt;1$)</td></tr>
+<tr><td>P4</td><td>2025 July 13 · Q6</td><td class="mono">6406531302389</td><td>MCQ · 3</td><td>EM ke E-step aur M-step ki sahi definition</td><td>Key option 1; mera ✓</td></tr>
+<tr><td colspan="6"><b>7.5 · EM properties and comparison with Lloyd's algorithm</b> (1 ID)</td></tr>
+<tr><td>P5</td><td>2025 July 13 · Q7</td><td class="mono">6406531302390</td><td>MSQ · 3</td><td>EM vs Lloyd ke 5 statements mein kaun sach</td><td>Key marked nahi <span class="tag t-q">[?]</span>; mera 2, 4, 5</td></tr>
+<tr><td colspan="6"><b>8.1 · Squared error and mean squared error (MSE)</b> (3 IDs)</td></tr>
+<tr><td>ctx</td><td>2025 July 13 · Q16</td><td class="mono">6406531302399</td><td>Comprehension · 0</td><td>4 points $x\in\mathbb R^2$ aur label $y$ ki table (P6, P7 ka context)</td><td>Passage</td></tr>
+<tr><td>P6</td><td>2025 July 13 · Q17</td><td class="mono">6406531302400</td><td>MCQ · 3</td><td>Squared error se $y=w^Tx$ fit karo; kaun sa model?</td><td>Key option 2 $y=x_1-2x_2$; mera ✓</td></tr>
+<tr><td>P7</td><td>2025 July 13 · Q18</td><td class="mono">6406531302401</td><td>SA · 1</td><td>Training dataset ka MSE</td><td>Key 0; mera $0$ ✓</td></tr>
+<tr><td colspan="6"><b>8.2 · Gradient descent and optimization</b> (1 ID)</td></tr>
+<tr><td>P8</td><td>2025 July 13 · Q8</td><td class="mono">6406531302391</td><td>MSQ · 3</td><td>Linear regression par GD / SGD ke 4 statements</td><td>Key marked nahi <span class="tag t-q">[?]</span>; mera 1, 4</td></tr>
+</tbody></table></div>
+<p><b>Bank frequency ≠ exam weightage:</b> 7.4 mein 4 aur 8.1 mein 2 solvable PYQs hain — yeh sirf batata hai ki practice mein kaun-kaun se <i>rang</i> aaye (weighted formulas, complement trick, EM ki definition, exact fit, convexity/GD ke statements), "kitna aayega" nahi.</p>
+<p><b>Tags:</b> <span class="tag t-src">[SRC]</span> PYQ file se · <span class="tag t-add">[ADDED]</span> meri explanation / naya question · <span class="tag t-flag">[FLAG]</span> source error, proof ke saath · <span class="tag t-q">[?]</span> source mein unreadable ya missing.</p>
+<p><b>B26 notation (L67–L76)</b> — B25 ke $L57$–$L66$ ke baad:
+L67 Weighted count (effective size): $N_k=\sum_{i=1}^{n}\gamma_k^i$; $\sum_kN_k=n$ ·
+L68 Mixing weight update: $\pi_k^{new}=\dfrac{N_k}{n}=\dfrac1n\sum_i\gamma_k^i$ ·
+L69 Mean update: $\mu_k^{new}=\dfrac{\sum_i\gamma_k^ix_i}{\sum_i\gamma_k^i}=\dfrac{\sum_i\gamma_k^ix_i}{N_k}$ (weighted average; weights $\gamma_k^i/N_k$ sum to 1) ·
+L70 Variance update (1-D): $\sigma_k^{2,new}=\dfrac{\sum_i\gamma_k^i\,(x_i-\mu_k^{new})^2}{N_k}$ — <b>naya</b> $\mu_k$ ke saath; $d$-dim spherical: $\dfrac{\sum_i\gamma_k^i\|x_i-\mu_k\|^2}{d\,N_k}$ ·
+L71 Hard limit: $\gamma\in\{0,1\}$ ⇒ $N_k=|S_k|$, $\mu_k$ = cluster ka plain mean (Lloyd ka update step) ·
+L72 EM loop: E-step ($\theta^{(t)}\to\gamma$) phir M-step ($\gamma\to\theta^{(t+1)}$); log-likelihood $\ell(\theta^{(t+1)})\ge\ell(\theta^{(t)})$ ·
+L73 Linear regression ($X\in\mathbb R^{d\times n}$, columns = points): $\hat y_i=w^Tx_i$; $L(w)=\sum_i(w^Tx_i-y_i)^2$; $\text{MSE}=L/n$ ·
+L74 Gradient aur closed form: $\nabla\text{MSE}=\dfrac2nX(X^Tw-y)$; $XX^Tw=Xy\Rightarrow w^*=(XX^T)^{-1}Xy$ ($XX^T$ invertible ho to) ·
+L75 Gradient descent: $w\leftarrow w-\eta\nabla\text{MSE}(w)$; quadratic loss par converge $\iff0<\eta<2/L_{\text{curv}}$, $L_{\text{curv}}=\tfrac2n\lambda_{\max}(XX^T)$ ·
+L76 SGD: ek point ka gradient $2(w^Tx_i-y_i)x_i$ (noisy); constant $\eta$ par $w^*$ ke aas-paas ghoomta hai, decaying $\eta_t$ par converge. (Pichhle builds ke $L1$–$L66$ B12–B25 mein.)</p>
+<p><b>Source integrity — 6 notes:</b></p>
+<ol>
+<li><span class="tag t-flag">[FLAG]</span> <b>P3 (2024 Oct Q9) = F9:</b> $\lambda_k^3=2.5$ hai, par responsibility ek probability hai, $[0,1]$ mein honi chahiye. Key ($1.50$–$1.60$) printed values se hi bani hai: $6.72/4.3=1.5628$. Agar $2.5$ asal mein $0.25$ ya $0.5$ hota to $\mu_k$ $1.083$ ya $1.183$ aata — range ke bahar. Isliye printed numbers pe formula lagaya; proof P3 mein.</li>
+<li><span class="tag t-q">[?]</span> <b>P5 (2025 Jul Q7):</b> bank mein 5 statements hain par koi correct-marked nahi. Statements 1–3 pakke (proof), 4 aur 5 "course-standard reading" par tikte hain (4 ke liye maine ek chhota simulation bhi chalaya). Mera jawab $\{2,4,5\}$ meri derivation hai, source key nahi.</li>
+<li><span class="tag t-q">[?]</span> <b>P8 (2025 Jul Q8):</b> yahan bhi koi option marked nahi. Mera jawab $\{1,4\}$: statement 1 aur 2 pakke (convexity), 3 pakka (constant-$\eta$ SGD), 4 "iterations ki ginti" ki reading par (GD ka har step mehnga, par steps kam).</li>
+<li><span class="tag t-q">[?]</span> <b>P6/P7 notation:</b> stem "$y=wx$, $w=[w_1\ w_2]^T$" likhta hai — asal mein $y=w^Tx$ (koi bias nahi). Options $y=x_1+2x_2$ jaise hain, jo isi padhai se match karte hain; key par asar nahi.</li>
+<li><b>Count check (F12):</b> roadmap ke per-build numbers ka total 163 tha vs 162 blocks. B26 ke 4 subtopics mein 9 IDs hain ($4+1+3+1$); B25 ke 12 ke saath $12+9=21=1+16+4$ (convexity + GMM + regression) — total ab $162$ pe band hota hai. F12 <b>resolved</b>.</li>
+<li><b>Locate karne ka tareeka:</b> subtopics heading se locate kiye ("M-step and parameter updates", "EM properties and comparison with Lloyd's algorithm", "Squared error and mean squared error (MSE)", "Gradient descent and optimization"); roadmap ke line numbers (4161–4297, 4984–5088) is rendering se match nahi karte. Project tool ne file ek baar phir poori inline return ki (B25 jaisa); maine sirf in headings ke neeche ka hissa use kiya.</li>
+</ol>
+<p>Saare numerical answers (8 PYQs, worked examples, transfer questions, dono tests) python se code-verified; do naye widgets (<code>mstep</code>, <code>gd1d</code>) ka logic alag se test kiya.</p>
+</div>
+</section>
+
+<!-- ===================================================== 7.4 ===================================================== -->
+<h2>7.4 · M-step and parameter updates</h2>
+
+<section data-track="warm74">
+<h3>🔁 Recall warm-up (pichhle builds se, chat mein mat bhejo — khud check karo)</h3>
+<div class="try"><p class="ttl">W1 · B25 7.3 (E-step)</p><p>$\pi=(0.3,0.7)$; ek point par $f_1(x)=0.2$, $f_2(x)=0.4$. $\gamma_1$?</p>
+<details class="reveal"><summary>Show answer</summary><p>Joints: $0.3\cdot0.2=0.06$, $0.7\cdot0.4=0.28$; $p=0.34$. $\gamma_1=\dfrac{0.06}{0.34}=\mathbf{0.1765}$ (code ✓).</p></details></div>
+<div class="try"><p class="ttl">W2 · B25 7.3 deeper-3 (expected count)</p><p>Q19 mein $\sum_i\gamma_1^i=2.7701$ aur $n=4$. Yeh M-step mein $\pi_1$ ke liye kya banta hai?</p>
+<details class="reveal"><summary>Show answer</summary><p>$\pi_1^{new}=\dfrac{2.7701}{4}=\mathbf{0.6925}$ (L68). Yahi aaj ka pehla formula hai; B25 ne $0.6925$ sirf jhalak ke taur par dikhaya tha.</p></details></div>
+<div class="try"><p class="ttl">W3 · B23 5.2 (Gaussian MLE)</p><p>Data $\{2,4,9\}$. Gaussian ke $\hat\mu$ aur $\hat\sigma^2$ (MLE)?</p>
+<details class="reveal"><summary>Show answer</summary><p>$\hat\mu=\bar x=5$; $\hat\sigma^2=\dfrac{(2-5)^2+(4-5)^2+(9-5)^2}{3}=\dfrac{26}{3}=\mathbf{8.667}$ ($n$ se divide, $n-1$ se nahi). M-step ka $\mu_k,\sigma_k^2$ yahi MLE hai, bas har point ka vote $\gamma$ jitna.</p></details></div>
+</section>
+
+<section data-track="pretest74">
+<h3>❓ Pretest — pehle bina padhe try karo</h3>
+<div class="try"><p class="ttl">Ek PYQ, cold attempt</p>
+<p>2024 July 07 · Q6: The EM algorithm is run on a dataset of 100 points modeled using a GMM with three components. Let $\lambda_k^i$ be the value obtained in the E-step for data point $i$ and component $k$. The estimated mixture probabilities are $\pi_1=0.3,\ \pi_2=0.5,\ \pi_3=0.2$. For some data point $x_p$, $\lambda_1^p+\lambda_3^p=0.2$. What is the probability that the second component generated $x_p$, given that we have observed $x_p$?</p>
+<p class="note">Do minute lagao, jawab aur confidence (S/U/G) khud likh lo. Solution neeche <b>P2</b> mein hai.</p></div>
+</section>
+
+<section data-track="pos74">
+<h3>🧭 Position — yeh kahan baithta hai</h3>
+<ul>
+<li><b>Pichhla:</b> 7.3 (B25) ne diye hue $\theta^{(t)}$ par $\gamma_k^i=P(z_i=k\mid x_i)$ nikala. 7.4 EM ka doosra half-step hai: $\gamma$ ko <i>fixed</i> maan kar parameters badalna.</li>
+<li><b>Prerequisites:</b> G1 (weighted average: weights $\ge0$, sum $1$), S4 ($\gamma$, $\sum_k\gamma_k=1$), T5 ka Gaussian MLE ($\hat\mu=\bar x$, $\hat\sigma^2=\tfrac1n\sum(x-\bar x)^2$), T6 ($\ln$ concave — sirf deeper insight mein).</li>
+<li><b>Yeh kya unlock karta hai:</b> 7.5 (EM vs Lloyd: M-step ka hard limit Lloyd ka update hai) aur poora EM loop: E → M → E → M…, har round mein $\ell(\theta)$ badhta hai.</li>
+</ul>
+</section>
+
+<section data-track="intu74">
+<h3>🧠 Intuition — plain language</h3>
+<p>E-step ne har point par ek <b>vote-sheet</b> bana di: point $x_i$ ke $\gamma_1^i$ hisse component 1 ke, $\gamma_2^i$ hisse component 2 ke ($\gamma_1^i+\gamma_2^i=1$). Ab sawaal: "agar yeh hisse sach hote, to component 1 ke parameters kya hote?" Jawab seedha hai: <b>component 1 ke paas kul $N_1=\sum_i\gamma_1^i$ points hain</b> (fractional), uska mean in points ka <b>weighted average</b> hai (jis point ka hissa zyada, uska pull zyada), aur variance weighted spread. Component ka weight $\pi_1$ = uske hisse ka fraction $N_1/n$.</p>
+<div class="box">
+<p><b>Analogy (labelled): ek class ko do teams mein "aadha-aadha" baantna <span class="tag t-add">[ADDED]</span></b> — student $i$ team 1 ko $\gamma_1^i$ hisse deta hai. Team 1 ki "average height" nikalne ke liye har student ki height ko uske hisse se tolo aur kul hisse se divide karo. Team ka size $N_1$ = hisson ka jod, aur team ka share $\pi_1=N_1/n$.</p>
+<p><b>Yeh kahan toot-ta hai:</b> asli students ek hi team mein hote hain; yahan "aadha" sirf hamari <i>anischitata</i> (uncertainty) hai, koi student sach mein aadha nahi hota. Aur teams ke parameters agle round mein badalte hain to hisse bhi badal jaate hain — jo class ke saath nahi hota.</p>
+</div>
+<div class="box amber">
+<p><b>Yeh kya NAHI hai:</b></p>
+<ul>
+<li>$\mu_k\ne$ un points ka mean jinka $\gamma_k>0.5$ (hard cut-off) — saare points ka weighted mean hai, kam hisse wale bhi thoda kheenchte hain.</li>
+<li>Denominator $n$ nahi: $\mu_k$ aur $\sigma_k^2$ mein $N_k=\sum_i\gamma_k^i$ se divide; sirf $\pi_k$ mein $n$ se.</li>
+<li>$\pi_k$ ka formula $\mu_k$ mein nahi aata: M-step mein $\pi_k$ pehle ke $\pi_k$ se nahi, naye $N_k/n$ se bana.</li>
+<li>$\sigma_k^2$ mein <b>purana</b> $\mu_k$ nahi — naya $\mu_k^{new}$ (Example 3 mein dikhaya).</li>
+<li>M-step $\gamma$ ko badalta nahi (woh E-step ka kaam hai); yahan $\gamma$ fixed hai aur $\theta$ variable.</li>
+</ul>
+</div>
+</section>
+
+<section data-track="vis74">
+<h3>📊 Visual intuition</h3>
+<figure class="viz">
+  <p class="vt">Visual 1: M-step explorer (interactive) <span class="tag t-add">[ADDED]</span></p>
+  <p class="vs">Har point ke neeche slider hai: $\gamma_1^i$ (component 1 ka hissa); $\gamma_2^i=1-\gamma_1^i$ khud nikalta hai. Do lanes: neela lane component 1 ke weights (circle ka kshetrafal $\propto\gamma$), peela lane component 2 ke. Triangle = naya $\mu_k$; chhoti bar = $\pm\sigma_k$. "Hard" preset mein $\gamma\in\{0,1\}$ hai aur M-step bilkul Lloyd ka plain mean banta hai. Preset button se Ex1 ya 7.5 ka example load karo.</p>
+  <div data-widget="mstep" data-x="1,2,6" data-g="0.9,0.8,0.1"></div>
+  <figcaption><b>Interpretation:</b> kisi ek point ka $\gamma_1$ badhao to $\mu_1$ us point ki taraf khinchta hai aur $\pi_1$ badhta hai. Saare $\gamma_1\in\{0,1\}$ kar do to $N_1$ ek poora number (cluster size) aur $\mu_1$ plain average ban jaata hai — yeh 7.5 ka pul hai.</figcaption>
+</figure>
+<figure class="viz diagram">
+  <p class="vt">Visual 2: EM ka ek round — E aur M ka seedha chain <span class="tag t-add">[ADDED]</span></p>
+  <p class="vs"><b>Schematic</b>: boxes data-flow dikhate hain, numbers nahi. E-step $\theta^{(t)}$ padhta hai aur $\gamma$ likhta hai; M-step $\gamma$ padhta hai aur $\theta^{(t+1)}$ likhta hai. Har round mein $\ell(\theta)$ ghat nahi sakta.</p>
+<svg viewBox="0 0 720 190" role="img" aria-label="Loop diagram: parameters theta at iteration t feed the E-step which outputs responsibilities gamma, which feed the M-step which outputs parameters theta at iteration t plus one, which loops back"><defs><marker id="ah74" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#737373"/></marker></defs>
+<rect x="20" y="60" width="150" height="62" rx="8" fill="#181818" stroke="#60A5FA"/><text x="95" y="86" text-anchor="middle" font-size="13" font-weight="600" fill="#fff">θ(t)</text><text x="95" y="106" text-anchor="middle" font-size="11" fill="#a3a3a3">π, μ, σ² (current)</text>
+<rect x="215" y="60" width="130" height="62" rx="8" fill="#181818" stroke="#FBBF24"/><text x="280" y="86" text-anchor="middle" font-size="13" font-weight="600" fill="#fff">E-step</text><text x="280" y="106" text-anchor="middle" font-size="11" fill="#a3a3a3">Bayes: π f / Σ π f</text>
+<rect x="390" y="60" width="130" height="62" rx="8" fill="#181818" stroke="#34D399"/><text x="455" y="86" text-anchor="middle" font-size="13" font-weight="600" fill="#fff">γ  (n × K)</text><text x="455" y="106" text-anchor="middle" font-size="11" fill="#a3a3a3">soft weights</text>
+<rect x="565" y="60" width="135" height="62" rx="8" fill="#181818" stroke="#FBBF24"/><text x="632" y="86" text-anchor="middle" font-size="13" font-weight="600" fill="#fff">M-step</text><text x="632" y="106" text-anchor="middle" font-size="11" fill="#a3a3a3">N, π, μ, σ² (weighted)</text>
+<line x1="170" y1="91" x2="213" y2="91" stroke="#737373" marker-end="url(#ah74)"/><line x1="345" y1="91" x2="388" y2="91" stroke="#737373" marker-end="url(#ah74)"/><line x1="520" y1="91" x2="563" y2="91" stroke="#737373" marker-end="url(#ah74)"/>
+<path d="M632,122 V160 H95 V124" fill="none" stroke="#737373" marker-end="url(#ah74)"/><text x="364" y="154" text-anchor="middle" font-size="11.5" fill="#d4d4d4">θ(t+1)  →  agla round; ℓ(θ(t+1)) ≥ ℓ(θ(t))</text>
+</svg>
+  <figcaption><b>Interpretation:</b> E-step aur M-step ek dusre ka input hain; isiliye PYQs mein "E-step ke baad $\lambda$ diye hain, M-step ke baad $\pi,\mu$ batao" jaise sawaal bante hain. Starting point $\theta^{(0)}$ (init) hai, aur E-step pehle chalta hai.</figcaption>
+</figure>
+</section>
+
+<section data-track="formal74">
+<h3>📖 Formal version (Formula Protocol)</h3>
+<h4>(a) Weighted counts aur mixing weights (L67, L68)</h4>
+$$N_k=\sum_{i=1}^{n}\gamma_k^{\,i},\qquad \pi_k^{new}=\frac{N_k}{n}$$
+<p><b>Symbols aur assumptions:</b> $\gamma_k^i=\lambda_k^i$ E-step ka output ($0\le\gamma\le1$, $\sum_k\gamma_k^i=1$); $n$ points; $N_k$ component $k$ ke "expected points". Data i.i.d.</p>
+<p><b>Words mein:</b> $\pi_k$ = component $k$ ka average hissa; yaani sab points ke $\gamma_k^i$ ka <i>simple average</i>.</p>
+<p><b>Notice that…</b> $\sum_kN_k=\sum_i\sum_k\gamma_k^i=n$, isliye $\sum_k\pi_k^{new}=1$ khud ho jaata hai (koi alag normalisation nahi).</p>
+<h4>(b) Mean (L69)</h4>
+$$\mu_k^{new}=\frac{\sum_{i=1}^{n}\gamma_k^{\,i}\,x_i}{\sum_{i=1}^{n}\gamma_k^{\,i}}$$
+<p><b>Words mein:</b> weights $w_i=\gamma_k^i/N_k$ (nonneg, sum $1$) ke saath $x_i$ ka weighted average (G1). Vector data mein har coordinate ke liye same formula.</p>
+<h4>(c) Variance (L70)</h4>
+$$\sigma_k^{2,new}=\frac{\sum_{i=1}^{n}\gamma_k^{\,i}\,\bigl(x_i-\mu_k^{new}\bigr)^2}{\sum_{i=1}^{n}\gamma_k^{\,i}}$$
+<p><b>Notice that…</b> yeh $\mu_k^{new}$ (b) ke baad nikalta hai: pehle mean, phir us mean ke around spread. $d$-dim spherical $\sigma_k^2I$ mein $\|x_i-\mu_k\|^2$ aur denominator mein extra $d$.</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Quantity</th><th>Hard (Lloyd / K-means)</th><th>Soft (EM, M-step)</th></tr></thead>
+<tbody>
+<tr><td>Cluster size</td><td>$|S_k|$ (poora number)</td><td>$N_k=\sum_i\gamma_k^i$ (fractional)</td></tr>
+<tr><td>Centre / mean</td><td>$\dfrac1{|S_k|}\sum_{i\in S_k}x_i$</td><td>$\dfrac{\sum_i\gamma_k^ix_i}{N_k}$</td></tr>
+<tr><td>Weight $\pi_k$</td><td>nahi (barabar maan-te hain)</td><td>$N_k/n$ (seekha jaata hai)</td></tr>
+<tr><td>Variance</td><td>nahi (sirf mean)</td><td>$\dfrac{\sum_i\gamma_k^i(x_i-\mu_k)^2}{N_k}$</td></tr>
+</tbody></table></div>
+<p><b>Small worked example (Ex1 ka number-by-number):</b> $x=(1,2,6)$, $\gamma_1=(0.9,0.8,0.1)$: $N_1=1.8$, $\pi_1=0.6$, $\mu_1=\dfrac{0.9+1.6+0.6}{1.8}=\dfrac{3.1}{1.8}=1.7222$.</p>
+<div class="box em"><p><b>Important insight:</b> M-step ka har formula T5 ka MLE hai jisme har point ko ek <i>fractional multiplicity</i> $\gamma_k^i$ mili. Hard $\gamma$ daalo to seedha Lloyd (L71).</p>
+<p><b>This is why</b> P2 mein $\pi_k$, $n=100$ jaise numbers distractor hain: ek <i>akele</i> point ka $\lambda_2^p$ us point ke baaki $\lambda$ se milta hai ($\sum_k=1$), parameters se nahi.</p></div>
+</section>
+
+<section data-track="how74">
+<h3>⚙️ How it works — M-step ka numbered mechanism</h3>
+<ol>
+<li>E-step ka output $\gamma_k^i$ (table $n\times K$) pakdo; check karo har row ka jod $1$ hai.</li>
+<li>Har component $k$ ke liye <b>column ka jod</b> $N_k=\sum_i\gamma_k^i$.</li>
+<li>$\pi_k^{new}=N_k/n$.</li>
+<li>Ek column bana: $\gamma_k^ix_i$; uska jod $\div N_k$ $\Rightarrow\mu_k^{new}$.</li>
+<li>Ek aur column: $\gamma_k^i(x_i-\mu_k^{new})^2$; jod $\div N_k\Rightarrow\sigma_k^{2,new}$.</li>
+<li>$\theta^{(t+1)}=\{\pi_k,\mu_k,\sigma_k^2\}$ ko agle E-step ko do.</li>
+</ol>
+</section>
+
+<section data-track="we74">
+<h3>🧪 Worked examples (simple → exam-level → tricky) <span class="tag t-add">[ADDED]</span></h3>
+<h4>Example 1 (simple): teen points, ek component ke saare parameters</h4>
+<p>$x=(1,2,6)$, $\gamma_1=(0.9,0.8,0.1)$.</p>
+<ul>
+<li>$N_1=0.9+0.8+0.1=1.8$; $\pi_1=1.8/3=\mathbf{0.6}$.</li>
+<li>$\mu_1=(0.9\cdot1+0.8\cdot2+0.1\cdot6)/1.8=3.1/1.8=\mathbf{1.7222}$.</li>
+<li>Deviations $x_i-\mu_1=(-0.7222,\ 0.2778,\ 4.2778)$; $\sum\gamma(x-\mu)^2=0.9(0.5216)+0.8(0.0772)+0.1(18.2994)=2.3611$; $\sigma_1^2=2.3611/1.8=\mathbf{1.3117}$.</li>
+</ul>
+<p>Code ✓ (sab teen). Widget mein yahi preset khula hai.</p>
+<h4>Example 2 (exam-level): B25 ke Q19 ka poora EM round (sirf $\theta$ unknown)</h4>
+<p>Mixture $f(x\mid\theta)=\theta e^{-x}+(1-\theta)3e^{-3x}$, data $\{0.2,0.5,1.1,1.8\}$, $\theta^{(0)}=0.6$. Yahan components ($f_1,f_2$) known hain, sirf mixing weight $\theta=\pi_1$ seekhna hai — isliye M-step sirf $\pi$ wala formula hai.</p>
+<ul>
+<li>E-step (B25 P7): $\gamma_1^{(0)}=(0.4272,\ 0.5761,\ 0.8186,\ 0.9482)$, $\sum=2.7701$.</li>
+<li>M-step: $\theta^{(1)}=2.7701/4=\mathbf{0.6925}$.</li>
+<li>Agla E-step $\theta^{(1)}$ par: $\sum\gamma=3.0357$ $\Rightarrow\theta^{(2)}=\mathbf{0.7589}$.</li>
+<li>Log-likelihood: $\ell(\theta^{(0)})=-3.9881$, $\ell(\theta^{(1)})=-3.8594$, $\ell(\theta^{(2)})=-3.7828$ — har round mein badha (L72) ✓.</li>
+</ul>
+<p>Code ✓ (8 rounds tak $\theta$: $0.600,0.693,0.759,0.807,0.844,0.871,0.893,0.910$; $\ell$ strictly badhta).</p>
+<h4>Example 3 (tricky): $\sigma^2$ mein purana $\mu$ lagao to?</h4>
+<p>Ex1 ka data. Galat: purana $\mu^{old}=1$ lekar $\sum\gamma(x-1)^2/N=(0.9\cdot0+0.8\cdot1+0.1\cdot25)/1.8=\mathbf{1.833}$. Sahi (naya $\mu=1.7222$): $\mathbf{1.312}$. Galat wala <i>hamesha</i> bada aata hai, kyunki weighted spread apne weighted mean par hi sabse chhota hota hai.</p>
+<h4>Non-example</h4>
+<ul>
+<li>$\mu_1=3.1/3=1.033$ ($n$ se divide) ✗; sahi $3.1/1.8$.</li>
+<li>$\mu_1=\bar x_{\gamma>0.5}=(1+2)/2=1.5$ (hard cut-off) ✗; sahi $1.7222$.</li>
+<li>$\pi_1=N_1=1.8$ (probability $1$ se bada) ✗; sahi $N_1/n=0.6$.</li>
+</ul>
+</section>
+
+<section data-track="deep74">
+<h3>🔬 Deeper insight (D3 — collapsible)</h3>
+<details class="deep"><summary>1. $\mu_k$ aur $\sigma_k^2$ ka derivation (weighted Gaussian MLE)</summary>
+<p>E-step ke baad $\gamma$ fixed hai. Component $k$ ka objective $Q_k=\sum_i\gamma_k^i\ln\mathcal N(x_i;\mu,\sigma^2)=-\tfrac12\sum_i\gamma_k^i\bigl[\ln(2\pi\sigma^2)+\tfrac{(x_i-\mu)^2}{\sigma^2}\bigr]$.</p>
+<p>$\dfrac{\partial Q_k}{\partial\mu}=\dfrac1{\sigma^2}\sum_i\gamma_k^i(x_i-\mu)=0\ \Rightarrow\ \mu=\dfrac{\sum_i\gamma_k^ix_i}{\sum_i\gamma_k^i}$. Phir $\dfrac{\partial Q_k}{\partial\sigma^2}=-\dfrac{N_k}{2\sigma^2}+\dfrac{\sum_i\gamma_k^i(x_i-\mu)^2}{2\sigma^4}=0\ \Rightarrow\ \sigma^2=\dfrac{\sum_i\gamma_k^i(x_i-\mu)^2}{N_k}$. Jab $\gamma\equiv1$ hai to yeh T5 ka Gaussian MLE hi hai.</p></details>
+<details class="deep"><summary>2. $\pi_k=N_k/n$ ka derivation (Lagrange)</summary>
+<p>$\pi$ ka hissa $\sum_kN_k\ln\pi_k$ hai, shart $\sum_k\pi_k=1$. $\mathcal L=\sum_kN_k\ln\pi_k-\nu(\sum_k\pi_k-1)$; $\dfrac{N_k}{\pi_k}=\nu\Rightarrow\pi_k=N_k/\nu$; jod lene par $1=\sum N_k/\nu=n/\nu\Rightarrow\nu=n$. Isliye $\pi_k=N_k/n$ — aur yeh T5 ke Bernoulli MLE ($k/n$) ka $K$-category roop hai.</p></details>
+<details class="deep"><summary>3. EM kyun kaam karta hai — $\ell$ kabhi ghatta nahi (T6 ka Jensen) <span class="tag t-add">[ADDED]</span></summary>
+<p>Kisi bhi weights $q_k^i$ ($\ge0$, har point par sum $1$) ke liye Jensen ($\ln$ concave): $\ell(\theta)=\sum_i\ln\sum_kq_k^i\dfrac{\pi_kf_k(x_i)}{q_k^i}\ \ge\ \sum_i\sum_kq_k^i\ln\dfrac{\pi_kf_k(x_i)}{q_k^i}$. Barabari tab hoti hai jab $q_k^i=\gamma_k^i$ (E-step). M-step wahi lower bound ko $\theta$ par maximise karta hai. Isliye $\ell(\theta^{(t)})=\text{bound}(\theta^{(t)})\le\text{bound}(\theta^{(t+1)})\le\ell(\theta^{(t+1)})$.</p></details>
+<details class="deep"><summary>4. Edge case: component ek point par collapse ($\sigma_k^2\to0$)</summary>
+<p>Agar koi component ek hi point ko poora hissa de de ($N_k\approx1$, $\mu_k=x_i$) to $\sigma_k^2\to0$ ho sakta hai aur us point par density $\to\infty$, yaani $\ell$ unbounded. Practical GMM mein variance par neeche ki seema (floor) lagate hain. Yeh exam ka kaam nahi, par "EM global optimum nahi deta" (7.5) ki ek wajah hai.</p></details>
+<details class="deep"><summary>5. Sirf $\pi$ unknown ho to (Example 2)</summary>
+<p>$f_1,f_2$ known hon to $\mu,\sigma^2$ ka M-step hat jaata hai; sirf $\pi_1=\theta\leftarrow N_1/n$. B25 Q19 aise hi mixture ka sawaal tha. Is chhote model mein $\ell$ ka maximiser $\theta=1$ par boundary hai (data ka mean $0.9\approx1/\text{rate}$ aur $f_1$ ka rate $1$ ke bahut kareeb), isliye $\theta^{(t)}\to1$ — EM boundary ki taraf dheere dheere chalta hai (code se: $\theta^{(7)}=0.910$ aur badhta). Yeh "tay" sirf is data ke liye hai, general rule nahi.</p></details>
+</section>
+
+<section data-track="tool74">
+<h3>⚡ PYQ pattern toolkit — trigger → concept → first move</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Trigger clue</th><th>Concept</th><th>First move</th></tr></thead>
+<tbody>
+<tr><td>"estimate of $\pi_k$ after M-step", $\lambda_k^i$ ki list</td><td>L68</td><td>List ka jod $\div n$</td></tr>
+<tr><td>"estimate of $\mu_k$ after M-step", $x_i$ aur $\lambda_k^i$ diye</td><td>L69</td><td>Column $\lambda x$ banao; jod $\div\sum\lambda$</td></tr>
+<tr><td>"estimate of $\sigma_k^2$"</td><td>L70</td><td>Pehle naya $\mu_k$; phir $\sum\lambda(x-\mu_k)^2\div\sum\lambda$</td></tr>
+<tr><td>"given $\lambda$'s of other components, find the rest"</td><td>$\sum_k\lambda_k^p=1$ (per point)</td><td>$1-$ diye hue $\lambda$ ka jod; $\pi,n$ ignore</td></tr>
+<tr><td>"define E-step / M-step"</td><td>L72</td><td>E: $\gamma$ nikalo ($\theta$ fixed); M: $\theta$ nikalo ($\gamma$ fixed)</td></tr>
+<tr><td>$\lambda>1$ ya $<0$ dikhe</td><td>F9</td><td>Formula lagao, par noting karo: invalid responsibility</td></tr>
+</tbody></table></div>
+<p><b>Common traps:</b> $n$ ya $K$ se divide karna; $\gamma$ ke bajay $\pi$ ko weight banana; $\sigma^2$ mein purana $\mu$; hard cut-off $\gamma>0.5$; $\pi_k$ ko probability ke bajay count chhodna.</p>
+</section>
+
+<h2>🎯 7.4 PYQs — P1 to P4</h2>
+
+<section data-track="pyq1">
+<h3>🎯 P1 — 5 points ke $\lambda_k^i$ se $\pi_k$ (2023 October Q8) <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2023 October · Original Q8 · ID <code>640653669241</code> · SA · 4 marks · Pages 7–8 · <span class="tag t-src">[SRC]</span></p>
+<p>A GMM is fit for a dataset with 5 points. At some time-step in the EM algorithm, the values of $\lambda_k^i$ for all points in the dataset for the $k^{th}$ mixture are: $\lambda_k^1=0.3,\ \lambda_k^2=0.1,\ \lambda_k^3=0.5,\ \lambda_k^4=0.5,\ \lambda_k^5=0.3$. What is the estimate of $\pi_k$ after the M-step? Enter the answer to two decimal places.</p>
+<p><b>Accepted answer (source):</b> 0.3 to 0.4.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>$\pi_k$ ka matlab kya hai (probability ya count)? Kis number se divide hoga? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> $\pi_k^{new}$. <b>Given:</b> $\lambda_k^i$, $i=1..5$ (E-step ka output). Trigger: "estimate after the M-step".</li>
+<li><b>Prerequisites:</b> L67–L68 (S4, G1). <b>Core principle:</b> $\pi_k$ = average responsibility.</li>
+</ul>
+<h4>2. 🧭 Methods</h4>
+<p>Sirf 1 genuinely alag method: $\pi_k=\tfrac1n\sum_i\lambda_k^i$ (yeh M-step ka ek hi formula hai; doosra tareeka "expected count $\div n$" wahi hai). Padhne ka ek sanity bound zaroor hai (average ka beech mein hona), par woh check hai, method nahi.</p>
+<h4>3. 🧮 Working</h4>
+<div class="box">
+<p><b>Step 1:</b> $N_k=0.3+0.1+0.5+0.5+0.3=\mathbf{1.7}$.</p>
+<p><b>Step 2:</b> $\pi_k^{new}=\dfrac{N_k}{n}=\dfrac{1.7}{5}=\mathbf{0.34}$.</p>
+</div>
+<h4>4. 📊 Comparison</h4>
+<p>Ek hi tareeka; ~20 s. ⚡ <b>FASTEST</b> = 🏆 <b>BEST EXAM METHOD:</b> list ka jod $\div n$.</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li>Code: $1.7/5=0.34$ ✓. Source key $0.3$–$0.4$ ✓.</li>
+<li>Bound: $\pi_k$ average hai ⇒ $\min\lambda=0.1\le0.34\le0.5=\max\lambda$ ✓.</li>
+<li>Agar $K=2$ hota to doosre component ke $\lambda$ $0.7,0.9,0.5,0.5,0.7$ hote ($=1-\lambda$), jod $3.3$, $\pi=0.66$; $0.34+0.66=1$ ✓.</li>
+</ul>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>$\sum\lambda=1.7$ ko $\pi$ likh dena (count ko probability samajhna).</li>
+<li>$1.7$ se divide karna ($\to1.0$) ya $K$ se.</li>
+<li>Sirf $\lambda\ge0.5$ wale points gina ($2/5=0.4$): hard count, soft nahi.</li>
+</ul>
+<p><b>Recognition rule:</b> "$\pi_k$ after M-step" $\Rightarrow$ $\lambda_k$ column ka jod $\div n$.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>$n=8$ points; component $k$ ke $\lambda$: $0.9,0.7,0.2,0.1,0.0,0.4,0.6,0.1$. $\pi_k^{new}$?</p>
+<details class="reveal"><summary>Show answer</summary><p>Jod $=3.0$; $\pi_k=3.0/8=\mathbf{0.375}$ (code ✓).</p></details>
+</details>
+</section>
+
+<section data-track="pyq2">
+<h3>🎯 P2 — doosre component ne $x_p$ banaya: probability (2024 July Q6) <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2024 July 07 · Original Q6 · ID <code>640653829510</code> · SA · 3 marks · Pages 6–7 · <span class="tag t-src">[SRC]</span></p>
+<p>The EM algorithm is run on a dataset of 100 points modeled using a GMM with three components. Let $\lambda_k^i$ be the value obtained in the E-step for data point $i$ and component $k$. The estimated mixture probabilities are $\pi_1=0.3,\ \pi_2=0.5,\ \pi_3=0.2$. For some data point $x_p$, $\lambda_1^p+\lambda_3^p=0.2$. What is the probability that the second component generated $x_p$, given that we have observed $x_p$?</p>
+<p><b>Accepted answer (source):</b> 0.8.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>"given that we have observed $x_p$" kis cheez ka naam hai? Kaun se diye hue numbers zaroori hain? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> $P(z_p=2\mid x_p)=\lambda_2^p$ (posterior = responsibility). <b>Given:</b> $\pi$'s, $n=100$, aur $\lambda_1^p+\lambda_3^p=0.2$.</li>
+<li><b>Trigger:</b> "probability that component 2 generated $x_p$, given that we observed $x_p$". <b>Prerequisites:</b> S4, L63. <b>Core principle:</b> ek point ke saare components ke $\lambda$ ka jod $1$.</li>
+</ul>
+<h4>2. 🧭 Methods</h4>
+<p>1 method: complement. Bayes se direct jaane ke liye $f_k(x_p)$ chahiye, jo diye hi nahi — isliye wahi raasta band hai, aur yehi is sawaal ka maksad hai.</p>
+<h4>3. 🧮 Working</h4>
+<div class="box">
+<p><b>Step 1:</b> Har point par $\sum_{k=1}^{3}\lambda_k^p=1$ (S4).</p>
+<p><b>Step 2:</b> $\lambda_2^p=1-(\lambda_1^p+\lambda_3^p)=1-0.2=\mathbf{0.8}$.</p>
+</div>
+<h4>4. 📊 Comparison</h4>
+<p>~10 s. ⚡ <b>FASTEST</b> = 🏆 <b>BEST EXAM METHOD:</b> complement.</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li>Jod: $0.2+0.8=1$ ✓. Source key $0.8$ ✓.</li>
+<li>$\pi_2=0.5$ nahi: $\pi_2=\tfrac1n\sum_i\lambda_2^i$ <i>saare 100 points</i> ka average hai; ek point ka $\lambda_2^p$ us point ke evidence se alag ho sakta hai ($0.8\ne0.5$ bilkul theek).</li>
+<li>Consistency: $\pi$'s ka jod $0.3+0.5+0.2=1$ ✓ (distractor hai, par valid).</li>
+</ul>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>$\pi_2=0.5$ likh dena (prior vs posterior).</li>
+<li>$0.2\cdot0.5$ ya $0.5\cdot0.8=0.4$ jaise products banana.</li>
+<li>Dar jaana ki "$n=100$ aur $\pi$ kahan use honge" — woh use nahi hote.</li>
+</ul>
+<p><b>Recognition rule:</b> kuch $\lambda$ diye hon aur baaki component ka $\lambda$ poochha ho $\Rightarrow$ $1-\text{jod}$.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>$K=4$ components; ek point par $\lambda_1+\lambda_2=0.35$ aur $\lambda_4=0.15$. $\lambda_3$?</p>
+<details class="reveal"><summary>Show answer</summary><p>$\lambda_3=1-0.35-0.15=\mathbf{0.50}$ (code ✓).</p></details>
+</details>
+</section>
+
+<section data-track="pyq3">
+<h3>🎯 P3 — weighted mean $\mu_k$ (2024 October Q9) <span class="tag t-src">[SRC]</span> <span class="tag t-flag">[FLAG]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2024 October 27 · Original Q9 · ID <code>640653995450</code> · SA · 4 marks · Page 9 · <span class="tag t-src">[SRC]</span> <span class="tag t-flag">[FLAG]</span></p>
+<p>Consider a GMM for 5 points: $x_1=1,\ x_2=1.2,\ x_3=2,\ x_4=1.5,\ x_5=0.5$. At some timestep in EM, the values of $\lambda_k^i$ for the $k$-th mixture after the E-step are: $\lambda_k^1=0.3,\ \lambda_k^2=0.1,\ \lambda_k^3=2.5,\ \lambda_k^4=0.6,\ \lambda_k^5=0.8$. Find the estimate of $\mu_k$ after the M-step.</p>
+<p><b>Accepted answer (source):</b> 1.50 to 1.60.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Kaun se denominator se divide karoge? $\lambda=2.5$ dekh kar kuch ajeeb laga? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> $\mu_k^{new}$. <b>Given:</b> 5 points aur unke $\lambda_k^i$. <b>Trigger:</b> "estimate of $\mu_k$ after the M-step".</li>
+<li><b>Prerequisites:</b> L69 (G1 weighted average). <b>Core principle:</b> $\mu_k=\dfrac{\sum\lambda x}{\sum\lambda}$.</li>
+</ul>
+<h4>2. 🧭 Methods</h4>
+<p>2 genuinely alag arithmetic routes: direct weighted sum (General) aur shifted-origin deviation (Shortcut). Dono ek hi formula ke roop hain, par ghalti ke raaste alag.</p>
+<h4>3. 🧮 Working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Direct"><div class="mh">M1 · Direct weighted sum (General)</div>
+<p><b>Step 1:</b> $\sum\lambda=0.3+0.1+2.5+0.6+0.8=\mathbf{4.3}$.</p>
+<p><b>Step 2:</b> $\sum\lambda x=0.3(1)+0.1(1.2)+2.5(2)+0.6(1.5)+0.8(0.5)=0.3+0.12+5+0.9+0.4=\mathbf{6.72}$.</p>
+<p><b>Step 3:</b> $\mu_k=\dfrac{6.72}{4.3}=\mathbf{1.5628}$.</p></div>
+<div class="method" data-label="M2 Shifted"><div class="mh">M2 · Shifted origin (Shortcut)</div>
+<p><b>Step 1:</b> reference $c=1.5$; $d_i=x_i-1.5=(-0.5,-0.3,\ 0.5,\ 0,\ -1.0)$.</p>
+<p><b>Step 2:</b> $\sum\lambda d=-0.15-0.03+1.25+0-0.8=\mathbf{0.27}$.</p>
+<p><b>Step 3:</b> $\mu_k=c+\dfrac{\sum\lambda d}{\sum\lambda}=1.5+\dfrac{0.27}{4.3}=1.5+0.0628=\mathbf{1.5628}$ ✓.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<p>M1 ~1 min, M2 ~1 min par numbers chhote (0.27 vs 6.72), isliye multiplication ka error-risk kam. ⚡ <b>FASTEST:</b> M1. 🏆 <b>BEST EXAM METHOD:</b> M1 (ek saaf table: $\lambda$, $x$, $\lambda x$ columns) aur M2 se cross-check. Trade-off: M2 mein $c$ ka chunav aur sign dono galat ja sakte hain.</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li>Code: M1 $1.56279$, M2 $1.56279$ ✓. Source key $1.50$–$1.60$ ✓.</li>
+<li>Sanity: $\mu$ sabse bade weight ($2.5$) wale point $x_3=2$ ki taraf khinchta hai: unweighted mean $1.24$ se upar ✓ aur $\max x=2$ ke andar ✓.</li>
+</ul>
+<div class="box amber">
+<p><span class="tag t-flag">[FLAG]</span> <b>F9: $\lambda_k^3=2.5$ ek valid responsibility nahi hai.</b> $\lambda_k^i=P(z_i=k\mid x_i)\in[0,1]$. Proof: key printed number se hi bani hai — agar $2.5$ asal mein $0.25$ hota to $\mu=\dfrac{2.22}{2.05}=1.083$; $0.5$ hota to $\dfrac{2.72}{2.30}=1.183$ — dono key range ($1.50$–$1.60$) ke <b>bahar</b>. Isliye key $2.5$ ke saath consistent hai. Mera jawab: formula-as-printed $\mathbf{1.5628}$ (ya "1.56"). Yeh sirf exam-wording ki kamzori hai, concept (L69) par asar nahi.</p>
+</div>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>$n=5$ se divide ($6.72/5=1.344$, range ke bahar) ✗.</li>
+<li>Plain mean $1.24$ ✗.</li>
+<li>"$\lambda>1$ hai, sawaal galat hai" kehkar chhod dena — mark gawana; formula lagao aur flag note karo.</li>
+</ul>
+<p><b>Recognition rule:</b> "estimate of $\mu_k$" + $\lambda$ column $\Rightarrow$ $\sum\lambda x\div\sum\lambda$.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>$x=(0,2,4)$, $\lambda_k=(0.5,0.5,1.0)$. M-step ke baad $\mu_k$ aur $\sigma_k^2$?</p>
+<details class="reveal"><summary>Show answer</summary><p>$N=2$; $\mu=\dfrac{0+1+4}{2}=\mathbf{2.5}$; $\sigma^2=\dfrac{0.5(6.25)+0.5(0.25)+1.0(2.25)}{2}=\dfrac{5.5}{2}=\mathbf{2.75}$ (code ✓).</p></details>
+</details>
+</section>
+
+<section data-track="pyq4">
+<h3>🎯 P4 — EM ke E-step aur M-step ki definition (2025 July Q6) <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2025 July 13 · Original Q6 · ID <code>6406531302389</code> · MCQ · 3 marks · Pages 6–7 · <span class="tag t-src">[SRC]</span></p>
+<p>You are presented with a dataset that has latent variables influencing your data. You are asked to use the Expectation-Maximization (EM) algorithm to best capture the data. How would you define the steps in the EM algorithm?</p>
+<ol>
+<li>E-step: Estimate the latent variables in the dataset. M-step: Maximize the likelihood over the model parameters. <b>[correct in source]</b></li>
+<li>E-step: Estimate the number of latent variables in the dataset. M-step: Maximize the likelihood over the model parameters.</li>
+<li>E-step: Estimate the likelihood over the model parameters. M-step: Maximize the number of latent variables in the dataset.</li>
+<li>E-step: Estimate the likelihood over the model parameters. M-step: Maximize the number of parameters in the model.</li>
+</ol>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>E-step mein kya fixed hai aur kya nikalta hai? M-step mein ulta? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> EM ke do steps ki sahi definition. <b>Trigger:</b> "latent variables", "EM". <b>Prerequisites:</b> S2 (hidden $z$), L63, L72.</li>
+<li><b>Core principle:</b> E: $\theta$ fixed, hidden $z$ ka posterior $\gamma$ nikalo. M: $\gamma$ fixed, $\theta$ ko likelihood (expected complete-data log-likelihood) maximise karne ke liye badlo.</li>
+</ul>
+<h4>2. 🧭 Methods</h4>
+<p>Conceptual MCQ: 1 method — har option ko E/M ke role se jaancho (option elimination).</p>
+<h4>3. 🧮 Working (option elimination)</h4>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Option</th><th>Verdict</th><th>Kyun</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><b>✓</b></td><td>E: latent $z$ ke baare mein anuman (posterior $\gamma$, soft); M: parameters par likelihood maximise.</td></tr>
+<tr><td>2</td><td>✗</td><td>Latent variables ki <i>sankhya</i> estimate nahi hoti: har point ka ek $z_i$ hai ($n$ fixed), aur $K$ hum chunte hain.</td></tr>
+<tr><td>3</td><td>✗</td><td>Dono steps ulte: E-step likelihood ko "estimate" nahi karta aur M-step latent variables ki sankhya maximise nahi karta.</td></tr>
+<tr><td>4</td><td>✗</td><td>Parameters ki sankhya maximise karna maqsad nahi; model ka size fixed hai.</td></tr>
+</tbody></table></div>
+<h4>4. 📊 Comparison</h4>
+<p>Ek hi tareeka; ~30 s. ⚡ <b>FASTEST</b> = 🏆 <b>BEST EXAM METHOD:</b> "E $\to$ $z$ ka posterior, M $\to$ $\theta$ ka maximiser" yaad rakho, baaki options par "number of …" dekhte hi kaat do.</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li>Source key option 1 ✓.</li>
+<li>Soch ki shuddhta: option 1 ka "estimate the latent variables" ka sahi arth $P(z\mid x,\theta)$ (soft) hai, hard guess nahi; B25 aur Ex2 ne yahi kiya.</li>
+</ul>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>E-step mein parameters badalna / M-step mein $\gamma$ badalna.</li>
+<li>"Number of …" wale options: sankhya kabhi estimate/maximise nahi hoti.</li>
+</ul>
+<p><b>Recognition rule:</b> E $=$ posterior over $z$ ($\theta$ fixed), M $=$ argmax over $\theta$ ($\gamma$ fixed).</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>EM ke iteration $t$ mein M-step ke dauran kaun si cheez fixed hoti hai aur kaun si variable? Aur E-step ke dauran?</p>
+<details class="reveal"><summary>Show answer</summary><p>M-step: $\gamma$ fixed, $\theta$ variable. E-step: $\theta^{(t)}$ fixed, $\gamma$ computed. Pehle iteration ka E-step $\theta^{(0)}$ (init) se shuru hota hai.</p></details>
+</details>
+</section>
+
+<section data-track="mem74">
+<h3>📌 Memory card — 7.4 M-step</h3>
+<div class="box em">
+<ul>
+<li><b>Core model:</b> M-step = weighted MLE: $\gamma$ ko fractional counts maan kar $N_k,\pi_k,\mu_k,\sigma_k^2$ nikalo.</li>
+<li><b>Backbone chain:</b> $\gamma$ (n×K) → $N_k=\sum_i\gamma_k^i$ → $\pi_k=N_k/n$ → $\mu_k=\sum\gamma x/N_k$ → $\sigma_k^2=\sum\gamma(x-\mu_k^{new})^2/N_k$ → $\theta^{(t+1)}$.</li>
+<li><b>Formulas (conditions):</b> $\sum_k\gamma_k^i=1$ (per point) · $\sum_kN_k=n$ · $\pi_k=N_k/n$ · $\mu_k$ mein $N_k$ se divide · $\sigma_k^2$ mein <b>naya</b> $\mu_k$ · $d$-dim spherical mein extra $d$ · hard $\gamma$ ⇒ Lloyd.</li>
+<li><b>Top 3 traps:</b> (1) $n$/$K$ se divide ya count ko probability likhna; (2) $\sigma^2$ mein purana $\mu$; (3) $\pi$ ko "prior" samajhna aur point-level $\lambda$ se milana (P2).</li>
+<li><b>Trigger bank:</b> "estimate of $\pi_k$/$\mu_k$/$\sigma_k^2$ after M-step" · "$\lambda_1+\lambda_3=0.2$, find $\lambda_2$" · "steps of EM".</li>
+<li><b>Method selector:</b> list ka jod $\div n$ ($\pi$); $\lambda x$ column ($\mu$); complement ($\lambda$ ek point ka); E/M role ($\theta$ vs $\gamma$ fixed).</li>
+<li><b>Source flags:</b> P3 <span class="tag t-flag">[FLAG]</span> F9 ($\lambda=2.5>1$; key printed values se consistent).</li>
+<li><b>Spaced review (due):</b> 2026-11-13 P2, P3 · 2026-11-15 P1, P4 · 2026-11-19 7.4 memory card · 2026-12-03 7.4 + T7 prerequisites.</li>
+</ul>
+</div>
+</section>
+
+<section data-track="eib74">
+<h3>✍️ Explain-it-back — 7.4 (chat mein jawab do)</h3>
+<div class="try"><p>Chat mein 3–5 lines: (a) $\mu_k$ ke formula mein $n$ ki jagah $N_k$ kyun? (b) $\sigma_k^2$ mein naya $\mu_k$ kyun, purana kyun nahi? (c) P2 mein $\pi_2=0.5$ jawab kyun nahi?</p>
+<p><b>Checkpoint question <span class="tag t-add">[ADDED]</span>:</b> $x=(0,3,6)$, $\gamma_1=(1,\ 0.5,\ 0)$. M-step ke baad $\pi_1,\ \mu_1,\ \sigma_1^2$ kya hain?</p>
+<p class="note">Format: <code>Answer: … | Confidence: S/U/G | Reason: …</code></p></div>
+</section>
+
+<!-- ===================================================== 7.5 ===================================================== -->
+<h2>7.5 · EM properties and comparison with Lloyd's algorithm</h2>
+
+<section data-track="warm75">
+<h3>🔁 Recall warm-up (pichhle builds se, chat mein mat bhejo — khud check karo)</h3>
+<div class="try"><p class="ttl">W1 · B19 (4.4 monotonicity)</p><p>Lloyd's algorithm ke har <b>assign</b> step aur har <b>update</b> step par objective $F=\sum\|x_i-\mu_{z_i}\|^2$ ka kya hota hai?</p>
+<details class="reveal"><summary>Show answer</summary><p>Dono steps par $F$ <b>kabhi badhta nahi</b> (non-increasing): assign step har point ko sabse paas ke mean par bhejta hai; update step mean ko cluster ka plain average banata hai, jo squared distance ka minimiser hai.</p></details></div>
+<div class="try"><p class="ttl">W2 · B25 7.3 (equal variance, midpoint)</p><p>$\pi=(0.5,0.5)$, $\mu=(0,4)$, $\sigma^2=1$ dono, $x=2$. $\gamma_1$?</p>
+<details class="reveal"><summary>Show answer</summary><p>$x$ dono means ka midpoint hai; barabar $\pi,\sigma^2$ ⇒ $\ln\text{odds}=\dfrac{(2-4)^2-(2-0)^2}{2}=0$ ⇒ $\gamma_1=\mathbf{0.5}$ (code ✓).</p></details></div>
+<div class="try"><p class="ttl">W3 · B26 7.4 (weighted mean)</p><p>$x=(0,2,8)$, $\gamma_1=(1,1,0.5)$. $N_1$ aur $\mu_1$?</p>
+<details class="reveal"><summary>Show answer</summary><p>$N_1=2.5$; $\mu_1=\dfrac{0+2+4}{2.5}=\mathbf{2.4}$ (code ✓).</p></details></div>
+</section>
+
+<section data-track="pretest75">
+<h3>❓ Pretest — pehle bina padhe try karo</h3>
+<div class="try"><p class="ttl">Ek PYQ, cold attempt</p>
+<p>2025 July 13 · Q7: Which of the following statements is/are true? (1) EM algorithm converges to a global optimum. (2) Lloyd's algorithm converges to a local optimum. (3) Poor initialization does not affect the clusters produced by EM algorithm. (4) Poor initialization leads to a slower convergence of Lloyd's algorithm. (5) Lloyd's algorithm is sensitive to the number of clusters $k$.</p>
+<p class="note">Do minute lagao; har statement ke aage T/F aur confidence (S/U/G) likho. Solution neeche <b>P5</b> mein hai.</p></div>
+</section>
+
+<section data-track="pos75">
+<h3>🧭 Position — yeh kahan baithta hai</h3>
+<ul>
+<li><b>Pichhla:</b> T4 (Lloyd's / K-means, B17–B21) aur 7.1–7.4 (GMM, E-step, M-step). 7.5 dono ko ek jagah jodta hai: Lloyd aur EM ka rishta aur unki <i>guarantees</i>.</li>
+<li><b>Prerequisites:</b> 4.4 (monotonicity, convergence), L63 ($\gamma$), L69–L72 (M-step, $\ell$ ka badhna).</li>
+<li><b>Yeh kya unlock karta hai:</b> "kaun sa algorithm kya guarantee deta hai" wale MSQ; aur T8 mein bhi wahi sawaal ("GD global minimum deta hai?").</li>
+</ul>
+</section>
+
+<section data-track="intu75">
+<h3>🧠 Intuition — plain language</h3>
+<p>Lloyd aur EM ek hi kahani ke do sanskaran hain. Dono "assign karo → parameters update karo" ke loop hain. <b>Lloyd:</b> har point <b>ek hi</b> cluster ko jaata hai (winner takes all) aur cluster ka mean us cluster ke points ka plain average. <b>EM:</b> har point <b>sab</b> components ko hisson mein jaata hai ($\gamma$), aur har component ka mean/variance/weight hisse-weighted. Agar components bahut sakht (chhote $\sigma^2$) aur barabar-weight hon, to $\gamma$ lagbhag $0/1$ ban jaata hai aur EM = Lloyd.</p>
+<div class="box">
+<p><b>Analogy (labelled): chunaav <span class="tag t-add">[ADDED]</span></b> — Lloyd "first-past-the-post" hai: har voter ek hi seat ko jaata hai. EM "proportional representation" hai: har voter ka vote seats ke beech baantta hai. Har round ke baad seats ke centre (mean) naye bante hain.</p>
+<p><b>Yeh kahan toot-ta hai:</b> chunaav mein har seat ka size/spread seekha nahi jaata; EM $\pi_k$ (seat ka size) aur $\sigma_k^2$ (spread) bhi seekhta hai, Lloyd nahi. Aur dono mein "voters" (points) fixed hain, sirf seats chalte hain.</p>
+</div>
+<div class="box amber">
+<p><b>Yeh kya NAHI hai:</b></p>
+<ul>
+<li>EM "better Lloyd" nahi, ek <i>bada model</i> hai ($\pi,\mu,\sigma^2$); dono local optimum dete hain, global ki guarantee kisi ko nahi.</li>
+<li>"Converged" $\neq$ "optimal": Lloyd ek jagah ruk jaata hai jahan koi step $F$ ghata nahi sakta, par woh sabse acchi partition nahi hona zaroori.</li>
+<li>EM ka output hard clusters nahi: $\gamma$ hai. Hard label chahiye to MAP ($\arg\max_k\gamma_k$) alag se lagao.</li>
+<li>$\ell$ ka monotone badhna $\Rightarrow$ global max nahi.</li>
+</ul>
+</div>
+</section>
+
+<section data-track="vis75">
+<h3>📊 Visual intuition</h3>
+<figure class="viz">
+  <p class="vt">Visual 1: Lloyd vs EM — ek hi data, ek hi init, ek M-step <span class="tag t-add">[ADDED]</span></p>
+  <p class="vs">Data $x=(0,1,4,9)$, init $\mu=(1,8)$. Pehle Lloyd ka hard assignment (preset "Lloyd (hard)") dekho, phir EM ka soft assignment $\sigma^2=1$, $\pi=0.5$ (preset "EM soft"). Slider se kisi point ka $\gamma_1$ badal kar dekho $\mu_1$ kitna hilta hai.</p>
+  <div data-widget="mstep" data-x="0,1,4,9" data-g="1,1,0.9707,0"></div>
+  <figcaption><b>Interpretation:</b> point $x=4$ ke beech mein hone ki wajah se Lloyd use poora cluster 1 ko deta hai ($\mu_1=1.667$, $\mu_2=9$); EM ($\sigma^2=1$) use $0.97$ cluster 1 ko deta hai aur $\mu_1=1.644$, $\mu_2=8.858$ nikalta hai — fark chhota hai par hai, aur wohi "soft" ka asar hai.</figcaption>
+</figure>
+<figure class="viz">
+  <p class="vt">Visual 2: $\sigma^2\to0$ par EM, Lloyd ban jaata hai (point $x=4$ ka $\gamma_1$) <span class="tag t-add">[ADDED]</span></p>
+  <p class="vs">Wahi data aur init, $\pi=(0.5,0.5)$, barabar $\sigma^2$ dono components ka; x-axis par $\sigma^2$ ghat raha hai. Exact Gaussian formula, code se.</p>
+  <div class="chart" data-chart='{"type":"vbar","labels":["σ²=4","σ²=1","σ²=0.25","σ²=0.01"],"values":[0.7058,0.9707,1.0,1.0],"unit":"","aria":"Responsibility of component 1 for the point x=4 as the common variance shrinks","tips":["soft: 0.706","soft: 0.971","hard: 1.000 (rounded)","hard: 1.000 (rounded)"]}'></div>
+  <figcaption><b>Interpretation:</b> $\sigma^2$ chhota hone par sigmoid ki dhal khadi ho jaati hai ($\ln\text{odds}=\dfrac{(x-\mu_2)^2-(x-\mu_1)^2}{2\sigma^2}$ bada), $\gamma_1\to1$, aur M-step ka $\mu_1,\mu_2$ ($1.667,\ 9$) bilkul Lloyd ke ho jaate hain (L71). $\sigma^2$ ke 4 values par $\mu$: $(1.4145,7.8492)$, $(1.6436,8.8576)$, $(1.6667,9)$, $(1.6667,9)$.</figcaption>
+</figure>
+</section>
+
+<section data-track="formal75">
+<h3>📖 Formal version (Formula Protocol)</h3>
+<h4>(a) Lloyd ka loop aur EM ka loop — samanantar</h4>
+$$\text{Lloyd: } z_i=\arg\min_k\|x_i-\mu_k\|^2,\ \ \mu_k=\frac1{|S_k|}\sum_{i\in S_k}x_i\qquad\text{EM: } \gamma_k^i=\frac{\pi_kf_k(x_i)}{\sum_j\pi_jf_j(x_i)},\ \ \mu_k=\frac{\sum_i\gamma_k^ix_i}{\sum_i\gamma_k^i}$$
+<p><b>Symbols aur assumptions:</b> $S_k$ = cluster $k$ ke point; $f_k$ Gaussian. Lloyd ka mean-update EM ke M-step ka $\gamma\in\{0,1\}$ wala special case hai (L71).</p>
+<p><b>Words mein:</b> dono E/assign aur M/update ke beech jhoolte hain; fark sirf "ek winner" vs "hisse" mein hai.</p>
+<p><b>Notice that…</b> dono mein har step objective ko <i>sudharta ya barabar rakhta</i> hai: Lloyd mein $F\downarrow$ (non-increasing), EM mein $\ell\uparrow$ (non-decreasing).</p>
+<h4>(b) Comparison table (aksar confuse hote hain)</h4>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Pehlu</th><th>Lloyd's (K-means)</th><th>EM for GMM</th></tr></thead>
+<tbody>
+<tr><td>Assignment</td><td>Hard $z_i\in\{1..K\}$</td><td>Soft $\gamma_k^i\in[0,1]$, row sum $1$</td></tr>
+<tr><td>Mean update</td><td>Cluster ka plain mean</td><td>$\gamma$-weighted mean</td></tr>
+<tr><td>Seekhe jaane wale parameters</td><td>$\mu_k$ (sirf)</td><td>$\pi_k,\mu_k,\sigma_k^2$</td></tr>
+<tr><td>Objective</td><td>$F=\sum\|x_i-\mu_{z_i}\|^2$ (minimise)</td><td>$\ell(\theta)=\sum_i\ln\sum_k\pi_kf_k(x_i)$ (maximise)</td></tr>
+<tr><td>Monotonicity</td><td>$F$ har step par non-increasing</td><td>$\ell$ har round non-decreasing (D3-3 ka Jensen)</td></tr>
+<tr><td>Converge hota hai</td><td>Finite steps mein (partition repeat nahi hota)</td><td>Limit mein ($\ell$ ke badlaav ko tolerance se roko)</td></tr>
+<tr><td>Kahan pahunchta hai</td><td>Local minimum (init par depend)</td><td>Local maximum / stationary point (init par depend)</td></tr>
+<tr><td>Global optimum guarantee</td><td><b>Nahi</b></td><td><b>Nahi</b></td></tr>
+<tr><td>$K$ ke prati</td><td>$K$ input hai; $F$ $K$ badhne par ghatta hai ($K=n$ par $0$)</td><td>$K$ input hai; $\ell$ bhi $K$ ke saath badhta hai</td></tr>
+<tr><td>Chhote-$\sigma^2$, barabar-$\pi$ limit</td><td>—</td><td>$\gamma\to$ hard ⇒ Lloyd</td></tr>
+</tbody></table></div>
+<div class="box em"><p><b>Important insight:</b> "monotone improvement + finite/limit convergence" kabhi "global optimum" ka matlab nahi hota; yeh dono algorithms ke liye ek jaisa jawab hai: <i>local</i>.</p>
+<p><b>This is why</b> P5 mein statements 1 aur 3 (global optimum, init se asar nahi) dono galat hain, aur 2, 4, 5 sahi.</p></div>
+</section>
+
+<section data-track="how75">
+<h3>⚙️ How it works — ek iteration, dono tareeke se (numbered)</h3>
+<ol>
+<li>Wahi data aur wahi init $\mu^{(0)}$ lo.</li>
+<li><b>Lloyd assign:</b> har point sabse paas ke mean ko (squared distance); <b>EM E-step:</b> $\gamma$ nikalo.</li>
+<li><b>Lloyd update:</b> cluster ka plain mean; <b>EM M-step:</b> $N_k,\pi_k,\mu_k,\sigma_k^2$.</li>
+<li>Check: Lloyd mein $F$ ne badha? ($\times$); EM mein $\ell$ ne ghata? ($\times$).</li>
+<li>Rukna: Lloyd — jab assignments na badlein; EM — jab $\ell$ (ya $\theta$) tolerance se kam badle.</li>
+</ol>
+</section>
+
+<section data-track="we75">
+<h3>🧪 Worked examples (simple → exam-level → tricky) <span class="tag t-add">[ADDED]</span></h3>
+<h4>Example 1 (simple): ek iteration, Lloyd vs EM ($x=(0,1,4,9)$, $\mu^{(0)}=(1,8)$)</h4>
+<ul>
+<li><b>Lloyd:</b> $z=(1,1,1,2)$; $F$ (init means par) $=1+0+9+1=11$; naya $\mu=(\tfrac53,\ 9)=(1.667,\ 9)$.</li>
+<li><b>EM</b> ($\pi=(0.5,0.5)$, $\sigma^2=1$): $\gamma_1=(1.0000,\ 1.0000,\ 0.9707,\ 0.0000)$ (4 d.p.; pehle do points ke $\gamma_1$ $0.99999\ldots$ ke kareeb); $N=(2.9707,\ 1.0293)$; $\pi=(0.7427,\ 0.2573)$; $\mu=(1.6436,\ 8.8576)$; $\sigma^2=(2.8631,\ 0.6917)$.</li>
+</ul>
+<p>Code ✓. Lloyd ko $\pi,\sigma^2$ nahi milte; EM ko milte hain.</p>
+<h4>Example 2 (exam-level): $k$ par sensitivity</h4>
+<p>9 points $\{0,1,2,10,11,12,20,21,22\}$ (teen saaf group). Lloyd, init $(0,12)$ se: $k=2$ ($\mu=(1,\ 16)$, $F=156$) — do group ek mein mil gaye; $k=3$ ($\mu=(1,11,21)$, $F=6$) — teeno group alag; $k=4$ ($\mu=(1,10.5,12,21)$, $F=4.5$) — beech ka group faltu tod diya. Natija: partition aur $F$ dono $k$ par depend karte hain (statement 5 ✓), aur $F$ $k$ ke saath ghatta hai (isliye $F$ se $k$ chunna galat). Code ✓.</p>
+<h4>Example 3 (tricky): converge hua, par optimal nahi (init ka asar)</h4>
+<p>Wahi 9 points, $k=3$. Init $\{0,1,2\}$ se Lloyd rukta hai $\mu=(0,\ 1.5,\ 16)$ par, $F=154.5$ — assignments stable hain, koi step $F$ nahi ghata sakta, phir bhi achhi init $\{1,11,21\}$ ka $F=6$ kahin behtar hai. Yani <b>Lloyd local optimum par rukta hai, global par nahi</b> (statements 2 ✓, "always optimal" ✗).</p>
+<p>EM mein bhi: 1-D GMM, $K=3$, in hi 9 points par, init means $(0,11,22)$ ya $(0,1,2)$ ya $(10,11,12)$ ya $(0,10,11)$ — sab $\ell=-20.8334$ par pahunche; par init $(0,1,11)$ ek alag stationary point par ruka: $\ell=-21.3324$ (kam), aur ek component ek hi point par collapse hua ($\sigma^2\approx0$, maine variance floor $10^{-6}$ lagaya). Yani EM ka natija bhi init par depend karta hai (statements 1, 3 ✗). Code ✓.</p>
+<h4>Non-example</h4>
+<ul>
+<li>"$\ell$ har round badha, isliye global max mila" ✗ — monotone badhna ek local statement hai.</li>
+<li>"$F$ ko minimise karke $k$ chunenge" ✗ — $F$ $k$ ke saath ghatta hai, $k=n$ par $0$.</li>
+</ul>
+</section>
+
+<section data-track="deep75">
+<h3>🔬 Deeper insight (D3 — collapsible)</h3>
+<details class="deep"><summary>1. Lloyd = "hard EM" (classification EM)</summary>
+<p>Barabar $\pi_k$ aur sabke liye same $\sigma^2$ lo. E-step mein soft $\gamma$ ki jagah $\arg\max_k\gamma_k$ (hard) lo. M-step ka $\mu_k$ plain mean aur $\pi_k=|S_k|/n$ ban jaata hai. Squared-distance wala $F$ is hard model ka negative (scaled) log-likelihood hai: $-\ln\mathcal N(x;\mu,\sigma^2)=\tfrac1{2\sigma^2}\|x-\mu\|^2+\text{const}$.</p></details>
+<details class="deep"><summary>2. Lloyd finite steps mein kyun ruk jaata hai; EM kyun nahi (guarantee)</summary>
+<p>Lloyd: har assign/update step par $F$ non-increasing; jab koi point cluster badalta hai to $F$ strictly ghatta hai (jab tie na ho). Partitions ki sankhya finite ($K^n$) hai aur $F$ strictly ghatta hai, isliye koi partition dobara aa nahi sakta (B17 ka 2026 July Q4 option 2 yahi hai) — algorithm finite steps mein ruk jaata hai. EM mein $\theta$ continuous hai: $\ell$ badhta hai par ek stationary point ki taraf <i>limit</i> mein; tolerance par rukna padta hai.</p></details>
+<details class="deep"><summary>3. Init ka asar — K-means++ aur dheemi convergence <span class="tag t-add">[ADDED]</span></summary>
+<p>Statement 4 ek <i>tendency</i> hai, theorem nahi. Maine ek chhota simulation chalaya: 300 random 2-D datasets, har ek mein $5$ gaussian blobs $\times60$ points; Lloyd ko teen init se chalaya. Average iterations: <b>clumped (paanch paas-paas points) $9.76$</b>, random $7.57$, K-means++ $6.15$. Clumped init random se zyada iterations leta $62\%$ trials mein ($187$ of $300$), isliye "leads to slower" ek aam pravritti hai, har baar nahi. (Simulation setup: 2-D, $K=5$; code se.)</p></details>
+<details class="deep"><summary>4. Konsi cheez dono ko jodti hai: $K$ ka chunav</summary>
+<p>$K$ dono mein hyper-parameter hai. $F$ (Lloyd) aur $\ell$ (EM, bina penalty ke) dono $K$ badhne par behtar hote jaate hain, isliye "sirf objective dekh kar $K$ chuno" dono mein galat hai (elbow / penalised criteria alag topic, syllabus ke bahar).</p></details>
+</section>
+
+<section data-track="tool75">
+<h3>⚡ PYQ pattern toolkit — trigger → concept → first move</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Trigger clue</th><th>Concept</th><th>First move</th></tr></thead>
+<tbody>
+<tr><td>"converges to a global optimum"</td><td>Local vs global</td><td>EM ya Lloyd dono ke liye ✗ (init se natija badalta hai)</td></tr>
+<tr><td>"converges to a local optimum"</td><td>Monotone + stop rule</td><td>Lloyd ✓ ($F\downarrow$, finite steps); EM ✓ ($\ell\uparrow$ stationary point)</td></tr>
+<tr><td>"poor initialization … affect / slower"</td><td>Init sensitivity</td><td>"does not affect" ✗; "slower" ✓ (tendency)</td></tr>
+<tr><td>"sensitive to the number of clusters $k$"</td><td>$K$ hyper-parameter</td><td>✓ (partition aur $F$ $k$ par depend)</td></tr>
+<tr><td>"EM vs Lloyd: soft/hard"</td><td>L71</td><td>$\gamma\to\{0,1\}$ ⇒ weighted mean = plain mean</td></tr>
+</tbody></table></div>
+<p><b>Common traps:</b> "converge" ko "optimal" samajhna; Lloyd ko global optimum waala maan-na; EM ke $\ell$ ke badhne ko global maximum maan-na.</p>
+</section>
+
+<h2>🎯 7.5 PYQ — P5</h2>
+
+<section data-track="pyq5">
+<h3>🎯 P5 — EM vs Lloyd: kaun se statements sach (2025 July Q7) <span class="tag t-src">[SRC]</span> <span class="tag t-q">[?]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2025 July 13 · Original Q7 · ID <code>6406531302390</code> · MSQ · 3 marks · Pages 7–8 · <span class="tag t-src">[SRC]</span> <span class="tag t-q">[?]</span></p>
+<p>Which of the following statements is/are true?</p>
+<ol>
+<li>EM algorithm converges to a global optimum.</li>
+<li>Lloyd's algorithm converges to a local optimum.</li>
+<li>Poor initialization does not affect the clusters produced by EM algorithm.</li>
+<li>Poor initialization leads to a slower convergence of Lloyd's algorithm.</li>
+<li>Lloyd's algorithm is sensitive to the number of clusters $k$.</li>
+</ol>
+<p><b>Source note:</b> bank mein yeh 5 statements hain par koi option correct-marked nahi, isliye key <span class="tag t-q">[?]</span>; neeche jawab meri derivation hai.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Har statement par ek-ek line mein kaaran likho: "global" aur "affect nahi karta" jaise strong words par ruko. Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> kaun se statements sach. <b>Given:</b> 5 statements (EM / Lloyd). <b>Trigger:</b> "converges to … optimum", "initialization", "number of clusters".</li>
+<li><b>Prerequisites:</b> 4.4, 4.5, L71–L72. <b>Core principle:</b> dono local optimum dete hain; init aur $K$ natija badalte hain.</li>
+</ul>
+<h4>2. 🧭 Methods</h4>
+<p>MSQ: 1 method — har statement ko alag proof/counter-example se jaancho (statement-by-statement), phir jawab ka set.</p>
+<h4>3. 🧮 Working (statement-by-statement)</h4>
+<div class="tbl-wrap"><table>
+<thead><tr><th>#</th><th>Verdict</th><th>Reason</th><th>Pakkapan</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>✗ False</td><td>EM $\ell$ ko non-decreasing rakhta hai, par sirf ek stationary point tak. Ex3: $K=3$, init $(0,1,11)$ ne $\ell=-21.332$ par roka jabki doosri inits $-20.833$ tak gayi.</td><td>Pakka (counter-example)</td></tr>
+<tr><td>2</td><td>✓ True</td><td>$F$ non-increasing, partitions finite ⇒ ruk jaata hai; us partition par koi assign ya update step $F$ nahi ghata sakta (local minimum).</td><td>Pakka</td></tr>
+<tr><td>3</td><td>✗ False</td><td>Statement 1 wala counter-example: init se final $\ell$ aur parameters badle.</td><td>Pakka</td></tr>
+<tr><td>4</td><td>✓ True (tendency)</td><td>Poor init aam taur par zyada iterations leta hai: simulation mein clumped $9.76$ vs random $7.57$ vs K-means++ $6.15$ average iterations; par har trial mein nahi ($62\%$).</td><td>Course-standard reading <span class="tag t-q">[?]</span></td></tr>
+<tr><td>5</td><td>✓ True</td><td>$k$ input hai; Ex2: $k=2,3,4$ par partitions aur $F$ ($156,\ 6,\ 4.5$) badle.</td><td>Course-standard reading <span class="tag t-q">[?]</span></td></tr>
+</tbody></table></div>
+<p><b>Jawab: $\{2,4,5\}$.</b></p>
+<h4>4. 📊 Comparison</h4>
+<p>Ek hi tareeka (statement-by-statement); ~2 min. ⚡ <b>FASTEST</b> = 🏆 <b>BEST EXAM METHOD:</b> pehle 1 aur 3 ko "global / affect nahi" ke strong words par kaat do, phir 2, 4, 5 ko "local / tendency / hyper-parameter" se pakdo.</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li>Code: EM runs (5 inits) ke $\ell$ — ek alag; Lloyd ke $k=2,3,4$ ke $F$; Lloyd ki poor-vs-random-vs-K-means++ iterations ka simulation ✓.</li>
+<li><span class="tag t-q">[?]</span> Source key bank mein nahi hai: 1–3 par pakkapan hai; 4 aur 5 par wahi reading jo course ka standard hai. Agar paper ka key 4 ya 5 par alag ho, to yahi do statements pehle dobara dekho.</li>
+</ul>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>"EM $\ell$ badhata hai" se "global max" tak chhalaang lagana.</li>
+<li>Statement 4 ko "hamesha slower" padhna ya poori tarah galat maan-na.</li>
+<li>Statement 5 ko "$k$ se koi fark nahi" samajhna.</li>
+</ul>
+<p><b>Recognition rule:</b> "global" / "does not affect" wale absolute words $\Rightarrow$ shak se dekho; "local", "tendency", "hyper-parameter" wale $\Rightarrow$ aksar sach.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>Sach/jhooth: (a) EM ka $\ell$ kabhi nahi ghatta. (b) Lloyd ka $F$ kabhi nahi badhta. (c) Dono ko agar do alag inits se chalao to hamesha ek hi final answer. (d) $\sigma^2\to0$, barabar $\pi$ par EM ka M-step Lloyd ke update jaisa ho jaata hai.</p>
+<details class="reveal"><summary>Show answer</summary><p>(a) ✓ (L72). (b) ✓ (4.4). (c) ✗ (init se natija badalta hai). (d) ✓ (L71, Visual 2).</p></details>
+</details>
+</section>
+
+<section data-track="mem75">
+<h3>📌 Memory card — 7.5 EM vs Lloyd</h3>
+<div class="box em">
+<ul>
+<li><b>Core model:</b> Lloyd = hard assign + plain mean; EM = soft assign + weighted mean + $\pi,\sigma^2$; $\gamma\to\{0,1\}$ par EM $\to$ Lloyd.</li>
+<li><b>Backbone chain:</b> E/assign → M/update → ($F\downarrow$ ya $\ell\uparrow$) → ruko → local optimum.</li>
+<li><b>Formulas (conditions):</b> $F=\sum\|x_i-\mu_{z_i}\|^2$ · $\ell=\sum_i\ln\sum_k\pi_kf_k$ · M-step: $\pi=N/n,\ \mu=\sum\gamma x/N,\ \sigma^2=\sum\gamma(x-\mu)^2/N$.</li>
+<li><b>Top 3 traps:</b> (1) converge $=$ global; (2) init sensitivity ko inkaar; (3) $\ell\uparrow$ ko "global max" samajhna.</li>
+<li><b>Trigger bank:</b> "global optimum" · "does not affect" · "slower convergence" · "sensitive to $k$" · "soft vs hard".</li>
+<li><b>Method selector:</b> statement-by-statement; absolute words par shak.</li>
+<li><b>Source flags:</b> P5 <span class="tag t-q">[?]</span> (key marked nahi; mera $\{2,4,5\}$).</li>
+<li><b>Spaced review (due):</b> 2026-11-13 P5 · 2026-11-19 7.5 memory card · 2026-12-03 7.5 + T7.</li>
+</ul>
+</div>
+</section>
+
+<section data-track="eib75">
+<h3>✍️ Explain-it-back — 7.5 (chat mein jawab do)</h3>
+<div class="try"><p>Chat mein 3–5 lines: (a) EM aur Lloyd ke beech ek line mein fark aur ek line mein samanta; (b) "local optimum" ka matlab kya hai aur Ex3 mein kaise dikha; (c) statement 4 "tendency" kyun hai, theorem kyun nahi?</p>
+<p><b>Checkpoint question <span class="tag t-add">[ADDED]</span>:</b> Lloyd ko do alag inits se chalane par $F$ ke final values $6$ aur $154.5$ mile. Kya yeh Lloyd ke "convergence" ke daave ke khilaf hai? Kyun / kyun nahi?</p>
+<p class="note">Format: <code>Answer: … | Confidence: S/U/G | Reason: …</code></p></div>
+</section>
+
+<!-- ===================================================== T8 PREREQUISITES ===================================================== -->
+<h2>T8 · Regression — prerequisite module</h2>
+
+<section data-track="pre8">
+<h3>🌳 Dependency tree (3 tier) aur prose</h3>
+<p>Regression ke liye tum teen tier se guzarte ho. <b>Tier 1 (general foundations):</b> dot product $w^Tx$ aur matrix–vector product, chain rule se simple derivative, aur "quadratic ka minimum wahan jahan slope $0$". <b>Tier 2 (topic-specific maths):</b> R1 linear model, R2 squared error aur MSE (sum vs mean), R3 quadratic ka gradient, R4 normal equations, R5 gradient descent aur learning rate. <b>Tier 3 (target):</b> 8.1 MSE aur best-fit $w$ → 8.2 GD ki convergence. Har prerequisite ko 5 hisson mein padho: A core idea · B notation · C worked examples · D common mistakes · E "ML bridge".</p>
+<figure class="viz">
+  <p class="vt">Visual: Regression prerequisites ka 3-tier dependency tree <span class="tag t-add">[ADDED]</span></p>
+  <p class="vs">Tier 1 (neeche) → Tier 2 (beech) → Tier 3 target (upar). Arrow = "isko samajhne ke liye yeh chahiye". <b>Schematic</b> hai.</p>
+  <svg viewBox="0 0 720 400" role="img" aria-label="Three tier dependency tree for regression: general foundations feed R1 to R5 which feed the target 8.1 MSE and 8.2 gradient descent">
+    <defs><marker id="ah8" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#737373"/></marker></defs>
+    <text x="12" y="22" font-size="11" fill="#737373" letter-spacing="1">TIER 3 · TARGET</text>
+    <rect x="110" y="32" width="230" height="52" rx="8" fill="#181818" stroke="#34D399"/><text x="225" y="52" text-anchor="middle" font-size="12.5" font-weight="600" fill="#fff">8.1 MSE aur best-fit w</text><text x="225" y="69" text-anchor="middle" font-size="11" fill="#a3a3a3">normal equations, MSE = 0</text>
+    <rect x="380" y="32" width="230" height="52" rx="8" fill="#181818" stroke="#34D399"/><text x="495" y="52" text-anchor="middle" font-size="12.5" font-weight="600" fill="#fff">8.2 Gradient descent</text><text x="495" y="69" text-anchor="middle" font-size="11" fill="#a3a3a3">η &lt; 2/L, global min, SGD</text>
+    <text x="12" y="132" font-size="11" fill="#737373" letter-spacing="1">TIER 2 · TOPIC-SPECIFIC MATHS</text>
+    <rect x="8" y="142" width="130" height="52" rx="8" fill="#181818" stroke="#60A5FA"/><text x="73" y="162" text-anchor="middle" font-size="12.5" font-weight="600" fill="#fff">R1 Linear model</text><text x="73" y="179" text-anchor="middle" font-size="11" fill="#a3a3a3">ŷ = wᵀx</text>
+    <rect x="148" y="142" width="130" height="52" rx="8" fill="#181818" stroke="#60A5FA"/><text x="213" y="162" text-anchor="middle" font-size="12.5" font-weight="600" fill="#fff">R2 Squared error</text><text x="213" y="179" text-anchor="middle" font-size="11" fill="#a3a3a3">sum vs mean (MSE)</text>
+    <rect x="288" y="142" width="130" height="52" rx="8" fill="#181818" stroke="#60A5FA"/><text x="353" y="162" text-anchor="middle" font-size="12.5" font-weight="600" fill="#fff">R3 Gradient</text><text x="353" y="179" text-anchor="middle" font-size="11" fill="#a3a3a3">∇ of quadratic</text>
+    <rect x="428" y="142" width="130" height="52" rx="8" fill="#181818" stroke="#60A5FA"/><text x="493" y="162" text-anchor="middle" font-size="12.5" font-weight="600" fill="#fff">R4 Normal eqns</text><text x="493" y="179" text-anchor="middle" font-size="11" fill="#a3a3a3">∇ = 0 ⇒ XXᵀw = Xy</text>
+    <rect x="568" y="142" width="144" height="52" rx="8" fill="#181818" stroke="#60A5FA"/><text x="640" y="162" text-anchor="middle" font-size="12.5" font-weight="600" fill="#fff">R5 GD, learning rate</text><text x="640" y="179" text-anchor="middle" font-size="11" fill="#a3a3a3">w ← w − η∇</text>
+    <text x="12" y="252" font-size="11" fill="#737373" letter-spacing="1">TIER 1 · GENERAL FOUNDATIONS</text>
+    <rect x="40" y="262" width="190" height="52" rx="8" fill="#181818" stroke="#a3a3a3"/><text x="135" y="282" text-anchor="middle" font-size="12.5" font-weight="600" fill="#fff">G1 Dot product, Xᵀw</text><text x="135" y="299" text-anchor="middle" font-size="11" fill="#a3a3a3">d×n matrix ka convention</text>
+    <rect x="265" y="262" width="190" height="52" rx="8" fill="#181818" stroke="#a3a3a3"/><text x="360" y="282" text-anchor="middle" font-size="12.5" font-weight="600" fill="#fff">G2 Derivative, chain rule</text><text x="360" y="299" text-anchor="middle" font-size="11" fill="#a3a3a3">d/dw (aw−b)² = 2a(aw−b)</text>
+    <rect x="490" y="262" width="190" height="52" rx="8" fill="#181818" stroke="#a3a3a3"/><text x="585" y="282" text-anchor="middle" font-size="12.5" font-weight="600" fill="#fff">G3 Convexity (T6)</text><text x="585" y="299" text-anchor="middle" font-size="11" fill="#a3a3a3">bowl: koi local ≠ global nahi</text>
+    <line x1="135" y1="262" x2="73" y2="194" stroke="#737373" stroke-width="1.6" marker-end="url(#ah8)"/>
+    <line x1="135" y1="262" x2="213" y2="194" stroke="#737373" stroke-width="1.6" marker-end="url(#ah8)"/>
+    <line x1="360" y1="262" x2="353" y2="194" stroke="#737373" stroke-width="1.6" marker-end="url(#ah8)"/>
+    <line x1="360" y1="262" x2="640" y2="194" stroke="#737373" stroke-width="1.6" marker-end="url(#ah8)"/>
+    <line x1="585" y1="262" x2="640" y2="194" stroke="#737373" stroke-width="1.6" marker-end="url(#ah8)"/>
+    <line x1="73" y1="142" x2="190" y2="84" stroke="#737373" stroke-width="1.6" marker-end="url(#ah8)"/>
+    <line x1="213" y1="142" x2="225" y2="84" stroke="#737373" stroke-width="1.6" marker-end="url(#ah8)"/>
+    <line x1="353" y1="142" x2="250" y2="84" stroke="#737373" stroke-width="1.6" marker-end="url(#ah8)"/>
+    <line x1="493" y1="142" x2="270" y2="84" stroke="#737373" stroke-width="1.6" marker-end="url(#ah8)"/>
+    <line x1="353" y1="142" x2="470" y2="84" stroke="#737373" stroke-width="1.6" marker-end="url(#ah8)"/>
+    <line x1="640" y1="142" x2="520" y2="84" stroke="#737373" stroke-width="1.6" marker-end="url(#ah8)"/>
+    <text x="360" y="352" text-anchor="middle" font-size="11" fill="#737373">Schematic: dependency map; exact formal ordering nahi.</text>
+    <text x="360" y="372" text-anchor="middle" font-size="11" fill="#737373">G3 = T6 ka convexity (B25): "bowl" hone ki wajah se GD global minimum dhoondh leta hai.</text>
+  </svg>
+  <figcaption><b>Interpretation:</b> 8.1 ko R1, R2, R3, R4 chahiye; 8.2 ko R3 (gradient), R5 (update rule) aur G3 (bowl) chahiye. Isliye R3 dono target ke beech ka pul hai.</figcaption>
+</figure>
+<p class="note"><b>Convention (course):</b> data matrix $X$ ka shape $d\times n$ hai (har column ek point $x_i\in\mathbb R^d$), label vector $y\in\mathbb R^n$, aur model <b>bina bias</b> ke $\hat y_i=w^Tx_i$. Sab formulae isi convention mein hain.</p>
+</section>
+
+<!-- R1 -->
+<section data-track="r1">
+<h3>R1 · Linear model $\hat y=w^Tx$</h3>
+<h4>A. Core idea</h4>
+<p>Linear model har feature ko ek <b>weight</b> se guna karke jod deta hai. $w$ ek "recipe" hai: $w_j$ batata hai ki feature $j$ ka output par kitna asar hai. Bias nahi hai, isliye model hamesha origin se guzarta hai ($x=0\Rightarrow\hat y=0$).</p>
+<h4>B. Notation aur operations</h4>
+<ul>
+<li>$x\in\mathbb R^d$, $w\in\mathbb R^d$, $\hat y=w^Tx=\sum_jw_jx_j$ (ek number).</li>
+<li>Saare $n$ points ek saath: $\hat y=X^Tw\in\mathbb R^n$ ($X$ shape $d\times n$ ⇒ $X^T$ shape $n\times d$).</li>
+<li>Residual: $r_i=\hat y_i-y_i$ (prediction minus label). Sign ka convention important hai: is course ke gradient formula mein $r=X^Tw-y$.</li>
+</ul>
+<h4>C. Worked examples <span class="tag t-add">[ADDED]</span></h4>
+<ul>
+<li><b>Simple:</b> $w=(2,-1)$, $x=(3,4)$: $\hat y=2\cdot3+(-1)\cdot4=2$.</li>
+<li><b>Exam-level:</b> P6 ka data ($x_1=(4,1)$, $x_2=(2,8)$, $x_3=(1,4)$, $x_4=(3,2)$), $w=(1,-2)$: $\hat y=(4-2,\ 2-16,\ 1-8,\ 3-4)=(2,-14,-7,-1)$. Labels $y=(2,-14,-7,-1)$ se <i>exact</i> match (code ✓).</li>
+<li><b>Tricky:</b> $w=(1,-1)$ wahi data par: $\hat y=(3,-6,-3,1)$, residual $=(1,8,4,2)$ — bina bias ke bhi alag $w$ alag predictions deta hai.</li>
+</ul>
+<h4>D. Common mistakes</h4>
+<ul>
+<li>$X^Tw$ ki jagah $Xw$ likhna: $X$ $d\times n$ hai, $Xw$ shape-mismatch hai.</li>
+<li>Stem "$y=wx$" ko scalar product samajhna: yahan $w,x$ vectors hain ($w^Tx$).</li>
+<li>Bias maan lena: P6 ke options ($y=x_1-2x_2$ jaise) mein koi constant term nahi.</li>
+</ul>
+<h4>E. Why regression needs this (ML bridge)</h4>
+<p><b>Q:</b> "Linear" ka matlab $w$ mein linear hai ya $x$ mein? <b>A:</b> $w$ mein: $\hat y$ $w$ ka linear function hai. Isiliye loss $w$ ka quadratic bowl banta hai (R3) aur GD ki guarantee milti hai (R5).</p>
+<details class="reveal"><summary>Mini self-check R1</summary>
+<p><b>Q:</b> $w=(0,3)$, $x=(5,2)$: $\hat y$? <b>Q:</b> $X$ shape $3\times10$ ho to $X^Tw$ ka shape?</p>
+<p><b>Ans:</b> $6$ ($0\cdot5+3\cdot2$); $10\times1$.</p></details>
+</section>
+
+<!-- R2 -->
+<section data-track="r2">
+<h3>R2 · Squared error aur MSE (sum vs mean)</h3>
+<h4>A. Core idea</h4>
+<p>Prediction aur label ke beech ka farq (residual) square karke jodte hain: square se negative/positive errors cancel nahi hote, aur bade error zyada penalise hote hain. <b>Sum</b> ($L$) ko $n$ se bhaag do to <b>mean</b> (MSE) milta hai.</p>
+<h4>B. Notation</h4>
+$$L(w)=\sum_{i=1}^n(w^Tx_i-y_i)^2=\|X^Tw-y\|^2,\qquad \text{MSE}(w)=\frac1nL(w)$$
+<p>Symbols: $r=X^Tw-y\in\mathbb R^n$. $\|r\|^2=r^Tr=\sum r_i^2$. Assumption: koi regularisation nahi.</p>
+<h4>C. Worked examples <span class="tag t-add">[ADDED]</span></h4>
+<ul>
+<li><b>Simple:</b> residual $(1,8,4,2)$ ($w=(1,-1)$): $L=1+64+16+4=85$; MSE $=85/4=21.25$ (code ✓).</li>
+<li><b>Exam-level:</b> $w=(1,-2)$: residual $(0,0,0,0)$ ⇒ $L=0$, MSE $=0$ (P7 yahi hai).</li>
+<li><b>Tricky:</b> $w=0$ (sab prediction $0$): residual $=-y=(-2,14,7,1)$, $L=4+196+49+1=250$, MSE $=62.5$. Yaani "kuch nahi karna" ka error sabse bura nahi, par $w=(1,-2)$ se bahut zyada.</li>
+</ul>
+<h4>D. Common mistakes</h4>
+<ul>
+<li>Sum aur mean ko ek samajhna: $85$ vs $21.25$. Gradient mein bhi $2$ vs $2/n$ ka fark aata hai.</li>
+<li>Absolute error ($|r|$) aur squared error ($r^2$) mix karna.</li>
+<li>Residual ka sign ulta karna: square mein farq nahi, par gradient mein farq aata hai.</li>
+</ul>
+<h4>E. ML bridge</h4>
+<p><b>Q:</b> MSE $=0$ ka kya matlab? <b>A:</b> Training data par har prediction exact; ye tab hi hota hai jab labels $X^Tw$ ke column space mein hon (P7 mein hota hai). Naye data par accuracy ka koi daawa nahi.</p>
+<details class="reveal"><summary>Mini self-check R2</summary>
+<p><b>Q:</b> Residuals $(2,-2,1,0)$: $L$ aur MSE? <b>Ans:</b> $L=4+4+1+0=9$; MSE $=9/4=2.25$.</p></details>
+</section>
+
+<!-- R3 -->
+<section data-track="r3">
+<h3>R3 · Quadratic ka gradient</h3>
+<h4>A. Core idea</h4>
+<p>Gradient $\nabla f(w)$ woh vector hai jo batata hai ki $f$ sabse tezi se kis taraf badhta hai; $-\nabla f$ ghatne ki disha hai. Squared error $w$ ka quadratic function hai, isliye gradient $w$ mein linear hota hai.</p>
+<h4>B. Notation aur formula</h4>
+$$\nabla L(w)=2X(X^Tw-y),\qquad \nabla\,\text{MSE}(w)=\frac2nX(X^Tw-y)$$
+<p><b>Symbols:</b> $X$ shape $d\times n$, $r=X^Tw-y\in\mathbb R^n$, gradient $\in\mathbb R^d$. <b>Derivation (1 point):</b> $\partial_w(w^Tx-y)^2=2(w^Tx-y)x$; $n$ points ka jod $\sum_i2r_ix_i=2Xr$.</p>
+<h4>C. Worked examples <span class="tag t-add">[ADDED]</span></h4>
+<ul>
+<li><b>Simple (1-D):</b> $f(w)=(w-3)^2$, $f'(w)=2(w-3)$; $f'(0)=-6$ (negative ⇒ $w$ badhao).</li>
+<li><b>Exam-level:</b> P6 data, $w=(1,-1)$: $r=(1,8,4,2)$, $Xr=(4+16+4+6,\ 1+64+16+4)=(30,85)$, $\nabla\text{MSE}=\frac24(30,85)=(15,\ 42.5)$ (code ✓).</li>
+<li><b>Tricky:</b> $w=(1,-2)$ par $r=0\Rightarrow\nabla=0$: gradient $0$ hone par update ruk jaata hai (yeh minimum hai).</li>
+</ul>
+<h4>D. Common mistakes</h4>
+<ul>
+<li>$2/n$ ki jagah $1/n$ ya $2$ likhna: dekho ki sum ka gradient hai ya mean ka.</li>
+<li>$X^T$ ko beech mein bhool jaana ($X(Xw-y)$): shapes check karo.</li>
+<li>$r=y-X^Tw$ lekar bhi $+2Xr$ likhna: sign ulta ho jaata hai.</li>
+</ul>
+<h4>E. ML bridge</h4>
+<p><b>Q:</b> Gradient zero kab? <b>A:</b> $Xr=0$, yaani residual har feature direction se orthogonal. Yahi R4 (normal equations) hai.</p>
+<details class="reveal"><summary>Mini self-check R3</summary>
+<p><b>Q:</b> $f(w)=\frac12\lambda w^2$ ka $f'$ aur wo $w$ jahan $f'=0$? <b>Ans:</b> $f'=\lambda w$; $w=0$.</p></details>
+</section>
+
+<!-- R4 -->
+<section data-track="r4">
+<h3>R4 · Normal equations</h3>
+<h4>A. Core idea</h4>
+<p>Loss ek bowl hai; bowl ka sabse neecha point wahan hai jahan slope $0$. $\nabla L=0$ ko $w$ ke liye solve karo.</p>
+<h4>B. Notation</h4>
+$$XX^Tw=Xy\ \Longrightarrow\ w^*=(XX^T)^{-1}Xy\quad(\text{jab }XX^T\text{ invertible})$$
+<p>$XX^T$ shape $d\times d$ (symmetric, PSD). Invertible $\iff$ $X$ ke rows (features) linearly independent. Agar nahi, to infinite solutions (non-unique $w^*$).</p>
+<h4>C. Worked example (P6 ka data) <span class="tag t-add">[ADDED]</span></h4>
+<p>$XX^T=\begin{bmatrix}30&30\\30&85\end{bmatrix}$ ($16+4+1+9=30$; $4+16+4+6=30$; $1+64+16+4=85$), $Xy=\begin{bmatrix}-30\\-140\end{bmatrix}$ ($8-28-7-3$; $2-112-28-2$). Solve: $30w_1+30w_2=-30\Rightarrow w_1+w_2=-1$; $30w_1+85w_2=-140\Rightarrow 55w_2=-110\Rightarrow w_2=-2,\ w_1=1$. $w^*=(1,-2)$ (code ✓).</p>
+<h4>D. Common mistakes</h4>
+<ul>
+<li>$X^TX$ ($n\times n$) ko normal equation mein lagana: yahan sahi matrix $XX^T$ hai ($d\times d$).</li>
+<li>Invertibility check bhoolna (collinear features).</li>
+<li>Solution ko "sabse accha model" samajhna jabki sirf <i>training</i> squared error ka minimiser hai.</li>
+</ul>
+<h4>E. ML bridge</h4>
+<p><b>Q:</b> GD ki zaroorat kyun agar closed form hai? <b>A:</b> $(XX^T)^{-1}$ ka cost $O(d^3)$; bade $d$ par GD/SGD sasta hota hai. Dono ka minimum wahi hai.</p>
+<details class="reveal"><summary>Mini self-check R4</summary>
+<p><b>Q:</b> 1-D, $x=(1,2,3)$, $y=(2,4,7)$, bina bias: $w^*$? <b>Ans:</b> $XX^T=14$, $Xy=2+8+21=31$, $w^*=31/14=2.2143$ (code ✓).</p></details>
+</section>
+
+<!-- R5 -->
+<section data-track="r5">
+<h3>R5 · Gradient descent aur learning rate</h3>
+<h4>A. Core idea</h4>
+<p>Pahaad se utarne ki tarah: jahan khade ho wahan ki dhal (gradient) dekho, aur uske ulta chhota kadam $\eta$ lo. Kadam bahut bada ho to ghaati paar karke doosri taraf chadh jaoge.</p>
+<h4>B. Notation</h4>
+$$w_{t+1}=w_t-\eta\,\nabla f(w_t),\qquad \eta>0$$
+<p>MSE ke liye $\nabla f=\frac2nX(X^Tw-y)$. <b>Smoothness constant</b> $L=\frac2n\lambda_{\max}(XX^T)$. Convergence ki shart: $0<\eta<2/L$ (8.2 mein proof).</p>
+<h4>C. Worked examples <span class="tag t-add">[ADDED]</span></h4>
+<ul>
+<li><b>1-D $f(w)=2w^2$</b> ($f'=4w$, $L=4$): $w_{t+1}=(1-4\eta)w_t$. $\eta=0.25$: $w$ ek step mein $0$. $\eta=0.5=2/L$: $1,-1,1,-1,\dots$ (oscillation, converge nahi). $\eta=0.6$: $1,-1.4,1.96,-2.744,\dots$ (diverge) — code ✓.</li>
+<li><b>P6 data par</b> ($L=49.0985$, $2/L=0.0407$): $\eta=0.02$ par MSE $62.5\to8.6\to5.96\to4.12\to\dots\to0$; $\eta=0.045$ par blow-up.</li>
+</ul>
+<h4>D. Common mistakes</h4>
+<ul>
+<li>"$\eta$ jitna bada utna tez" maan lena.</li>
+<li>Sign: $w+\eta\nabla$ (ascent) likhna.</li>
+<li>Minimum par pahunchne ke baad bhi $\nabla\ne0$ sochna: wahan $\nabla=0$ aur update ruk jaata hai.</li>
+</ul>
+<h4>E. ML bridge</h4>
+<p><b>Q:</b> Regression mein GD global minimum kyun deta hai? <b>A:</b> MSE $w$ ka convex bowl hai (G3 / T6): koi local-but-not-global minimum hai hi nahi, aur $\eta<2/L$ ho to sequence minimum ki taraf jaata hai.</p>
+<details class="reveal"><summary>Mini self-check R5</summary>
+<p><b>Q:</b> $f(w)=w^2$ ($L=2$): $\eta=1$ par $w_0=1$ ka $w_1,w_2$? <b>Ans:</b> $w_1=1-2=-1$, $w_2=1$; oscillation ($\eta=2/L$).</p></details>
+</section>
+
+<!-- ===================================================== 8.1 ===================================================== -->
+<h2>8.1 · Squared error aur mean squared error (MSE)</h2>
+
+<section data-track="warm81">
+<h3>🔁 Recall warm-up (pichhle builds se — khud check karo)</h3>
+<div class="try"><p class="ttl">W1 · B25 T6 (convexity)</p><p>Convex function ka koi local minimum global minimum kyun hota hai?</p>
+<details class="reveal"><summary>Show answer</summary><p>Convex ka graph "bowl" hai: do points ko jodne wali chord function ke upar rehti hai, isliye ek local minimum se neeche koi doosra point ho hi nahi sakta; local $=$ global.</p></details></div>
+<div class="try"><p class="ttl">W2 · B22 (Bernoulli MLE)</p><p>Bernoulli MLE mein hum kya maximise karte the aur $\ln$ ka fayda kya?</p>
+<details class="reveal"><summary>Show answer</summary><p>Likelihood $\prod p^{x_i}(1-p)^{1-x_i}$; $\ln$ product ko sum bana deta hai ($\ln\prod=\sum\ln$) aur maximiser nahi badalta kyunki $\ln$ increasing hai.</p></details></div>
+<div class="try"><p class="ttl">W3 · B26 7.4 (weighted sum)</p><p>$N_1=\sum_i\gamma_1^i$ kya batata hai?</p>
+<details class="reveal"><summary>Show answer</summary><p>Component 1 ko diye gaye points ki "effective count"; $\pi_1=N_1/n$.</p></details></div>
+</section>
+
+<section data-track="pretest81">
+<h3>❓ Pretest — pehle bina padhe try karo</h3>
+<div class="try"><p class="ttl">Ek PYQ, cold attempt</p>
+<p>2025 July 13 · Q18 (context Q16): 4 points $x\in\mathbb R^2$ aur labels: $[4\ 1]^T\to2$, $[2\ 8]^T\to-14$, $[1\ 4]^T\to-7$, $[3\ 2]^T\to-1$. Is training dataset ka <b>mean squared error</b> (best linear fit par) kya hai?</p>
+<p class="note">Hint ki zaroorat ho to pehle P6 (neeche) ka $w$ dekho. Solution <b>P7</b> mein.</p></div>
+</section>
+
+<section data-track="pos81">
+<h3>🧭 Position</h3>
+<ul>
+<li><b>Pichhla:</b> R1–R4 (T8 prerequisites), T5 (MLE ka "$-\ln$" aur square ka rishta), T1 (projection).</li>
+<li><b>Yeh kya unlock karta hai:</b> 8.2 (GD isi MSE ka gradient leta hai) aur P6/P7 jaise "fit karo, error batao" sawaal.</li>
+</ul>
+</section>
+
+<section data-track="intu81">
+<h3>🧠 Intuition</h3>
+<p>Regression mein hum ek sidhi "recipe" $w$ chunte hain jo har training point ka label jitna ho sake predict kare. Har point par galti (residual) hoti hai; galti ka <b>square</b> karke sabko jodo — jo $w$ iska jod sabse chhota kare, wahi best fit hai. MSE ek <i>per-point average</i> galti hai: dataset ka size alag ho to bhi compare kar sakte ho.</p>
+<div class="box">
+<p><b>Analogy (labelled): dartboard <span class="tag t-add">[ADDED]</span></b> — har point ek dart ka nishana hai, $\hat y_i$ aapka dart. Residual = nishane se doori (sirf ek axis par). Square karna matlab "door ka dart bahut buri baat". Sabka jod ghatana ek aisa nishana dhoondhna hai jo sabke liye "sabse theek" ho.</p>
+<p><b>Yeh kahan toot-ta hai:</b> dartboard mein doori har direction mein hoti hai; regression mein sirf $y$-axis (label ki direction) par galti naapi jaati hai.</p>
+</div>
+<div class="box amber">
+<p><b>Yeh kya NAHI hai:</b></p>
+<ul>
+<li>MSE ($\frac1n\sum r^2$) $\neq$ sum of squares ($\sum r^2$): fark ek factor $n$ ka.</li>
+<li>MSE $=0$ $\neq$ "model perfect": sirf training data par exact; naye data par koi guarantee nahi.</li>
+<li>"Best fit $w$" ka matlab sabhi points par chhoti galti nahi, <i>squared galtiyon ka jod chhota</i> hai.</li>
+</ul>
+</div>
+</section>
+
+<section data-track="vis81">
+<h3>📊 Visual intuition</h3>
+<figure class="viz">
+  <p class="vt">Visual: alag-alag $w$ ke liye MSE (P6 ka data) <span class="tag t-add">[ADDED]</span></p>
+  <p class="vs">Chaar candidate $w$ aur best fit $(1,-2)$; MSE $=\frac14\sum(w^Tx_i-y_i)^2$, code se.</p>
+  <div class="chart" data-chart='{"type":"vbar","labels":["w=(0,0)","w=(1,1)","w=(1,−1)","w=(1,2)","w=(1,−2)"],"values":[62.5,191.25,21.25,340,0],"unit":"","aria":"MSE of five candidate weight vectors on the four-point regression dataset","tips":["MSE 62.5","MSE 191.25","MSE 21.25","MSE 340","MSE 0 (exact fit)"]}'></div>
+  <figcaption><b>Interpretation:</b> $w=(1,-2)$ par MSE $0$; $(1,-1)$ ke paas ($w_2$ sirf $1$ door) bhi MSE $21.25$ hai, aur $(1,2)$ par $340$. Matlab $w_2$ ka sign galat hona sabse mehnga padta hai.</figcaption>
+</figure>
+</section>
+
+<section data-track="formal81">
+<h3>📖 Formal version (Formula Protocol)</h3>
+$$L(w)=\sum_{i=1}^n(w^Tx_i-y_i)^2=\|X^Tw-y\|^2,\qquad\text{MSE}(w)=\frac1nL(w)$$
+<p><b>Symbols/assumptions:</b> $X\in\mathbb R^{d\times n}$, $y\in\mathbb R^n$, $w\in\mathbb R^d$, bina bias. $L$ sum hai, MSE mean hai.</p>
+<p><b>Words mein:</b> har point ki galti ka square, sabka jod ($L$) ya average (MSE).</p>
+<p><b>Notice that…</b> $L$ aur MSE ka minimiser $w^*$ <i>ek hi</i> hota hai (positive constant $\frac1n$ minimum ki jagah nahi badalta); sirf minimum ki <i>value</i> alag hoti hai.</p>
+<h4>Best fit: normal equations</h4>
+$$\nabla L=2X(X^Tw-y)=0\ \Rightarrow\ XX^Tw=Xy\ \Rightarrow\ w^*=(XX^T)^{-1}Xy$$
+<div class="tbl-wrap"><table>
+<thead><tr><th>Quantity</th><th>Formula</th><th>P6 data par</th></tr></thead>
+<tbody>
+<tr><td>$XX^T$</td><td>$\sum_ix_ix_i^T$</td><td>$\begin{bmatrix}30&30\\30&85\end{bmatrix}$</td></tr>
+<tr><td>$Xy$</td><td>$\sum_iy_ix_i$</td><td>$(-30,-140)$</td></tr>
+<tr><td>$w^*$</td><td>$(XX^T)^{-1}Xy$</td><td>$(1,-2)$</td></tr>
+<tr><td>$L(w^*)$, MSE</td><td>$\|X^Tw^*-y\|^2$</td><td>$0,\ 0$</td></tr>
+</tbody></table></div>
+<div class="box em"><p><b>Important insight:</b> $L\ge0$ hamesha (squares ka jod). Isliye agar koi $w$ aisa mil jaye ki $L(w)=0$, to wahi global minimum hai — ye P6 aur P7 ko ek saath hal karta hai.</p>
+<p><b>This is why</b> option elimination kaam karti hai: jo option training labels ko <i>exactly</i> predict kare wahi best fit hai.</p></div>
+</section>
+
+<section data-track="how81">
+<h3>⚙️ How it works — best fit nikalne ke steps</h3>
+<ol>
+<li>$X$ ($d\times n$, columns = points) aur $y$ likho.</li>
+<li>$XX^T$ ($d\times d$) aur $Xy$ ($d$) compute karo.</li>
+<li>$XX^Tw=Xy$ solve karo ($d$ equations, $d$ unknowns).</li>
+<li>Check: residual $r=X^Tw-y$ nikalo; agar $r=0$ to MSE $0$.</li>
+<li>MSE $=\frac1n\sum r_i^2$ (sum se $n$ ka bhaag mat bhoolo).</li>
+</ol>
+</section>
+
+<section data-track="we81">
+<h3>🧪 Worked examples <span class="tag t-add">[ADDED]</span></h3>
+<h4>Example 1 (simple): 1-D</h4>
+<p>$x=(1,2,3)$, $y=(2,4,7)$. $XX^T=14$, $Xy=31$, $w^*=31/14=2.2143$. Residual $=2.2143\cdot(1,2,3)-(2,4,7)=(0.2143,\ 0.4286,\ -0.3571)$, $L=0.3571$, MSE $=0.1190$ (code ✓).</p>
+<h4>Example 2 (exam-level): do equations, do unknowns</h4>
+<p>$x_1=(1,2)\to5$, $x_2=(2,1)\to4$. $w_1+2w_2=5$, $2w_1+w_2=4$ ⇒ $w=(1,2)$, residual $0$, MSE $0$ (2 points, 2 unknowns ⇒ exact fit generic hai).</p>
+<h4>Example 3 (tricky): ek aur point jodne par MSE $0$ nahi rehta</h4>
+<p>Example 2 mein $x_3=(1,1)\to9$ jodo. $XX^T=\begin{bmatrix}6&5\\5&6\end{bmatrix}$, $Xy=(22,23)$, $w^*=(17/11,\ 28/11)=(1.5455,\ 2.5455)$; residual $(1.636,\ 1.636,\ -4.909)$; $L=324/11=29.4545$; MSE $=108/11=9.8182$ (code ✓). Teen points ek hi $w$ se exact fit nahi hote.</p>
+<h4>Non-example</h4>
+<ul>
+<li>"MSE chhota hai ⇒ model generalise karega" ✗: sirf training error.</li>
+<li>"Best fit $w$ har point par error $0$ dega" ✗ (Example 3).</li>
+</ul>
+</section>
+
+<section data-track="deep81">
+<h3>🔬 Deeper insight (D3 — collapsible)</h3>
+<details class="deep"><summary>1. Normal equations ka derivation aur geometric matlab</summary>
+<p>$L=(X^Tw-y)^T(X^Tw-y)$. $w$ ke baare mein gradient $2X(X^Tw-y)$. $=0$ ka matlab $Xr=0$: har feature (row of $X$) residual ke saath orthogonal. Yaani $X^Tw^*$ column space $\mathcal C(X^T)\subseteq\mathbb R^n$ par $y$ ka <b>orthogonal projection</b> hai (T1 ka vector projection, bas yahan subspace par).</p></details>
+<details class="deep"><summary>2. $XX^T$ kab invertible nahi hota?</summary>
+<p>Agar koi feature doosre feature ka linear combination ho (rows dependent), to $\det(XX^T)=0$ aur $w^*$ unique nahi: infinite $w$ barabar MSE dete hain. (Ridge isi ko theek karta hai; syllabus ke bahar.)</p></details>
+<details class="deep"><summary>3. Bernoulli/Gaussian MLE se rishta</summary>
+<p>Agar $y_i=w^Tx_i+\varepsilon_i$ aur $\varepsilon_i\sim\mathcal N(0,\sigma^2)$ ho, to $-\ln$ likelihood $=\frac1{2\sigma^2}\sum r_i^2+\text{const}$: Gaussian noise ke under squared error ka minimiser hi MLE hai. (T5 ka $-\ln$ wala khel.)</p></details>
+<details class="deep"><summary>4. MSE vs MAE</summary>
+<p>$|r|$ bade outliers ko kam penalise karta hai; square bade residual ko zyada. Isliye squared error outliers ke prati zyada sensitive hai (Lloyd/K-means ke $F$ jaisa hi).</p></details>
+</section>
+
+<section data-track="tool81">
+<h3>⚡ PYQ pattern toolkit</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Trigger clue</th><th>Concept</th><th>First move</th></tr></thead>
+<tbody>
+<tr><td>"fit the linear regression model using squared error"</td><td>Normal equations</td><td>$XX^T$, $Xy$ banao; ya option ko points par test karo</td></tr>
+<tr><td>"find the MSE of the training dataset"</td><td>Residual</td><td>Pehle best-fit $w$ lo; agar exact fit ho to $0$</td></tr>
+<tr><td>Labels exactly $w^Tx$ se bane dikhte hain</td><td>$L\ge0$</td><td>Option elimination: jo exact predict kare</td></tr>
+<tr><td>"sum" vs "mean"</td><td>$L$ vs MSE</td><td>$n$ se bhaag karna na bhoolo</td></tr>
+</tbody></table></div>
+<p><b>Common traps:</b> $Xw$ vs $X^Tw$; sum vs mean; training error ko generalisation samajhna; stem ke "$y=wx$" ko scalar padhna.</p>
+</section>
+
+<h2>🎯 8.1 PYQs — P6, P7</h2>
+
+<section data-track="pyq6">
+<h3>🎯 P6 — Squared error se linear model fit karo (2025 July Q17) <span class="tag t-src">[SRC]</span> <span class="tag t-q">[?]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2025 July 13 · Original Q17 · ID <code>6406531302400</code> · MCQ · 3 marks · Pages 14 · <span class="tag t-src">[SRC]</span> <span class="tag t-q">[?]</span> (notation)</p>
+<p><b>Context (Q16, ID <code>6406531302399</code>):</b> dataset with feature vector $x$ and label $y$: $[4\ 1]^T\to2$; $[2\ 8]^T\to-14$; $[1\ 4]^T\to-7$; $[3\ 2]^T\to-1$.</p>
+<p>Fit the linear regression model $y=wx$, $w=[w_1\ w_2]^T$ using the <b>squared error</b>.</p>
+<ol>
+<li>$y=x_1+2x_2$ &nbsp; 2. $y=x_1-2x_2$ <b>[correct in source]</b> &nbsp; 3. $y=x_1-x_2$ &nbsp; 4. $y=x_1+x_2$</li>
+</ol>
+<p class="note"><span class="tag t-q">[?]</span> Stem "$y=wx$" ka matlab $y=w^Tx$ (dot product, koi bias nahi). Options isi padhai se match karte hain; key par asar nahi.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Bina normal equations ke bhi kya koi option 10 second mein pakda ja sakta hai? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul><li><b>Asked:</b> squared-error best fit. <b>Given:</b> 4 points, 4 options. <b>Trigger:</b> "using the squared error". <b>Prerequisites:</b> R1–R4. <b>Core principle:</b> $L\ge0$; $L=0$ par global minimum; warna $XX^Tw=Xy$.</li></ul>
+<h4>2. 🧭 Methods (3 genuinely alag)</h4>
+<p><b>General:</b> normal equations. <b>Shortcut:</b> do points se do equations solve karo, phir baaki par verify. <b>Advanced:</b> options ko points par plug karke eliminate karo ($L\ge0$ ka argument).</p>
+<h4>3. 🧮 Working (step-interleaved)</h4>
+<p class="mono">Step 1 · Setup</p>
+<ul>
+<li><b>M1 (General):</b> $XX^T=\begin{bmatrix}30&30\\30&85\end{bmatrix}$, $Xy=(-30,-140)$.</li>
+<li><b>M2 (Shortcut):</b> Point 1: $4w_1+w_2=2$. Point 4: $3w_1+2w_2=-1$.</li>
+<li><b>M3 (Advanced):</b> Option $i$ ke liye $\hat y_1=w^Tx_1$ with $x_1=(4,1)$, label $2$.</li>
+</ul>
+<p class="mono">Step 2 · Solve / evaluate</p>
+<ul>
+<li><b>M1:</b> $30w_1+30w_2=-30\Rightarrow w_1+w_2=-1$; $30w_1+85w_2=-140\Rightarrow55w_2=-110\Rightarrow w_2=-2$, $w_1=1$.</li>
+<li><b>M2:</b> $\times2$: $8w_1+2w_2=4$; subtract second: $5w_1=5\Rightarrow w_1=1$; $w_2=2-4=-2$.</li>
+<li><b>M3:</b> Opt 1 $(1,2)$: $4+2=6\ne2$ ✗. Opt 2 $(1,-2)$: $4-2=2$ ✓. Opt 3 $(1,-1)$: $3$ ✗. Opt 4 $(1,1)$: $5$ ✗.</li>
+</ul>
+<p class="mono">Step 3 · Check baaki points</p>
+<ul>
+<li><b>M1/M2:</b> $w=(1,-2)$: $2-16=-14$ ✓, $1-8=-7$ ✓, $3-4=-1$ ✓.</li>
+<li><b>M3:</b> Option 2 baaki teeno par bhi exact; residual $(0,0,0,0)$ ⇒ $L=0$, jo $L\ge0$ ka minimum hai.</li>
+</ul>
+<p><b>Answer:</b> option 2, $y=x_1-2x_2$.</p>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead>
+<tbody>
+<tr><td>M1 Normal eqns</td><td>~3 min</td><td>Medium</td><td>Arithmetic ($XX^T$ entries)</td><td>Options na hon (SA)</td></tr>
+<tr><td>M2 Two points</td><td>~1.5 min</td><td>Easy</td><td>Verify bhoolna</td><td>$d=2$ aur exact data</td></tr>
+<tr><td>M3 Plug options</td><td>~30 s</td><td>Easy</td><td>Sirf ek point par ruk jaana (baaki par verify karo)</td><td>MCQ mein options di hon</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M3. 🏆 <b>BEST EXAM METHOD:</b> M3 + baaki points par ek line ka verify (M2 ka step 3). Trade-off: M3 tabhi bharosemand hai jab koi option sachmuch exact fit de.</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li>Code: $w^*=(1,-2)$; residual $(0,0,0,0)$; baaki options ke MSE: $340,\ 21.25,\ 191.25$ ✓.</li>
+<li>Source key option 2 ✓ (mera derivation match).</li>
+</ul>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>$XX^T$ ki jagah $X^TX$ ($4\times4$) lena.</li>
+<li>Sirf ek point par option check karke ruk jaana: option 2 ke alawa koi aur bhi ek point par fit ho sakta hai (yahan nahi hua, par rule yahi hai).</li>
+<li>"$y=wx$" ko scalar samajhna.</li>
+</ul>
+<p><b>Recognition rule:</b> "squared error" + options di hain ⇒ pehle plug-test; exact fit mil jaye to wahi answer.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>$x_1=(1,2)\to5$, $x_2=(2,1)\to4$; model $y=w^Tx$ (bias nahi). Best-fit $w$ aur MSE?</p>
+<details class="reveal"><summary>Show answer</summary><p>$w_1+2w_2=5$, $2w_1+w_2=4\Rightarrow w=(1,2)$; MSE $=0$ (code ✓).</p></details>
+</details>
+</section>
+
+<section data-track="pyq7">
+<h3>🎯 P7 — Training dataset ka MSE (2025 July Q18) <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2025 July 13 · Original Q18 · ID <code>6406531302401</code> · SA · 1 mark · Page 15 · <span class="tag t-src">[SRC]</span></p>
+<p>Context Q16 wahi (P6). Find the <b>mean squared error</b> for the training dataset. <b>Accepted answer in source: 0.</b></p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>P6 ka best fit use karke sirf residual dekho. Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul><li><b>Asked:</b> training MSE. <b>Given:</b> same data, best fit from P6. <b>Trigger:</b> "mean squared error for the training dataset". <b>Prerequisites:</b> R2, P6. <b>Core principle:</b> exact fit ⇒ $L=0$.</li></ul>
+<h4>2. 🧭 Methods</h4>
+<p>2 genuinely alag: <b>(a)</b> direct residuals; <b>(b)</b> bound argument ($L\ge0$ aur $\nabla=0$). Teesra independent method nahi.</p>
+<h4>3. 🧮 Working (side by side)</h4>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Step</th><th>(a) Direct residuals</th><th>(b) Bound / gradient</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>$w^*=(1,-2)$ (P6)</td><td>$L(w)=\sum r_i^2\ge0$ hamesha</td></tr>
+<tr><td>2</td><td>$\hat y=(2,-14,-7,-1)$</td><td>$w=(1,-2)$ par $r=0\Rightarrow L=0$</td></tr>
+<tr><td>3</td><td>$r=\hat y-y=(0,0,0,0)$</td><td>$L\ge0$ ka minimum value $0$ hi hai ⇒ best fit ka $L=0$</td></tr>
+<tr><td>4</td><td>MSE $=\frac14\cdot0=0$</td><td>MSE $=0$; gradient $2Xr=0$ ✓</td></tr>
+</tbody></table></div>
+<h4>4. 📊 Comparison</h4>
+<p>(a) ~30 s, (b) ~30 s (argument). ⚡ <b>FASTEST</b> = 🏆 <b>BEST EXAM METHOD:</b> (a), kyunki P6 ka $w$ pehle se hai.</p>
+<h4>5. ✅ Verification</h4>
+<ul><li>Code: MSE $=0.0$ ✓; source key $0$ ✓.</li></ul>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>Kisi galat $w$ (e.g. $(1,-1)$) par MSE nikalna ($21.25$).</li>
+<li>"MSE $0$" ko "model hamesha sahi" samajhna.</li>
+</ul>
+<p><b>Recognition rule:</b> Labels agar saaf integer combination ($x_1-2x_2$) ban rahe hon to MSE $0$ ka shak pehle karo.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>Transfer P6 ke data mein $x_3=(1,1)\to9$ jodo ($x_1=(1,2)\to5$, $x_2=(2,1)\to4$). Best-fit MSE $0$ hoga ya nahi? Agar nahi, kitna?</p>
+<details class="reveal"><summary>Show answer</summary><p>Nahi: $w^*=(17/11,28/11)$, $L=324/11=29.45$, MSE $=108/11=9.82$ (code ✓).</p></details>
+</details>
+</section>
+
+<section data-track="mem81">
+<h3>📌 Memory card — 8.1 MSE</h3>
+<div class="box em"><ul>
+<li><b>Core model:</b> best fit $=$ squared-error minimiser; MSE $=\frac1n\sum r^2$.</li>
+<li><b>Backbone chain:</b> residual → square → sum/mean → $\nabla=0$ → $XX^Tw=Xy$.</li>
+<li><b>Formulas:</b> $L=\|X^Tw-y\|^2$ · $\nabla L=2X(X^Tw-y)$ · $w^*=(XX^T)^{-1}Xy$ (jab invertible).</li>
+<li><b>Top 3 traps:</b> (1) $X^TX$ vs $XX^T$; (2) sum vs mean; (3) MSE $0$ = training only.</li>
+<li><b>Trigger bank:</b> "squared error" · "MSE" · "fit linear model" · "training dataset".</li>
+<li><b>Method selector:</b> options ⇒ plug-test; SA ⇒ normal equations.</li>
+<li><b>Source flags:</b> P6/P7 notation <span class="tag t-q">[?]</span>.</li>
+<li><b>Spaced review:</b> 2026-11-13 P6, P7 · 2026-11-19 memory card · 2026-12-03 8.1 + T8 prerequisites.</li>
+</ul></div>
+</section>
+
+<section data-track="eib81">
+<h3>✍️ Explain-it-back — 8.1</h3>
+<div class="try"><p>Chat mein 3–5 lines: (a) "sum" aur "mean" squared error ka minimiser ek hi kyun hota hai; (b) $XX^T$ vs $X^TX$ ka shape; (c) MSE $0$ ka matlab aur uski limit.</p>
+<p><b>Checkpoint:</b> 1-D, $x=(1,2,3)$, $y=(2,4,7)$, bina bias: best $w$ aur MSE (3 d.p.)?</p>
+<p class="note">Format: <code>Answer: … | Confidence: S/U/G | Reason: …</code></p></div>
+</section>
+
+<!-- ===================================================== 8.2 ===================================================== -->
+<h2>8.2 · Gradient descent aur optimization (linear regression)</h2>
+
+<section data-track="warm82">
+<h3>🔁 Recall warm-up (khud check karo)</h3>
+<div class="try"><p class="ttl">W1 · B26 8.1</p><p>MSE ka gradient (course convention) likho.</p>
+<details class="reveal"><summary>Show answer</summary><p>$\nabla\text{MSE}=\dfrac2nX(X^Tw-y)$, $X$ shape $d\times n$.</p></details></div>
+<div class="try"><p class="ttl">W2 · B26 7.5</p><p>Lloyd aur EM global optimum ki guarantee dete hain? Kyun?</p>
+<details class="reveal"><summary>Show answer</summary><p>Nahi. Dono monotone sudhar dete hain par sirf local optimum / stationary point tak; natija init par depend karta hai.</p></details></div>
+<div class="try"><p class="ttl">W3 · B25 T6</p><p>Convex $f$ ke liye local minimum aur global minimum mein kya rishta?</p>
+<details class="reveal"><summary>Show answer</summary><p>Har local minimum global hota hai.</p></details></div>
+</section>
+
+<section data-track="pretest82">
+<h3>❓ Pretest — pehle bina padhe try karo</h3>
+<div class="try"><p class="ttl">Ek PYQ, cold attempt</p>
+<p>2025 July 13 · Q8: For a linear regression problem, which among the following are true? (1) Gradient descent will converge to a global minimum. (2) Gradient descent will converge to a local minimum (which is not a global minimum). (3) Stochastic gradient descent is guaranteed to converge to a global minimum. (4) Gradient descent will take lesser number of iterations to converge to a local minimum than stochastic gradient descent.</p>
+<p class="note">Har statement par T/F + kaaran + confidence. Solution <b>P8</b> mein.</p></div>
+</section>
+
+<section data-track="pos82">
+<h3>🧭 Position</h3>
+<ul>
+<li><b>Pichhla:</b> 8.1 (MSE aur uska gradient), R5 (update rule), T6 (convexity).</li>
+<li><b>Yeh kya unlock karta hai:</b> "kaun sa optimiser kya guarantee deta hai" wale MSQ; aur 7.5 ke "local vs global" sawaalon ka regression-wala hissa.</li>
+</ul>
+</section>
+
+<section data-track="intu82">
+<h3>🧠 Intuition</h3>
+<p>GD ek andhere pahaad par utarne jaisa hai: har kadam par sirf <i>abhi ki dhal</i> dikhti hai. Regression ka loss ek <b>bowl</b> hai (convex), isliye sab raaste neeche ke ek hi point par jaate hain. Hamara kaam: kadam ka size $\eta$ itna rakhna ki na rengte rahein, na bowl ke us paar uchhal jaayein.</p>
+<div class="box">
+<p><b>Analogy (labelled): gend aur katori <span class="tag t-add">[ADDED]</span></b> — loss katori hai, $w$ gend ki jagah. Chhota $\eta$: gend dheere neeche. Bada par $<2/L$: gend dono taraf chadhti-utarti hue bhi neeche. $\eta=2/L$: gend baar-baar usi unchai par dono taraf. $\eta>2/L$: har baar zyada unchai par — bahar ud jaati hai.</p>
+<p><b>Yeh kahan toot-ta hai:</b> katori ki shape $L$ (kitni tez curvature) $w$ ke direction par depend karti hai; $d>1$ mein sabse tez-curvature wali direction $\eta$ ki upar-seema tay karti hai.</p>
+</div>
+<div class="box amber">
+<p><b>Yeh kya NAHI hai:</b></p>
+<ul>
+<li>GD "kuch bhi $\eta$ par converge" nahi karta; $\eta<2/L$ chahiye.</li>
+<li>SGD GD ka sasta version nahi jo wahi guarantee de: constant $\eta$ par SGD ek chhote ilaake mein ghoomta rehta hai.</li>
+<li>"Convex" ka matlab "ek step mein minimum" nahi; sirf "local $=$ global".</li>
+</ul>
+</div>
+</section>
+
+<section data-track="vis82">
+<h3>📊 Visual intuition</h3>
+<figure class="viz">
+  <p class="vt">Visual 1: 1-D parabola par GD — $\eta$ badal kar dekho <span class="tag t-add">[ADDED]</span></p>
+  <p class="vs">$f(w)=\tfrac12Lw^2$ ($f'=Lw$). Slider se $\eta L$ $0$ se $2.4$ tak ghumao; table mein $w_t=(1-\eta L)^tw_0$ aate hain.</p>
+  <div data-widget="gd1d" data-L="4" data-w0="1" data-eta="0.25"></div>
+  <figcaption><b>Interpretation:</b> $\eta L<1$ par $w_t$ ek hi taraf se $0$ ki or ($0<\eta L<1$: monotone); $1<\eta L<2$ par zigzag karte hue chhota hota jaata hai; $\eta L=2$ par $\pm w_0$ (oscillation); $\eta L>2$ par har step bada (diverge). $\eta L=1$ par ek hi step mein $0$.</figcaption>
+</figure>
+<figure class="viz">
+  <p class="vt">Visual 2: P6 ke data par GD ($\eta=0.02$) — MSE har iteration ke baad <span class="tag t-add">[ADDED]</span></p>
+  <p class="vs">$w_0=(0,0)$, $L=\frac2n\lambda_{\max}(XX^T)=49.0985$, $2/L=0.0407$; $\eta=0.02$ ($<2/L$). Code se.</p>
+  <div class="chart" data-chart='{"type":"vbar","labels":["t=0","t=1","t=2","t=3","t=10","t=50"],"values":[62.5,8.625,5.959,4.124,0.314,0.0],"unit":"","aria":"MSE after t gradient descent steps with eta 0.02 on the four-point dataset","tips":["MSE 62.5","MSE 8.625","MSE 5.959","MSE 4.124","MSE 0.314","MSE ≈ 0 (below 1e-6)"]}'></div>
+  <figcaption><b>Interpretation:</b> shuruaati steps mein MSE tezi se girta hai, phir dheere; $50$ steps mein lagbhag $0$. $\eta=0.045$ ($>2/L$) par wahi data $10$ steps mein MSE $\approx2245$ aur badhta jaata hai (diverge).</figcaption>
+</figure>
+</section>
+
+<section data-track="formal82">
+<h3>📖 Formal version (Formula Protocol)</h3>
+$$w_{t+1}=w_t-\eta\nabla f(w_t),\qquad f(w)=\text{MSE}(w),\ \ \nabla f(w)=\frac2nX(X^Tw-y)$$
+<p><b>Symbols/assumptions:</b> $\eta>0$ constant; $f$ convex quadratic; $H=\nabla^2f=\frac2nXX^T$ (constant, symmetric PSD). $L=\lambda_{\max}(H)=\frac2n\lambda_{\max}(XX^T)$.</p>
+<p><b>Words mein:</b> har step mein ($-$gradient) ki taraf $\eta$ jitna chal do.</p>
+<p><b>Notice that…</b> $w_{t+1}-w^*=(I-\eta H)(w_t-w^*)$ (jab $XX^T$ invertible, $\nabla f(w)=H(w-w^*)$). Error har step mein matrix $I-\eta H$ se guna hota hai.</p>
+<h4>Convergence ki shart</h4>
+<p>$H$ ke eigenvalues $0<\lambda_1\le\dots\le\lambda_d=L$. $I-\eta H$ ke eigenvalues $1-\eta\lambda_j$. Sab ka $|\cdot|<1$ ho tabhi error $\to0$:</p>
+$$|1-\eta\lambda_j|<1\ \ \forall j\iff0<\eta<\frac2{\lambda_j}\ \ \forall j\iff \boxed{0<\eta<\frac2L}$$
+<div class="tbl-wrap"><table>
+<thead><tr><th>$\eta$ ka range</th><th>$\eta L$</th><th>Behaviour (sabse tez direction)</th></tr></thead>
+<tbody>
+<tr><td>$0<\eta<1/L$</td><td>$<1$</td><td>Monotone convergence</td></tr>
+<tr><td>$\eta=1/L$</td><td>$=1$</td><td>Is direction mein ek step mein $0$</td></tr>
+<tr><td>$1/L<\eta<2/L$</td><td>$1$ se $2$</td><td>Zigzag, par converge</td></tr>
+<tr><td>$\eta=2/L$</td><td>$=2$</td><td>$\pm$ oscillation, converge nahi</td></tr>
+<tr><td>$\eta>2/L$</td><td>$>2$</td><td>Diverge</td></tr>
+</tbody></table></div>
+<div class="box em"><p><b>Important insight:</b> Convexity ($H\succeq0$) ki wajah se koi bad local minimum hai hi nahi: GD ka limit (agar converge ho) hamesha global minimum hota hai.</p>
+<p><b>This is why</b> P8 mein statement 1 ✓ aur 2 ✗ (par "$\eta$ sahi" ki shart yaad rakhna).</p></div>
+<h4>SGD (ek point ka gradient)</h4>
+<p>SGD har step par ek random point $i$ ka gradient $2(w^Tx_i-y_i)x_i$ leta hai. Ye <i>unbiased</i> hai (average mein poore gradient ke barabar), par <i>noisy</i> hai. Constant $\eta$ par $w_t$ $w^*$ ke aas-paas ek chhote ilaake mein ghoomta rehta hai (jab tak labels exactly fit na hon).</p>
+</section>
+
+<section data-track="how82">
+<h3>⚙️ How it works — GD ke steps</h3>
+<ol>
+<li>$w_0$ chuno (e.g. $0$), $\eta$ chuno ($<2/L$).</li>
+<li>Gradient: $g_t=\frac2nX(X^Tw_t-y)$.</li>
+<li>Update: $w_{t+1}=w_t-\eta g_t$.</li>
+<li>Rukne ka rule: $\|g_t\|$ chhota ya MSE ka badlaav chhota.</li>
+<li>Output $w_T\approx w^*$.</li>
+</ol>
+</section>
+
+<section data-track="we82">
+<h3>🧪 Worked examples <span class="tag t-add">[ADDED]</span></h3>
+<h4>Example 1 (simple): 1-D, $f(w)=2w^2$ ($L=4$, $2/L=0.5$)</h4>
+<p>$w_{t+1}=(1-4\eta)w_t$, $w_0=1$. $\eta=0.25$: $1,0,0,\dots$. $\eta=0.5$: $1,-1,1,-1,\dots$. $\eta=0.6$: $1,-1.4,1.96,-2.744,\dots$ (code ✓).</p>
+<h4>Example 2 (exam-level): $L$ kaise nikalte hain</h4>
+<p>P6 data: $XX^T=\begin{bmatrix}30&30\\30&85\end{bmatrix}$; eigenvalues $98.197,\ 16.803$ (trace $115$, det $1650$). $L=\frac24\cdot98.197=49.099$; $\eta_{\max}=2/L=0.0407$. $H=\frac2nXX^T$ ke eigenvalues $49.099$ aur $8.401$. $\eta=0.04$ par error-factors $1-0.04\cdot49.099=-0.964$ aur $1-0.04\cdot8.401=0.664$; dono $|\cdot|<1$ ⇒ converge, par dheere (rate $0.964$, tez direction ka zigzag): MSE $52\to45.64\to41.23\to\dots\to1.27\ (t=50)\to0\ (t=2000)$ (code ✓).</p>
+<h4>Example 3 (tricky): SGD constant $\eta$ par bhatakta hai</h4>
+<p>1-D, $x=(1,2,3)$, $y=(2,4,7)$, $w^*=2.2143$. Constant $\eta=0.05$, 6000 SGD steps, 20 random seeds: aakhri $1000$ steps mein $w$ ka standard deviation average mein $\mathbf{0.102}$; $\eta=0.02$ par $0.056$. Yani $w$ ruk nahi jaata; $\eta$ ghatane par noise chhota hota hai par $0$ nahi. Full GD ($\eta=0.05$, $L=9.33$, $2/L=0.214$) $200$ steps mein $2.214285714$ par tik jaata hai (code ✓).</p>
+<h4>Non-example</h4>
+<ul>
+<li>"GD ka koi bhi $\eta$ chalega kyunki loss convex hai" ✗: convex hai par $\eta>2/L$ par diverge.</li>
+<li>"SGD $\Rightarrow$ hamesha thoda galat" ✗: agar labels exactly fit hon (P6) to SGD bhi exact minimum par converge karta hai (neeche D3-3).</li>
+</ul>
+</section>
+
+<section data-track="deep82">
+<h3>🔬 Deeper insight (D3 — collapsible)</h3>
+<details class="deep"><summary>1. Proof ka ek line: $|1-\eta\lambda|<1\iff0<\eta<2/\lambda$</summary>
+<p>$|1-\eta\lambda|<1\iff-1<1-\eta\lambda<1\iff0<\eta\lambda<2$. Sab $\lambda_j\le L$ ke liye sabse tight shart sabse bade $\lambda=L$ ki hai.</p></details>
+<details class="deep"><summary>2. Convergence ki raftaar aur condition number</summary>
+<p>Error har step mein direction $j$ par factor $|1-\eta\lambda_j|$ se ghatta hai; overall rate $=\max_j|1-\eta\lambda_j|$. Tez direction ($\lambda_{\max}$) $\eta$ ko $<2/L$ par rokti hai, aur $\eta$ bada hone par wahi zigzag se rate ko bigaadti hai ($\eta=0.04$: $0.964$); $\eta$ chhota karne par slow direction ($\lambda_{\min}$) rate tay karti hai ($\eta=0.02$: $0.832$). Behtareen $\eta=2/(\lambda_{\max}+\lambda_{\min})$ ho to rate $(\kappa-1)/(\kappa+1)$, $\kappa=\lambda_{\max}/\lambda_{\min}$; P6 data par $\kappa=5.84$, rate $0.708$ (code ✓).</p></details>
+<details class="deep"><summary>3. SGD ke baare mein sahi bayaan <span class="tag t-add">[ADDED]</span></summary>
+<p>(a) Noisy labels mein constant $\eta$ par SGD global minimum par <i>exactly</i> converge nahi karta (Example 3). (b) $\eta_t\to0$ (aur $\sum\eta_t=\infty$, $\sum\eta_t^2<\infty$) jaisi decaying schedule se convex problem mein convergence ka theorem hai — par PYQ ka statement 3 shart nahi batata, isliye "guaranteed" ✗. (c) Exact-fit (interpolation) case mein har point ka gradient $w^*$ par $0$ hota hai, isliye SGD bhi converge karta hai: P6 data par $\eta=0.005$, $200{,}000$ steps ke baad $w=(1,-2)$ (code ✓).</p></details>
+<details class="deep"><summary>4. Iterations vs cost per iteration</summary>
+<p>GD ka ek step $O(nd)$ (sab points), SGD ka $O(d)$. "Kam iterations" (statement 4) aur "kam total cost" alag baatein hain: SGD zyada, par sasti steps leta hai.</p></details>
+</section>
+
+<section data-track="tool82">
+<h3>⚡ PYQ pattern toolkit</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Trigger clue</th><th>Concept</th><th>First move</th></tr></thead>
+<tbody>
+<tr><td>"GD converges to a global minimum" (regression)</td><td>Convex loss</td><td>✓ (sahi $\eta$ par); "local, not global" ✗</td></tr>
+<tr><td>"SGD is guaranteed to converge to global min"</td><td>Noise floor</td><td>✗ (constant $\eta$ / koi condition nahi)</td></tr>
+<tr><td>"GD takes fewer iterations than SGD"</td><td>Iterations vs cost</td><td>Tendency ✓ (course reading)</td></tr>
+<tr><td>$\eta$ ka upper bound</td><td>$2/L$</td><td>$L=\frac2n\lambda_{\max}(XX^T)$ (MSE) ya $\lambda_{\max}$ of Hessian</td></tr>
+</tbody></table></div>
+<p><b>Common traps:</b> "convex ⇒ koi bhi $\eta$"; SGD ko GD jaisi guarantee dena; $\eta=2/L$ ko convergent maanna; $L$ mein $2/n$ factor bhoolna.</p>
+</section>
+
+<h2>🎯 8.2 PYQ — P8</h2>
+
+<section data-track="pyq8">
+<h3>🎯 P8 — GD aur SGD ke statements (2025 July Q8) <span class="tag t-src">[SRC]</span> <span class="tag t-q">[?]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2025 July 13 · Original Q8 · ID <code>6406531302391</code> · MSQ · 3 marks · Page 8 · <span class="tag t-src">[SRC]</span> <span class="tag t-q">[?]</span></p>
+<p>For a <b>linear regression</b> problem, which among the following are true?</p>
+<ol>
+<li>Gradient descent will converge to a global minimum.</li>
+<li>Gradient descent will converge to a local minimum (which is not a global minimum).</li>
+<li>Stochastic gradient descent is guaranteed to converge to a global minimum.</li>
+<li>Gradient descent will take lesser number of iterations to converge to a local minimum than stochastic gradient descent.</li>
+</ol>
+<p><b>Source note:</b> bank mein koi option correct-marked nahi, isliye key <span class="tag t-q">[?]</span>; neeche jawab meri derivation hai.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>"guaranteed" aur "local, not global" par ruko. Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul><li><b>Asked:</b> true statements. <b>Trigger:</b> "linear regression", "global minimum", "guaranteed". <b>Prerequisites:</b> R5, G3 (convexity), 8.2. <b>Core principle:</b> MSE convex quadratic ⇒ local $=$ global; SGD constant-$\eta$ noisy.</li></ul>
+<h4>2. 🧭 Methods</h4>
+<p>MSQ: 1 method — statement-by-statement. Statement 3 ke liye ek counter-example chahiye (Example 3).</p>
+<h4>3. 🧮 Working</h4>
+<div class="tbl-wrap"><table>
+<thead><tr><th>#</th><th>Verdict</th><th>Reason</th><th>Pakkapan</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>✓ True</td><td>Convex MSE; GD ka limit (agar converge ho, $\eta<2/L$) global minimum hai.</td><td>Pakka (convexity)</td></tr>
+<tr><td>2</td><td>✗ False</td><td>Convex function mein "local but not global" minimum hota hi nahi.</td><td>Pakka</td></tr>
+<tr><td>3</td><td>✗ False</td><td>Constant-$\eta$ SGD noise-floor par ghoomta hai: $0.102$ std ($\eta=0.05$), $0.056$ ($\eta=0.02$); koi shart di nahi, isliye "guaranteed" nahi.</td><td>Pakka (counter-example)</td></tr>
+<tr><td>4</td><td>✓ True (tendency)</td><td>Poore gradient se smooth raasta; SGD ka noisy raasta zyada iterations leta hai.</td><td>Course-standard reading <span class="tag t-q">[?]</span></td></tr>
+</tbody></table></div>
+<p><b>Jawab: $\{1,4\}$.</b></p>
+<h4>4. 📊 Comparison</h4>
+<p>Ek hi tareeka (statement-by-statement), ~2 min. ⚡ <b>FASTEST</b> = 🏆 <b>BEST EXAM METHOD:</b> strong words ("guaranteed", "local, not global") pehle kaato; phir "iterations" wale tendency ko dekho.</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li>Code: GD ($\eta=0.05$) $2.214285714$ par tik gaya; SGD (20 seeds, 6000 steps) tail std $0.102/0.056$ ✓.</li>
+<li><span class="tag t-q">[?]</span> Key bank mein nahi: 1–3 pakke; 4 "iterations" ki reading par. Agar official key 4 par alag ho, to yahi statement dobara dekho.</li>
+</ul>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>Statement 1 ko "$\eta$ koi bhi" samajhna.</li>
+<li>Statement 3 ko ($\eta_t\to0$ wale theorem se) ✓ maan lena jabki PYQ ne woh shart di hi nahi.</li>
+<li>Statement 4 mein "iterations" ko "total time/cost" samajhna.</li>
+</ul>
+<p><b>Recognition rule:</b> "global / local" + convex loss ⇒ global; "guaranteed" ⇒ shart dhoondho.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>$f(w)=w^2$ ($L=2$). GD, $w_0=1$: (a) $\eta=1$ par $w_1,w_2$? (b) $\eta=0.5$ par $w_1$? (c) $\eta=1.1$ par $|w_1|$?</p>
+<details class="reveal"><summary>Show answer</summary><p>(a) $w_1=1-1\cdot2=-1$, $w_2=1$ (oscillation, $\eta=2/L$). (b) $w_1=1-0.5\cdot2=0$ ($\eta=1/L$). (c) $w_1=1-1.1\cdot2=-1.2$, $|w_1|=1.2>1$ (diverge) — code ✓.</p></details>
+</details>
+</section>
+
+<section data-track="mem82">
+<h3>📌 Memory card — 8.2 Gradient descent</h3>
+<div class="box em"><ul>
+<li><b>Core model:</b> $w\leftarrow w-\eta\nabla f$; bowl ⇒ local $=$ global.</li>
+<li><b>Backbone chain:</b> gradient → step → error matrix $(I-\eta H)$ → eigenvalue $|1-\eta\lambda|<1$ → $\eta<2/L$.</li>
+<li><b>Formulas:</b> $L=\frac2n\lambda_{\max}(XX^T)$ · $0<\eta<2/L$ · $\eta=2/L$ oscillation.</li>
+<li><b>Top 3 traps:</b> (1) "koi bhi $\eta$"; (2) SGD "guaranteed"; (3) $2/n$ ka factor.</li>
+<li><b>Trigger bank:</b> "global minimum" · "SGD guaranteed" · "fewer iterations" · "learning rate".</li>
+<li><b>Method selector:</b> statement-by-statement; strong words ke liye counter-example.</li>
+<li><b>Source flags:</b> P8 <span class="tag t-q">[?]</span> (key nahi; mera $\{1,4\}$).</li>
+<li><b>Spaced review:</b> 2026-11-13 P8 · 2026-11-19 8.2 memory card · 2026-12-03 8.2 + T8.</li>
+</ul></div>
+</section>
+
+<section data-track="eib82">
+<h3>✍️ Explain-it-back — 8.2</h3>
+<div class="try"><p>Chat mein 3–5 lines: (a) $\eta<2/L$ ki shart ka ek-line proof; (b) SGD constant $\eta$ par kyun nahi tikta; (c) statement 4 "tendency" kyun hai.</p>
+<p><b>Checkpoint:</b> MSE $f$ ka $L=8$ ho. $\eta=0.2$ converge karega? $\eta=0.25$ par kya hota hai?</p>
+<p class="note">Format: <code>Answer: … | Confidence: S/U/G | Reason: …</code></p></div>
+</section>
+
+<!-- ===================================================== FINAL TIMED TEST ===================================================== -->
+<h2>⏱️ Final timed mixed test (T1 → T8)</h2>
+
+<section data-track="timed">
+<div class="box">
+<p><b>12 sawaal · 36 marks · 24 minute</b> (har sawaal ~2 min). Poora paper ek baithak mein, bina notes ke. Jawab neeche hidden hain; pehle khud likho, phir "Show answer" kholo. Sab sawaal <span class="tag t-add">[ADDED]</span> hain (PYQ-style, numbers naye) aur har answer code se verify kiya hai.</p>
+<p class="note">Marks: har sawaal 3. Time guideline: aasaan 1 min, medium 2 min, tough 3 min. Jo atak jaaye use chhodo, baad mein wapas aao (<span class="tag t-q">[TIME]</span> error tag isi ke liye hai).</p>
+</div>
+
+<div class="try"><p class="ttl">Q1 · T1 · Projection · 3 marks</p><p>$x=(5,1)$, line direction $w=(2,1)$ (origin se). Projection ke baad <b>squared reconstruction error</b> $\|x-\text{proj}\|^2$ kya hai?</p>
+<details class="reveal"><summary>Show answer</summary><p>$\|x\|^2=26$; scalar projection $\frac{x^Tw}{\|w\|}=\frac{11}{\sqrt5}$, uska square $\frac{121}5=24.2$; error $=26-24.2=\mathbf{1.8}$ (norm $1.342$). Code ✓.</p></details></div>
+
+<div class="try"><p class="ttl">Q2 · T2 · Explained variance · 3 marks</p><p>Covariance eigenvalues $12,6,4,2,0$. Top-2 PCs kitne % variance capture karte hain?</p>
+<details class="reveal"><summary>Show answer</summary><p>Total $=24$; top-2 $=18$; $18/24=\mathbf{75\%}$ (code ✓).</p></details></div>
+
+<div class="try"><p class="ttl">Q3 · T2 · Storage · 3 marks</p><p>$n=40$ points, $d=500$. PCA ke $k=3$ components par compressed storage (numbers ki ginti; mean store nahi, course convention)?</p>
+<details class="reveal"><summary>Show answer</summary><p>$k(d+n)=3\cdot540=\mathbf{1620}$ (code ✓; 2025 Jul Q11 wali convention).</p></details></div>
+
+<div class="try"><p class="ttl">Q4 · T3 · Kernels · 3 marks</p><p>(a) $k(x,y)=(x^Ty+1)^2$, $x=(1,2)$, $y=(2,0)$: $k$? (b) Gaussian $\sigma=1$: $k((0,0),(1,1))$ (3 d.p.)?</p>
+<details class="reveal"><summary>Show answer</summary><p>(a) $x^Ty=2$; $(2+1)^2=\mathbf9$. (b) $\|x-y\|^2=2$; $e^{-2/2}=e^{-1}=\mathbf{0.368}$ (code ✓).</p></details></div>
+
+<div class="try"><p class="ttl">Q5 · T3 · Feature count · 3 marks</p><p>Degree-2 polynomial kernel $(x^Ty+1)^2$ ka implicit feature space kitne dimensions ka hai, jab $x\in\mathbb R^4$? (Source ka degree-3, $d=4$ answer $35$ tha.)</p>
+<details class="reveal"><summary>Show answer</summary><p>$\binom{d+p}{p}=\binom{6}{2}=\mathbf{15}$ (code ✓; $d=4,p=3$ se $\binom73=35$ match).</p></details></div>
+
+<div class="try"><p class="ttl">Q6 · T4 · Lloyd · 3 marks</p><p>1-D points $\{0,1,5,6\}$, $K=2$, init means $(0,6)$. Pehla assign step, phir update step ke baad objective $F$?</p>
+<details class="reveal"><summary>Show answer</summary><p>Assign: $\{0,1\}\to C_1$, $\{5,6\}\to C_2$ ($F$ init means par $0+1+1+0=2$). Update: means $(0.5,\ 5.5)$, $F=4\cdot0.25=\mathbf1$ (code ✓; $F$ non-increasing: $2\to1$).</p></details></div>
+
+<div class="try"><p class="ttl">Q7 · T4 · K-means++ · 3 marks</p><p>Points $(0,0),(1,0),(0,2),(3,0)$; pehla mean $(0,0)$. Squared-distance scores par $(0,2)$ ke dusra mean banne ki probability?</p>
+<details class="reveal"><summary>Show answer</summary><p>Scores $1,4,9$ (nonzero points), total $14$; $(0,2)$: $4/14=\mathbf{0.2857}$ (code ✓).</p></details></div>
+
+<div class="try"><p class="ttl">Q8 · T5 · Bayes · 3 marks</p><p>Prior $\text{Beta}(2,3)$, data mein $10$ ones aur $5$ zeros. Posterior aur uska mean?</p>
+<details class="reveal"><summary>Show answer</summary><p>$\text{Beta}(2+10,\ 3+5)=\text{Beta}(12,8)$; mean $\frac{12}{20}=\mathbf{0.6}$ (code ✓).</p></details></div>
+
+<div class="try"><p class="ttl">Q9 · T5 · MLE · 3 marks</p><p>Exponential $\lambda e^{-\lambda x}$, data $\{1,2,3,6\}$: $\hat\lambda_{MLE}$ (3 d.p.)?</p>
+<details class="reveal"><summary>Show answer</summary><p>$\hat\lambda=\frac n{\sum x_i}=\frac4{12}=\mathbf{0.333}$ (code ✓).</p></details></div>
+
+<div class="try"><p class="ttl">Q10 · T6 · Jensen · 3 marks</p><p>Kaun se $(\lambda_1,\lambda_2,\lambda_3)$ har convex $f$ ke liye $f(\sum\lambda_ia_i)\le\sum\lambda_if(a_i)$ guarantee karte hain? (A) $(0.5,0.3,0.2)$ (B) $(0.7,0.7,-0.4)$ (C) $(\tfrac14,\tfrac14,\tfrac12)$ (D) $(0.5,0.5,0.5)$</p>
+<details class="reveal"><summary>Show answer</summary><p>Shart: sab $\lambda_i\ge0$ aur $\sum\lambda_i=1$. (A) $\checkmark$ ($1.0$). (B) ✗ (negative). (C) $\checkmark$ ($1.0$). (D) ✗ (sum $1.5$). Jawab: <b>A, C</b> (code ✓).</p></details></div>
+
+<div class="try"><p class="ttl">Q11 · T7 · E-step · 3 marks</p><p>$\pi=(0.5,0.5)$, $\mu=(0,4)$, $\sigma^2=(1,1)$, $x=1$. $\gamma_1$ (3 d.p.)?</p>
+<details class="reveal"><summary>Show answer</summary><p>$\ln\text{odds}=\frac{(1-4)^2-(1-0)^2}{2}=4$; $\gamma_1=\frac1{1+e^{-4}}=\mathbf{0.982}$ (code ✓).</p></details></div>
+
+<div class="try"><p class="ttl">Q12 · T8 · Gradient descent · 3 marks</p><p>MSE ka $L=8$ ($=\frac2n\lambda_{\max}(XX^T)$). GD ke converge karne ke liye $\eta$ ki exact range kya hai? $\eta=0.25$ par sabse tez direction mein kya hota hai?</p>
+<details class="reveal"><summary>Show answer</summary><p>Range $0<\eta<2/L=0.25$ (strict). $\eta=0.25$ par us direction ka error-factor $1-\eta L=1-2=-1$: error $\pm$ oscillate karta hai, ghatta nahi ⇒ converge nahi (code ✓: $1,-1,1,-1$).</p></details></div>
+
+<div class="box em">
+<p><b>Self-scoring (honest):</b> har sawaal ke aage S/U/G aur sahi/galat likho. $\ge10/12$ sahi aur zyadatar S ⇒ mazboot. Galat sawaal ko "wapas jao" table (Checkpoint 5 ke neeche) se topic ke page par bhejo. <b>Mera koi grade yahan nahi:</b> status tabhi badlega jab tum chat mein <code>Answer: … | Confidence: … | Reason: …</code> doge.</p>
+</div>
+</section>
+
+<!-- ===================================================== CHECKPOINT 5 ===================================================== -->
+<h2>🧩 Checkpoint 5 — mixed test (T1 → T8)</h2>
+
+<section data-track="cp5">
+<div class="box">
+<p><b>10 sawaal · saare topics ek saath.</b> Yeh timed test se alag hai: yahan concept + calculation mix hai, aur galat hone par seedha "wapas jao" table se us build par jao. Sab <span class="tag t-add">[ADDED]</span>, code se verified, answers hidden.</p>
+</div>
+
+<div class="try"><p class="ttl">C1 · T1 · Projection (non-unit $w$)</p><p>$x=(3,1)$, $w=(0,2)$. (a) $x$ ka line $w$ par projection vector, (b) residual, (c) $\|\text{residual}\|^2$.</p>
+<details class="reveal"><summary>Show answer</summary><p>Unit direction $u=w/\|w\|=(0,1)$. Scalar projection $x^Tu=1$; projection vector $=(0,1)$; residual $=(3,1)-(0,1)=(3,0)$; $\|\cdot\|^2=\mathbf9$ (code ✓). $w$ ka length koi farq nahi daalta, sirf direction.</p></details></div>
+
+<div class="try"><p class="ttl">C2 · T2 · PCA</p><p>Centered points $(2,0),(-2,0),(0,1),(0,-1)$. Covariance $C=\frac1n\sum x x^T$, PC1 aur variance along PC1, aur PC1 ka explained-variance %.</p>
+<details class="reveal"><summary>Show answer</summary><p>$C=\frac14\sum xx^T=\text{diag}\big(\tfrac84,\tfrac24\big)=\text{diag}(2,\ 0.5)$. PC1 $=(1,0)$, variance $\mathbf2$, explained $=\frac{2}{2.5}=\mathbf{80\%}$ (code ✓).</p></details></div>
+
+<div class="try"><p class="ttl">C3 · T2 · Dual PCA</p><p>$X$ shape $d\times n$, $d>n=50$, centered. $X^TX$ ka top eigenvalue $100$. Covariance $C=\frac1nXX^T$ ka top eigenvalue kya hai?</p>
+<details class="reveal"><summary>Show answer</summary><p>$X^TX$ aur $XX^T$ ke nonzero eigenvalues barabar ⇒ $XX^T$ ka top $=100$; $C$ ka top $=\frac{100}{50}=\mathbf2$ (code ✓).</p></details></div>
+
+<div class="try"><p class="ttl">C4 · T3 · Valid kernels (MSQ)</p><p>$x,y\in\mathbb R$. Kaun valid kernels hain? (a) $xy+3$ (b) $-xy$ (c) $e^{xy}$ (d) $|x-y|$</p>
+<details class="reveal"><summary>Show answer</summary><p>(a) ✓: linear kernel + positive constant. (b) ✗: $k(x,x)=-x^2<0$. (c) ✓: $e^{xy}=\sum\frac{(xy)^m}{m!}$, positive coefficients wali power series. (d) ✗: $x=0,y=1$: Gram $\begin{bmatrix}0&1\\1&0\end{bmatrix}$, eigenvalue $-1<0$. Jawab: <b>a, c</b> (code ✓).</p></details></div>
+
+<div class="try"><p class="ttl">C5 · T3 · Kernel PCA</p><p>$n=50$ points; centered kernel matrix $K^c$ ka largest eigenvalue $20$. Transformed data ke covariance ka largest eigenvalue?</p>
+<details class="reveal"><summary>Show answer</summary><p>$\lambda_{\text{cov}}=\lambda_{K^c}/n=20/50=\mathbf{0.4}$ (code ✓; 2024 Jul Q5 jaisa: $10/100=0.1$).</p></details></div>
+
+<div class="try"><p class="ttl">C6 · T4 · Lloyd ki guarantees (T/F)</p><p>(a) Lloyd ka $F$ har step par kabhi badhta nahi. (b) Lloyd ka final $F$ hamesha global minimum hota hai. (c) $K=n$ (sab alag points) par $F=0$ ho sakta hai. (d) Do alag inits ek hi final partition dene ki guarantee dete hain.</p>
+<details class="reveal"><summary>Show answer</summary><p>(a) ✓ (assign aur update dono par). (b) ✗ (local optimum; 7.5 Ex3: $F=154.5$ vs $6$). (c) ✓ (har point apna centroid). (d) ✗. Jawab: <b>a, c</b>.</p></details></div>
+
+<div class="try"><p class="ttl">C7 · T4 · K-means++</p><p>Points $(1,0),(0,2),(2,2)$ aur pehla mean $(0,0)$. Squared-distance scores par $(2,2)$ ke dusra mean banne ki probability?</p>
+<details class="reveal"><summary>Show answer</summary><p>Scores $1,4,8$; total $13$; $\frac8{13}=\mathbf{0.6154}$ (code ✓).</p></details></div>
+
+<div class="try"><p class="ttl">C8 · T5 · Poisson MLE</p><p>25 data points: value $0,1,2,3,4$ ki frequency $2,5,8,6,4$. $\hat\lambda_{MLE}$?</p>
+<details class="reveal"><summary>Show answer</summary><p>$\hat\lambda=\bar x=\frac{0\cdot2+1\cdot5+2\cdot8+3\cdot6+4\cdot4}{25}=\frac{55}{25}=\mathbf{2.2}$ (code ✓).</p></details></div>
+
+<div class="try"><p class="ttl">C9 · T6 + T7 · Jensen aur responsibility</p><p>(a) $\ln(0.5\cdot1+0.5\cdot9)$ aur $0.5\ln1+0.5\ln9$ compare karo; kaun bada, aur kyun? (b) GMM mein $\pi_1=0.25$, $\gamma_1=0.5$. Kya uniquely nikal sakte hain: (i) $p(x)$, (ii) $f(x|z=1)/p(x)$, (iii) $\sum_{k\ge2}\gamma_k$?</p>
+<details class="reveal"><summary>Show answer</summary><p>(a) $\ln5=1.609$ vs $0+0.5\cdot2.197=1.099$: pehla bada. $\ln$ concave hai ⇒ $\ln(\sum\lambda_ia_i)\ge\sum\lambda_i\ln a_i$ (Jensen ulti disha mein); yahi EM ke $\ell$ ke monotone badhne ka karan hai. (b) (i) ✗: $p(x)$ do numbers se nahi nikalta. (ii) ✓: $\gamma_1/\pi_1=0.5/0.25=\mathbf2$. (iii) ✓: $1-\gamma_1=\mathbf{0.5}$ (code ✓).</p></details></div>
+
+<div class="try"><p class="ttl">C10 · T8 · Regression</p><p>1-D, bina bias: $x=(1,2,3)$, $y=(2,4,7)$. Best-fit $w$, MSE (3 d.p.)? Aur GD ke liye $\eta<?$ (MSE ke liye $L=\frac2n\sum x_i^2$).</p>
+<details class="reveal"><summary>Show answer</summary><p>$w^*=\frac{\sum xy}{\sum x^2}=\frac{31}{14}=\mathbf{2.214}$; SSE $=0.3571$, MSE $=\mathbf{0.119}$. $L=\frac23\cdot14=9.333$; $\eta<2/L=\mathbf{0.2143}$ (code ✓).</p></details></div>
+</section>
+
+<section data-track="wapas">
+<h3>🔙 "Wapas jao" table — galat sawaal ke baad kahan jaana hai</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Sawaal</th><th>Topic</th><th>Wapas jao (build · section)</th></tr></thead>
+<tbody>
+<tr><td>Timed Q1, Checkpoint C1</td><td>T1 Projection</td><td><a href="#b03">B3</a> · 1.1 Vector projection, 1.2 Reconstruction error</td></tr>
+<tr><td>Timed Q2, C2</td><td>T2 PCA, explained variance</td><td><a href="#b05">B5</a> · 2.1 · <a href="#b10">B10</a> · 2.4</td></tr>
+<tr><td>Timed Q3, C3</td><td>T2 Storage / Dual PCA</td><td><a href="#b11">B11</a> · 2.5 · <a href="#b12">B12</a> · 2.6</td></tr>
+<tr><td>Timed Q4, Q5, C4</td><td>T3 Kernels</td><td><a href="#b13">B13</a> · 3.1, 3.3 · <a href="#b14">B14</a>/<a href="#b15">B15</a> · 3.2</td></tr>
+<tr><td>C5</td><td>T3 Kernel PCA</td><td><a href="#b16">B16</a> · 3.4</td></tr>
+<tr><td>Timed Q6, Q7, C6, C7</td><td>T4 K-means / K-means++</td><td><a href="#b17">B17</a> · 4.1 · <a href="#b19">B19</a> · 4.4 · <a href="#b20">B20</a>/<a href="#b21">B21</a> · 4.5</td></tr>
+<tr><td>Timed Q8, Q9, C8</td><td>T5 Bayes / MLE</td><td><a href="#b22">B22</a> · <a href="#b23">B23</a> · <a href="#b24">B24</a></td></tr>
+<tr><td>Timed Q10, C9(a)</td><td>T6 Jensen</td><td><a href="#b25">B25</a> · T6 prerequisites</td></tr>
+<tr><td>Timed Q11, C9(b)</td><td>T7 E-step</td><td><a href="#b25">B25</a> · 7.3 · <a href="#b26">B26</a> · 7.4–7.5</td></tr>
+<tr><td>Timed Q12, C10</td><td>T8 Regression, GD</td><td><a href="#b26">B26</a> · 8.1, 8.2</td></tr>
+</tbody></table></div>
+<p class="note">Rule: ek hi cheez par 3 baar galat ho to us page ka sirf padhna kaafi nahi: naye representation se dobara sikhaenge (chat mein batao).</p>
+</section>

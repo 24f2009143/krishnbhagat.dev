@@ -1,0 +1,291 @@
+<section data-track="intro">
+<p class="muted mono" style="margin:0">B1 · Orientation</p>
+<h1>PYQ Analysis Dashboard + Big Picture</h1>
+<p class="lead">Is page ka kaam: pehle poore PYQ bank ko data ki tarah dekhna (kya, kitna, kahan se), phir MLT ki "story" samajhna — har topic kyun exist karta hai aur kaunsa topic kis par depend karta hai. Koi PYQ solve nahi ho raha yahan; woh B3 se shuru hoga.</p>
+<div class="box">
+<p><b>Tags legend:</b> <span class="tag t-src">[SRC]</span> = mere PYQ file se · <span class="tag t-add">[ADDED]</span> = explanation / example / naya question · <span class="tag t-flag">[FLAG]</span> = source ya answer-key error, proof ke saath · <span class="tag t-q">[?]</span> = unreadable / missing in source.</p>
+<p><b>Important caveat:</b> Bank frequency ≠ exam weightage. Neeche ke counts sirf yeh batate hain ki <i>is bank</i> mein kya aaya — future paper ka guarantee nahi. Isliye kahin bhi "high-yield" label sirf counts se nahi lagaya gaya.</p>
+<p class="note">Saare numbers code se compute hue hain (question metadata ke 162 rows se) aur file ke apne topic index se cross-check hue: topic counts 39/53/23/16/23/3/4/1 match ✓, subtopic counts match ✓.</p>
+</div>
+</section>
+
+<section data-track="glance">
+<h2>📊 1. Bank at a glance <span class="tag t-src">[SRC]</span></h2>
+<div class="cards">
+  <div class="card"><div class="k">Papers</div><div class="v">10</div><div class="s">Jul 2023 → Jul 2026</div></div>
+  <div class="card"><div class="k">Question blocks</div><div class="v">162</div><div class="s">138 scorable + 24 comprehension parents (0 marks)</div></div>
+  <div class="card"><div class="k">Marks captured</div><div class="v">440</div><div class="s">across all scorable questions</div></div>
+  <div class="card"><div class="k">Completeness</div><div class="v">✓</div><div class="s">No Q-number gaps in any paper; every paper totals 50 or 40</div></div>
+</div>
+<p>Q1 har paper mein "confirm subject" wala 0-mark prompt tha — woh 9 baar excluded hai (Jul 2026 paper mein Q1 hi actual PCA question hai). Iske alawa har paper ke saare question numbers bank mein maujood hain, isliye neeche ke paper-wise numbers <b>poore papers</b> ko represent karte hain, sample ko nahi.</p>
+<figure class="viz">
+  <p class="vt">Scorable questions per paper</p>
+  <p class="vs">Count of non-comprehension questions in each paper (hover for marks)</p>
+  <div class="chart" data-chart='{"type": "vbar", "labels": ["Jul 23", "Oct 23", "Feb 24", "Jul 24", "Oct 24", "Feb 25", "Jul 25", "Oct 25", "Mar 26", "Jul 26"], "values": [13, 13, 13, 16, 13, 14, 15, 14, 16, 11], "unit": "", "aria": "Scorable questions per paper", "tips": ["50 marks \u00b7 Q2\u2013Q15 all present", "50 marks \u00b7 Q2\u2013Q16 all present", "50 marks \u00b7 Q2\u2013Q17 all present", "40 marks \u00b7 Q2\u2013Q21 all present", "50 marks \u00b7 Q2\u2013Q16 all present", "40 marks \u00b7 Q2\u2013Q17 all present", "40 marks \u00b7 Q2\u2013Q18 all present", "40 marks \u00b7 Q2\u2013Q18 all present", "40 marks \u00b7 Q2\u2013Q22 all present", "40 marks \u00b7 Q1\u2013Q11 all present"]}'></div>
+  <figcaption><b>Interpretation:</b> Pehle teen papers + Oct 2024 = 50 marks each; baaki 40 marks. Question count 11–16 ke beech — matlab ek question average ~3 marks ka hai, time per mark plan karna padega.</figcaption>
+  <details class="table-view"><summary>Table view</summary><div class="tbl-wrap"><table><thead><tr><th>Paper</th><th class="num">Scorable Qs · marks</th></tr></thead><tbody><tr><td>Jul 23 (2023-07)</td><td class="num">13 Qs · 50 marks</td></tr><tr><td>Oct 23 (2023-10)</td><td class="num">13 Qs · 50 marks</td></tr><tr><td>Feb 24 (2024-02)</td><td class="num">13 Qs · 50 marks</td></tr><tr><td>Jul 24 (2024-07-07)</td><td class="num">16 Qs · 40 marks</td></tr><tr><td>Oct 24 (2024-10-27)</td><td class="num">13 Qs · 50 marks</td></tr><tr><td>Feb 25 (2025-02-23)</td><td class="num">14 Qs · 40 marks</td></tr><tr><td>Jul 25 (2025-07-13)</td><td class="num">15 Qs · 40 marks</td></tr><tr><td>Oct 25 (2025-10-26)</td><td class="num">14 Qs · 40 marks</td></tr><tr><td>Mar 26 (2026-03-15)</td><td class="num">16 Qs · 40 marks</td></tr><tr><td>Jul 26 (2026-07-16)</td><td class="num">11 Qs · 40 marks</td></tr></tbody></table></div></details>
+</figure>
+</section>
+
+<section data-track="by-topic">
+<h2>🧮 2. Topic-wise: questions and marks <span class="tag t-src">[SRC]</span></h2>
+<div class="grid2">
+<figure class="viz">
+  <p class="vt">Marks by topic</p>
+  <p class="vs">Sum of marks of scorable questions, all 10 papers</p>
+  <div class="chart" data-chart='{"type": "hbar", "labels": ["T2 PCA", "T4 K-means", "T3 Kernels", "T5 Prob/MLE/Bayes", "T7 GMM/EM", "T1 Linear Algebra", "T8 Regression", "T6 Convexity"], "values": [127.0, 109.0, 78.5, 60.0, 47.5, 7.0, 7.0, 4.0], "unit": " marks", "tips": ["44 scorable Qs \u00b7 10/10 papers \u00b7 28.9% of captured marks", "33 scorable Qs \u00b7 10/10 papers \u00b7 24.8% of captured marks", "22 scorable Qs \u00b7 9/10 papers \u00b7 17.8% of captured marks", "19 scorable Qs \u00b7 8/10 papers \u00b7 13.6% of captured marks", "14 scorable Qs \u00b7 9/10 papers \u00b7 10.8% of captured marks", "2 scorable Qs \u00b7 1/10 papers \u00b7 1.6% of captured marks", "3 scorable Qs \u00b7 1/10 papers \u00b7 1.6% of captured marks", "1 scorable Qs \u00b7 1/10 papers \u00b7 0.9% of captured marks"], "aria": "Marks by topic"}'></div>
+  <figcaption><b>Interpretation:</b> PCA + K-means = 236 / 440 marks (53.6%) is bank mein. Kernels 78.5 marks (17.8%).</figcaption>
+  <details class="table-view"><summary>Table view</summary><div class="tbl-wrap"><table><thead><tr><th>Topic</th><th class="num">Marks</th></tr></thead><tbody><tr><td>T2 PCA</td><td class="num">127.0</td></tr><tr><td>T4 K-means</td><td class="num">109.0</td></tr><tr><td>T3 Kernels</td><td class="num">78.5</td></tr><tr><td>T5 Prob/MLE/Bayes</td><td class="num">60.0</td></tr><tr><td>T7 GMM/EM</td><td class="num">47.5</td></tr><tr><td>T1 Linear Algebra</td><td class="num">7.0</td></tr><tr><td>T8 Regression</td><td class="num">7.0</td></tr><tr><td>T6 Convexity</td><td class="num">4.0</td></tr></tbody></table></div></details>
+</figure>
+<figure class="viz">
+  <p class="vt">Scorable questions by topic</p>
+  <p class="vs">Comprehension parent blocks excluded (hover to see how many)</p>
+  <div class="chart" data-chart='{"type": "hbar", "labels": ["T2 PCA", "T4 K-means", "T3 Kernels", "T5 Prob/MLE/Bayes", "T7 GMM/EM", "T1 Linear Algebra", "T8 Regression", "T6 Convexity"], "values": [44, 33, 22, 19, 14, 2, 3, 1], "unit": " Qs", "tips": ["+9 comprehension parent block(s)", "+6 comprehension parent block(s)", "+1 comprehension parent block(s)", "+4 comprehension parent block(s)", "+2 comprehension parent block(s)", "+1 comprehension parent block(s)", "+1 comprehension parent block(s)", "+0 comprehension parent block(s)"], "aria": "Scorable questions by topic"}'></div>
+  <figcaption><b>Interpretation:</b> Top-5 ka order count aur marks dono se same hai (PCA &gt; K-means &gt; Kernels &gt; Probability &gt; GMM) — koi topic "kam questions, zyada marks" wala nahi.</figcaption>
+  <details class="table-view"><summary>Table view</summary><div class="tbl-wrap"><table><thead><tr><th>Topic</th><th class="num">Scorable Qs</th></tr></thead><tbody><tr><td>T2 PCA</td><td class="num">44</td></tr><tr><td>T4 K-means</td><td class="num">33</td></tr><tr><td>T3 Kernels</td><td class="num">22</td></tr><tr><td>T5 Prob/MLE/Bayes</td><td class="num">19</td></tr><tr><td>T7 GMM/EM</td><td class="num">14</td></tr><tr><td>T1 Linear Algebra</td><td class="num">2</td></tr><tr><td>T8 Regression</td><td class="num">3</td></tr><tr><td>T6 Convexity</td><td class="num">1</td></tr></tbody></table></div></details>
+</figure>
+</div>
+<div class="box amber">
+<p><b>Careful reading:</b> T1 (Linear Algebra), T6 (Convexity), T8 (Regression) sirf ek-ek paper mein alag topic ke roop mein aaye (total 18 marks). Lekin T1 ki projection maths PCA ke 2.3, 2.5 questions ke andar baar-baar use hoti hai — isliye T1 chhota dikhta hai par prerequisite ke roop mein bahut bada hai. Yeh exactly woh jagah hai jahan "count = importance" galat padta hai.</p>
+</div>
+</section>
+
+<section data-track="heatmap">
+<h2>🗓️ 3. Paper × topic marks map <span class="tag t-src">[SRC]</span></h2>
+<figure class="viz">
+  <p class="vt">Marks per topic in each paper</p>
+  <p class="vs">Rows = topics, columns = papers (chronological). Cell = marks; "·" = topic absent. Hover a cell for its label.</p>
+  <div class="chart" data-chart='{"type": "heat", "corner": "Topic \\ Paper", "rows": ["T1 Linear Algebra", "T2 PCA", "T3 Kernels", "T4 K-means", "T5 Prob/MLE/Bayes", "T6 Convexity", "T7 GMM/EM", "T8 Regression"], "cols": ["Jul 23", "Oct 23", "Feb 24", "Jul 24", "Oct 24", "Feb 25", "Jul 25", "Oct 25", "Mar 26", "Jul 26"], "matrix": [[0, 0, 0, 0, 7, 0, 0, 0, 0, 0], [12, 23, 12, 10, 7, 14, 12, 16, 14, 7], [12.5, 0, 12, 10, 11, 7, 8, 3, 8, 7], [13, 16, 13, 8, 12, 8, 4, 11, 10, 14], [8, 7, 13, 9, 9, 7, 3, 4, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 4], [4.5, 4, 0, 3, 4, 4, 6, 6, 8, 8], [0, 0, 0, 0, 0, 0, 7, 0, 0, 0]], "rowTotal": true, "unit": ""}'></div>
+  <figcaption><b>Interpretation:</b> PCA aur K-means har ek paper mein aaye (10/10). Kernels aur GMM 9/10 papers mein, Probability 8/10. T1, T6, T8 ek-ek paper mein. Sequential blue = sirf magnitude; colour koi rank/status nahi batata.</figcaption>
+</figure>
+<details class="deep"><summary>Subtopic-wise table (29 subtopics, sorted by marks)</summary>
+<div class="tbl-wrap"><table><thead><tr><th>#</th><th>Subtopic</th><th class="num">Scorable Qs</th><th class="num">Marks</th></tr></thead><tbody><tr><td class="mono">2.1</td><td>Covariance, eigenvalues, variance along PCs</td><td class="num">13</td><td class="num">36</td></tr><tr><td class="mono">4.5</td><td>K-means++ initialization</td><td class="num">10</td><td class="num">36</td></tr><tr><td class="mono">3.2</td><td>Valid kernels, Gram matrices, closure</td><td class="num">10</td><td class="num">34.5</td></tr><tr><td class="mono">2.5</td><td>Reconstruction, residuals, compression, storage</td><td class="num">8</td><td class="num">25</td></tr><tr><td class="mono">2.3</td><td>Projection scores and PC coordinates</td><td class="num">9</td><td class="num">24</td></tr><tr><td class="mono">4.3</td><td>Assignment, distance, geometry</td><td class="num">7</td><td class="num">24</td></tr><tr><td class="mono">5.3</td><td>Beta priors, posterior, mean/mode</td><td class="num">8</td><td class="num">24</td></tr><tr><td class="mono">2.2</td><td>PC directions and orthogonality</td><td class="num">7</td><td class="num">23</td></tr><tr><td class="mono">7.3</td><td>E-step, responsibilities</td><td class="num">6</td><td class="num">22.5</td></tr><tr><td class="mono">4.4</td><td>Objective, monotonicity, convergence</td><td class="num">7</td><td class="num">20</td></tr><tr><td class="mono">3.4</td><td>Kernel PCA</td><td class="num">5</td><td class="num">19</td></tr><tr><td class="mono">5.1</td><td>Bernoulli model and MLE</td><td class="num">5</td><td class="num">19</td></tr><tr><td class="mono">3.1</td><td>Feature maps and kernel transformations</td><td class="num">5</td><td class="num">18</td></tr><tr><td class="mono">5.2</td><td>Likelihood and MLE for distributions</td><td class="num">6</td><td class="num">17</td></tr><tr><td class="mono">4.2</td><td>Centroid updates and iterations</td><td class="num">5</td><td class="num">15</td></tr><tr><td class="mono">7.4</td><td>M-step updates</td><td class="num">4</td><td class="num">14</td></tr><tr><td class="mono">4.1</td><td>Core K-means calculations</td><td class="num">3</td><td class="num">11</td></tr><tr><td class="mono">2.4</td><td>Explained variance, rank, dimension selection</td><td class="num">3</td><td class="num">10</td></tr><tr><td class="mono">2.6</td><td>Dual PCA, Gram matrices, d > n</td><td class="num">4</td><td class="num">9</td></tr><tr><td class="mono">3.3</td><td>Polynomial and Gaussian kernels</td><td class="num">2</td><td class="num">7</td></tr><tr><td class="mono">7.2</td><td>GMM likelihood</td><td class="num">2</td><td class="num">5</td></tr><tr><td class="mono">1.2</td><td>Projection-based reconstruction error</td><td class="num">1</td><td class="num">4</td></tr><tr><td class="mono">6.1</td><td>Convex combinations and Jensen</td><td class="num">1</td><td class="num">4</td></tr><tr><td class="mono">8.1</td><td>Squared error and MSE</td><td class="num">2</td><td class="num">4</td></tr><tr><td class="mono">1.1</td><td>Vector projection length and direction</td><td class="num">1</td><td class="num">3</td></tr><tr><td class="mono">4.6</td><td>Choosing K, initialization effects</td><td class="num">1</td><td class="num">3</td></tr><tr><td class="mono">7.1</td><td>GMM fundamentals</td><td class="num">1</td><td class="num">3</td></tr><tr><td class="mono">7.5</td><td>EM vs Lloyd</td><td class="num">1</td><td class="num">3</td></tr><tr><td class="mono">8.2</td><td>Gradient descent</td><td class="num">1</td><td class="num">3</td></tr></tbody></table></div>
+<p class="note">Subtopic numbers file ke original headings se hain (roadmap ke build numbers ke saath match).</p>
+</details>
+</section>
+
+<section data-track="types">
+<h2>🧾 4. Question types and marks per question <span class="tag t-src">[SRC]</span></h2>
+<div class="grid2">
+<figure class="viz">
+  <p class="vt">Blocks by type</p>
+  <p class="vs">All 162 blocks (hover for what each type demands)</p>
+  <div class="chart" data-chart='{"type": "vbar", "labels": ["MCQ", "MSQ", "SA (numeric)", "Comprehension parent"], "values": [53, 25, 60, 24], "unit": "", "aria": "Question blocks by type", "tips": ["single correct option", "multiple correct \u2014 all options judged", "numeric entry, often a range accepted", "0-mark shared passage; children carry the marks"]}'></div>
+  <figcaption><b>Interpretation:</b> SA (numeric) 60 sabse zyada — calculation accuracy aur rounding instructions ("two decimal places") seriously lene padenge. MSQ 25: har option alag se judge karna padega.</figcaption>
+  <details class="table-view"><summary>Table view</summary><div class="tbl-wrap"><table><thead><tr><th>Type</th><th class="num">Count</th></tr></thead><tbody><tr><td>MCQ</td><td class="num">53</td></tr><tr><td>MSQ</td><td class="num">25</td></tr><tr><td>SA (numeric)</td><td class="num">60</td></tr><tr><td>Comprehension parent</td><td class="num">24</td></tr></tbody></table></div></details>
+</figure>
+<figure class="viz">
+  <p class="vt">Marks per scorable question</p>
+  <p class="vs">How many questions carry each mark value</p>
+  <div class="chart" data-chart='{"type": "vbar", "labels": ["1", "2", "2.5", "3", "3.5", "4", "4.5", "5"], "values": [2, 33, 2, 43, 1, 50, 1, 6], "unit": "", "sub": [], "aria": "Marks per question"}'></div>
+  <figcaption><b>Interpretation:</b> 4-mark (50), 3-mark (43) aur 2-mark (33) questions hi bulk hain. 5-mark wale 6 questions mein se 5 MSQ hain — MSQ par partial galti mehngi padti hai.</figcaption>
+  <details class="table-view"><summary>Table view</summary><div class="tbl-wrap"><table><thead><tr><th>Marks</th><th class="num">Questions</th></tr></thead><tbody><tr><td>1 marks</td><td class="num">2</td></tr><tr><td>2 marks</td><td class="num">33</td></tr><tr><td>2.5 marks</td><td class="num">2</td></tr><tr><td>3 marks</td><td class="num">43</td></tr><tr><td>3.5 marks</td><td class="num">1</td></tr><tr><td>4 marks</td><td class="num">50</td></tr><tr><td>4.5 marks</td><td class="num">1</td></tr><tr><td>5 marks</td><td class="num">6</td></tr></tbody></table></div></details>
+</figure>
+</div>
+</section>
+
+<section data-track="patterns">
+<h2>🔁 5. Repeated patterns <span class="tag t-src">[SRC]</span></h2>
+<p>Yeh woh question "families" hain jo alag papers mein same idea ke saath wapas aayi. Exact duplicates bhi hain. Pattern pehchanna = exam mein first move turant pata hona.</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Pattern</th><th class="num">Times</th><th>Question IDs</th><th>Core idea (detail in build)</th></tr></thead>
+<tbody>
+<tr><td>K-means++: probability of choosing a point as next centre</td><td class="num">8</td><td class="mono">640653669234, 640653829509, 640653995446, 640653995447, 6406531104786, 6406531527616, 6406531951438 (+ 640653669235 nearest-mean)</td><td>Score = distance (or distance²) to <i>nearest</i> chosen centre, normalise → B20–21</td></tr>
+<tr><td>Run K-means to convergence from given start</td><td class="num">7</td><td class="mono">640653577730, 640653577736, 640653738039/40, 640653829516/17, 6406531527625/26, 6406531951449/50, 640653669231</td><td>Assign → mean → repeat till assignment same → B17–19</td></tr>
+<tr><td>Variance along PC1 = largest eigenvalue</td><td class="num">6</td><td class="mono">640653669237, 640653829512, 6406531104791, 6406531302397, 6406531527622, 6406532158944</td><td>$\max_{\|w\|=1} w^TCw = \lambda_1$ → B5–6</td></tr>
+<tr><td>GMM responsibility via Bayes rule</td><td class="num">6</td><td class="mono">640653577738, 6406531104788, 6406531951453, 6406532158942, 6406532158943, 6406531527629</td><td>$\lambda_k^i = \pi_k f_k(x_i)/\sum_j \pi_j f_j(x_i)$ → B25</td></tr>
+<tr><td>Beta prior → posterior (count / mean)</td><td class="num">5 sets</td><td class="mono">640653577739, 640653669240, 640653829522/23, 6406531104793/94, 6406531527617</td><td>Beta(α,β) + h ones, t zeros → Beta(α+h, β+t) → B24</td></tr>
+<tr><td>Point ka PC coordinates (a, b)</td><td class="num">5 sets</td><td class="mono">640653577741/42, 640653738032/33, 640653829514, 6406531951443/44, 6406531104784</td><td>$a = x^Tw_1,\ b = x^Tw_2$ (unit $w$) → B8–9</td></tr>
+<tr><td>Bernoulli MLE → count zeros / type-B</td><td class="num">4</td><td class="mono">640653577737, 640653669236, 640653738041, 640653995451 (last two identical)</td><td>$\hat p = \#\text{ones}/n$ → B22</td></tr>
+<tr><td>Data lies in a k-dim subspace → #nonzero eigenvalues, zero residue</td><td class="num">4</td><td class="mono">640653577732, 6406531527614, 6406531527618, 6406532158934</td><td>rank of covariance = subspace dimension → B11, B5</td></tr>
+<tr><td>Eigenvectors of $XX^T$ vs $X^TX$ (same? → No)</td><td class="num">3</td><td class="mono">640653577734 (opt 4), 6406531104783 (opt 4), 6406531951447</td><td>Same nonzero eigenvalues, different eigenvectors (different sizes!) → B12</td></tr>
+<tr><td>Kernel closure: sum / scaling / product / normalisation</td><td class="num">7</td><td class="mono">640653738034, 640653829505, 640653995442, 6406531302387, 6406531527615, 6406531951446, 6406532158941</td><td>Valid kernel ⇔ Gram matrix PSD; closure rules → B14–15</td></tr>
+<tr><td>Feature map φ for $(x^Ty)^2+1$</td><td class="num">2</td><td class="mono">640653738035, 640653995444 (identical)</td><td>Expand and match terms → B13</td></tr>
+<tr><td>PC1 = top eigenvector, max variance (MSQ)</td><td class="num">2</td><td class="mono">640653577731, 640653669238 (near-identical)</td><td>→ B5, B7</td></tr>
+<tr><td>Storage after PCA</td><td class="num">2</td><td class="mono">6406531104785, 6406531302393</td><td>store $k$ PCs ($kd$) + coefficients ($kn$) → B11</td></tr>
+</tbody></table></div>
+<p class="note">Counts = number of question IDs/sets in this bank that test the same core move. Ek question do families mein bhi ho sakta hai.</p>
+</section>
+
+<section data-track="flags">
+<h2>⚠️ 6. Source flags (checked with code) <span class="tag t-flag">[FLAG]</span></h2>
+<p>Maine bank ke 40+ numerical answer keys ko Python se recompute kiya. Neeche woh hain jahan key ya data match nahi karta. Har ek ka full solution (dono versions ke saath) uske build mein aayega; yahan sirf proof ka summary hai.</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>#</th><th>Question</th><th>Source says</th><th>My computation (code-verified)</th><th>Build</th></tr></thead>
+<tbody>
+<tr><td>F1</td><td>2024 Oct 27 · Q8 · <span class="mono">640653995448</span> · SA 5</td><td>Accepted 6; distance table given</td><td>Table ke 4 entries galat: $(-1,0)\to\mu_2$ = 9 (table 3), $(2,0)\to\mu_1$ = 9 (table 3), $(4,0)\to\mu_1$ = 25 (table 5), $(4,0)\to\mu_2$ = 4 (table 2). Given means se $F = 0+1+1+0+2+2+4 = 10$; table se 8. <b>6</b> tab aata hai jab means update karke $\mu_1=(-1,0), \mu_2=(3,0)$ se $F$ nikalo (2 + 4).</td><td>B17</td></tr>
+<tr><td>F2</td><td>2023 Oct · Q11 · <span class="mono">640653669234</span> · MCQ 4</td><td>(10,10) highest probability</td><td>Manhattan distance from (2,2): (4,4)→4, (10,10)→16, (12,12)→20, (13,13)→22. Score ∝ $d$: P(13,13)=22/64=0.344; score ∝ $d^2$: 484/1160=0.417. Dono tarah <b>(13,13)</b> highest.</td><td>B20</td></tr>
+<tr><td>F3</td><td>2023 Oct · Q12 · <span class="mono">640653669235</span> · MCQ 4</td><td>(−5,10) closest to (10,10)</td><td>Squared Euclidean: to (3,3) = 64+49 = <b>113</b>, to (10,10) = 225, to (12,12) = 293 → closest <b>(3,3)</b>.</td><td>B20</td></tr>
+<tr><td>F4</td><td>2023 Jul · Q9 · <span class="mono">640653577736</span> · SA 4</td><td>ab = 60</td><td>Given data se clusters {−3,1,0,1,4} (mean 0.6) aur {299,300,301} (mean 300) → ab = <b>180</b>. Agar second value <b>−1</b> ho (mean 0.2) to ab = 60 ✓ — lagta hai extraction mein minus sign gaya. <span class="tag t-q">[?]</span> original PDF check karo.</td><td>B19</td></tr>
+<tr><td>F5</td><td>2025 Oct 26 · Q17 · <span class="mono">6406531527625</span> · MCQ 3</td><td>(−1.75, 2.5) and (1.5, −1.5)</td><td>Listed points se cluster 2 = {(2,−1), (3,−2)} → mean <b>(2.5, −1.5)</b>. Cluster 1 = (−1.75, 2.5) ✓. Points figure se padhe gaye the <span class="tag t-q">[?]</span> — ya to ek point galat padha gaya ya option misprint.</td><td>B19</td></tr>
+<tr><td>F6</td><td>2025 Feb 23 · Q14 · <span class="mono">6406531104791</span> · SA 3</td><td>43 to 44</td><td>Centred data (standard PCA): $\lambda_1 = 18.4375$ ($\tfrac1n$) ya 24.58 ($\tfrac1{n-1}$). Key 43.75 = $\tfrac1n\sum\|x_i\|^2$ = <b>uncentred</b> second moment. Standard PCA pehle centre karta hai.</td><td>B6</td></tr>
+<tr><td>F7</td><td>2026 Jul 16 · Q11 · <span class="mono">6406532158944</span> · SA 3</td><td>100</td><td>$\lambda_1 = 100\cdot2^{-1} = $ <b>50</b>. 100 = total variance $\sum_{i=1}^{100}\lambda_i = 100(1-2^{-100})\approx100$. Key tabhi sahi jab indexing $i=0$ se ho.</td><td>B6</td></tr>
+<tr><td>F8</td><td>2023 Oct · Q9 · <span class="mono">640653669240</span> · SA 3</td><td>0.2 to 0.3</td><td>Posterior = Beta(3+15, 4+35) = Beta(18, 39); mean = 18/57 = <b>0.316</b> → accepted range ke bahar.</td><td>B24</td></tr>
+<tr><td>F9</td><td>2024 Oct 27 · Q9 · <span class="mono">640653995450</span> · SA 4</td><td>1.50 to 1.60</td><td>$\lambda_k^3 = 2.5 > 1$ — responsibility probability hai, [0,1] mein honi chahiye. Formula $\sum\lambda_k^i x_i/\sum\lambda_k^i = 6.72/4.3 = 1.563$ phir bhi range mein aata hai.</td><td>B26</td></tr>
+<tr><td>F10</td><td>2025 Oct 26 · Q15 · <span class="mono">6406531527629</span> · SA 3</td><td>λ<sub>1</sub><sup>?</sup> = 0.64–0.68</td><td>Density table: $x=1$ row sahi (0.242, 0.054 ✓) par $x=10, 20$ rows $\mu=2,3,\sigma^2=1$ ke saath impossible (true ≈ 0). Superscript (kaunsa point) unreadable <span class="tag t-q">[?]</span>. $x=1$ lo to $\lambda = 0.0726/0.1104 = 0.658$ ✓.</td><td>B25</td></tr>
+<tr><td>F11</td><td>2025 Feb 23 · Q2 · <span class="mono">6406531104779</span> · MCQ 2</td><td>(3) &lt; (1) &lt; (2)</td><td>Source mein expressions (1) aur (3) <b>bilkul same</b> print hue hain, toh "(3) &lt; (1)" as written possible nahi. Ek expression ka superscript/subscript extraction mein badla hoga <span class="tag t-q">[?]</span>.</td><td>B17</td></tr>
+</tbody></table></div>
+<details class="deep"><summary><span class="tag t-q">[?]</span> Image-dependent / incomplete questions (12)</summary>
+<ul>
+<li><span class="mono">640653577735</span> (Jul 23 Q7, MSQ 5): options sirf figures hain → original images chahiye.</li>
+<li><span class="mono">6406531951434</span> (Mar 26 Q2): Scenario-1/2 ki values recover nahi hui.</li>
+<li><span class="mono">6406532158934</span> (Jul 26 Q1): constraints ("every data point satisfies…") ki equations missing; sirf summary hai.</li>
+<li><span class="mono">640653669243</span> (Oct 23 Q14): option 4 truncated.</li>
+<li><span class="mono">6406531104790</span> (Feb 25 Q13): options 3–4 incomplete (aur dataset 2-D hai par options 3-D vectors — yeh bhi check karna).</li>
+<li><span class="mono">6406531527620</span> (Oct 25 Q9 parent): $X^TX$ eigenvalues aur "Figure 1: Dataset 1" ek saath — figure ke 4 points text mein nahi hain.</li>
+<li><span class="mono">640653738045</span> (Feb 24 Q16): red/green line wala Beta(2,5) plot chahiye.</li>
+<li><span class="mono">640653995440</span> (Oct 24 Q5): option 3 garbled ("[x_i^Tx_i, (x_i^Tw)^2]" — comma shayad minus tha).</li>
+<li><span class="mono">6406531527624</span>, <span class="mono">640653738038</span>, <span class="mono">6406531104786</span>: points figure se padhe gaye — verify with original.</li>
+<li><span class="mono">6406531951448</span> (Mar 26 Q16): table "visible beginning" — 4 rows; child z-vectors 4-length hain, toh shayad complete.</li>
+</ul></details>
+<details class="deep"><summary>Questions with <b>no answer key</b> in source (23) — answers will be derived and tagged [ADDED]</summary>
+<p class="mono" style="font-size:12.5px;line-height:1.9">640653577730 · 640653577735 · 640653738039 · 6406531527613 · 640653738037 · 6406531527616 · 6406531951434 · 640653577731 · 640653669238 · 640653738030 · 640653577732 · 6406531527614 · 640653577729 · 640653738035 · 640653577734 · 640653738034 · 6406531951446 · 640653577733 · 640653738036 · 6406531302390 · 640653738043 · 6406531527617 · 6406531302391</p>
+</details>
+<div class="box em"><p><b>Checked and matching (sample):</b> 625 ✓, 80% ✓, k = 4 ✓, 5250 ✓, 74.5% ✓, 1.342 / 0.408 ✓, 1.155 / 0.707 ✓, 2.121 / 0.707 ✓, 4.95 ✓, 0.707 ✓, 0.129 ✓, 0.368 ✓, 35 ✓, 16 ✓, 0.1 ✓, centred $K^c$ ✓, 4.5 / 0.5 ✓, −5 / 9 ✓, 8.2 ✓, 24 ✓, 0.25 ✓, 0.095 ✓, 0.5 ✓, 0.88 ✓, 0.23 ✓, Σγ = 2.77 ✓, π₁ = 1/3 ✓, 2.52 ✓, 0.286 ✓, 1/9 ✓, 1.148 ✓, 0.108 ✓, 40 ✓, $y = x_1 - 2x_2$ with MSE 0 ✓.</p></div>
+</section>
+
+<section data-track="big-picture">
+<h2>🌍 7. Big picture: MLT ki poori story <span class="tag t-add">[ADDED]</span></h2>
+<p>Is bank ke 440 marks mein se sirf 7 (Regression) supervised learning ke hain — baaki sab <b>unsupervised learning</b> hai: hamare paas data hai, labels nahi. Data ko ek matrix ki tarah rakhte hain:</p>
+$$X = \begin{bmatrix} | & | & & | \\ x_1 & x_2 & \cdots & x_n \\ | & | & & | \end{bmatrix} \in \mathbb{R}^{d\times n}$$
+<p>Yahan $d$ = features ki sankhya (har point kitne numbers se bana hai), $n$ = points ki sankhya, aur $x_i \in \mathbb{R}^d$ = $i$-th data point (ek column). Course ke saare PYQs isi convention ($d\times n$, points as columns) ko use karte hain — yeh yaad rakhna, kyunki $XX^T$ ($d\times d$) aur $X^TX$ ($n\times n$) ka fark isi se aata hai.</p>
+<p>Ab is data se hum <b>teen sawaal</b> poochte hain — aur har sawaal ek topic family ban jaata hai:</p>
+<div class="grid2">
+<div class="box"><p><b>Q1. "Data ko kam numbers mein kaise likhein?"</b> → <b>Representation</b></p><p>PCA (T2): best lines/subspace dhundo jis par project karne se sabse kam information jaaye. Kernel PCA (T3): agar structure curved hai, pehle data ko higher-dimensional space mein "map" karo, phir PCA.</p></div>
+<div class="box"><p><b>Q2. "Data mein groups kaunse hain?"</b> → <b>Clustering</b></p><p>K-means (T4): har point ko ek hi cluster (hard assignment). GMM + EM (T7): har point ko har cluster mein ek probability (soft assignment).</p></div>
+<div class="box"><p><b>Q3. "Kaunsa probability model is data ko generate karta hai?"</b> → <b>Estimation</b></p><p>MLE (T5): woh parameter jo observed data ko sabse likely banaye. Bayesian (T5): parameter ke baare mein prior belief + data → posterior belief.</p></div>
+<div class="box"><p><b>Tools jo sab jagah lagte hain</b></p><p>Linear Algebra (T1): projection, eigenvectors. Convexity (T6): Jensen's inequality — EM ka backbone. Regression (T8): supervised learning ki pehli jhalak — loss minimise karna.</p></div>
+</div>
+<div class="box em">
+<p><b>Analogy</b> <span class="tag t-add">[ADDED]</span>: Socho tumhare paas ek bade school ke saare students ka data hai (height, weight, marks, …).</p>
+<ul>
+<li><b>PCA</b> = "har student ko 50 numbers ki jagah 2–3 summary scores se describe karo" (jaise ek 'overall size' score).</li>
+<li><b>K-means / GMM</b> = "students ko natural groups mein baanto" — K-means pakka bolta hai "tum group 2 ho", GMM bolta hai "70% group 2, 30% group 1".</li>
+<li><b>MLE / Bayes</b> = "pass hone ki probability $p$ kya hai?" — MLE sirf data dekhta hai; Bayes pichle saal ka anubhav (prior) bhi milata hai.</li>
+</ul>
+<p><b>Analogy kahan toot-ti hai:</b> real students mein features ke units alag hote hain (cm vs kg), aur PCA scale-sensitive hai — analogy yeh nahi batati. Aur "natural groups" ki definition K-means ke liye sirf <i>distance to mean</i> hai, insaani samajh nahi.</p>
+</div>
+<p><b>Yeh kya NAHI hai:</b> MLT ka yeh part classification/neural networks nahi padhata; regression bhi sirf loss + gradient descent ke level par aata hai (bank mein 3 scorable questions).</p>
+</section>
+
+<section data-track="why-topics">
+<h2>🧭 8. Har topic kyun exist karta hai <span class="tag t-add">[ADDED]</span></h2>
+<p>Har card: <b>problem</b> → <b>core idea</b> → <b>signature formula</b> → bank mein kaisa dikhta hai.</p>
+<div class="grid2">
+<div class="card"><div class="k">T1 · Linear Algebra</div><p><b>Problem:</b> ek vector ko ek direction ke "along" aur "perpendicular" hisson mein kaise todein?</p><p><b>Idea:</b> projection = shadow on a line.</p><p>$$\text{proj}_w(x) = \frac{x^Tw}{w^Tw}\,w$$</p><p class="note">Bank: projection length, reconstruction error (Oct 2024). Andar se PCA ke har coordinate question mein.</p></div>
+<div class="card"><div class="k">T2 · PCA</div><p><b>Problem:</b> high-dimensional data ko kam dimensions mein, minimum information loss ke saath.</p><p><b>Idea:</b> sabse zyada variance wali directions = covariance ke top eigenvectors.</p><p>$$C=\frac1n\sum_{i=1}^n x_ix_i^T,\quad Cw=\lambda w$$</p><p class="note">Bank: variance along PC, PC coordinates, explained variance, storage, dual PCA.</p></div>
+<div class="card"><div class="k">T3 · Kernels</div><p><b>Problem:</b> PCA sirf straight lines/flat subspaces pakadta hai; curved structure miss.</p><p><b>Idea:</b> $\phi(x)$ se higher dimension mein le jao — par $\phi$ explicitly compute kiye bina, sirf dot products se.</p><p>$$k(x,y)=\phi(x)^T\phi(y)$$</p><p class="note">Bank: find φ, valid kernel?, polynomial/Gaussian values, kernel PCA facts.</p></div>
+<div class="card"><div class="k">T4 · K-means</div><p><b>Problem:</b> unlabelled points ko $K$ groups mein baantna.</p><p><b>Idea:</b> alternate karo — nearest mean ko assign, phir mean update (Lloyd's algorithm).</p><p>$$F=\sum_{i=1}^n\|x_i-\mu_{z_i}\|^2$$</p><p class="note">Bank: run to convergence, objective monotonic, K-means++ probabilities.</p></div>
+<div class="card"><div class="k">T5 · Probability / MLE / Bayes</div><p><b>Problem:</b> data dekh kar model ka parameter estimate karna.</p><p><b>Idea:</b> likelihood maximise (MLE) ya prior × likelihood → posterior (Bayes).</p><p>$$\hat\theta_{ML}=\arg\max_\theta\sum_i\log f(x_i;\theta)$$</p><p class="note">Bank: Bernoulli/Poisson/exponential/Pareto MLE, Beta posterior mean/mode.</p></div>
+<div class="card"><div class="k">T6 · Convexity</div><p><b>Problem:</b> log of a sum ko handle kaise karein (GMM likelihood)?</p><p><b>Idea:</b> convex/concave function ke liye Jensen's inequality — weights non-negative aur sum = 1.</p><p>$$f\Big(\sum_j\lambda_ja_j\Big)\le\sum_j\lambda_jf(a_j)$$</p><p class="note">Bank: 1 MSQ (Jul 2026) — par EM ka proof isi par khada hai.</p></div>
+<div class="card"><div class="k">T7 · GMM + EM</div><p><b>Problem:</b> clusters overlapping hain, hard assignment galat lagta hai.</p><p><b>Idea:</b> har cluster ek Gaussian; E-step = responsibilities, M-step = weighted MLE.</p><p>$$\lambda_k^i=\frac{\pi_k\,\mathcal N(x_i\mid\mu_k,\sigma_k^2)}{\sum_j\pi_j\,\mathcal N(x_i\mid\mu_j,\sigma_j^2)}$$</p><p class="note">Bank: responsibilities, π/μ updates, likelihood form, EM vs Lloyd.</p></div>
+<div class="card"><div class="k">T8 · Regression</div><p><b>Problem:</b> labels $y$ diye hain; input se predict karna.</p><p><b>Idea:</b> squared error minimise karo (closed form ya gradient descent).</p><p>$$\min_w\ \frac1n\sum_i (w^Tx_i-y_i)^2$$</p><p class="note">Bank: fit $w$, MSE, GD convergence (Jul 2025 only).</p></div>
+</div>
+</section>
+
+<section data-track="dep-map">
+<h2>🕸️ 9. Relationship + dependency map <span class="tag t-add">[ADDED]</span></h2>
+<figure class="viz diagram">
+  <p class="vt">How MLT topics depend on each other</p>
+  <p class="vs">Top → bottom = foundations → core methods → extensions. Solid arrow = "needs"; dashed = "closely related / compare". <i>Schematic</i> — arrangement for learning, not a formal hierarchy.</p>
+<svg viewBox="0 0 900 520" role="img" aria-label="Topic dependency map">
+<defs>
+  <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#a3a3a3"/></marker>
+</defs>
+<g font-size="11" fill="#737373"><text x="6" y="22">FOUNDATIONS</text><text x="6" y="190">CORE METHODS</text><text x="6" y="352">EXTENSIONS</text></g>
+<!-- tier 1 -->
+<g>
+<rect x="40" y="32" width="250" height="78" rx="10" fill="#181818" stroke="#a3a3a3"/>
+<text x="165" y="58" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">T1 Linear Algebra</text>
+<text x="165" y="78" text-anchor="middle" fill="#a3a3a3" font-size="11.5">dot product · projection · rank</text>
+<text x="165" y="95" text-anchor="middle" fill="#a3a3a3" font-size="11.5">eigenvalues · symmetric matrices</text>
+<rect x="325" y="32" width="250" height="78" rx="10" fill="#181818" stroke="#a3a3a3"/>
+<text x="450" y="58" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">Probability basics</text>
+<text x="450" y="78" text-anchor="middle" fill="#a3a3a3" font-size="11.5">PDF/PMF · i.i.d. · Bayes rule</text>
+<text x="450" y="95" text-anchor="middle" fill="#a3a3a3" font-size="11.5">expectation · Gaussian · Beta</text>
+<rect x="610" y="32" width="250" height="78" rx="10" fill="#181818" stroke="#a3a3a3"/>
+<text x="735" y="58" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">Calculus + T6 Convexity</text>
+<text x="735" y="78" text-anchor="middle" fill="#a3a3a3" font-size="11.5">derivative = 0 · log tricks</text>
+<text x="735" y="95" text-anchor="middle" fill="#a3a3a3" font-size="11.5">convex sets/functions · Jensen</text>
+</g>
+<!-- tier 2 -->
+<g>
+<rect x="20" y="200" width="200" height="70" rx="10" fill="#141c2b" stroke="#60A5FA"/>
+<text x="120" y="230" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">T2 PCA</text>
+<text x="120" y="250" text-anchor="middle" fill="#a3a3a3" font-size="11.5">covariance → eigenvectors</text>
+<rect x="240" y="200" width="200" height="70" rx="10" fill="#141c2b" stroke="#60A5FA"/>
+<text x="340" y="230" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">T4 K-means</text>
+<text x="340" y="250" text-anchor="middle" fill="#a3a3a3" font-size="11.5">distance · mean · Lloyd</text>
+<rect x="460" y="200" width="200" height="70" rx="10" fill="#141c2b" stroke="#60A5FA"/>
+<text x="560" y="230" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">T5 MLE + Bayes</text>
+<text x="560" y="250" text-anchor="middle" fill="#a3a3a3" font-size="11.5">likelihood · prior → posterior</text>
+<rect x="680" y="200" width="200" height="70" rx="10" fill="#141c2b" stroke="#60A5FA"/>
+<text x="780" y="230" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">T8 Regression</text>
+<text x="780" y="250" text-anchor="middle" fill="#a3a3a3" font-size="11.5">MSE · gradient descent</text>
+</g>
+<!-- tier 3 -->
+<g>
+<rect x="20" y="362" width="270" height="70" rx="10" fill="#0f1d17" stroke="#34D399"/>
+<text x="155" y="392" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">T3 Kernels + Kernel PCA</text>
+<text x="155" y="412" text-anchor="middle" fill="#a3a3a3" font-size="11.5">φ(x) · Gram matrix K = XᵀX</text>
+<rect x="360" y="362" width="300" height="70" rx="10" fill="#0f1d17" stroke="#34D399"/>
+<text x="510" y="392" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">T7 GMM + EM</text>
+<text x="510" y="412" text-anchor="middle" fill="#a3a3a3" font-size="11.5">soft clustering · E-step / M-step</text>
+</g>
+<!-- solid edges -->
+<g stroke="#a3a3a3" stroke-width="1.6" fill="none" marker-end="url(#ah)">
+<path d="M130,110 L120,198"/>
+<path d="M200,110 L320,198"/>
+<path d="M275,110 C520,150 700,160 760,198"/>
+<path d="M450,110 L540,198"/>
+<path d="M680,110 L590,198"/>
+<path d="M760,110 L775,198"/>
+<path d="M120,270 L140,360"/>
+<path d="M360,270 L450,360"/>
+<path d="M560,270 L540,360"/>
+<path d="M845,110 C895,250 820,400 662,398"/>
+</g>
+<!-- dashed relations -->
+<g stroke="#60A5FA" stroke-width="1.4" fill="none" stroke-dasharray="5 4">
+<path d="M660,248 L680,248"/>
+<path d="M220,226 L240,226"/>
+</g>
+<g font-size="10.5" fill="#d4d4d4">
+<text x="132" y="160">variance, eigen</text>
+<text x="246" y="152">distance, mean</text>
+<text x="470" y="160">likelihood</text>
+<text x="640" y="160">set ∂ = 0</text>
+<text x="138" y="322">dual PCA → XᵀX</text>
+<text x="300" y="322">hard → soft (EM vs Lloyd)</text>
+<text x="556" y="322">weighted MLE</text>
+<text x="780" y="330">Jensen → EM</text>
+<text x="664" y="290" fill="#93c5fd">MSE ≈ Gaussian MLE</text>
+<text x="170" y="292" fill="#93c5fd">both: means, distances</text>
+</g>
+<g font-size="11" fill="#a3a3a3"><rect x="20" y="470" width="14" height="10" rx="2" fill="#181818" stroke="#a3a3a3"/><text x="40" y="479">foundation</text>
+<rect x="130" y="470" width="14" height="10" rx="2" fill="#141c2b" stroke="#60A5FA"/><text x="150" y="479">core method</text>
+<rect x="250" y="470" width="14" height="10" rx="2" fill="#0f1d17" stroke="#34D399"/><text x="270" y="479">extension (target)</text>
+<line x1="400" y1="475" x2="430" y2="475" stroke="#a3a3a3" stroke-width="1.6" marker-end="url(#ah)"/><text x="438" y="479">needs</text>
+<line x1="500" y1="475" x2="530" y2="475" stroke="#60A5FA" stroke-dasharray="5 4"/><text x="538" y="479">related / compare</text></g>
+</svg>
+  <figcaption><b>Interpretation:</b> Linear algebra teen core methods ko feed karta hai — isliye roadmap T1 se shuru hota hai. GMM sabse "deep" node hai: use K-means (idea), MLE (M-step) aur Jensen (EM proof) teeno chahiye — isliye woh roadmap mein late aata hai (B25–26).</figcaption>
+</figure>
+<details class="deep"><summary>Dependency map in words (dependencies chain by chain)</summary>
+<ol>
+<li><b>Projection → PCA → Kernel PCA:</b> PCA = "best line par projection". Dual PCA mein covariance ($XX^T$, $d\times d$) ki jagah $X^TX$ ($n\times n$) use hota hai — aur yahi $X^TX$ kernel PCA mein Gram matrix $K$ ban jaata hai. Isliye 2.6 (dual PCA) ke baad hi T3.</li>
+<li><b>Distance + mean → K-means → GMM:</b> K-means ka mean update = "squared distance ka minimiser". GMM wahi kaam soft weights se karta hai; EM vs Lloyd ka comparison is chain ka last link hai.</li>
+<li><b>Probability → MLE → GMM M-step:</b> GMM ke M-step ke formulas sirf "weighted MLE" hain — agar Bernoulli/Gaussian MLE clear hai to M-step free mein mil jaata hai.</li>
+<li><b>Convexity → Jensen → EM:</b> $\log$ concave hai, toh $\log\sum \ge \sum\log$ (weighted) — isse EM ka lower bound banta hai jo har iteration mein likelihood ko kam nahi hone deta.</li>
+<li><b>Calculus → Regression:</b> MSE convex hai (bowl-shaped), isliye gradient descent global minimum tak jaata hai — Jul 2025 MSQ ka core.</li>
+</ol>
+</details>
+</section>
+
+<section data-track="explain-back">
+<h2>✍️ 10. Explain-it-back</h2>
+<div class="try">
+<p class="ttl">Chat mein apne words mein jawab do (2–4 lines):</p>
+<p>"Bank mein T1 Linear Algebra sirf 2 scorable questions hai, phir bhi roadmap usse shuru kyun hota hai? Apne answer mein kam se kam ek PCA pattern ka naam lo jo T1 par depend karta hai."</p>
+<p class="note">Format: <code>Answer: … | Confidence: S/U/G | Reason: …</code></p>
+</div>
+</section>

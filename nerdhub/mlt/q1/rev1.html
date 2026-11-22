@@ -1,0 +1,162 @@
+<section data-track="top">
+<p class="muted mono" style="margin:0">B27 · Phase 2 · Topic revision page</p>
+<h1>📄 T1 Linear Algebra — Revision &amp; Cheat Sheet</h1>
+<p class="lead">Yeh page exam se 1–2 din pehle ke liye hai, pehli baar seekhne ke liye nahi. T1 ke poore formulas, traps, trigger→first-move aur ek quick test ek jagah hain — subtopic pages (B2, B3) kholne ki zaroorat nahi honi chahiye. Naya content sirf ek jagah hai: quick test ke numbers (remix, code-verified).</p>
+<div class="box">
+<p><b>Is page mein kya hai:</b> 1) big picture · 2) cheat sheet · 3) exam pattern digest · 4) mistake log · 5) quick test (6 Q, ≈12 min) · 6) topic-closed checklist (ticks is browser mein save hote hain).</p>
+<p><b>Source:</b> B2 (T1 prerequisites) aur B3 (1.1 + 1.2 + T1 timed set) ke published pages se padha hua — raw PYQ bank dobara nahi khola. Tags: <span class="tag t-src">[SRC]</span> PYQ se · <span class="tag t-add">[ADDED]</span> meri explanation / naya question · <span class="tag t-flag">[FLAG]</span> source error · <span class="tag t-q">[?]</span> missing / unreadable.</p>
+<p class="note">Bank frequency ≠ exam weightage. T1 ke sirf 2 scorable PYQ (7 marks) alag topic ke roop mein aaye, par yahi projection maths PCA (T2) ke 2.3 aur 2.5 ke andar baar-baar chalti hai — isliye prerequisite ke roop mein T1 bahut bada hai.</p>
+</div>
+</section>
+
+<h2>🖼️ 1. Topic big picture</h2>
+<section data-track="picture">
+<p><b>T1 kyun exist karta hai [ADDED]:</b> PCA ka poora idea ek line par projection hai: "kaunsi line par data ko girane se sabse kam information jaati hai?" Is sawaal ke do hisse hain — (1.1) point ka line par <b>projection</b> kaise nikalte hain, aur (1.2) jo bacha (<b>residual</b>) uski size kitni hai. T2 mein yahi do cheezein "PC coordinate" aur "reconstruction error" ban jaati hain.</p>
+<figure class="viz diagram">
+  <p class="vt">T1 relational map — line se residual tak, aur wahan se PCA tak</p>
+  <p class="vs">Blue = subtopic 1.1 (projection) · green = subtopic 1.2 (error) · dashed grey = T2 mein aage. <i>Schematic</i> — formulas ka flow, scale nahi.</p>
+<svg viewBox="0 0 900 330" role="img" aria-label="T1 map: line direction to scalar projection to projection vector to residual to error norm to PCA">
+<defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#a3a3a3"/></marker></defs>
+<text x="20" y="22" font-size="12" fill="#60A5FA" font-weight="600">1.1 VECTOR PROJECTION</text>
+<text x="650" y="22" font-size="12" fill="#34D399" font-weight="600">1.2 RECONSTRUCTION ERROR</text>
+<rect x="20" y="40" width="190" height="86" rx="10" fill="#141c2b" stroke="#60A5FA"/>
+<text x="115" y="68" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">Line through origin</text>
+<text x="115" y="90" text-anchor="middle" fill="#a3a3a3" font-size="12">direction w ≠ 0</text>
+<text x="115" y="108" text-anchor="middle" fill="#a3a3a3" font-size="12">unit: u = w / ‖w‖</text>
+<rect x="250" y="40" width="190" height="86" rx="10" fill="#141c2b" stroke="#60A5FA"/>
+<text x="345" y="68" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">Scalar projection</text>
+<text x="345" y="90" text-anchor="middle" fill="#a3a3a3" font-size="12">s = xᵀw / ‖w‖  (signed)</text>
+<text x="345" y="108" text-anchor="middle" fill="#a3a3a3" font-size="12">length = |s|</text>
+<rect x="480" y="40" width="190" height="86" rx="10" fill="#141c2b" stroke="#60A5FA"/>
+<text x="575" y="68" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">Projection vector</text>
+<text x="575" y="90" text-anchor="middle" fill="#a3a3a3" font-size="12">p = (xᵀw / wᵀw) w</text>
+<text x="575" y="108" text-anchor="middle" fill="#a3a3a3" font-size="12">= s·u</text>
+<rect x="710" y="40" width="170" height="86" rx="10" fill="#0f1d17" stroke="#34D399"/>
+<text x="795" y="68" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">Residual</text>
+<text x="795" y="90" text-anchor="middle" fill="#a3a3a3" font-size="12">r = x − p</text>
+<text x="795" y="108" text-anchor="middle" fill="#a3a3a3" font-size="12">r ⟂ w  (rᵀw = 0)</text>
+<line x1="210" y1="83" x2="248" y2="83" stroke="#a3a3a3" marker-end="url(#a1)"/>
+<line x1="440" y1="83" x2="478" y2="83" stroke="#a3a3a3" marker-end="url(#a1)"/>
+<line x1="670" y1="83" x2="708" y2="83" stroke="#a3a3a3" marker-end="url(#a1)"/>
+<rect x="480" y="190" width="190" height="86" rx="10" fill="#0f1d17" stroke="#34D399"/>
+<text x="575" y="218" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">Pythagoras</text>
+<text x="575" y="240" text-anchor="middle" fill="#a3a3a3" font-size="12">‖r‖² = ‖x‖² − s²</text>
+<text x="575" y="258" text-anchor="middle" fill="#a3a3a3" font-size="12">(u unit)</text>
+<rect x="250" y="190" width="190" height="86" rx="10" fill="#0f1d17" stroke="#34D399"/>
+<text x="345" y="218" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">Dataset average</text>
+<text x="345" y="240" text-anchor="middle" fill="#a3a3a3" font-size="12">(1/n) Σ ‖xᵢ − (xᵢᵀu)u‖²</text>
+<text x="345" y="258" text-anchor="middle" fill="#a3a3a3" font-size="12">= tr C − uᵀCu</text>
+<rect x="20" y="190" width="190" height="86" rx="10" fill="none" stroke="#737373" stroke-dasharray="5 4"/>
+<text x="115" y="218" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">→ T2 PCA</text>
+<text x="115" y="240" text-anchor="middle" fill="#a3a3a3" font-size="12">error min ⇔ uᵀCu max</text>
+<text x="115" y="258" text-anchor="middle" fill="#a3a3a3" font-size="12">PC coordinate = s</text>
+<line x1="795" y1="126" x2="795" y2="158" stroke="#a3a3a3"/><line x1="795" y1="158" x2="575" y2="158" stroke="#a3a3a3"/><line x1="575" y1="158" x2="575" y2="188" stroke="#a3a3a3" marker-end="url(#a1)"/>
+<line x1="478" y1="233" x2="442" y2="233" stroke="#a3a3a3" marker-end="url(#a1)"/>
+<line x1="248" y1="233" x2="212" y2="233" stroke="#a3a3a3" stroke-dasharray="5 4" marker-end="url(#a1)"/>
+<text x="20" y="312" font-size="11.5" fill="#737373">Backbone: w → u → s → p → r → ‖r‖² → dataset average → PCA</text>
+</svg>
+  <figcaption><b>Interpretation:</b> Seedha raasta: <code>w → s → p → r → ‖r‖²</code>. Exam mein aksar sirf ek mod chahiye hota hai (length, coordinate ya error-norm) — baaki chain ko skip karke Pythagoras (<code>‖r‖² = ‖x‖² − s²</code>) sabse tez raasta hai.</figcaption>
+</figure>
+<div class="box em">
+<p><b>Topic ki "exam story" (1–2 line) [ADDED]:</b> "Direction $w$ diya hai — $w$ ko normalise karo, dot lo, aur chain mein jo maanga ho (length / vector / error) wahan ruko." Is topic mein marks <b>$\|w\|$ bhoolne</b> aur <b>norm vs squared</b> mein jaate hain, concept mein nahi.</p>
+</div>
+</section>
+
+<h2>📋 2. Consolidated cheat sheet</h2>
+<section data-track="cheat">
+<h3>T1 core — subtopic 1.1 aur 1.2</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Concept</th><th>Formula</th><th>When it applies</th><th>Common mix-up</th></tr></thead>
+<tbody>
+<tr><td>Unit vector</td><td>$u=\dfrac{w}{\|w\|}$, $\|u\|=1$</td><td>$w\neq0$; direction hi chahiye, size nahi</td><td>$w=(1,1)$ ko "unit" maan lena ($\|w\|=\sqrt2$)</td></tr>
+<tr><td>Scalar projection (signed)</td><td>$s=\dfrac{x^Tw}{\|w\|}=x^Tu$</td><td>Koi bhi $w\neq0$; sign = $w$ ke saath ya ulta</td><td>$\|w\|$ se divide na karna ($7$ instead of $4.95$)</td></tr>
+<tr><td>Length of projection</td><td>$\|p\|=|s|=\dfrac{|x^Tw|}{\|w\|}$</td><td>"length", "magnitude" maanga ho</td><td>Negative sign rakh dena; $\|w\|^2$ se divide karna (woh $t^*$ hai)</td></tr>
+<tr><td>Coordinate along a PC</td><td>$z=x^Tu$ (PC unit hota hai)</td><td>"representation / coordinate in PC system"</td><td>Projection vector ko coordinate bata dena</td></tr>
+<tr><td>Projection vector</td><td>$p=\dfrac{x^Tw}{w^Tw}\,w=s\,u$</td><td>Kisi bhi nonzero $w$ ke liye</td><td>$(x^Tw)\,w$ — yeh sirf unit $w$ par sahi hai</td></tr>
+<tr><td>Projection matrix</td><td>$P=\dfrac{ww^T}{w^Tw}$; $P^2=P$, $P^T=P$; $r=(I-P)x$</td><td>Ek se zyada points ek hi line par</td><td>$P$ ko $w^Tw$ (number) se confuse karna</td></tr>
+<tr><td>Residual</td><td>$r=x-p$, $r^Tw=0$</td><td>"residue", "reconstruction error vector"</td><td>Option elimination bhoolna: $r^Tw\neq0$ ⇒ galat option</td></tr>
+<tr><td>Error norm (Pythagoras)</td><td>$\|r\|^2=\|x\|^2-s^2$ ($s$ sahi formula se)</td><td>Sirf $\|r\|$ ya $\|r\|^2$ chahiye, kisi bhi $d$ mein</td><td>Norm vs squared ($0.71$ vs $0.5$); lengths subtract ($5-4.95=0.05$)</td></tr>
+<tr><td>2-D distance to line</td><td>$\|r\|=\dfrac{|x^Tn|}{\|n\|}$, $n\perp w$ ($n=(w_2,-w_1)$)</td><td>Sirf 2-D, sirf distance</td><td>$n$ ka sign / normal galat (check $n^Tw=0$)</td></tr>
+<tr><td>Orthonormal set</td><td>$\|r\|^2=\|x\|^2-\sum_{j}(x^Tw_j)^2$</td><td>$w_1..w_k$ orthonormal (PCs)</td><td>Non-orthogonal directions par yeh formula nahi lagta</td></tr>
+<tr><td>Dataset reconstruction error</td><td>$\tfrac1n\sum_i\|x_i-(x_i^Tu)u\|^2=\operatorname{tr}C-u^TCu$</td><td>Centred data, $\|u\|=1$, $\tfrac1n$ convention</td><td>Uncentred data; $u$ unit nahi; error min ⇔ variance max bhoolna</td></tr>
+<tr><td>Scale / sign of $w$</td><td>$p$ aur residual $cw$ ($c\neq0$) se nahi badalte; $s\to\operatorname{sign}(c)\,s$</td><td>Sirf direction matter karti hai</td><td>$x-(x^Tv)v$ mein $v=5u$ daalna ⇒ $p$ 25 guna (formula unit maangta hai)</td></tr>
+<tr><td>Bounds</td><td>$0\le|s|\le\|x\|$, $\|r\|\le\|x\|$</td><td>Answer sanity check</td><td>$7>\|x\|=5$ jaisa answer sidha impossible hai</td></tr>
+</tbody></table></div>
+<h3>T1 prerequisites (B2) — ek line mein [ADDED]</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Fact</th><th>Formula</th><th>Use</th></tr></thead>
+<tbody>
+<tr><td>Dot product</td><td>$x^Ty=\sum_jx_jy_j=y^Tx$</td><td>Projection ka core</td></tr>
+<tr><td>Norm</td><td>$\|x\|^2=x^Tx$; $\|x-y\|^2=\|x\|^2+\|y\|^2-2x^Ty$</td><td>Distance, Pythagoras</td></tr>
+<tr><td>Angle / orthogonal</td><td>$\cos\theta=\dfrac{x^Ty}{\|x\|\|y\|}$; $x\perp y\iff x^Ty=0$</td><td>PC orthogonality (T2)</td></tr>
+<tr><td>Outer product</td><td>$ab^T$ ek matrix ($d\times d$ agar $a,b\in\mathbb R^d$); $ww^T$ rank 1</td><td>$P$, $C=\tfrac1n\sum xx^T$</td></tr>
+<tr><td>Transpose rule</td><td>$(AB)^T=B^TA^T$</td><td>Shape check ($XX^T$ vs $X^TX$)</td></tr>
+</tbody></table></div>
+</section>
+
+<h2>🔑 3. Exam pattern digest</h2>
+<section data-track="digest">
+<p><b>Bank mein T1 [SRC]:</b> ek hi comprehension — 2024 October 27, Q11 (<code>640653995437</code>, context) ke do child: Q12 (<code>…438</code>, 3 marks, projection length) aur Q13 (<code>…439</code>, 4 marks, reconstruction-error norm). Dono ek hi $x=(3,4)$, $w=(1,1)$ par. Jawab: $4.95$ aur $0.71$.</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Recurring question type</th><th>Trigger phrase → first move</th></tr></thead>
+<tbody>
+<tr><td>Length of projection</td><td>"length of the projection", "line defined by $w$" → pehle $\|w\|$ nikalo, $1$ nahi hai to divide</td></tr>
+<tr><td>Scalar projection / coordinate</td><td>"scalar projection onto first PC" (unit diya) → seedha $x^Tw$, phir bhi $\|w\|=1$ verify</td></tr>
+<tr><td>Projection vector / reconstructed point</td><td>"projection vector", "reconstructed point" → pehle scalar, phir unit vector se guna</td></tr>
+<tr><td>Magnitude of reconstruction error</td><td>"norm of reconstruction error" → $s$ (exact) → $\sqrt{\|x\|^2-s^2}$</td></tr>
+<tr><td>Residue options (vectors)</td><td>Residue vectors diye hon → har option ka $r^Tw=0$ check karke eliminate</td></tr>
+<tr><td>2-D, sirf distance</td><td>$n$ = $w$ ke components swap + ek sign → $|x^Tn|/\|n\|$</td></tr>
+</tbody></table></div>
+<div class="box amber">
+<p><b>Top 5 traps (B3 se):</b></p>
+<ol>
+<li>$w$ normalise na karna ($7$ instead of $4.95$; $7>\|x\|$ impossible).</li>
+<li>$\|w\|^2$ se divide karke "length" bolna (woh coefficient $t^*=3.5$ hai).</li>
+<li>Norm vs squared mix ($0.71$ vs $0.5$).</li>
+<li>Lengths subtract karna ($5-4.95=0.05\neq0.71$) — Pythagoras use karo.</li>
+<li>Intermediate rounding ($4.95^2=24.5025$ vs exact $24.5$): bade numbers mein answer bigad jaata hai; exact rakho, end mein round karo. Vector answer dena jab number maanga ho (ya ulta) — format check.</li>
+</ol>
+</div>
+<p><b>Method selector [ADDED]:</b> sirf number → unit + dot · aage residual bhi chahiye → vector $p$ pehle · sirf error norm → Pythagoras · 2-D distance → normal vector · residual vector options → $r^Tw=0$.</p>
+</section>
+
+<h2>🩹 4. Mistake log summary</h2>
+<section data-track="mistakes">
+<div class="box">
+<p><b>[FLAG] / [?] in T1:</b> <b>koi nahi.</b> B3 mein koi answer-key mismatch nahi mila. Ek <i>range note</i> [SRC]: Q12 ka accepted range $4.8$–$5.1$ chaudi hai — $\|x\|=5.00$ bhi andar aata hai, jo galat reasoning ("projection = $x$ ki length") se milta hai. Exam mein range par mat tiko; sahi value $4.95$. Yeh key error nahi hai, isliye [FLAG] nahi.</p>
+<p><b>Aapke logged errors:</b> abhi tak koi nahi — state mein <code>needs_repair</code> khaali hai aur T1 par chat mein koi graded answer nahi aaya. Jab T1 ke quick test ya timed set ke answers chat mein bhejoge, galtiyan yahan error-tag ([CONCEPT], [CALCULATION], …) ke saath judengi.</p>
+<p><b>Aage dekhne wali jagah:</b> T1 ka sabse common asli error-type [CALCULATION]/[CARELESS] hoga — $\|w\|$ ya squared vs norm. Isliye test mein har answer ke saath ek line likho: "$\|w\|=\,?$".</p>
+</div>
+</section>
+
+<h2>⏱️ 5. Quick revision test</h2>
+<section data-track="test">
+<p><b>Rules:</b> 6 questions · 19 marks · 12 minutes. Ek hi baithak mein, notes band, calculator allowed. B3 ke T1 timed set ke patterns par <b>naye numbers</b> (remix) <span class="tag t-add">[ADDED]</span> — answers neeche hidden hain. Chat mein: <span class="mono">RT1: … | RT2: … | Confidence per Q: S/U/G</span></p>
+<ol>
+<li><p><b>RT1 · SA · 3 marks.</b> $x=(2,-9)$, line through origin, direction $w=(5,12)$. Length of the projection of $x$ (2 decimals)?</p></li>
+<li><p><b>RT2 · SA · 3 marks.</b> Wahi data. Norm of the reconstruction error $\|x-p\|$ (2 decimals)?</p></li>
+<li><p><b>RT3 · MCQ · 3 marks.</b> $w\neq0$ unit nahi hai. Line $\{tw\}$ par $x$ ke vector projection ki <b>length</b> kaunsi hai?</p>
+<p>(a) $\dfrac{|x^Tw|}{w^Tw}$ &nbsp; (b) $\dfrac{|x^Tw|}{\|w\|}$ &nbsp; (c) $|x^Tw|\,\|w\|$ &nbsp; (d) $|x^Tw|$</p></li>
+<li><p><b>RT4 · MSQ · 4 marks.</b> $\|u\|=1$, $r=x-(x^Tu)u$. Kaun se statements hamesha sach hain?</p>
+<p>(a) $u$ ko $-u$ se badalne par $r$ nahi badalta &nbsp; (b) $\|r\|^2=\|x\|^2-(x^Tu)^2$ &nbsp; (c) $\|r\|^2=\|x\|^2-|x^Tu|$ &nbsp; (d) $x$ line $\{tu\}$ par ho to $r=0$ &nbsp; (e) $\|p\|+\|r\|=\|x\|$</p></li>
+<li><p><b>RT5 · SA · 3 marks.</b> $x=(3,0,4)$, $w=(1,2,2)$. Squared reconstruction error $\|r\|^2$ (2 decimals)?</p></li>
+<li><p><b>RT6 · SA · 3 marks.</b> Centred dataset $(4,2),(-4,-2),(2,-2),(-2,2)$. Average squared reconstruction error (i) $x$-axis $u=(1,0)$ par, (ii) $y$-axis $u=(0,1)$ par. Dono mein se <b>chhota</b> value enter karo.</p></li>
+</ol>
+<details class="reveal"><summary>Show all answers (timer khatam hone ke baad)</summary>
+<p><b>RT1: 7.54.</b> $x^Tw=10-108=-98$; $\|w\|=13$; $s=-98/13=-7.538$; length $=|s|=7.54$. (Trap: $-7.54$, ya $98/169=0.58$.)</p>
+<p><b>RT2: 5.31.</b> $\|x\|^2=4+81=85$; $s^2=(98/13)^2=56.83$; $\|r\|^2=28.17$; $\|r\|=5.308$. Check: $p=\tfrac{-98}{169}(5,12)$, $r=x-p$ ka norm $5.3077$ ✓.</p>
+<p><b>RT3: (b).</b> (a) $=|t^*|$ — coefficient hai, length nahi ($w$ ki length ke bina). (c) aur (d) mein $\|w\|$ galat jagah / bilkul nahi — $w$ ko double karo to length double ho jaati, jabki projection ki length $w$ ke scale par depend nahi karti.</p>
+<p><b>RT4: (a), (b), (d).</b> (a) $x^T(-u)(-u)=(x^Tu)u$, $p$ same ⇒ $r$ same. (b) Pythagoras. (c) ✗ — $|x^Tu|$ nahi, uska square. (d) $x=tu\Rightarrow x^Tu=t$, $p=tu=x$, $r=0$. (e) ✗ — $\|p\|^2+\|r\|^2=\|x\|^2$, lengths ka jod nahi (triangle inequality: $\|p\|+\|r\|\ge\|x\|$).</p>
+<p><b>RT5: 11.56.</b> $x^Tw=3+8=11$, $w^Tw=9$, $p=\tfrac{11}9w$; $\|x\|^2=25$; $s^2=\tfrac{121}{9}=13.44$; $\|r\|^2=25-13.44=\tfrac{104}9=11.56$.</p>
+<p><b>RT6: 4.</b> $x$-axis par error $=$ $y_i^2$ ka average $=\tfrac{4+4+4+4}4=4$; $y$-axis par $=$ $x_i^2$ ka average $=\tfrac{16+16+4+4}4=10$. Chhota $=4$. Bonus (T2 preview): $C=\begin{bmatrix}10&2\\2&4\end{bmatrix}$, best direction par error $=\operatorname{tr}C-\lambda_{\max}=14-10.606=3.394$ — $x$-axis se bhi kam.</p>
+<p class="note">Scoring: SA = full ya zero; MSQ = saare sahi options, koi galat nahi. 19 mein se 16+ = T1 revision-ready. Saare numerical answers numpy se code-verified. Galtiyan chat mein error-tag ke saath bhejo.</p>
+</details>
+</section>
+
+<h2>✅ 6. Topic-closed checklist</h2>
+<section>
+<p class="note">Har line ke liye sach batao: <b>"kya main yeh cold, exam time ke andar, bina hint ke kar sakta/sakti hoon?"</b> Tick sirf tab karo jab pichhle quick test ya timed set mein yeh sach saabit hua ho. Ticks is browser mein save hote hain.</p>
+<div class="chkrow" data-check="1.1"><b>1.1 Vector projection</b> — non-unit $w$ ke saath length, signed $s$, vector $p$ aur PC coordinate, $\le2$ minute mein, $\|w\|$ bhule bina.</div>
+<div class="chkrow" data-check="1.2"><b>1.2 Reconstruction error</b> — $\|r\|^2=\|x\|^2-s^2$ se norm / squared dono, residue-vector options $r^Tw=0$ se eliminate, aur "error min ⇔ variance max" ek line mein bata sakun.</div>
+<div class="chkrow" data-check="prereq"><b>T1 prerequisites (B2)</b> — dot, norm, $\cos\theta$, orthogonality, outer product, shape check ($(AB)^T=B^TA^T$) bina soche.</div>
+</section>

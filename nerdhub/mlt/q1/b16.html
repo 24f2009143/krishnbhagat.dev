@@ -1,0 +1,972 @@
+<style>#content mjx-container:not([display="true"]){display:inline-block;max-width:100%;overflow-x:auto;overflow-y:hidden;vertical-align:middle}#content li,#content p,#content td{overflow-wrap:anywhere}</style>
+<section data-track="intro">
+<p class="muted mono" style="margin:0">B16 · T3 Kernels · topic-end build</p>
+<h1>3.4 Kernel PCA — plus ⏱️ T3 timed set</h1>
+<p class="lead">B12 mein dekha ki PCA ko poora data nahi chahiye — sirf dot products $x_i^Tx_j$ (Gram matrix). B13–B15 mein dekha ki dot product ki jagah kernel $k(x_i,x_j)=\phi(x_i)^T\phi(x_j)$ rakh sakte hain, $\phi$ banaye bina. <b>Kernel PCA</b> yeh dono jodta hai: $K_{ij}=k(x_i,x_j)$ banao, usse <i>feature space mein centre</i> karo ($K^c=HKH$), phir B12 ka dual PCA as-is chalao. Fayda: do concentric rings jaisa data, jahan seedhi line (standard PCA) kuch nahi pakadti, wahan ek hi kernel-PC dono rings ko alag kar deta hai (Visual 2). Aur ek naya sawaal: kitne components mil sakte hain — $d$ se zyada bhi (P4). Aakhir mein T3 ka timed set.</p>
+<div class="box">
+<p><b>Is build ke PYQs <span class="tag t-src">[SRC]</span></b> — subtopic 3.4 ke saare 5 blocks (file order; sab asli sawaal, koi context block nahi), total 19 marks. Numbering P1–P5.</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>#</th><th>Paper · Q</th><th>ID</th><th>Type · marks</th><th>Kya poochha</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td>P1</td><td>2023 July · Q6</td><td class="mono">640653577733</td><td>MSQ · 5</td><td>Kernel PCA ke 4 statements — kaun "always true"</td><td>Source mein answer marking nahi; derived options 2, 3 <span class="tag t-q">[?]</span></td></tr>
+<tr><td>P2</td><td>2024 February · Q5</td><td class="mono">640653738036</td><td>MCQ · 4</td><td>1000 samples, $d=20$, degree-3 polynomial kernel PCA — sahi statement</td><td>Source mein marking nahi; derived option 3 <span class="tag t-q">[?]</span></td></tr>
+<tr><td>P3</td><td>2024 July 07 · Q5</td><td class="mono">640653829507</td><td>SA · 3</td><td>Centered kernel matrix ka top eigenvalue $10$, $n=100$ — covariance ka top eigenvalue</td><td>Key 0.1 ✓</td></tr>
+<tr><td>P4</td><td>2024 October 27 · Q4</td><td class="mono">640653995443</td><td>MCQ · 3</td><td>Kernel PCA mein kya $k&gt;d$ ho sakta hai?</td><td>Key "Yes" ✓</td></tr>
+<tr><td>P5</td><td>2025 July 13 · Q5</td><td class="mono">6406531302388</td><td>MCQ · 4</td><td>$(1+x_i^Tx_j)^2$ kernel, $X=\begin{bmatrix}1&amp;0\\0&amp;1\\0&amp;0\end{bmatrix}$ — centered kernel matrix $K^c$</td><td>Key option 2 ✓ (formatting repaired)</td></tr>
+</tbody></table></div>
+<p><b>Bank frequency ≠ exam weightage:</b> yeh 5 sirf practice ka size hain. Kernel PCA ke saath poora T3 (3.1–3.4, 23 blocks) ab bank ke hisaab se cover ho gaya; T3 ke baaki hisse B13–B15 mein the.</p>
+<p><b>Tags:</b> <span class="tag t-src">[SRC]</span> PYQ file se · <span class="tag t-add">[ADDED]</span> meri explanation / naya question · <span class="tag t-flag">[FLAG]</span> source error, proof ke saath · <span class="tag t-q">[?]</span> unreadable / missing / ambiguous. <b>PACER:</b> Procedural · Analogous · Conceptual · Evidence · Reference.</p>
+<p><b>B16 notation (N19–N24; N1–N8 B13, N9–N14 B14, N15–N18 B15, M1–M7 B12):</b> N19 feature-space centering $\tilde\phi=\phi-\bar\phi$ · N20 centered Gram $K^c=HKH$, $k^c_{ij}=k_{ij}-\theta_i-\theta_j+P$ · N21 kernel-PCA eigenproblem $K^c\beta=\lambda\beta$: variance $\lambda/n$, $\alpha=\beta/\sqrt\lambda$ · N22 scores: training $\sqrt\lambda\beta_i$, naya point $\sum_j\alpha_j(k(x,x_j)-\theta_j)$ · N23 component count $\le\min(D_{\text{eff}},n-1)$, $d$ se bandha nahi · N24 linear kernel ⇒ kernel PCA = standard PCA.</p>
+<p>Saare numerical answers (P3, P5, worked examples, transfer aur timed set) numpy se code-verified; koi <span class="tag t-flag">[FLAG]</span> nahi. Teen chhote notes: (1) P1/P2 mein is copy mein koi option "correct" mark nahi hai — maine apni derivation se answer nikala hai <span class="tag t-q">[?]</span>. (2) P3 mein covariance ka convention $\tfrac1n$ hai (B5 se confirmed); key $0.1=10/100$ isi se milti hai ($\tfrac1{n-1}$ se $0.101$ aata). (3) P5 ke options ka LaTeX toota hua tha (matrix ki row-breaks gayab); maine sirf formatting theek ki, entries wahi hain jo source ne dikhaye the.</p>
+</div>
+</section>
+
+<section data-track="warmup">
+<h2>🔁 Recall warm-up — B12 + B13 + B14 <span class="tag t-add">[ADDED]</span></h2>
+<p>3 chhote sawaal, notes dekhe bina. (Spaced review: B14 aur B15 ke items 2026-11-13 ko due hain; B12 ka dual-PCA review abhi baaki hai — Q1 usi ka hai.)</p>
+<ol>
+<li><p><b>(B12 M3, M4)</b> $n=4$, $K=X^TX$ ka top eigenvalue $16$, unit eigenvector $\beta=\tfrac12(1,1,1,-1)$. $\alpha_1$, PC1 ka variance, aur $x_4$ ka training score?</p>
+<details class="reveal"><summary>Show answer</summary><p>$\alpha_1=\dfrac{\beta_1}{\sqrt\lambda}=\dfrac{0.5}{4}=\mathbf{0.125}$; variance $=\lambda/n=16/4=\mathbf4$; score $z_4=\sqrt\lambda\,\beta_4=4\times(-0.5)=\mathbf{-2}$ (code-verified). Aaj yahi pipeline $K\to K^c$ ke saath chalegi.</p></details></li>
+<li><p><b>(B14 N10–N12)</b> $\begin{bmatrix}2&amp;3\\3&amp;2\end{bmatrix}$ ek valid Gram matrix hai? Ek line mein kaaran.</p>
+<details class="reveal"><summary>Show answer</summary><p><b>Nahi.</b> Cauchy–Schwarz: $3^2=9&gt;2\cdot2=4$ ($\det=4-9=-5&lt;0$); eigenvalues $5$ aur $-1$ (code). Valid Gram matrix PSD hoti hai; $K^c$ bhi PSD hoti hai — aaj ka ek check.</p></details></li>
+<li><p><b>(B13 N8)</b> Gaussian kernel $\sigma=1$, $k\bigl((0,1),(1,0)\bigr)=e^{-1}=0.3679$. Feature space mein $\|\phi(x)-\phi(y)\|^2$ kitna?</p>
+<details class="reveal"><summary>Show answer</summary><p>$k(x,x)+k(y,y)-2k(x,y)=1+1-2(0.3679)=\mathbf{1.2642}$ (code-verified). $k(x,x)=1$ ka matlab: Gaussian features unit sphere par (B15 N17).</p></details></li>
+</ol>
+</section>
+
+<!-- =========================================================== -->
+<h2>📐 3.4 Kernel PCA and nonlinear dimensionality reduction</h2>
+
+<section data-track="pretest">
+<h3>❓ Pretest — cold attempt (solution neeche 🎯 P5 mein)</h3>
+<div class="try">
+<p class="mono" style="margin:0 0 6px">2025 July 13 · Original Q5 · ID <code>6406531302388</code> · MCQ · 4 marks · <span class="tag t-src">[SRC]</span></p>
+<p>Kernel PCA with a polynomial kernel is applied to the following dataset with three features:</p>
+$$X=\begin{bmatrix}1&amp;0\\0&amp;1\\0&amp;0\end{bmatrix}.$$
+<p>The $k$-th principal component is given by $w_k=\phi(X)\alpha_k$, where $\phi$ is the transformation mapping corresponding to $k(x_i,x_j)=(1+x_i^Tx_j)^2$. Find the <b>centered kernel matrix</b> $K^c$. Hint (source):</p>
+$$k^c_{ij}=k_{ij}-\theta_i\mathbf 1_j^T-\mathbf 1_i\theta_j^T+P\,\mathbf 1_i\mathbf 1_j^T,\qquad \theta_i=\frac1n\sum_{k=1}^{n}k_{ik},\quad P=\frac1{n^2}\sum_{i,j}k_{ij}.$$
+<ol>
+<li>$\begin{bmatrix}-1.5&amp;1.5\\1.5&amp;-1.5\end{bmatrix}$</li>
+<li>$\begin{bmatrix}1.5&amp;-1.5\\-1.5&amp;1.5\end{bmatrix}$</li>
+<li>$\begin{bmatrix}4&amp;1\\1&amp;4\end{bmatrix}$</li>
+<li>$\begin{bmatrix}1&amp;-1\\4&amp;-4\end{bmatrix}$</li>
+</ol>
+<p class="note">3 minute, bina neeche padhe. Answer + Confidence S / U / G note karo. Hint-sawaal: $X$ ke columns points hain ya rows? $n$ kitna hai? Ek centered Gram matrix ki kaun si teen khoobiyan har option par ek-ek second mein check ho sakti hain?</p>
+</div>
+</section>
+
+<section data-track="position">
+<h3>🧭 Position — yeh kahan baitha hai</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Peeche (prerequisites)</th><th>Yeh subtopic</th><th>Aage (kya unlock hota hai)</th></tr></thead>
+<tbody><tr>
+<td>B12: dual PCA — $K=X^TX$, $K\beta=\lambda\beta$, $\alpha=\beta/\sqrt\lambda$, variance $\lambda/n$, score $\sqrt\lambda\beta_i$ (M1–M4) · B13: $\phi$, $k=\phi^T\phi$, Gram $K_{ij}=k(x_i,x_j)$, polynomial / Gaussian (N2, N5–N7) · B14: Gram valid ⇔ PSD (N10–N12) · B15: kernel library, Gaussian $k(x,x)=1$ (N17–N18)</td>
+<td>Feature-space centering ($K^c=HKH$); kernel-PCA eigenproblem; scores for training aur naye point; kitne components mil sakte hain ($\le\min(D_{\text{eff}},n-1)$); linear kernel = standard PCA</td>
+<td>T3 ka aakhri subtopic. Aage T4 (K-means) alag family hai — is chain par seedha nirbhar nahi, isliye B17 se naya topic. Yahan se saath le jaane wali cheezein: centering formula, $\lambda/n$, $\sqrt\lambda\beta_i$, aur rank bound $\le n-1$.</td>
+</tr></tbody></table></div>
+</section>
+
+<section data-track="intuition">
+<h3>🧠 Intuition — plain language</h3>
+<ul>
+<li><b>PCA ek hi cheez maangta hai: dot products.</b> B12 ne dikhaya ki dual PCA data ko sirf $x_i^Tx_j$ ke through dekhta hai. B13 ne dikhaya ki kernel $k(x_i,x_j)$ bhi ek aisa hi dot product hai — kisi (bade, shayad infinite) feature space $\phi(x)$ mein. To dual PCA ka $x_i^Tx_j$ hatao, $k(x_i,x_j)$ rakho: ho gaya <b>kernel PCA</b> = PCA <i>us</i> feature space mein, jahan $\phi$ kabhi explicitly nahi banta.</li>
+<li><b>Nonlinear structure seedha ho jaata hai.</b> Do concentric rings ko koi seedhi line alag nahi kar sakti (standard PCA mein dono directions barabar variance deti hain). Par Gaussian feature space mein "andar ki ring" aur "bahar ki ring" ke features alag jagah baithte hain, aur ek hi PC unhe alag kar deta hai.</li>
+<li><b>Centering feature space mein hoti hai.</b> PCA ko mean-zero data chahiye. Par yahan data $\phi(x_i)$ hai, aur uska mean $\bar\phi$ hum dekh nahi sakte. Ilaaj: Gram matrix ko hi centre kar do — $K^c=HKH$. Input data centred ho tab bhi $\bar\phi\ne0$ ho sakta hai (Example 1).</li>
+<li><b>Baaki sab B12 jaisa.</b> $K^c$ ke eigenvectors $\beta$ (points ki space ke weights), variance $\lambda/n$, score $\sqrt\lambda\,\beta_i$, coefficients $\alpha=\beta/\sqrt\lambda$. Naya point: $k(x,x_j)$ ke $n$ values chahiye.</li>
+<li><b>Components $d$ se zyada ho sakte hain.</b> Standard PCA mein nonzero components $\le\min(d,n-1)$. Yahan limit feature space ki dimension aur $n-1$ hai. Gaussian mein feature space infinite hai, to limit $n-1$ (jab points generic hon).</li>
+</ul>
+<div class="box em">
+<p><b>Analogy <span class="tag t-add">[ADDED]</span> — "kaun kisse kitna milta-julta hai" ka table.</b> Class ke $n$ students ka ek similarity-table $K$ hai (har pair ki similarity). Pehle table ko "class ke average student" ke hisaab se re-baseline karo (centering: har student ki similarity us average se naapo). Phir table ke sabse bade patterns (eigenvectors) nikalo — har pattern batata hai kaun se students ek tarah behave karte hain, aur pattern ki taaqat $\lambda$ hai.</p>
+<p><b>Analogy kahan tootti hai:</b> (1) Table koi bhi raay nahi — woh valid kernel (PSD) honi chahiye, warna $\lambda$ negative aa sakte hain. (2) "Average student" ek asli student nahi, feature space ka mean $\bar\phi$ hai, jise hum kabhi dekh nahi paate — sirf $\theta_i$ aur $P$ se uska asar pata chalta hai. (3) Patterns students ke weights ($\beta\in\mathbb R^n$) hain; asli PC $w$ feature space mein rehta hai aur explicitly likha nahi jaata.</p>
+</div>
+<div class="box red">
+<p><b>Yeh kya NAHI hai:</b></p>
+<ul>
+<li>"Input data centred hai to $K$ pehle se centred hai" — nahi. Sirf linear kernel mein sach hai. Polynomial: input mean $0$ ho tab bhi $\bar\phi=(1,0,\tfrac23)$ (Example 1).</li>
+<li>"$K^c$ ka eigenvector PC hai" — nahi. $\beta\in\mathbb R^n$ points ki space mein hai; PC $w=\tilde\Phi\beta/\sqrt\lambda$ feature space mein (B12 jaisa pul).</li>
+<li>"Components $\le d$" — nahi (P1 option 1, P4). Limit $\min(D_{\text{eff}},n-1)$.</li>
+<li>"Kernel PCA hamesha 2-D mein sundar tasveer deta hai" — nahi. Naya variance bahut saare components mein bikhra hota hai (Visual 3: PC1 sirf $14.9\%$), aur sahi kernel / parameter chunna padta hai.</li>
+<li>"$\lambda_{K^c}$ hi covariance ka eigenvalue hai" — nahi, $n$ se divide karo: $\lambda/n$ (P3).</li>
+</ul>
+</div>
+</section>
+
+<section data-track="visual">
+<h3>📊 Visual intuition</h3>
+
+<figure class="viz diagram">
+  <p class="vt">Visual 1: kernel-PCA pipeline — data se scores tak <span class="tag t-add">[ADDED]</span></p>
+  <p class="vs">Upar training: Gram → centre → eigen. Neeche outputs. Schematic — shapes sirf flow dikhate hain, scale nahi.</p>
+  <svg viewBox="0 0 740 330" role="img" aria-label="Pipeline of kernel PCA: data points go into the Gram matrix K with entries k of x i and x j; K is centred as K c equals H K H; the eigenproblem K c beta equals lambda beta gives eigenpairs; outputs are variance lambda over n, training scores square root of lambda times beta i, and new point score as the sum of alpha j times k of x and x j minus theta j">
+    <defs><marker id="ak16" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#a3a3a3"/></marker></defs>
+    <rect x="10" y="20" width="150" height="80" rx="8" fill="#1e1e1e" stroke="#60A5FA"/>
+    <text x="85" y="50" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">Data</text>
+    <text x="85" y="72" text-anchor="middle" fill="#a3a3a3" font-size="12">x₁ … xₙ ∈ ℝᵈ</text>
+    <text x="85" y="89" text-anchor="middle" fill="#a3a3a3" font-size="11.5">+ kernel k</text>
+    <rect x="195" y="20" width="160" height="80" rx="8" fill="#1e1e1e" stroke="#FBBF24"/>
+    <text x="275" y="48" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">Gram K (n × n)</text>
+    <text x="275" y="70" text-anchor="middle" fill="#a3a3a3" font-size="12">Kᵢⱼ = k(xᵢ, xⱼ)</text>
+    <text x="275" y="88" text-anchor="middle" fill="#a3a3a3" font-size="11.5">φ kabhi nahi banta</text>
+    <rect x="390" y="20" width="150" height="80" rx="8" fill="#1e1e1e" stroke="#34D399"/>
+    <text x="465" y="48" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">Centre</text>
+    <text x="465" y="70" text-anchor="middle" fill="#34D399" font-size="13">Kᶜ = H K H</text>
+    <text x="465" y="88" text-anchor="middle" fill="#a3a3a3" font-size="11.5">rows ka jod = 0</text>
+    <rect x="575" y="20" width="155" height="80" rx="8" fill="#1e1e1e" stroke="#34D399"/>
+    <text x="652" y="48" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">Eigen</text>
+    <text x="652" y="70" text-anchor="middle" fill="#34D399" font-size="13">Kᶜβ = λβ, ‖β‖ = 1</text>
+    <text x="652" y="88" text-anchor="middle" fill="#a3a3a3" font-size="11.5">sirf λ &gt; 0 rakho</text>
+    <line x1="160" y1="60" x2="193" y2="60" stroke="#a3a3a3" stroke-width="1.6" marker-end="url(#ak16)"/>
+    <line x1="355" y1="60" x2="388" y2="60" stroke="#a3a3a3" stroke-width="1.6" marker-end="url(#ak16)"/>
+    <line x1="540" y1="60" x2="573" y2="60" stroke="#a3a3a3" stroke-width="1.6" marker-end="url(#ak16)"/>
+    <line x1="652" y1="100" x2="652" y2="150" stroke="#a3a3a3" stroke-width="1.6" marker-end="url(#ak16)"/>
+    <line x1="652" y1="150" x2="120" y2="150" stroke="#525252" stroke-width="1.4"/>
+    <line x1="120" y1="150" x2="120" y2="196" stroke="#a3a3a3" stroke-width="1.6" marker-end="url(#ak16)"/>
+    <line x1="370" y1="150" x2="370" y2="196" stroke="#a3a3a3" stroke-width="1.6" marker-end="url(#ak16)"/>
+    <line x1="652" y1="150" x2="652" y2="196" stroke="#a3a3a3" stroke-width="1.6" marker-end="url(#ak16)"/>
+    <rect x="10" y="200" width="220" height="110" rx="8" fill="#101a14" stroke="#34D399"/>
+    <text x="120" y="226" text-anchor="middle" fill="#34D399" font-size="13.5" font-weight="600">Variance, EVR</text>
+    <text x="120" y="250" text-anchor="middle" fill="#fff" font-size="13">variance = λ / n</text>
+    <text x="120" y="272" text-anchor="middle" fill="#fff" font-size="13">EVR = λₖ / tr(Kᶜ)</text>
+    <text x="120" y="294" text-anchor="middle" fill="#a3a3a3" font-size="11.5">(P3: 10 / 100 = 0.1)</text>
+    <rect x="260" y="200" width="220" height="110" rx="8" fill="#101a14" stroke="#34D399"/>
+    <text x="370" y="226" text-anchor="middle" fill="#34D399" font-size="13.5" font-weight="600">Training scores</text>
+    <text x="370" y="250" text-anchor="middle" fill="#fff" font-size="13">zᵢₖ = √λₖ · βₖ,ᵢ</text>
+    <text x="370" y="272" text-anchor="middle" fill="#fff" font-size="13">α = β / √λ</text>
+    <text x="370" y="294" text-anchor="middle" fill="#a3a3a3" font-size="11.5">(B12 jaisa, K → Kᶜ)</text>
+    <rect x="510" y="200" width="220" height="110" rx="8" fill="#101a14" stroke="#60A5FA"/>
+    <text x="620" y="226" text-anchor="middle" fill="#60A5FA" font-size="13.5" font-weight="600">Naya point x</text>
+    <text x="620" y="250" text-anchor="middle" fill="#fff" font-size="13">z(x) = Σⱼ αⱼ (k(x,xⱼ) − θⱼ)</text>
+    <text x="620" y="272" text-anchor="middle" fill="#fff" font-size="13">n kernel evaluations</text>
+    <text x="620" y="294" text-anchor="middle" fill="#a3a3a3" font-size="11.5">(Σαⱼ = 0 ⇒ P, mean ghayab)</text>
+  </svg>
+  <figcaption><b>Interpretation:</b> kernel PCA B12 ke dual PCA mein sirf do badlav laata hai: $x_i^Tx_j\to k(x_i,x_j)$ aur $K\to K^c$ (feature-space centering). Baaki ($\lambda/n$, $\sqrt\lambda\beta_i$, $\alpha=\beta/\sqrt\lambda$) wahi hai.</figcaption>
+</figure>
+
+<figure class="viz">
+  <p class="vt">Visual 2: do concentric rings — standard PCA vs kernel PCA (Gaussian, $\sigma=1$) <span class="tag t-add">[ADDED]</span></p>
+  <p class="vs">40 points: andar ki ring radius 1 (16 points, amber circles), bahar ki ring radius 3 (24 points, blue squares). Right: har point ka PC1 score ek line par. Upar standard PCA ($x$-axis par; dono eigenvalues $2.9$, to PC1 ki direction arbitrary hai) — rings overlap karti hain. Neeche kernel PCA — <i>real computation</i> (code), har ring ke saare points ek hi value par. Dono strips ke scales alag hain.</p>
+  <svg viewBox="0 0 780 340" role="img" aria-label="Two concentric rings of points, 16 inner and 24 outer. Left: the scatter. Right top: standard PCA first-component scores overlap, inner points lie inside minus 1 to 1 and outer points between minus 3 and 3. Right bottom: Gaussian kernel PCA first-component score puts all 16 inner points at minus 0.439 and all 24 outer points at plus 0.293.">
+  <text x="170" y="22" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">Data (2-D)</text>
+  <line x1="20" y1="170" x2="320" y2="170" stroke="#262626"/><line x1="170" y1="20" x2="170" y2="320" stroke="#262626"/>
+  <circle cx="214.8" cy="165.6" r="4.2" fill="#FBBF24" fill-opacity="0.9"/>
+  <circle cx="209.7" cy="148.8" r="4.2" fill="#FBBF24" fill-opacity="0.9"/>
+  <circle cx="198.5" cy="135.2" r="4.2" fill="#FBBF24" fill-opacity="0.9"/>
+  <circle cx="183.1" cy="126.9" r="4.2" fill="#FBBF24" fill-opacity="0.9"/>
+  <circle cx="165.6" cy="125.2" r="4.2" fill="#FBBF24" fill-opacity="0.9"/>
+  <circle cx="148.8" cy="130.3" r="4.2" fill="#FBBF24" fill-opacity="0.9"/>
+  <circle cx="135.2" cy="141.5" r="4.2" fill="#FBBF24" fill-opacity="0.9"/>
+  <circle cx="126.9" cy="156.9" r="4.2" fill="#FBBF24" fill-opacity="0.9"/>
+  <circle cx="125.2" cy="174.4" r="4.2" fill="#FBBF24" fill-opacity="0.9"/>
+  <circle cx="130.3" cy="191.2" r="4.2" fill="#FBBF24" fill-opacity="0.9"/>
+  <circle cx="141.5" cy="204.8" r="4.2" fill="#FBBF24" fill-opacity="0.9"/>
+  <circle cx="156.9" cy="213.1" r="4.2" fill="#FBBF24" fill-opacity="0.9"/>
+  <circle cx="174.4" cy="214.8" r="4.2" fill="#FBBF24" fill-opacity="0.9"/>
+  <circle cx="191.2" cy="209.7" r="4.2" fill="#FBBF24" fill-opacity="0.9"/>
+  <circle cx="204.8" cy="198.5" r="4.2" fill="#FBBF24" fill-opacity="0.9"/>
+  <circle cx="213.1" cy="183.1" r="4.2" fill="#FBBF24" fill-opacity="0.9"/>
+  <rect x="299.7" y="145.3" width="7.2" height="7.2" fill="#60A5FA" fill-opacity="0.9"/>
+  <rect x="289.7" y="111.5" width="7.2" height="7.2" fill="#60A5FA" fill-opacity="0.9"/>
+  <rect x="271.3" y="81.4" width="7.2" height="7.2" fill="#60A5FA" fill-opacity="0.9"/>
+  <rect x="245.8" y="57.2" width="7.2" height="7.2" fill="#60A5FA" fill-opacity="0.9"/>
+  <rect x="214.8" y="40.4" width="7.2" height="7.2" fill="#60A5FA" fill-opacity="0.9"/>
+  <rect x="180.5" y="32.1" width="7.2" height="7.2" fill="#60A5FA" fill-opacity="0.9"/>
+  <rect x="145.3" y="33.1" width="7.2" height="7.2" fill="#60A5FA" fill-opacity="0.9"/>
+  <rect x="111.5" y="43.1" width="7.2" height="7.2" fill="#60A5FA" fill-opacity="0.9"/>
+  <rect x="81.4" y="61.5" width="7.2" height="7.2" fill="#60A5FA" fill-opacity="0.9"/>
+  <rect x="57.2" y="87.0" width="7.2" height="7.2" fill="#60A5FA" fill-opacity="0.9"/>
+  <rect x="40.4" y="118.0" width="7.2" height="7.2" fill="#60A5FA" fill-opacity="0.9"/>
+  <rect x="32.1" y="152.3" width="7.2" height="7.2" fill="#60A5FA" fill-opacity="0.9"/>
+  <rect x="33.1" y="187.5" width="7.2" height="7.2" fill="#60A5FA" fill-opacity="0.9"/>
+  <rect x="43.1" y="221.3" width="7.2" height="7.2" fill="#60A5FA" fill-opacity="0.9"/>
+  <rect x="61.5" y="251.4" width="7.2" height="7.2" fill="#60A5FA" fill-opacity="0.9"/>
+  <rect x="87.0" y="275.6" width="7.2" height="7.2" fill="#60A5FA" fill-opacity="0.9"/>
+  <rect x="118.0" y="292.4" width="7.2" height="7.2" fill="#60A5FA" fill-opacity="0.9"/>
+  <rect x="152.3" y="300.7" width="7.2" height="7.2" fill="#60A5FA" fill-opacity="0.9"/>
+  <rect x="187.5" y="299.7" width="7.2" height="7.2" fill="#60A5FA" fill-opacity="0.9"/>
+  <rect x="221.3" y="289.7" width="7.2" height="7.2" fill="#60A5FA" fill-opacity="0.9"/>
+  <rect x="251.4" y="271.3" width="7.2" height="7.2" fill="#60A5FA" fill-opacity="0.9"/>
+  <rect x="275.6" y="245.8" width="7.2" height="7.2" fill="#60A5FA" fill-opacity="0.9"/>
+  <rect x="292.4" y="214.8" width="7.2" height="7.2" fill="#60A5FA" fill-opacity="0.9"/>
+  <rect x="300.7" y="180.5" width="7.2" height="7.2" fill="#60A5FA" fill-opacity="0.9"/>
+  <text x="170" y="332" text-anchor="middle" fill="#a3a3a3" font-size="11.5">andar: radius 1 (○, 16) · bahar: radius 3 (□, 24)</text>
+  <text x="330" y="47" fill="#fff" font-size="13" font-weight="600">Standard PCA — PC1 = x-axis</text>
+  <line x1="330" y1="105" x2="760" y2="105" stroke="#525252"/>
+  <line x1="343.4" y1="101" x2="343.4" y2="109" stroke="#525252"/><text x="343.4" y="125" text-anchor="middle" fill="#a3a3a3" font-size="10.5">-3</text>
+  <line x1="410.6" y1="101" x2="410.6" y2="109" stroke="#525252"/><text x="410.6" y="125" text-anchor="middle" fill="#a3a3a3" font-size="10.5">-2</text>
+  <line x1="477.8" y1="101" x2="477.8" y2="109" stroke="#525252"/><text x="477.8" y="125" text-anchor="middle" fill="#a3a3a3" font-size="10.5">-1</text>
+  <line x1="545.0" y1="101" x2="545.0" y2="109" stroke="#525252"/><text x="545.0" y="125" text-anchor="middle" fill="#a3a3a3" font-size="10.5">0</text>
+  <line x1="612.2" y1="101" x2="612.2" y2="109" stroke="#525252"/><text x="612.2" y="125" text-anchor="middle" fill="#a3a3a3" font-size="10.5">1</text>
+  <line x1="679.4" y1="101" x2="679.4" y2="109" stroke="#525252"/><text x="679.4" y="125" text-anchor="middle" fill="#a3a3a3" font-size="10.5">2</text>
+  <line x1="746.6" y1="101" x2="746.6" y2="109" stroke="#525252"/><text x="746.6" y="125" text-anchor="middle" fill="#a3a3a3" font-size="10.5">3</text>
+  <circle cx="611.9" cy="72.2" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <circle cx="604.3" cy="80.8" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <circle cx="587.6" cy="89.5" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <circle cx="564.5" cy="74.4" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <circle cx="538.4" cy="83.0" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <circle cx="513.3" cy="91.6" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <circle cx="493.1" cy="76.5" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <circle cx="480.7" cy="85.2" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <circle cx="478.1" cy="93.8" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <circle cx="485.7" cy="78.7" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <circle cx="502.4" cy="87.3" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <circle cx="525.5" cy="72.2" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <circle cx="551.6" cy="80.8" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <circle cx="576.7" cy="89.5" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <circle cx="596.9" cy="74.4" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <circle cx="609.3" cy="83.0" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <rect x="740.9" y="68.4" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="725.9" y="53.3" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="698.4" y="62.0" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="660.3" y="70.6" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="614.0" y="55.5" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="562.9" y="64.1" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="510.3" y="49.0" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="459.8" y="57.6" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="415.0" y="66.3" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="378.7" y="51.2" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="353.6" y="59.8" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="341.3" y="68.4" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="342.7" y="53.3" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="357.7" y="62.0" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="385.2" y="70.6" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="423.3" y="55.5" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="469.6" y="64.1" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="520.7" y="49.0" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="573.3" y="57.6" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="623.8" y="66.3" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="668.6" y="51.2" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="704.9" y="59.8" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="730.0" y="68.4" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="742.3" y="53.3" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <text x="330" y="143" fill="#a3a3a3" font-size="11">andar [−1, 1], bahar [−3, 3] — overlap</text>
+  <text x="330" y="192" fill="#fff" font-size="13" font-weight="600">Kernel PCA (Gaussian σ = 1) — PC1</text>
+  <line x1="330" y1="250" x2="760" y2="250" stroke="#525252"/>
+  <line x1="369.1" y1="246" x2="369.1" y2="254" stroke="#525252"/><text x="369.1" y="270" text-anchor="middle" fill="#a3a3a3" font-size="10.5">-0.5</text>
+  <line x1="466.8" y1="246" x2="466.8" y2="254" stroke="#525252"/><text x="466.8" y="270" text-anchor="middle" fill="#a3a3a3" font-size="10.5">-0.25</text>
+  <line x1="564.5" y1="246" x2="564.5" y2="254" stroke="#525252"/><text x="564.5" y="270" text-anchor="middle" fill="#a3a3a3" font-size="10.5">0</text>
+  <line x1="662.3" y1="246" x2="662.3" y2="254" stroke="#525252"/><text x="662.3" y="270" text-anchor="middle" fill="#a3a3a3" font-size="10.5">0.25</text>
+  <line x1="760.0" y1="246" x2="760.0" y2="254" stroke="#525252"/><text x="760.0" y="270" text-anchor="middle" fill="#a3a3a3" font-size="10.5">0.5</text>
+  <circle cx="393.0" cy="217.2" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <circle cx="393.0" cy="225.8" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <circle cx="393.0" cy="234.5" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <circle cx="393.0" cy="219.4" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <circle cx="393.0" cy="228.0" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <circle cx="393.0" cy="236.6" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <circle cx="393.0" cy="221.5" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <circle cx="393.0" cy="230.2" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <circle cx="393.0" cy="238.8" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <circle cx="393.0" cy="223.7" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <circle cx="393.0" cy="232.3" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <circle cx="393.0" cy="217.2" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <circle cx="393.0" cy="225.8" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <circle cx="393.0" cy="234.5" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <circle cx="393.0" cy="219.4" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <circle cx="393.0" cy="228.0" r="3.6" fill="#FBBF24" fill-opacity="0.85"/>
+  <rect x="675.7" y="213.4" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="675.7" y="198.3" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="675.7" y="207.0" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="675.7" y="215.6" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="675.7" y="200.5" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="675.7" y="209.1" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="675.7" y="194.0" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="675.7" y="202.6" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="675.7" y="211.3" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="675.7" y="196.2" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="675.7" y="204.8" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="675.7" y="213.4" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="675.7" y="198.3" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="675.7" y="207.0" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="675.7" y="215.6" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="675.7" y="200.5" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="675.7" y="209.1" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="675.7" y="194.0" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="675.7" y="202.6" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="675.7" y="211.3" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="675.7" y="196.2" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="675.7" y="204.8" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="675.7" y="213.4" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <rect x="675.7" y="198.3" width="6.4" height="6.4" fill="#60A5FA" fill-opacity="0.85"/>
+  <text x="330" y="288" fill="#a3a3a3" font-size="11"></text>
+  <text x="392.9" y="288" text-anchor="middle" fill="#FBBF24" font-size="11">16 points @ −0.439</text>
+  <text x="679.1" y="288" text-anchor="middle" fill="#60A5FA" font-size="11">24 points @ +0.293</text>
+  </svg>
+  <figcaption><b>Interpretation:</b> standard PCA ka PC1 andar aur bahar dono ringon ko ek hi interval mein daalta hai ($[-1,1]$ aur $[-3,3]$ — andar wale bahar ke andar chhup jaate hain). Gaussian kernel PCA ka PC1 andar ki ring ko $-0.439$ par aur bahar ki ring ko $+0.293$ par bhejta hai — ek hi coordinate se dono ring alag. Yeh sirf ek (aur $\sigma$-sensitive) example hai; $\sigma$ ka asar Deeper insight 6 mein.</figcaption>
+</figure>
+
+<figure class="viz">
+  <p class="vt">Visual 3: kernel PCs ka variance — same ring data, Gaussian $\sigma=1$ <span class="tag t-add">[ADDED]</span></p>
+  <p class="vs">Top 8 kernel PCs ka variance $\lambda_k/n$ ($n=40$). Standard PCA ke sirf 2 components hain ($d=2$, dono variance $2.9$ — alag feature space, isliye sirf <i>count</i> compare karo, height nahi). Kernel PCA ke $39=n-1$ nonzero components.</p>
+  <div class="chart" data-chart='{"type":"vbar","labels":["PC1","PC2","PC3","PC4","PC5","PC6","PC7","PC8"],"values":[0.1284,0.0932,0.0932,0.0663,0.0663,0.0652,0.0652,0.0481],"unit":"","tips":["14.9% of total variance","25.7% cumulative with PC2","tied with PC2 (rotational symmetry)","tied with PC5","tied with PC4","tied with PC7","tied with PC6","72.7% cumulative through PC8"],"aria":"Variance of the top eight kernel principal components on the two-ring data: 0.128, 0.093, 0.093, 0.066, 0.066, 0.065, 0.065, 0.048"}'></div>
+  <figcaption><b>Interpretation:</b> variance bahut saare components mein bikhra hai — PC1 sirf $14.9\%$, top 8 milkar $72.7\%$. Pairs (PC2–PC3, PC4–PC5, …) barabar hain kyunki ring rotation-symmetric hai (cos / sin jaise jode). Kernel PCA mein "kitne components rakhne hain" ka sawaal (B10 ka CEV rule) aur bhi zaroori ho jaata hai.</figcaption>
+  <details class="table-view"><summary>Table view</summary><div class="tbl-wrap"><table><thead><tr><th>PC</th><th class="num">Variance $\lambda/n$</th><th class="num">Cumulative EVR</th></tr></thead><tbody>
+<tr><td>1</td><td class="num">0.1284</td><td class="num">14.9%</td></tr>
+<tr><td>2</td><td class="num">0.0932</td><td class="num">25.7%</td></tr>
+<tr><td>3</td><td class="num">0.0932</td><td class="num">36.6%</td></tr>
+<tr><td>4</td><td class="num">0.0663</td><td class="num">44.3%</td></tr>
+<tr><td>5</td><td class="num">0.0663</td><td class="num">52.0%</td></tr>
+<tr><td>6</td><td class="num">0.0652</td><td class="num">59.5%</td></tr>
+<tr><td>7</td><td class="num">0.0652</td><td class="num">67.1%</td></tr>
+<tr><td>8</td><td class="num">0.0481</td><td class="num">72.7%</td></tr>
+</tbody></table></div></details>
+</figure>
+</section>
+
+<section data-track="formal">
+<h3>📖 Formal version — Formula Protocol</h3>
+<p><b>Setting:</b> points $x_1,\dots,x_n\in\mathbb R^d$; kernel $k(x,y)=\phi(x)^T\phi(y)$; $\Phi=[\phi(x_1)\cdots\phi(x_n)]$ (columns), $K=\Phi^T\Phi$, $K_{ij}=k(x_i,x_j)$. $\phi$ shayad infinite-dimensional ho, isliye $\Phi$ sirf soch mein hai — hum sirf $K$ se kaam karte hain. Convention $C=\tfrac1n\tilde\Phi\tilde\Phi^T$ (B5, B12 se).</p>
+
+<p><b>N19 (centering in feature space).</b></p>
+$$\tilde\phi(x_i)=\phi(x_i)-\bar\phi,\qquad \bar\phi=\frac1n\sum_{j=1}^n\phi(x_j),\qquad \tilde\Phi=\Phi H.$$
+<ul>
+<li><b>Symbols:</b> $\bar\phi$ = feature-space mean; $\tilde\Phi$ = centred feature matrix; $H=I-\tfrac1n\mathbf 1\mathbf 1^T$ (N20).</li>
+<li><b>Assumption:</b> PCA ko mean-zero data chahiye (B4). Yahan "data" $\phi(x_i)$ hai, $x_i$ nahi.</li>
+<li><b>Meaning in words:</b> har feature vector se unka average ghatao. Hum $\bar\phi$ ko explicitly nahi nikaal sakte (bahut bada / infinite), par uske dot products $K$ se nikal sakte hain.</li>
+</ul>
+<p><b>Notice that…</b> input centred ($\sum x_i=0$) hone se $\bar\phi=0$ nahi hota jab $\phi$ nonlinear ho. Example 1: points $-1,0,1$, $\phi(x)=(1,\sqrt2x,x^2)$ ⇒ $\bar\phi=(1,0,\tfrac23)\ne0$.</p>
+
+<p><b>N20 (centered Gram matrix) — main formula, P5 ka formula.</b></p>
+$$K^c=HKH,\quad H=I-\tfrac1n\mathbf 1\mathbf 1^T;\qquad k^c_{ij}=k_{ij}-\theta_i-\theta_j+P,\quad \theta_i=\frac1n\sum_{l=1}^nk_{il},\ \ P=\frac1{n^2}\sum_{a,b}k_{ab}.$$
+<ul>
+<li><b>Symbols:</b> $\theta_i$ = $K$ ki $i$-th row ka mean; $P$ = poore $K$ ka mean (grand mean). Source ka hint $k_{ij}-\theta_i\mathbf 1_j^T-\mathbf 1_i\theta_j^T+P\mathbf 1_i\mathbf 1_j^T$ isi ka entry-wise roop hai.</li>
+<li><b>Meaning in words:</b> $K^c_{ij}=\tilde\phi(x_i)^T\tilde\phi(x_j)$ — <i>centred</i> features ka dot product. Har entry mein $i$-th aur $j$-th row ka mean ghatao, aur grand mean ek baar wapas jodo (kyunki do baar ghatane se ek hissa dobara kat gaya).</li>
+<li><b>Proof (ek line):</b> $\tilde\Phi=\Phi H\Rightarrow K^c=\tilde\Phi^T\tilde\Phi=H\Phi^T\Phi H=HKH$ ($H$ symmetric). Entry-wise: $\tilde\phi_i^T\tilde\phi_j=\phi_i^T\phi_j-\phi_i^T\bar\phi-\bar\phi^T\phi_j+\bar\phi^T\bar\phi=k_{ij}-\theta_j-\theta_i+P$.</li>
+<li><b>Properties (checks):</b> symmetric; PSD ($=\tilde\Phi^T\tilde\Phi$); har row ka jod $0$ ($K^c\mathbf 1=0$); diagonal $\ge0$; rank $\le n-1$; $\operatorname{tr}K^c=\sum_i\|\tilde\phi(x_i)\|^2$.</li>
+</ul>
+<div class="tbl-wrap"><table>
+<thead><tr><th></th><th>$K$ (uncentered)</th><th>$K^c$ (centered)</th></tr></thead>
+<tbody>
+<tr><td>Entry meaning</td><td>$\phi_i^T\phi_j$</td><td>$\tilde\phi_i^T\tilde\phi_j$</td></tr>
+<tr><td>Row sums</td><td>aam taur par $\ne0$</td><td>$0$ (hamesha)</td></tr>
+<tr><td>Diagonal</td><td>$\|\phi_i\|^2$</td><td>$\|\tilde\phi_i\|^2$ (aam taur par chhota)</td></tr>
+<tr><td>Eigenvalues</td><td>mean ka asar shamil (top eigenvalue bada)</td><td>sirf spread (kernel PCA ke liye yahi chahiye)</td></tr>
+<tr><td>Equal kab?</td><td colspan="2">Linear kernel + centred input (N24) mein $K^c=K$; warna aam taur par nahi</td></tr>
+</tbody></table></div>
+<p><b>Small example:</b> P5 ka data: $K=\begin{bmatrix}4&amp;1\\1&amp;4\end{bmatrix}$, $\theta=(2.5,2.5)$, $P=2.5$ ⇒ $K^c_{11}=4-2.5-2.5+2.5=1.5$, $K^c_{12}=1-2.5-2.5+2.5=-1.5$ ⇒ $K^c=\begin{bmatrix}1.5&amp;-1.5\\-1.5&amp;1.5\end{bmatrix}$ (full solution P5 mein).</p>
+<p><b>Important insight:</b> centering Gram matrix par ek <i>matrix operation</i> hai ($HKH$) — feature space mein kabhi jaana nahi padta. Isliye "infinite-dimensional Gaussian space mein centering" bhi $n\times n$ arithmetic hai.</p>
+<p><b>This is why…</b> P5 jaise sawaal mein $K$ banana (kernel evaluate karna) aur phir centering formula lagana hi poora sawaal hai.</p>
+
+<p><b>N21 (kernel-PCA eigenproblem) — B12 M2/M3 ka direct copy, $K\to K^c$.</b></p>
+$$K^c\beta_k=\lambda_k\beta_k\ (\|\beta_k\|=1,\ \lambda_k&gt;0),\qquad \text{variance}_k=\frac{\lambda_k}{n},\qquad \text{EVR}_k=\frac{\lambda_k}{\sum_j\lambda_j}=\frac{\lambda_k}{\operatorname{tr}K^c},$$
+$$w_k=\tilde\Phi\,\frac{\beta_k}{\sqrt{\lambda_k}}=\sum_{i=1}^n\alpha^{(k)}_i\,\tilde\phi(x_i),\qquad \alpha^{(k)}=\frac{\beta_k}{\sqrt{\lambda_k}}.$$
+<ul>
+<li><b>Symbols:</b> $\lambda_k,\beta_k$ = $K^c$ ke eigenpairs; $w_k$ = $k$-th kernel PC (feature space mein, unit); $\alpha^{(k)}$ = coefficients (P5 stem ka $w_k=\phi(X)\alpha_k$ isi ka roop hai).</li>
+<li><b>Assumption:</b> $\lambda_k&gt;0$; $\beta_k$ unit.</li>
+<li><b>Meaning in words:</b> $\tilde\Phi\tilde\Phi^T$ (feature-space covariance $\times n$) aur $\tilde\Phi^T\tilde\Phi=K^c$ ke nonzero eigenvalues same hain (B12 M2: $\tilde\Phi\tilde\Phi^T(\tilde\Phi\beta)=\tilde\Phi K^c\beta=\lambda(\tilde\Phi\beta)$). $\|\tilde\Phi\beta\|^2=\beta^TK^c\beta=\lambda$, isliye $\sqrt\lambda$ se divide. Covariance $\tfrac1n\tilde\Phi\tilde\Phi^T$ ka eigenvalue $\lambda/n$.</li>
+</ul>
+<p><b>Notice that…</b> $w_k$ ko likhne ke liye $\tilde\phi(x_i)$ chahiye — jo hum nahi jaante. Isliye kernel PCA mein PC "implicit" rehta hai; sirf $\alpha$ aur scores kaam ke hain.</p>
+<p><b>Important insight:</b> P3 isi se: top eigenvalue of $K^c=10$, $n=100$ ⇒ covariance ka top eigenvalue $10/100=0.1$. $\phi$ ya kernel ka degree jaanna zaroori nahi.</p>
+
+<p><b>N22 (scores).</b></p>
+$$z_{ik}=w_k^T\tilde\phi(x_i)=\sqrt{\lambda_k}\,\beta_{k,i}\quad(\text{training});\qquad z_k(x)=\sum_{j=1}^n\alpha^{(k)}_j\,\tilde k(x,x_j)=\sum_{j=1}^n\alpha^{(k)}_j\bigl(k(x,x_j)-\theta_j\bigr)\quad(\text{naya }x).$$
+<ul>
+<li><b>Symbols:</b> $\tilde k(x,x_j)=\tilde\phi(x)^T\tilde\phi(x_j)=k(x,x_j)-\tfrac1n\sum_lk(x,x_l)-\theta_j+P$ — naye point ke liye centred kernel; vector roop $\tilde k_x=H\bigl(k_x-\tfrac1nK\mathbf 1\bigr)$, $k_x=(k(x,x_1),\dots,k(x,x_n))^T$.</li>
+<li><b>Why the shortcut (second equality):</b> $K^c\mathbf 1=0$ aur symmetric ⇒ $\beta_k\perp\mathbf 1$ ($\lambda_k&gt;0$) ⇒ $\sum_j\alpha_j=0$. To $\tfrac1n\sum_lk(x,x_l)$ aur $P$ wale terms $\sum_j\alpha_j(\cdot)$ mein bahar nikalkar $0$ ho jaate hain; sirf $-\theta_j$ bachta hai.</li>
+<li><b>Meaning in words:</b> naye point ka score = uski training points se kernel-similarities (mean $\theta_j$ hata ke) ka $\alpha$-weighted jod. Training point par $z_i=\sqrt\lambda\beta_i$ (B12 M4 jaisa).</li>
+</ul>
+<p><b>Notice that…</b> $\theta_j$ ghatana zaroori hai. Bina uske answer galat ho sakta hai jab $\alpha\cdot\theta\ne0$ (Example 3: sahi $0.393$, galat $0$).</p>
+
+<p><b>N23 (kitne components).</b></p>
+$$\#\{\lambda_k&gt;0\}\ \le\ \min\bigl(D_{\text{eff}},\,n-1\bigr),\qquad D_{\text{eff}}=\dim\bigl(\text{affine hull of }\phi(x_1),\dots,\phi(x_n)\bigr).$$
+<ul>
+<li><b>Symbols:</b> $D_{\text{eff}}\le D$ = feature space ki (effective) dimension; $n-1$ centering ki wajah se.</li>
+<li><b>Meaning in words:</b> limit $d$ (input dimension) se nahi, feature space aur sample count se aati hai. Standard PCA mein $\phi(x)=x$, $D_{\text{eff}}=d$ — wahan $\le\min(d,n-1)$ (B10 J5).</li>
+<li><b>Values:</b> $(1+x^Ty)^m$: $D=\binom{d+m}{m}$, constant coordinate ka variance zero ⇒ $D_{\text{eff}}=\binom{d+m}m-1$. $(x^Ty)^m$: $D_{\text{eff}}=\binom{d+m-1}{m}$. Gaussian: $\infty$ ⇒ bound $=n-1$ (generic points). Sab code-verified neeche P2/P4 mein.</li>
+</ul>
+<p><b>Important insight:</b> P4 ka "Yes" aur P1 ke option 1 ka "False" isi ek line se: nonlinear $\phi$ ke liye $D_{\text{eff}}$ ya $n-1$ $d$ se bahut bada ho sakta hai.</p>
+
+<p><b>N24 (linear kernel ⇒ standard PCA).</b> $k(x,y)=x^Ty$: $K=X^TX$, $K^c=\tilde X^T\tilde X$ ($\tilde X$ = column-centred $X$). Isliye eigenvalues $=n\times$ (standard PCA ke variances), scores same (sign tak), aur centering automatically ho jaati hai (input pehle se centre karne ki zaroorat nahi). Code: random $6\times3$ data par $K^c$, $\tilde X^T\tilde X$ aur $n\,C$ ke eigenvalues teeno $17.762,\ 1.550,\ 0.411$ ✓.</p>
+
+<div class="tbl-wrap"><table>
+<thead><tr><th></th><th>Standard PCA</th><th>Dual PCA (B12)</th><th>Kernel PCA</th></tr></thead>
+<tbody>
+<tr><td>Matrix</td><td>$C=\tfrac1nXX^T$ ($d\times d$)</td><td>$K=X^TX$ ($n\times n$)</td><td>$K^c=HKH$ ($n\times n$)</td></tr>
+<tr><td>Data kaise aata hai</td><td>$x_i$</td><td>$x_i^Tx_j$</td><td>$k(x_i,x_j)$</td></tr>
+<tr><td>Centering</td><td>$x_i-\mu$ (input)</td><td>$x_i-\mu$ (input)</td><td>feature space mein ($K\to K^c$)</td></tr>
+<tr><td>Nonzero comps $\le$</td><td>$\min(d,n-1)$</td><td>$\min(d,n-1)$</td><td>$\min(D_{\text{eff}},n-1)$ — $d$ se zyada ho sakta hai</td></tr>
+<tr><td>PC explicit?</td><td>haan ($w\in\mathbb R^d$)</td><td>haan ($w=X\beta/\sqrt\lambda$)</td><td>nahi (feature space mein)</td></tr>
+<tr><td>Variance</td><td>$\lambda_C$</td><td>$\lambda_K/n$</td><td>$\lambda_{K^c}/n$</td></tr>
+<tr><td>Naya point $x$</td><td>$x^Tw$</td><td>$\sum_j\alpha_j\,x^Tx_j$</td><td>$\sum_j\alpha_j\,(k(x,x_j)-\theta_j)$</td></tr>
+</tbody></table></div>
+<p><b>This is why…</b> 3.4 ke sawaal chaar shakl ke hain: (a) $K^c$ compute karo (P5); (b) eigenvalue ka $n$ se rishta (P3); (c) kitne components (P4, P1/1); (d) kernel PCA ki concept-statements (P1, P2).</p>
+</section>
+
+<section data-track="how">
+<h3>⚙️ How it works — numbered mechanism</h3>
+<p><b>A. Training (kernel PCA)</b></p>
+<ol>
+<li>Kernel aur uske parameters chuno (degree $m$, constant $c\ge0$, ya $\sigma$). Kernel valid hona chahiye (B14–B15).</li>
+<li>Gram matrix banao: $K_{ij}=k(x_i,x_j)$, $n\times n$ symmetric. (Input ko pehle centre karne ki zaroorat nahi — par karne se koi nuksaan bhi nahi.)</li>
+<li>Centre karo: $\theta_i$ = $i$-th row ka mean, $P$ = poore $K$ ka mean, $k^c_{ij}=k_{ij}-\theta_i-\theta_j+P$ (ya $K^c=HKH$).</li>
+<li>Checks (10 second): $K^c$ symmetric? har row ka jod $0$? diagonal $\ge0$? Teeno hone chahiye.</li>
+<li>Eigen-decompose karo: $K^c\beta_k=\lambda_k\beta_k$, $\lambda_1\ge\lambda_2\ge\cdots$, har $\beta_k$ unit.</li>
+<li>Sirf $\lambda_k&gt;0$ rakho (count $\le\min(D_{\text{eff}},n-1)$). Variance $\lambda_k/n$; EVR $\lambda_k/\operatorname{tr}K^c$; kitne rakhne hain — B10 ka CEV rule.</li>
+<li>Coefficients $\alpha^{(k)}=\beta_k/\sqrt{\lambda_k}$. Training scores $z_{ik}=\sqrt{\lambda_k}\,\beta_{k,i}$.</li>
+</ol>
+<p><b>B. Naya point $x$</b></p>
+<ol>
+<li>$k_x=(k(x,x_1),\dots,k(x,x_n))^T$ nikalo ($n$ kernel evaluations).</li>
+<li>$\theta$ ghatao: $z_k(x)=\sum_j\alpha^{(k)}_j\,(k(x,x_j)-\theta_j)$ (N22; $\sum_j\alpha_j=0$ ki wajah se baaki terms ghayab).</li>
+</ol>
+<p><b>C. Sanity checks</b></p>
+<ol>
+<li>$\sum_k\lambda_k=\operatorname{tr}K^c=\sum_i K^c_{ii}$ (eigenvalues ka jod = diagonal ka jod).</li>
+<li>Training score ka jod $\sum_iz_{ik}=0$ (kyunki $\beta_k\perp\mathbf 1$).</li>
+<li>Linear kernel par standard PCA se compare (N24).</li>
+</ol>
+</section>
+
+<section data-track="examples">
+<h3>🧪 Worked examples <span class="tag t-add">[ADDED]</span></h3>
+
+<h4>Example 1 (simple) — 1-D data, $k(x,y)=(1+xy)^2$, poora pipeline; aur "$k&gt;d$" ka gawah</h4>
+<p>Points $x_1=-1$, $x_2=0$, $x_3=1$ ($d=1$, $n=3$, input mean $0$). Feature map $\phi(x)=(1,\sqrt2x,x^2)^T$ (B13 N5; $\phi(x)^T\phi(y)=1+2xy+x^2y^2=(1+xy)^2$ ✓).</p>
+<ol>
+<li><b>Gram:</b> $K_{11}=(1+1)^2=4$, $K_{12}=(1+0)^2=1$, $K_{13}=(1-1)^2=0$, $K_{22}=1$, $K_{23}=1$, $K_{33}=4$:
+$$K=\begin{bmatrix}4&amp;1&amp;0\\1&amp;1&amp;1\\0&amp;1&amp;4\end{bmatrix}.$$</li>
+<li><b>Means:</b> $\theta=(\tfrac53,\,1,\,\tfrac53)$; $P=\tfrac{4+1+0+1+1+1+0+1+4}{9}=\tfrac{13}9$.</li>
+<li><b>Centre:</b> $K^c_{11}=4-\tfrac53-\tfrac53+\tfrac{13}9=\tfrac{36-30+13}9=\tfrac{19}9$; $K^c_{12}=1-\tfrac53-1+\tfrac{13}9=\tfrac{-15+13}9=-\tfrac29$; $K^c_{13}=0-\tfrac{10}3+\tfrac{13}9=\tfrac{-30+13}9=-\tfrac{17}9$; $K^c_{22}=1-2+\tfrac{13}9=\tfrac49$; $K^c_{23}=-\tfrac29$; $K^c_{33}=\tfrac{19}9$:
+$$K^c=\frac19\begin{bmatrix}19&amp;-2&amp;-17\\-2&amp;4&amp;-2\\-17&amp;-2&amp;19\end{bmatrix}.$$ Row sums: $19-2-17=0$, $-2+4-2=0$ ✓.</li>
+<li><b>Feature mean $\ne0$ (N19):</b> $\bar\phi=\tfrac13\bigl[(1,-\sqrt2,1)+(1,0,0)+(1,\sqrt2,1)\bigr]=(1,\,0,\,\tfrac23)\ne0$ — input centred tha, features nahi.</li>
+<li><b>Eigenpairs:</b> $K^c(1,0,-1)^T=\tfrac19(19+17,\ -2+2,\ -17-19)=4\,(1,0,-1)^T$ ⇒ $\lambda_1=4$. $K^c(1,-2,1)^T=\tfrac19(19+4-17,\ -2-8-2,\ -17+4+19)=\tfrac29\cdot3\,(1,-2,1)^T=\tfrac23(1,-2,1)^T$ ⇒ $\lambda_2=\tfrac23$. $(1,1,1)$ ⇒ $\lambda_3=0$.</li>
+<li><b>Checks:</b> $\operatorname{tr}K^c=\tfrac{19+4+19}9=\tfrac{14}3=4+\tfrac23$ ✓. Variances $\lambda/n$: $\tfrac43=1.333$ aur $\tfrac29=0.222$. EVR(PC1) $=\tfrac{4}{14/3}=\tfrac67=85.7\%$.</li>
+<li><b>Scores:</b> $\beta_1=\tfrac1{\sqrt2}(1,0,-1)$ ⇒ $z_{\cdot1}=\sqrt4\,\beta_1=(\sqrt2,0,-\sqrt2)=(1.414,0,-1.414)$ (sign arbitrary). $\beta_2=\tfrac1{\sqrt6}(1,-2,1)$ ⇒ $z_{\cdot2}=\sqrt{2/3}\,\beta_2=\tfrac13(1,-2,1)=(0.333,-0.667,0.333)$. Score ka jod har PC par $0$ ✓.</li>
+<li><b>Components:</b> $2$ nonzero eigenvalues, jabki $d=1$ ⇒ <b>$k=2&gt;d$ possible</b> (P4 ka gawah). Bound check: $D_{\text{eff}}=\binom{1+2}2-1=2$, $n-1=2$ ⇒ $\min=2$ ✓.</li>
+<li>Explicit check (code): feature-space covariance $\tfrac13\tilde\Phi\tilde\Phi^T$ ke eigenvalues $0,\ 0.2222,\ 1.3333$ = $\lambda/3$ ✓.</li>
+</ol>
+
+<h4>Example 2 (exam-level) — 2-D points, poora sawaal-set</h4>
+<p>Points $x_1=(1,0)$, $x_2=(0,1)$, $x_3=(-1,-1)$ (input mean $(0,0)$). $k(x,y)=(1+x^Ty)^2$. Pucho: (a) $K^c$ (b) PC1 ka variance (c) EVR(PC1) (d) $x_3$ ka PC1 score (e) nonzero components.</p>
+<ol>
+<li><b>Dot products:</b> $x_1^Tx_1=1$, $x_2^Tx_2=1$, $x_3^Tx_3=2$; $x_1^Tx_2=0$; $x_1^Tx_3=-1$; $x_2^Tx_3=-1$.</li>
+<li><b>Gram:</b> $K_{11}=4$, $K_{22}=4$, $K_{33}=(1+2)^2=9$, $K_{12}=1$, $K_{13}=(1-1)^2=0$, $K_{23}=0$:
+$$K=\begin{bmatrix}4&amp;1&amp;0\\1&amp;4&amp;0\\0&amp;0&amp;9\end{bmatrix},\quad \theta=\bigl(\tfrac53,\tfrac53,3\bigr),\quad P=\tfrac{19}9.$$</li>
+<li><b>(a) Centre:</b> $K^c_{11}=4-\tfrac{10}3+\tfrac{19}9=\tfrac{25}9$; $K^c_{12}=1-\tfrac{10}3+\tfrac{19}9=-\tfrac29$; $K^c_{13}=0-\tfrac53-3+\tfrac{19}9=-\tfrac{23}9$; $K^c_{33}=9-6+\tfrac{19}9=\tfrac{46}9$:
+$$K^c=\frac19\begin{bmatrix}25&amp;-2&amp;-23\\-2&amp;25&amp;-23\\-23&amp;-23&amp;46\end{bmatrix}.$$ Rows ka jod: $25-2-23=0$, $-2+25-23=0$, $-23-23+46=0$ ✓.</li>
+<li><b>Eigenpairs:</b> $K^c(1,-1,0)^T=\tfrac19(27,-27,0)=3\,(1,-1,0)^T$ ⇒ $\lambda=3$. $K^c(1,1,-2)^T=\tfrac19(25-2+46,\ -2+25+46,\ -23-23-92)=\tfrac{69}9(1,1,-2)^T=\tfrac{23}3(1,1,-2)^T$ ⇒ $\lambda=\tfrac{23}3=7.667$. Teesra: $(1,1,1)$ ⇒ $0$. Trace: $\tfrac{25+25+46}9=\tfrac{96}9=\tfrac{32}3=\tfrac{23}3+3$ ✓.</li>
+<li><b>(b) Variance:</b> $\tfrac{23/3}{3}=\tfrac{23}9=\mathbf{2.556}$; PC2: $\tfrac33=1$.</li>
+<li><b>(c) EVR:</b> $\tfrac{23/3}{32/3}=\tfrac{23}{32}=\mathbf{71.9\%}$.</li>
+<li><b>(d) Score:</b> $\beta_1=\tfrac1{\sqrt6}(1,1,-2)$ ⇒ $z_{3}=\sqrt{23/3}\cdot\tfrac{-2}{\sqrt6}=-2\sqrt{\tfrac{23}{18}}=\mathbf{-2.261}$ (sign arbitrary); $z_1=z_2=+1.130$.</li>
+<li><b>(e) Components:</b> $2$ nonzero (rank $\le n-1=2$).</li>
+<li><b>Trap (uncentered $K$):</b> $K$ ke eigenvalues $5,3,9$ — top $9$ ⇒ "variance" $9/3=3.0$ ✗ (sahi $2.556$). Mean ka asar top eigenvalue mein ghus gaya. (Sab code-verified.)</li>
+</ol>
+
+<h4>Example 3 (tricky) — naya point, aur $\theta_j$ ghatana kyun zaroori hai</h4>
+<p>Example 2 ka model. Naya point $x=(0,0)$. $\alpha=\beta_1/\sqrt{\lambda_1}=\tfrac{(1,1,-2)}{\sqrt6\sqrt{23/3}}=\tfrac{(1,1,-2)}{\sqrt{46}}=(0.1474,\,0.1474,\,-0.2949)$. Check: $\sum\alpha_j=0$ ✓.</p>
+<ol>
+<li>$k_x=\bigl(k(x,x_1),k(x,x_2),k(x,x_3)\bigr)=(1,1,1)$ (kyunki $x^Tx_j=0$ ⇒ $(1+0)^2=1$).</li>
+<li><b>Sahi (N22):</b> $z=\sum_j\alpha_j(k_{xj}-\theta_j)=0.1474(1-\tfrac53)\cdot2+(-0.2949)(1-3)=-0.1965+0.5898=\mathbf{+0.393}$.</li>
+<li><b>Galat (bina $\theta$):</b> $z=\sum_j\alpha_jk_{xj}=0.1474+0.1474-0.2949=\mathbf0$ ✗ — origin ka score zero dikhta, par asal $0.393$.</li>
+<li><b>Explicit check (code):</b> $w=\tilde\Phi\beta/\sqrt\lambda$, $z=w^T(\phi(x)-\bar\phi)=0.3932$ ✓; full formula (saare teen terms) $=0.3932$ ✓; shortcut ($\theta$ only) $=0.3932$ ✓.</li>
+<li>Training point par: $\sqrt\lambda\beta_i=(1.130,1.130,-2.261)$ aur seedha $w^T\tilde\phi(x_i)$ same ✓.</li>
+</ol>
+<p>P5 ke data par bhi: naya point $(2,0,0)$: $k_x=(9,1)$, $\theta=(2.5,2.5)$, $\alpha=\tfrac1{\sqrt6}(1,-1)$ ⇒ $z=\tfrac{(9-2.5)-(1-2.5)}{\sqrt6}=\tfrac{8}{\sqrt6}=3.266$ (code ✓; $\alpha\cdot\theta=0$ yahan, isliye bina $\theta$ ke bhi wahi — sirf is symmetric case mein).</p>
+
+<h4>Non-examples</h4>
+<ul>
+<li><b>$K^c$ jiska row sum $\ne0$ ya jiska diagonal negative:</b> centred Gram nahi ho sakti. P5 ke option 3 ($\begin{bmatrix}4&amp;1\\1&amp;4\end{bmatrix}$, rows ka jod $5$) = uncentered $K$; option 1 ($-K^c$) mein diagonal $-1.5$.</li>
+<li><b>Input centre karke $K$ ko $K^c$ maan lena</b> (polynomial / Gaussian): Example 1/2 mein input mean $0$ tha, par $K\ne K^c$.</li>
+<li><b>$\lambda_{K^c}=10$ ko "variance 10" likhna ($n=100$):</b> variance $0.1$.</li>
+</ul>
+</section>
+
+<section data-track="deeper">
+<h3>🔬 Deeper insight (D3)</h3>
+<details class="deep"><summary>1. $K^c=HKH$ — proof, aur $H$ ke gun</summary>
+<p>$H=I-\tfrac1n\mathbf 1\mathbf 1^T$ symmetric hai aur $H^2=H$ (idempotent): $H^2=I-\tfrac2n\mathbf 1\mathbf 1^T+\tfrac1{n^2}\mathbf 1(\mathbf 1^T\mathbf 1)\mathbf 1^T=I-\tfrac1n\mathbf 1\mathbf 1^T$. $H\mathbf 1=0$. Isliye $K^c\mathbf 1=HKH\mathbf 1=0$ — rows ka jod zero. $\Phi H$ ka $j$-th column $\phi(x_j)-\tfrac1n\Phi\mathbf 1=\phi(x_j)-\bar\phi$ ✓ (N19). Entry-wise expand: $(HKH)_{ij}=k_{ij}-\tfrac1n\sum_ak_{aj}-\tfrac1n\sum_bk_{ib}+\tfrac1{n^2}\sum_{a,b}k_{ab}=k_{ij}-\theta_j-\theta_i+P$ (symmetric $K$ ⇒ column mean = row mean). Code: matrix aur entry-wise forms $\|\cdot\|_\infty$ difference $\sim10^{-16}$.</p>
+</details>
+<details class="deep"><summary>2. Component count — $D_{\text{eff}}$ ke asli numbers (code-verified)</summary>
+<p>Centred rank = $\dim\operatorname{span}\{\phi(x_i)-\bar\phi\}$ = affine hull ki dimension. $(1+x^Ty)^m$ ke features = degree $\le m$ ke saare monomials (constant shamil): $D=\binom{d+m}m$. Constant coordinate sab points par same ⇒ centering ke baad $0$ ⇒ $D_{\text{eff}}=D-1$. $(x^Ty)^m$ (homogeneous) mein constant nahi hota ⇒ $D_{\text{eff}}=\binom{d+m-1}m$.</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Kernel</th><th>$d$, $n$</th><th>Bound</th><th>Code se mila rank</th></tr></thead>
+<tbody>
+<tr><td>$(1+x^Ty)^2$</td><td>2, 50</td><td>$\binom42-1=5$</td><td>5</td></tr>
+<tr><td>$(1+x^Ty)^2$</td><td>5, 200</td><td>$\binom72-1=20$</td><td>20</td></tr>
+<tr><td>$(x^Ty)^2$</td><td>5, 200</td><td>$\binom62=15$</td><td>15</td></tr>
+<tr><td>$(1+x^Ty)^3$</td><td>20, 1000</td><td>$\min(1770,\,999)=999$</td><td>999</td></tr>
+<tr><td>$(x^Ty)^3$</td><td>20, 1000</td><td>$\min(1540,\,999)=999$</td><td>999</td></tr>
+<tr><td>Gaussian</td><td>2, 10</td><td>$n-1=9$</td><td>9</td></tr>
+<tr><td>Linear</td><td>2, 10</td><td>$\min(d,n-1)=2$</td><td>2</td></tr>
+</tbody></table></div>
+<p>Random Gaussian-distributed points se test kiya (generic points); rank tolerance $10^{-10}\times\lambda_{\max}$. Special (dependent) point-sets mein rank kam ho sakta hai — bound upper limit hai, barabari guarantee nahi.</p>
+</details>
+<details class="deep"><summary>3. Linear kernel = standard PCA (N24 ka proof)</summary>
+<p>$k=x^Ty$ ⇒ $K=X^TX$. $H$ ko $X$ par lagao: $K^c=HX^TXH=(XH)^T(XH)=\tilde X^T\tilde X$, jahan $\tilde X=XH$ column-centred data hai. B12 M2 ke hisaab se $\tilde X^T\tilde X$ aur $\tilde X\tilde X^T=nC$ ke nonzero eigenvalues same ⇒ $\lambda_{K^c}=n\lambda_C$ ⇒ variance $\lambda_{K^c}/n=\lambda_C$ ✓. PCs $w=\tilde X\beta/\sqrt\lambda$ = standard PCA ke PCs. Isliye kernel PCA standard PCA ka generalisation hai: kernel badlo, baaki same.</p>
+</details>
+<details class="deep"><summary>4. Naye point ke liye centred kernel — derivation</summary>
+<p>$\tilde k(x,x_j)=(\phi(x)-\bar\phi)^T(\phi(x_j)-\bar\phi)=k(x,x_j)-\bar\phi^T\phi(x_j)-\phi(x)^T\bar\phi+\bar\phi^T\bar\phi$. Ab $\bar\phi^T\phi(x_j)=\tfrac1n\sum_lk(x_l,x_j)=\theta_j$, $\phi(x)^T\bar\phi=\tfrac1n\sum_lk(x,x_l)=:\bar k_x$, $\bar\phi^T\bar\phi=P$. To $\tilde k(x,x_j)=k(x,x_j)-\bar k_x-\theta_j+P$. Vector roop: $\tilde k_x=k_x-\bar k_x\mathbf 1-\theta+P\mathbf 1=H(k_x-\theta)$ [kyunki $H(k_x-\theta)=k_x-\theta-\mathbf 1\overline{(k_x-\theta)}$ aur $\overline{(k_x-\theta)}=\bar k_x-P$]. Score $z=\alpha^T\tilde k_x=\alpha^Tk_x-\bar k_x\sum\alpha_j-\alpha^T\theta+P\sum\alpha_j=\alpha^T(k_x-\theta)$ kyunki $\sum\alpha_j=0$. Training point par $x=x_i$: $z=\alpha^T(K_{\cdot i}-\theta)=\alpha^TK^c_{\cdot i}=\tfrac{(K^c\beta)_i}{\sqrt\lambda}=\sqrt\lambda\beta_i$ ✓ (N22 ka pehla roop).</p>
+</details>
+<details class="deep"><summary>5. Reconstruction aur pre-image — kernel PCA ki seema</summary>
+<p>Feature space mein reconstruction error nikal sakte hain: $\|\tilde\phi(x_i)\|^2-\sum_{k\le K'}z_{ik}^2=K^c_{ii}-\sum_{k\le K'}\lambda_k\beta_{k,i}^2$ (B11 jaisa). Par input space mein wapas jaana (pre-image: kaun sa $x$ ke $\phi(x)$ reconstructed vector ke paas hai) ka koi closed-form nahi, aur answer unique bhi nahi. Isliye B11 ka "storage / reconstruct" hisaab kernel PCA mein seedha nahi lagta; yahan $\alpha$ aur $n$ points store karne padte hain. (Yeh bank ke kisi sawaal mein nahi aaya.)</p>
+</details>
+<details class="deep"><summary>6. Gaussian kernel mein $\sigma$ ka asar (ring data, code-verified)</summary>
+<p>Wahi 40-point two-ring data (Visual 2/3). $\sigma$ badalne par top-3 variances aur top-2 ka share:</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>$\sigma$</th><th>Top-3 variances $\lambda/n$</th><th>EVR(top 2)</th><th>Kya hota hai</th></tr></thead>
+<tbody>
+<tr><td>0.1</td><td>0.025, 0.025, 0.025</td><td>5.1%</td><td>$K\approx I$ ⇒ $K^c\approx H$ ⇒ sab $\lambda\approx1$ ⇒ variance $\approx\tfrac1n=0.025$; koi structure nahi</td></tr>
+<tr><td>1</td><td>0.128, 0.093, 0.093</td><td>25.7%</td><td>PC1 ek-ek ring ko ek value deta hai (Visual 2)</td></tr>
+<tr><td>3</td><td>0.143, 0.143, 0.044</td><td>70.5%</td><td>Top 2 barabar; ring-wise separation ka PC1 ab degenerate pair mein ghul gaya</td></tr>
+<tr><td>10</td><td>0.0267, 0.0267, 0.0007</td><td>96.6%</td><td>$K^c\approx\tfrac1{\sigma^2}\tilde X^T\tilde X$ ⇒ linear PCA jaisa: $2.9/\sigma^2=0.029\approx0.0267$</td></tr>
+</tbody></table></div>
+<p>Chhota $\sigma$: har point alag (overfit-sa); bada $\sigma$: kernel linear ban jaata hai ($e^{-D^2/2\sigma^2}\approx1-D^2/2\sigma^2$, aur centering constant / $i$-only / $j$-only terms hata deti hai, bachta hai $x_i^Tx_j/\sigma^2$). Beech ka $\sigma$ structure pakadta hai. $\sigma$ chunna data par nirbhar hai — yeh bank ke sawaalon mein nahi aaya.</p>
+</details>
+<details class="deep"><summary>7. Cost aur scaling</summary>
+<p>$K$ banana $O(n^2)$ kernel evaluations; eigen-decomposition $O(n^3)$; memory $O(n^2)$. Naya point: $O(n)$ evaluations. Standard PCA: $O(d^3)$ (primal). Isliye kernel PCA bade $n$ par mehenga hai, aur $d\gg n$ par dual (B12) tarah sasta. (Order-of-magnitude, exact timings nahi.)</p>
+</details>
+</section>
+
+<section data-track="toolkit">
+<h3>⚡ PYQ pattern toolkit</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Trigger clue</th><th>Concept</th><th>First move</th></tr></thead>
+<tbody>
+<tr><td>"centered kernel matrix", hint with $\theta_i$, $P$</td><td>N20</td><td>$K$ banao → $\theta_i$ (row means), $P$ (grand mean) → $k^c_{ij}=k_{ij}-\theta_i-\theta_j+P$</td></tr>
+<tr><td>Options mein matrices ($K^c$ chunna)</td><td>N20 properties</td><td>Symmetric? rows ka jod 0? diagonal $\ge0$? — 10 second mein elimination</td></tr>
+<tr><td>"largest eigenvalue of covariance matrix of transformed dataset" + eigenvalue of $K^c$ diya</td><td>N21</td><td>$\lambda_C=\lambda_{K^c}/n$</td></tr>
+<tr><td>"can $k$ exceed $d$?", "number of nonzero eigenvalues"</td><td>N23</td><td>$\le\min(D_{\text{eff}},n-1)$ — $d$ se bandha nahi</td></tr>
+<tr><td>"statements always true about kernel PCA"</td><td>Statement bank (neeche)</td><td>"Always" ⇒ ek counterexample ya ek proof; list check karo</td></tr>
+<tr><td>"higher degree polynomial kernel"</td><td>Flexibility</td><td>$D$ badhta hai ⇒ zyada nonlinear structure; sahi statement</td></tr>
+<tr><td>"projection / score of a point", $\alpha$, $\beta$ diya</td><td>N22</td><td>Training: $\sqrt\lambda\beta_i$; naya: $\sum\alpha_j(k(x,x_j)-\theta_j)$</td></tr>
+<tr><td>Linear kernel ka zikr</td><td>N24</td><td>Standard PCA jaisa; $\lambda_{K^c}=n\lambda_C$</td></tr>
+</tbody></table></div>
+<p><b>Repeated statement bank — B16</b> <span class="tag t-src">[SRC]</span> (3.4 ke 5 blocks se; verdict + reason):</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Statement</th><th>Verdict</th><th>Reason</th><th>Dikha</th></tr></thead>
+<tbody>
+<tr><td>Kernel PCA ke nonzero PCs ki sankhya $\le d$</td><td>✗</td><td>Limit $\min(D_{\text{eff}},n-1)$; Example 1: $d=1$, 2 components</td><td>P1</td></tr>
+<tr><td>Har $\phi:\mathbb R^d\to\mathbb R^D$ ke liye valid kernel exist karta hai</td><td>✓</td><td>$k=\phi^T\phi$ (Gram $=\Phi^T\Phi$ PSD)</td><td>P1</td></tr>
+<tr><td>$ak_1+bk_2$ valid ($a,b&gt;0$)</td><td>✓</td><td>Closure C1 / concatenated features</td><td>P1</td></tr>
+<tr><td>Valid kernel ka output kabhi negative nahi</td><td>✗</td><td>Sirf $k(x,x)\ge0$ guaranteed; $x^Ty$ at $1,-1$ = $-1$</td><td>P1</td></tr>
+<tr><td>Kernel PCA hamesha standard PCA se kam dimension deta hai</td><td>✗</td><td>Components $d$ se zyada ho sakte hain</td><td>P2</td></tr>
+<tr><td>Kernel PCA sirf linearly separable data par</td><td>✗</td><td>Unsupervised; nonlinear structure ke liye hi bana hai</td><td>P2</td></tr>
+<tr><td>Higher-degree polynomial kernel ⇒ zyada flexibility</td><td>✓</td><td>$D$ (feature space) badhta hai</td><td>P2</td></tr>
+<tr><td>Covariance ka eigenvalue $=\lambda_{K^c}/n$</td><td>✓</td><td>N21</td><td>P3</td></tr>
+<tr><td>Kernel PCA mein $k&gt;d$ possible</td><td>✓</td><td>N23</td><td>P4</td></tr>
+<tr><td>$K^c=K-\theta\mathbf 1^T-\mathbf 1\theta^T+P\mathbf 1\mathbf 1^T$</td><td>✓</td><td>N20</td><td>P5</td></tr>
+</tbody></table></div>
+<p><b>Common traps:</b> $K^c$ ke bajaye $K$ ke eigenvalues use karna · variance mein $n$ se divide bhoolna ($\lambda$ hi likh dena) · "input centred hai to centering skip" · $\theta$/$P$ ka sign ya "$+P$" bhoolna (do baar ghataya, ek baar wapas jodo) · "components $\le d$" · naye point ke score mein $\theta_j$ bhoolna · "kernel PCA = lower-dimensional always" · $\sqrt\lambda$ ki jagah $\lambda$ se scale.</p>
+</section>
+
+<!-- =========================================================== -->
+<h2>🎯 PYQs — 3.4 Kernel PCA (P1–P5)</h2>
+
+<section data-track="pyq1">
+<h3>🎯 P1 — Kernel PCA ke 4 statements: kaun "always true"? (2023 July) <span class="tag t-src">[SRC]</span> <span class="tag t-q">[?]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2023 July · Original Q6 · ID <code>640653577733</code> · MSQ · 5 marks · Pages 6–7 · <span class="tag t-src">[SRC]</span></p>
+<p>Which of the following statements about kernel PCA is/are always true?</p>
+<ol>
+<li>The number of principal components corresponding to nonzero eigenvalues obtained using kernel PCA on $d$ dimensional dataset cannot be more than $d$.</li>
+<li>For every transformation mapping $\phi:\mathbb{R}^d\rightarrow\mathbb{R}^D$, there exists a valid kernel function.</li>
+<li>For two valid kernels $k_1,k_2:\mathbb{R}^d\times\mathbb{R}^d\rightarrow\mathbb{R}$, $ak_1+bk_2$ is a valid kernel function. Here both $a$ and $b$ are positive real numbers.</li>
+<li>The output of a valid kernel function can never be a negative real number.</li>
+</ol>
+<p><b>Answer marking:</b> is copy mein koi option "correct" mark nahi hai <span class="tag t-q">[?]</span>. Mera derived answer: <b>options 2 aur 3</b>.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Har statement ke liye: "hamesha sach?" ⇒ ya proof ya ek counterexample. Statement 1 ke liye $d=1$ aur $k=(1+xy)^2$ try karo. Statement 4 ke liye linear kernel $k=xy$ par $x=1,y=-1$. Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> kaun se statements <i>hamesha</i> true hain. <b>Given:</b> chaar claims — components ki sankhya, $\phi\to k$ existence, positive combination, kernel ka sign.</li>
+<li><b>Trigger clues:</b> "always true" ⇒ ek counterexample se option gir jaata hai; "cannot be more than $d$"; "for every $\phi$"; "never negative".</li>
+<li><b>Prerequisites:</b> N23 (count), B13 N1–N2 ($k=\phi^T\phi$), B14 N13 C1 (closure), N10 (diagonal $\ge0$) — Conceptual, Reference, Evidence. <b>Core principle:</b> kernel $\Leftrightarrow$ PSD Gram $\Leftrightarrow$ $\phi^T\phi$.</li>
+</ul>
+<h4>2. 🧭 Methods (2 genuinely different)</h4>
+<p><b>M1 Direct reasoning</b> (General: definition / rule se har option) aur <b>M2 Concrete witness</b> (Shortcut: ek chhota numeric example jo option ko gira de ya support kare). Dono har option par chalte hain.</p>
+<h4>3. 🧮 Option-by-option working</h4>
+<p><b>Option 1 — "components $\le d$"</b></p>
+<div class="methods">
+<div class="method" data-label="M1 Direct"><div class="mh">M1 · Direct reasoning</div>
+<p><b>Step 1:</b> Nonzero components ki sankhya $=\operatorname{rank}K^c\le\min(D_{\text{eff}},\,n-1)$ (N23).</p>
+<p><b>Step 2:</b> Is bound mein $d$ aata hi nahi; $D_{\text{eff}}$ feature space ki dimension hai, jo $d$ se bahut badi (ya $\infty$) ho sakti hai.</p>
+<p><b>Step 3:</b> Isliye "$\le d$" hamesha nahi. <b>False ✗</b>.</p></div>
+<div class="method" data-label="M2 Witness"><div class="mh">M2 · Concrete witness (Example 1)</div>
+<p><b>Step 1:</b> $d=1$, points $-1,0,1$, $k=(1+xy)^2$ (valid kernel).</p>
+<p><b>Step 2:</b> $K^c=\tfrac19\begin{bmatrix}19&amp;-2&amp;-17\\-2&amp;4&amp;-2\\-17&amp;-2&amp;19\end{bmatrix}$ ke eigenvalues $4,\ \tfrac23,\ 0$.</p>
+<p><b>Step 3:</b> Do nonzero eigenvalues, jabki $d=1$ ⇒ $2&gt;1$. Statement toot gayi. <b>False ✗</b>.</p></div>
+</div>
+<p><b>Option 2 — "har $\phi$ ke liye valid kernel"</b></p>
+<div class="methods">
+<div class="method" data-label="M1 Direct"><div class="mh">M1 · Direct</div>
+<p><b>Step 1:</b> Koi bhi $\phi:\mathbb R^d\to\mathbb R^D$ lo. Define $k(x,y)=\phi(x)^T\phi(y)$.</p>
+<p><b>Step 2:</b> Yeh symmetric hai, aur kisi bhi points ke liye $K=\Phi^T\Phi$ ($\Phi$ ke columns $\phi(x_i)$) ⇒ $c^TKc=\|\Phi c\|^2\ge0$ (PSD).</p>
+<p><b>Step 3:</b> To $k$ valid hai. <b>True ✓</b>.</p></div>
+<div class="method" data-label="M2 Witness"><div class="mh">M2 · Concrete witness</div>
+<p><b>Step 1:</b> Ek ajeeb $\phi$ lo: $\phi(x)=(\sin x,\ \cos x)^T$, $d=1$, $D=2$.</p>
+<p><b>Step 2:</b> $k(x,y)=\sin x\sin y+\cos x\cos y=\cos(x-y)$.</p>
+<p><b>Step 3:</b> Points $0,\ 1,\ 2$: Gram ke eigenvalues $\ge0$ (code: $\min\approx8\times10^{-17}$, yaani $0$ tak). $\phi$ jo bhi ho, $\phi^T\phi$ valid. <b>True ✓</b>.</p></div>
+</div>
+<p><b>Option 3 — "$ak_1+bk_2$, $a,b&gt;0$"</b></p>
+<div class="methods">
+<div class="method" data-label="M1 Feature map"><div class="mh">M1 · Feature map</div>
+<p><b>Step 1:</b> $k_1=\phi_1^T\phi_1$, $k_2=\phi_2^T\phi_2$.</p>
+<p><b>Step 2:</b> $\phi=(\sqrt a\,\phi_1,\ \sqrt b\,\phi_2)$ (concatenate) ⇒ $\phi(x)^T\phi(y)=ak_1+bk_2$ ($\sqrt a,\sqrt b$ real kyunki $a,b&gt;0$).</p>
+<p><b>Step 3:</b> <b>True ✓</b> (C1).</p></div>
+<div class="method" data-label="M2 PSD form"><div class="mh">M2 · PSD quadratic form</div>
+<p><b>Step 1:</b> Koi bhi $c$: $c^T(aK_1+bK_2)c=a\,c^TK_1c+b\,c^TK_2c$.</p>
+<p><b>Step 2:</b> Dono terms $\ge0$ kyunki $a,b&gt;0$ aur $K_1,K_2$ PSD.</p>
+<p><b>Step 3:</b> Sum $\ge0$; symmetric bhi ⇒ PSD ⇒ <b>True ✓</b>.</p></div>
+</div>
+<p><b>Option 4 — "kernel kabhi negative nahi"</b></p>
+<div class="methods">
+<div class="method" data-label="M1 Direct"><div class="mh">M1 · Direct</div>
+<p><b>Step 1:</b> Guarantee sirf diagonal par hai: $k(x,x)=\|\phi(x)\|^2\ge0$.</p>
+<p><b>Step 2:</b> Off-diagonal $k(x,y)=\phi(x)^T\phi(y)$ do vectors ka dot product hai — negative ho sakta hai (opposite directions).</p>
+<p><b>Step 3:</b> <b>False ✗</b>.</p></div>
+<div class="method" data-label="M2 Witness"><div class="mh">M2 · Concrete witness</div>
+<p><b>Step 1:</b> $k(x,y)=xy$ ($\phi(x)=x$), valid.</p>
+<p><b>Step 2:</b> $k(1,-1)=-1&lt;0$.</p>
+<p><b>Step 3:</b> Ek valid kernel ne negative value di ⇒ <b>False ✗</b>.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Direct reasoning</td><td>Fast (10–20 sec/option)</td><td>Low (rules yaad ho to)</td><td>Medium — "$\le d$" par intuition fisal sakti hai</td><td>Exam mein 1st pass</td></tr>
+<tr><td>M2 Witness</td><td>Medium</td><td>Low</td><td>Low — numbers khud sach bolte hain</td><td>"Always" waale option ko todne ke liye</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M1 on 2, 3 (rule); M2 ek line ka $xy$ example on 4. 🏆 <b>BEST EXAM METHOD:</b> M1 sab par, option 1 par Example-1 witness yaad rakho; trade-off: option 1 intuitive lagta hai ("$d$ dimension mein $d$ hi directions") — witness hi bharosa dilata hai.</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li>Code: Example 1 ke $K^c$ ke eigenvalues $\{4,\ 0.6667,\ 0\}$ ⇒ 2 nonzero, $d=1$ ✓.</li>
+<li>$\cos(x-y)$ Gram ($0,1,2$) PSD (min eigenvalue $\approx8\times10^{-17}$) ✓.</li>
+<li>Option 3: random $K_1,K_2$ PSD, $a=2,\ b=5$ ⇒ $\lambda_{\min}\ge0$ ✓.</li>
+<li><b>Verdicts:</b> 1 ✗; 2 ✓; 3 ✓; 4 ✗ ⇒ <b>options 2, 3</b> <span class="tag t-q">[?]</span> (source marking nahi; derived).</li>
+</ul>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>Kernel PCA ko "PCA hai to $\le d$" maan lena — $D_{\text{eff}}$ aur $n-1$ dekho.</li>
+<li>Option 2 ko "kuch $\phi$ galat honge" soch ke false kar dena — $k$ ko $\phi^T\phi$ define karte hain, isliye hamesha valid.</li>
+<li>Option 3 mein sign: $a,b&gt;0$ diye hain; $a,b$ negative hote to guarantee nahi (B14 X1–X2).</li>
+<li>"$k(x,x)\ge0$" ko "$k(x,y)\ge0$" samajhna.</li>
+</ul>
+<p><b>Recognition rule:</b> "always" statement ⇒ ya $\phi^T\phi$ proof ya ek valid kernel ka counterexample. Kernel ka output sign-free; sirf diagonal $\ge0$.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>Gaussian kernel, $n=10$ generic points in $\mathbb R^2$: kernel PCA ke maximum nonzero components kitne? Aur linear kernel, same data?</p>
+<details class="reveal"><summary>Show answer</summary><p>Gaussian: $D_{\text{eff}}=\infty$ ⇒ $\min(\infty,n-1)=\mathbf9$. Linear: $\min(d,n-1)=\min(2,9)=\mathbf2$. (Code: ranks $9$ aur $2$ ✓.) Gaussian mein $9&gt;d=2$ — option 1 phir toot gaya.</p></details>
+</details>
+</section>
+
+<section data-track="pyq2">
+<h3>🎯 P2 — 1000 samples, $d=20$, degree-3 polynomial kernel PCA — sahi statement (2024 February) <span class="tag t-src">[SRC]</span> <span class="tag t-q">[?]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2024 February · Original Q5 · ID <code>640653738036</code> · MCQ · 4 marks · <span class="tag t-src">[SRC]</span></p>
+<p>Consider a dataset consisting of 1000 samples in a 20-dimensional space. You apply Kernel PCA with a polynomial kernel of degree 3 to reduce the dimensionality of the data. Which of the following statements regarding Kernel PCA is true?</p>
+<ol>
+<li>Kernel PCA always results in a lower-dimensional representation of the data compared to standard PCA.</li>
+<li>Kernel PCA can only be applied to datasets that are linearly separable.</li>
+<li>Choosing a higher degree polynomial kernel in Kernel PCA can lead to increased flexibility in capturing non-linear relationships.</li>
+<li>None of these.</li>
+</ol>
+<p><b>Answer marking:</b> is copy mein koi option "correct" mark nahi <span class="tag t-q">[?]</span>. Mera derived answer: <b>option 3</b>.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Option 1 ke liye numbers lagao: $d=20$, $n=1000$, degree 3 — feature space kitni badi hai? Option 2: kya kernel PCA labels ya "separability" use karta hai? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> ek sahi statement. <b>Given:</b> $n=1000$, $d=20$, polynomial degree 3.</li>
+<li><b>Trigger clues:</b> "always", "only", "higher degree ⇒ flexibility", "None of these".</li>
+<li><b>Prerequisites:</b> N23, B13 N5–N6 (polynomial feature dimension), N24. (Conceptual, Reference.) <b>Core principle:</b> kernel PCA ka feature space bada hota hai; polynomial degree flexibility deta hai; unsupervised.</li>
+</ul>
+<h4>2. 🧭 Methods (2 genuinely different)</h4>
+<p><b>M1 Concept elimination</b> (Shortcut) aur <b>M2 Count with numbers</b> (General: $d=20,n=1000$ ke saath bound nikalna — option 1 ko numeric proof se todta hai). Option 3 ko M1 ke saath support milta hai.</p>
+<h4>3. 🧮 Working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Elimination"><div class="mh">M1 · Concept elimination</div>
+<p><b>Step 1 (opt 1):</b> "Always lower-dimensional" — kernel PCA ka output standard PCA ($\le20$) se zyada components de sakta hai (N23).</p>
+<p><b>Step 2 (opt 2):</b> Kernel PCA unsupervised hai; "linearly separable" ek classification ka concept hai. Kernel PCA to tab kaam aata hai jab data <i>linear</i> structure se nahi samjha ja sakta. ✗</p>
+<p><b>Step 3 (opt 3):</b> Degree $m$ ↑ ⇒ monomials ↑ ⇒ feature space bada ⇒ zyada nonlinear relations pakad sakta hai. ✓</p>
+<p><b>Step 4 (opt 4):</b> Option 3 true hai ⇒ "None of these" ✗.</p></div>
+<div class="method" data-label="M2 Count"><div class="mh">M2 · Numbers lagao (option 1)</div>
+<p><b>Step 1:</b> $(1+x^Ty)^3$, $d=20$: $D=\binom{23}3=1771$ features; centering ke baad $D_{\text{eff}}=1770$.</p>
+<p><b>Step 2:</b> $n=1000$ ⇒ $n-1=999$.</p>
+<p><b>Step 3:</b> Components $\le\min(1770,\ 999)=999$, jo $d=20$ se bahut zyada. Standard PCA $\le\min(d,n-1)=20$.</p>
+<p><b>Step 4:</b> Option 1 ✗. (Homogeneous $(x^Ty)^3$ ke liye bhi $\binom{22}3=1540$ ⇒ bound $999$.) Option 3 ke liye numeric proof nahi hota — concept.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Elimination</td><td>Fast (≈30 sec)</td><td>Low</td><td>Medium — "None of these" par bhatak sakte ho</td><td>Exam (4 marks, bina calculator)</td></tr>
+<tr><td>M2 Count</td><td>Medium (≈1 min)</td><td>Low–Medium ($\binom{23}3$)</td><td>Low</td><td>Option 1 ko pakka todne ke liye</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M1. 🏆 <b>BEST EXAM METHOD:</b> M1 + option 1 par ek-line count ($999\gg20$); trade-off: sirf M1 par "sab galat lagte hain" ka shak ho to "None of these" chuna ja sakta hai — option 3 hamesha sahi sunai deta hai.</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li>Code: $(1+x^Ty)^3$, $d=20$, $n=1000$ generic points ⇒ rank of $K^c$ $=999$ ✓; homogeneous $(x^Ty)^3$ ⇒ $999$ ✓. Standard PCA ka rank $20$.</li>
+<li>Binomials: $\binom{23}3=1771$, $\binom{22}3=1540$ ✓.</li>
+<li><b>Verdicts:</b> 1 ✗; 2 ✗; 3 ✓; 4 ✗ ⇒ <b>option 3</b> <span class="tag t-q">[?]</span> (source marking nahi; derived).</li>
+</ul>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>Naam "dimensionality reduction" sunke "hamesha kam dimension" maan lena — kernel PCA ke pehle $\phi$ se dimension badhti hai; kitne PCs rakhne hain yeh aapka chunaav hai (CEV rule), "always" nahi.</li>
+<li>"Linearly separable" ko kernel PCA se jodna (SVM-type soch).</li>
+<li>"None of these" ko safe option samajhna jab ek statement sahi ho.</li>
+</ul>
+<p><b>Recognition rule:</b> "always lower / only separable" ⇒ galat; "kernel / degree se flexibility" ⇒ sahi.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>$d=5$, $n=200$, $k=(1+x^Ty)^2$ — max nonzero components? Homogeneous $(x^Ty)^2$ ho to?</p>
+<details class="reveal"><summary>Show answer</summary><p>Inhomogeneous: $\binom{7}2-1=20$; $n-1=199$ ⇒ <b>20</b>. Homogeneous: $\binom{6}2=15$ ⇒ <b>15</b>. Dono $d=5$ se zyada. Code ranks $20$ aur $15$ ✓.</p></details>
+</details>
+</section>
+
+<section data-track="pyq3">
+<h3>🎯 P3 — Centered kernel matrix ka top eigenvalue 10 — covariance ka eigenvalue? (2024 July 07) <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2024 July 07 · Original Q5 · ID <code>640653829507</code> · SA · 3 marks · Page 6 · <span class="tag t-src">[SRC]</span></p>
+<p>Kernel PCA with a polynomial kernel of degree 3 is run on a dataset of 100 data-points. Let $\phi$ be the corresponding transformation. If the largest eigenvalue of the centered kernel matrix is 10, find the largest eigenvalue of the covariance matrix of the transformed dataset.</p>
+<p><b>Accepted answer (source):</b> <b>0.1</b>.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Gram matrix $K^c=\tilde\Phi^T\tilde\Phi$ aur covariance $C=\tfrac1n\tilde\Phi\tilde\Phi^T$ — dono ke nonzero eigenvalues ka rishta kya hai? $n$ kitna? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> $C$ ka largest eigenvalue ($C$ = covariance of $\phi$-images). <b>Given:</b> $n=100$; $\lambda_{\max}(K^c)=10$.</li>
+<li><b>Trigger clues:</b> "centered kernel matrix", "covariance matrix of the transformed dataset". Degree 3 sirf distractor — answer $\phi$ ke form par nirbhar nahi.</li>
+<li><b>Prerequisites:</b> N21, B12 M2 ($\tilde\Phi^T\tilde\Phi$ vs $\tilde\Phi\tilde\Phi^T$ ke nonzero eigenvalues same). (Procedural, Reference.) <b>Core principle:</b> $\lambda_C=\lambda_{K^c}/n$.</li>
+</ul>
+<h4>2. 🧭 Methods (2 genuinely different)</h4>
+<p><b>M1 Eigenvalue relation</b> (Shortcut: $\tilde\Phi^T\tilde\Phi$ aur $\tfrac1n\tilde\Phi\tilde\Phi^T$ ke spectrum) aur <b>M2 Variance = mean squared score</b> (General: PC1 par projections ka $\tfrac1n\sum z_i^2$).</p>
+<h4>3. 🧮 Side-by-side working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Eigenvalue relation"><div class="mh">M1 · Eigenvalue relation</div>
+<p><b>Step 1:</b> $K^c=\tilde\Phi^T\tilde\Phi$ ($n\times n$), $C=\tfrac1n\tilde\Phi\tilde\Phi^T$ ($D\times D$).</p>
+<p><b>Step 2:</b> $\tilde\Phi^T\tilde\Phi$ aur $\tilde\Phi\tilde\Phi^T$ ke nonzero eigenvalues same (M2 B12).</p>
+<p><b>Step 3:</b> $C$ mein $\tfrac1n$ ka factor ⇒ $\lambda_C=\lambda_{K^c}/n$.</p>
+<p><b>Step 4:</b> $\lambda_C=10/100=\mathbf{0.1}$.</p></div>
+<div class="method" data-label="M2 Mean squared score"><div class="mh">M2 · Variance = mean squared score</div>
+<p><b>Step 1:</b> $K^c\beta=10\beta$, $\|\beta\|=1$ ⇒ PC1 par training scores $z_i=\sqrt{10}\,\beta_i$ (N22).</p>
+<p><b>Step 2:</b> Scores ka mean $0$ (kyunki $\beta\perp\mathbf1$), isliye variance $=\tfrac1n\sum z_i^2=\tfrac1{100}\cdot10\sum\beta_i^2$.</p>
+<p><b>Step 3:</b> $\sum\beta_i^2=1$ ⇒ $\tfrac{10}{100}=\mathbf{0.1}$.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Relation</td><td>Fast (10 sec)</td><td>Low</td><td>Low (bas $\div n$ yaad rahe)</td><td>Exam</td></tr>
+<tr><td>M2 Mean squared score</td><td>Medium</td><td>Medium</td><td>Low</td><td>Samajh pakki karne ke liye ($\div n$ kahan se aaya)</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M1. 🏆 <b>BEST EXAM METHOD:</b> M1, M2 se sirf yaad dilane ke liye ($\div n$ = "average"); trade-off: sirf M1 par "$\div n$" ratta ban jaata hai — M2 ka ek mental check ($\tfrac1n\sum z^2$) use bhoolne nahi deta.</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li>Source key $0.1$ = $10/100$ ✓ (convention $C=\tfrac1n\tilde\Phi\tilde\Phi^T$, B5 se confirmed). $\tfrac1{n-1}$ convention se $10/99=0.101$ aata — key $0.1$ ke saath nahi milta, isliye $\tfrac1n$.</li>
+<li>Code (Example 1): explicit $\tfrac13\tilde\Phi\tilde\Phi^T$ ke eigenvalues $=\lambda_{K^c}/3$ ✓.</li>
+<li>Degree 3 / $D$ bekaar: $\phi$ badalne se yeh relation nahi badalta.</li>
+</ul>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>"Variance $=10$" likhna ($\div n$ bhoolna). ($n=100$ ke saath $\lambda$ aur $\lambda/n$ mein $100\times$ ka fark.)</li>
+<li>$10/99=0.101$ (galat convention).</li>
+<li>$K^c$ ki jagah $K$ ke eigenvalue se confuse hona ya degree 3 se $10^3$/$10/3$ jaisa kuch nikaalna.</li>
+</ul>
+<p><b>Recognition rule:</b> "kernel-matrix eigenvalue diya, covariance maanga" ⇒ $\div n$.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>$n=50$ points, centered Gram ke top eigenvalue $35$, $\operatorname{tr}K^c=70$. PC1 ka variance aur EVR?</p>
+<details class="reveal"><summary>Show answer</summary><p>Variance $=35/50=\mathbf{0.7}$. EVR $=35/70=\mathbf{50\%}$ ($n$ EVR mein cancel ho jaata hai). Code ✓.</p></details>
+</details>
+</section>
+
+<section data-track="pyq4">
+<h3>🎯 P4 — Kya kernel PCA mein $k&gt;d$ possible hai? (2024 October 27) <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2024 October 27 · Original Q4 · ID <code>640653995443</code> · MCQ · 3 marks · Page 5 · <span class="tag t-src">[SRC]</span></p>
+<p>Given $n$ data points in a $d$-dimensional space with a non-linear relationship, kernel PCA is applied to reduce dimensionality and select the first $k$ principal components.</p>
+<p><b>Question:</b> Is it possible for $k$ to be greater than $d$?</p>
+<ol><li>yes</li><li>No</li></ol>
+<p><b>Answer (source):</b> <b>Yes</b>.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>Standard PCA mein $k\le d$ kyun? Kernel PCA mein kaun si jagah par "$d$" ka bandhan hat jaata hai? Ek chhota $d=1$ example soch sakte ho? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> "$k&gt;d$ possible?" (Yes/No). <b>Given:</b> $n$ points, $d$ dims, nonlinear relation, kernel PCA.</li>
+<li><b>Trigger clues:</b> "non-linear relationship" ⇒ kernel; "$k$ greater than $d$". </li>
+<li><b>Prerequisites:</b> N23, B12 (rank $\le\min(d,n)$ standard PCA mein). (Conceptual, Reference.) <b>Core principle:</b> kernel PCA ki limit feature-space rank aur $n-1$ se hai, $d$ se nahi.</li>
+</ul>
+<h4>2. 🧭 Methods (2 genuinely different)</h4>
+<p><b>M1 Rank bound</b> (General) aur <b>M2 Explicit witness</b> (Shortcut: Example 1 ka ek-line example). Dono ek hi conclusion par.</p>
+<h4>3. 🧮 Side-by-side working</h4>
+<div class="methods">
+<div class="method" data-label="M1 Rank bound"><div class="mh">M1 · Rank bound</div>
+<p><b>Step 1:</b> Standard PCA: components $=\operatorname{rank}C\le\min(d,n-1)$ ⇒ $\le d$.</p>
+<p><b>Step 2:</b> Kernel PCA: components $=\operatorname{rank}K^c\le\min(D_{\text{eff}},\ n-1)$ (N23).</p>
+<p><b>Step 3:</b> Nonlinear kernel ($D_{\text{eff}}&gt;d$, e.g. polynomial ya Gaussian) aur $n$ kaafi bada ⇒ bound $&gt;d$.</p>
+<p><b>Step 4:</b> To $k&gt;d$ <b>possible</b> hai: <b>Yes</b>.</p></div>
+<div class="method" data-label="M2 Witness"><div class="mh">M2 · Explicit witness (Example 1)</div>
+<p><b>Step 1:</b> $d=1$, points $-1,0,1$, $k=(1+xy)^2$.</p>
+<p><b>Step 2:</b> Eigenvalues of $K^c$: $4,\ \tfrac23,\ 0$ ⇒ $2$ nonzero.</p>
+<p><b>Step 3:</b> $k=2&gt;d=1$ ⇒ <b>Yes</b>.</p></div>
+</div>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Rank bound</td><td>Fast (≈10 sec)</td><td>Low</td><td>Low</td><td>Exam</td></tr>
+<tr><td>M2 Witness</td><td>Medium</td><td>Low</td><td>Very low</td><td>Doubt hone par numeric proof</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M1. 🏆 <b>BEST EXAM METHOD:</b> M1; trade-off: "yes" sirf tab ke liye hai jab kernel nonlinear hai — linear kernel par $k\le d$ rehta hai (N24), isliye "nonlinear relationship" wali shart padhna zaroori hai.</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li>Code (Example 1): explicit $\phi$ se feature covariance ke eigenvalues $0,\ 0.2222,\ 1.3333$ ⇒ 2 nonzero ✓.</li>
+<li>Linear kernel, $d=2$, $n=10$: rank $2\le d$ ✓ (N24 ka counter-case).</li>
+<li>Source key <b>Yes</b> ✓.</li>
+</ul>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>"Dimensionality reduction ⇒ $k\le d$" — reduce hone ka matlab output ko $\phi$-space se chhota rakhna hai, $d$ se nahi.</li>
+<li>Linear kernel mein bhi "yes" bol dena (sirf nonlinear kernels).</li>
+<li>$k\le n$ jaisa dhokha: $n-1$ hoga (centering ke baad rank $\le n-1$).</li>
+</ul>
+<p><b>Recognition rule:</b> "$k$ vs $d$" ⇒ kernel PCA mein bandhan $\min(D_{\text{eff}},n-1)$ ka hai.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>(a) Linear kernel, $d=3$: max nonzero components? (b) Koi bhi kernel, $n=2$ points: max?</p>
+<details class="reveal"><summary>Show answer</summary><p>(a) $\min(d,n-1)\le\mathbf3$ (N24). (b) $\le n-1=\mathbf1$ — do points ke centred features $\pm v$, ek hi direction. Code (random kernels) ✓.</p></details>
+</details>
+</section>
+
+<section data-track="pyq5">
+<h3>🎯 P5 — Polynomial kernel $(1+x_i^Tx_j)^2$ ka centered kernel matrix (2025 July 13) <span class="tag t-src">[SRC]</span></h3>
+<div class="box">
+<p class="mono" style="margin:0 0 6px">2025 July 13 · Original Q5 · ID <code>6406531302388</code> · MCQ · 4 marks · Page 6 · <span class="tag t-src">[SRC]</span></p>
+<p>Kernel PCA with a polynomial kernel is applied to the following dataset with three features:</p>
+$$X=\begin{bmatrix}1&amp;0\\0&amp;1\\0&amp;0\end{bmatrix}.$$
+<p>The $k$-th principal component is given by $w_k=\phi(X)\alpha_k$, where $\phi$ is the transformation mapping corresponding to $k(x_i,x_j)=(1+x_i^Tx_j)^2$. Find the <b>centered kernel matrix</b> $K^c$. The source gives the centering hint:</p>
+$$k^c_{ij}=k_{ij}-\theta_i\mathbf 1_j^T-\mathbf 1_i\theta_j^T+P\,\mathbf 1_i\mathbf 1_j^T,\qquad \theta_i=\frac1n\sum_{k=1}^{n}k_{ik},\quad P=\frac1{n^2}\sum_{i,j}k_{ij}.$$
+<ol>
+<li>$\begin{bmatrix}-1.5&amp;1.5\\1.5&amp;-1.5\end{bmatrix}$</li>
+<li>$\begin{bmatrix}1.5&amp;-1.5\\-1.5&amp;1.5\end{bmatrix}$</li>
+<li>$\begin{bmatrix}4&amp;1\\1&amp;4\end{bmatrix}$</li>
+<li>$\begin{bmatrix}1&amp;-1\\4&amp;-4\end{bmatrix}$</li>
+</ol>
+<p><b>Answer (source):</b> option 2 marked correct. <b>Formatting:</b> options ke matrices ke row-breaks toote the; maine sirf formatting theek ki, entries wahi hain jo source ne dikhaye. <b>Reading:</b> $X$ ke <i>columns</i> points hain (3 features, $n=2$ points): $x_1=(1,0,0)^T$, $x_2=(0,1,0)^T$ — isliye $K^c$ $2\times2$ hai.</p>
+</div>
+<div class="try"><p class="ttl">✍️ Try first</p><p>(Pretest bhi yahi tha.) $K$ banao ($2\times2$), $\theta$ aur $P$ nikalo, fir hint formula. Ya bina calculation: kaun se options mein row-sum $\ne0$, ya negative diagonal, ya asymmetry hai? Confidence: S / U / G?</p></div>
+<details class="reveal"><summary>Show solution</summary>
+<h4>1. 🔍 Decode</h4>
+<ul>
+<li><b>Asked:</b> $K^c$. <b>Given:</b> 2 points in $\mathbb R^3$, kernel $(1+x^Ty)^2$, hint formula.</li>
+<li><b>Trigger clues:</b> "centered kernel matrix" + hint with $\theta_i$, $P$; options mein matrices.</li>
+<li><b>Prerequisites:</b> N19–N20; B14 N10 (Gram properties). (Procedural, Evidence.) <b>Core principle:</b> $K^c=HKH$; properties: symmetric, row sums $0$, diagonal $\ge0$, PSD.</li>
+</ul>
+<h4>2. 🧭 Methods (3 genuinely different)</h4>
+<p><b>M1 Elementwise</b> (hint formula: General) · <b>M2 $HKH$ matrix product</b> (Advanced/structural) · <b>M3 Property elimination</b> (Shortcut: bina $K$ banaye options todna).</p>
+<h4>3. 🧮 Working (step-interleaved)</h4>
+<div class="methods">
+<div class="method" data-label="M1 Elementwise"><div class="mh">M1 · Elementwise (hint)</div>
+<p><b>Step 1 — dot products:</b> $x_1^Tx_1=1$, $x_2^Tx_2=1$, $x_1^Tx_2=0$.</p>
+<p><b>Step 2 — Gram:</b> $K_{11}=K_{22}=(1+1)^2=4$, $K_{12}=(1+0)^2=1$ ⇒ $K=\begin{bmatrix}4&amp;1\\1&amp;4\end{bmatrix}$.</p>
+<p><b>Step 3 — $\theta$, $P$:</b> $\theta_1=\theta_2=\tfrac{4+1}2=2.5$; $P=\tfrac{4+1+1+4}{4}=2.5$.</p>
+<p><b>Step 4 — centre:</b> $K^c_{11}=4-2.5-2.5+2.5=1.5$; $K^c_{12}=1-2.5-2.5+2.5=-1.5$; symmetric ⇒ $K^c_{21}=-1.5$, $K^c_{22}=1.5$.</p>
+<p><b>Step 5:</b> $K^c=\begin{bmatrix}1.5&amp;-1.5\\-1.5&amp;1.5\end{bmatrix}$ ⇒ <b>option 2</b>.</p></div>
+<div class="method" data-label="M2 HKH"><div class="mh">M2 · $HKH$</div>
+<p><b>Step 1 — $K$:</b> same $\begin{bmatrix}4&amp;1\\1&amp;4\end{bmatrix}$.</p>
+<p><b>Step 2 — $H$:</b> $n=2$ ⇒ $H=I-\tfrac12\mathbf1\mathbf1^T=\begin{bmatrix}0.5&amp;-0.5\\-0.5&amp;0.5\end{bmatrix}$.</p>
+<p><b>Step 3 — $HK$:</b> row 1: $(0.5\cdot4-0.5\cdot1,\ 0.5\cdot1-0.5\cdot4)=(1.5,-1.5)$; row 2: $(-1.5,\ 1.5)$.</p>
+<p><b>Step 4 — $(HK)H$:</b> entry $(1,1)$: $1.5\cdot0.5+(-1.5)(-0.5)=1.5$; $(1,2)$: $1.5(-0.5)+(-1.5)(0.5)=-1.5$.</p>
+<p><b>Step 5:</b> $K^c=\begin{bmatrix}1.5&amp;-1.5\\-1.5&amp;1.5\end{bmatrix}$ ⇒ <b>option 2</b>.</p></div>
+<div class="method" data-label="M3 Elimination"><div class="mh">M3 · Property elimination</div>
+<p><b>Step 1 — option 3:</b> $\begin{bmatrix}4&amp;1\\1&amp;4\end{bmatrix}$ ke rows ka jod $5\ne0$ ⇒ yeh uncentered $K$ hai ✗.</p>
+<p><b>Step 2 — option 4:</b> $\begin{bmatrix}1&amp;-1\\4&amp;-4\end{bmatrix}$ symmetric nahi ($-1\ne4$) ✗.</p>
+<p><b>Step 3 — option 1:</b> diagonal $-1.5&lt;0$, par $K^c_{ii}=\|\tilde\phi(x_i)\|^2\ge0$ ✗.</p>
+<p><b>Step 4 — option 2:</b> symmetric, rows ka jod $0$, diagonal $\ge0$ ⇒ ✓. (M3 jaldi par har option ko poora nahi nikaalta — sirf eliminates.)</p></div>
+</div>
+<p><b>MCQ — distractors kyun galat:</b> option 3 = $K$ (centering bhooli); option 1 = $-K^c$ (sign galat; diagonal negative); option 4 = symmetric nahi (koi centering formula aisa matrix nahi deta).</p>
+<h4>4. 📊 Comparison</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Method</th><th>Speed</th><th>Difficulty</th><th>Error risk</th><th>Best use</th></tr></thead><tbody>
+<tr><td>M1 Elementwise</td><td>Medium (≈1.5 min)</td><td>Low</td><td>Medium ($\theta$/$P$ arithmetic, "$+P$")</td><td>Jab options kareeb hon ya number chahiye</td></tr>
+<tr><td>M2 $HKH$</td><td>Medium</td><td>Medium</td><td>Low (matrix arithmetic)</td><td>Verify; structure samajhna</td></tr>
+<tr><td>M3 Elimination</td><td>Very fast (≈20 sec)</td><td>Low</td><td>Low ($K$ banane ke baad bhi lag sakta hai)</td><td>Exam MCQ</td></tr>
+</tbody></table></div>
+<p>⚡ <b>FASTEST:</b> M3. 🏆 <b>BEST EXAM METHOD:</b> M3 se shortlist, M1 se confirm (jab $K$ chhota ho to $K$ + $\theta$,$P$ seedha ho jaata hai); trade-off: M3 tab hi akela chalta hai jab sirf ek option teeno properties pass kare — yahan ek hi bachta hai. Agar do bachte, M1 chahiye.</p>
+<h4>5. ✅ Verification</h4>
+<ul>
+<li>Code: matrix form $HKH$ aur elementwise form ka max difference $\sim10^{-16}$ ✓; $K^c=\begin{bmatrix}1.5&amp;-1.5\\-1.5&amp;1.5\end{bmatrix}$.</li>
+<li>Properties: $K^c\mathbf 1=0$ ✓; eigenvalues $3,\ 0$ ✓ (PSD); $\operatorname{tr}K^c=3$ ✓.</li>
+<li>Explicit $\phi$: $\phi(x)=(1,\sqrt2x_1,\sqrt2x_2,\sqrt2x_3,x_1^2,x_2^2,x_3^2,\sqrt2x_1x_2,\dots)$ se feature distance se $K^c_{12}=-1.5$ ✓ (code).</li>
+<li>Source key option 2 ✓.</li>
+</ul>
+<p><b>Aage badho (extension):</b> $K^c$ ka PC1: $\lambda=3$, $\beta=\tfrac1{\sqrt2}(1,-1)$ ⇒ variance $=\tfrac32=\mathbf{1.5}$; scores $z_i=\sqrt3\,\beta_i=\pm1.2247$; EVR $=3/3=100\%$ (ek hi nonzero PC, kyunki $n-1=1$). Naya point $(2,0,0)$: $k_x=(9,1)$, $\theta=(2.5,2.5)$, $\alpha=\tfrac1{\sqrt6}(1,-1)$ ⇒ $z=\tfrac{(9-2.5)-(1-2.5)}{\sqrt6}=\tfrac8{\sqrt6}=\mathbf{3.266}$ (code ✓).</p>
+<h4>6. ⚠️ Traps</h4>
+<ul>
+<li>$K$ ko hi $K^c$ maan lena (option 3).</li>
+<li>Centering mein "$+P$" bhoolna: $4-2.5-2.5=-1$ nikalega — sahi $1.5$ ke liye $+P$ zaroori.</li>
+<li>$X$ ke rows ko points maan lena ($3$ points, $2$ features) — tab $K$ $3\times3$ hota par options $2\times2$ hain; options ka size reading ka clue hai.</li>
+<li>Sign $-K^c$ (option 1): diagonal check se pakdo.</li>
+</ul>
+<p><b>Recognition rule:</b> "$K^c$ chunna" ⇒ pehle properties (sym · rows 0 · diag $\ge0$), phir hint formula.</p>
+<h4>7. 🔁 Transfer question <span class="tag t-add">[ADDED]</span></h4>
+<p>$K=\begin{bmatrix}2&amp;1&amp;0\\1&amp;2&amp;1\\0&amp;1&amp;2\end{bmatrix}$ diya hai. $K^c_{12}$ nikaalo.</p>
+<details class="reveal"><summary>Show answer</summary><p>$\theta=(1,\ \tfrac43,\ 1)$, $P=\tfrac{10}9$. $K^c_{12}=k_{12}-\theta_1-\theta_2+P=1-1-\tfrac43+\tfrac{10}9=\tfrac{-12+10}9=\mathbf{-\tfrac29\approx-0.222}$ (code ✓).</p></details>
+</details>
+</section>
+
+<!-- =========================================================== -->
+<h2>⏱️ T3 timed set <span class="tag t-add">[ADDED]</span></h2>
+<section data-track="timed">
+<div class="box amber">
+<p><b>Rules:</b> 8 questions · 24 marks (3 marks each) · <b>16 minutes</b> (≈2 min / question, exam pace). Timer lagao, calculator allowed, notes band. Answers end mein hidden hain. T3 (Kernels, B13–B16) ke patterns par naye questions — source se nahi: feature dimension, Gaussian distance, valid kernels, Gram/PSD, normalised kernel, centering, component count, kernel-PCA concepts.</p>
+<p class="note">Answers chat mein bhejna ho to: <code>TS1: … | TS2: … | … | Confidence per Q: S/U/G</code></p>
+</div>
+<ol>
+<li><p><b>TS1 · SA · 3 marks.</b> $k(x,y)=(1+x^Ty)^3$ on $x,y\in\mathbb R^3$. Transformed space ke kitne features (monomials of degree $\le3$)?</p></li>
+<li><p><b>TS2 · SA · 3 marks.</b> Gaussian kernel $\sigma=1$ ($k=e^{-\|x-y\|^2/2}$), $\|x-y\|^2=5$. Feature space mein $\|\phi(x)-\phi(y)\|^2$ (3 decimals)?</p></li>
+<li><p><b>TS3 · MSQ · 3 marks.</b> $x,y\in\mathbb R$. Kaun se valid kernels hain? (a) $3xy+2$ &nbsp; (b) $xy-1$ &nbsp; (c) $e^{xy}$ &nbsp; (d) $-(xy)^2$ &nbsp; (e) $\dfrac{1+xy}{\sqrt{(1+x^2)(1+y^2)}}$</p></li>
+<li><p><b>TS4 · SA · 3 marks.</b> $\begin{bmatrix}2&amp;a\\a&amp;8\end{bmatrix}$ valid Gram matrix hai. $a$ ki sabse badi sambhav value?</p></li>
+<li><p><b>TS5 · SA · 3 marks.</b> $k$ valid, $k(x,x)=4$, $k(y,y)=25$, $k(x,y)=6$. $k_3(x,y)=\dfrac{9\,k(x,y)}{\sqrt{k(x,x)\,k(y,y)}}+16$. $k_3(x,y)$ kitna?</p></li>
+<li><p><b>TS6 · SA · 3 marks.</b> $K=\begin{bmatrix}5&amp;3&amp;1\\3&amp;5&amp;1\\1&amp;1&amp;3\end{bmatrix}$. Centered kernel matrix ka entry $K^c_{12}$ (3 decimals)?</p></li>
+<li><p><b>TS7 · SA · 3 marks.</b> $d=4$, $n=500$ points, $k=(1+x^Ty)^2$. Kernel PCA mein nonzero eigenvalues wale PCs ki max sankhya?</p></li>
+<li><p><b>TS8 · MSQ · 3 marks.</b> Kernel PCA ke baare mein kaun se sach hain? (a) $K^c\mathbf 1=0$ &nbsp; (b) Naye point ke score ke liye explicit $\phi$ zaroori hai &nbsp; (c) Linear kernel par kernel PCA standard PCA ke barabar hai &nbsp; (d) $n=8$ aur $K^c$ ka top eigenvalue $12$ ⇒ PC1 ka variance $1.5$ &nbsp; (e) Input centred ho to har kernel ke liye $K^c=K$</p></li>
+</ol>
+<details class="reveal"><summary>Show all answers (timer khatam hone ke baad)</summary>
+<p><b>TS1: 20.</b> Degree $\le3$ ke monomials in $3$ variables: $\binom{3+3}3=\binom63=20$ (constant shamil). Trap: $\binom{3+3-1}{3}=10$ (homogeneous) ya $\binom{6}{3}-1=19$ (centered rank).</p>
+<p><b>TS2: 1.836.</b> $\|\phi(x)-\phi(y)\|^2=k(x,x)+k(y,y)-2k(x,y)=1+1-2e^{-5/2}=2-2(0.0821)=\mathbf{1.836}$. Trap: $e^{-5/2}$ ko hi distance maan lena.</p>
+<p><b>TS3: (a), (c), (e).</b> (a) $3xy$ (scale, C1) $+2$ (constant, C2) ✓. (b) $k(0,0)=-1&lt;0$ ✗. (c) $e^{k}$ with $k=xy$ valid (C5) ✓. (d) $k(1,1)=-1&lt;0$ ✗. (e) $\tilde k$ of the valid kernel $1+xy$ (N15 normalisation) ✓. Code: (b),(d) Gram ka min eigenvalue $-7.8,\ -4.3$; (a),(c),(e) $\approx0$ (round-off).</p>
+<p><b>TS4: 4.</b> PSD ⇒ $\det=16-a^2\ge0$ ⇒ $|a|\le4$ ($a=4$ par eigenvalues $0,10$ — code). Trap: $a=\sqrt{16}$ ke bajaye "$a\le2$" ya $8$.</p>
+<p><b>TS5: 21.4.</b> $\tilde k=\dfrac{6}{\sqrt{4\cdot25}}=\dfrac6{10}=0.6$; $k_3=9(0.6)+16=5.4+16=\mathbf{21.4}$ ($9\tilde k$: $a=9\ge0$, $+16$: $b\ge0$ ⇒ valid, B15 N16).</p>
+<p><b>TS6: −0.444.</b> $\theta=(3,3,\tfrac53)$, $P=\tfrac{23}9=2.556$. $K^c_{12}=3-3-3+\tfrac{23}9=-3+\tfrac{23}9=-\tfrac49=\mathbf{-0.444}$. Trap: $+P$ bhoolna ($-3$).</p>
+<p><b>TS7: 14.</b> $D_{\text{eff}}=\binom{4+2}2-1=14$; $n-1=499$ ⇒ $\min=\mathbf{14}$ ($d=4$ se zyada). Trap: $4$ ($\le d$) ya $15$ (constant gina) ya $499$.</p>
+<p><b>TS8: (a), (c), (d).</b> (a) $K^c=HKH$, $H\mathbf1=0$ ✓. (b) galat: $z(x)=\sum\alpha_j(k(x,x_j)-\theta_j)$ sirf kernel evaluations ✗. (c) N24 ✓. (d) $12/8=1.5$ ✓. (e) galat: input centred ≠ feature centred (Example 1: $K\ne K^c$) ✗.</p>
+<p class="note">Scoring: SA = full ya zero; MSQ = saare sahi options, koi galat nahi. 24 mein se 21+ = T3 exam-ready ki taraf; galtiyan chat mein error-tag ke saath bhejo. Saare answers numpy se code-verified.</p>
+</details>
+</section>
+
+<section data-track="memory">
+<h2>📌 Memory card — 3.4 Kernel PCA</h2>
+<div class="grid2">
+<div class="box em">
+<p><b>Core model:</b> Kernel PCA = dual PCA $+$ feature-space centering. $K\to K^c=HKH$, eigenpair $(\lambda,\beta)$ of $K^c$; PC variance $\lambda/n$; training score $\sqrt\lambda\,\beta_i$.</p>
+<p><b>Backbone chain:</b> kernel $k$ → $K_{ij}$ → $\theta_i$, $P$ → $K^c_{ij}=k_{ij}-\theta_i-\theta_j+P$ → $K^c\beta=\lambda\beta$ ($\|\beta\|=1$) → keep $\lambda&gt;0$ → $\alpha=\beta/\sqrt\lambda$ → score $z(x)=\sum_j\alpha_j(k(x,x_j)-\theta_j)$.</p>
+</div>
+<div class="box">
+<p><b>Formulas (with conditions):</b></p>
+<ul>
+<li>$K^c=HKH$, $H=I-\tfrac1n\mathbf1\mathbf1^T$ — sab kernels, hamesha</li>
+<li>$\lambda_C=\lambda_{K^c}/n$; EVR $=\lambda_k/\operatorname{tr}K^c$ ($n$ cancel)</li>
+<li>$K^c$: symmetric, PSD, rows ka jod $0$, diag $\ge0$, rank $\le n-1$</li>
+<li>Components $\le\min(D_{\text{eff}},n-1)$; $(1+x^Ty)^m$: $\binom{d+m}m-1$; $(x^Ty)^m$: $\binom{d+m-1}m$; Gaussian: $n-1$</li>
+<li>Linear kernel ⇒ standard PCA ($\le d$)</li>
+<li>Naye point: $z=\sum\alpha_j(k(x,x_j)-\theta_j)$ ($\sum\alpha_j=0$)</li>
+</ul>
+</div>
+</div>
+<div class="grid2">
+<div class="box amber">
+<p><b>Top 3 traps:</b> (1) $K$ ko $K^c$ maan lena ya "input centred ⇒ skip centering"; centering formula mein $+P$ bhoolna (P5). (2) $\lambda_{K^c}$ ko variance likhna ($\div n$ bhoolna, P3) ya $\div(n-1)$. (3) "components $\le d$" ya "PC explicit hai" — kernel PCA mein $k&gt;d$ possible, aur PC $\phi$-space mein hai, input space mein nahi (P1, P2, P4).</p>
+</div>
+<div class="box">
+<p><b>Trigger bank:</b> "centered kernel matrix" → $HKH$ / $\theta,P$ formula · "covariance of transformed data, $K^c$ eigenvalue diya" → $\div n$ · "can $k&gt;d$?" → yes, nonlinear kernel · "higher degree" → zyada flexibility · "always true" → proof ya counterexample · "valid kernel output negative?" → ho sakta hai · "linear kernel" → standard PCA.</p>
+</div>
+</div>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Method selector — question deta hai…</th><th>Use</th></tr></thead>
+<tbody>
+<tr><td>$K$ ya points + kernel; $K^c$ maanga</td><td>$\theta$, $P$ ⇒ elementwise; ya $HKH$; check rows ka jod $0$</td></tr>
+<tr><td>Options mein matrices ($K^c$ chunna)</td><td>Properties se eliminate (sym · rows 0 · diag $\ge0$)</td></tr>
+<tr><td>$K^c$ eigenvalue diya, variance/covariance maanga</td><td>$\lambda/n$ (proportion: $\lambda/\operatorname{tr}$)</td></tr>
+<tr><td>Components ki sankhya / "$k&gt;d$?"</td><td>$\min(D_{\text{eff}},n-1)$; linear kernel $\le d$</td></tr>
+<tr><td>Naye point ka score</td><td>$\sum\alpha_j(k(x,x_j)-\theta_j)$ (centering ke saath)</td></tr>
+<tr><td>Kernel PCA ke statements</td><td>Statement bank (Toolkit): "always" ⇒ counterexample</td></tr>
+</tbody></table></div>
+<p class="note"><b>Spaced review (3.4 + T3 set):</b> 2026-11-13 (P3, P5) · 2026-11-15 (P1, P2, P4) · 2026-11-19 (memory card) · 2026-12-03 (3.4 + poora T3 set: TS3, TS6, TS7) — har baar P5 ($HKH$ + elimination), Example 1 ($k=2&gt;d=1$), Example 3 (naye point mein $\theta_j$), Deeper 2 ($D_{\text{eff}}$ table), TS6, TS7.</p>
+</section>
+
+<section data-track="explain-back">
+<h2>✍️ Explain-it-back</h2>
+<div class="try">
+<p class="ttl">Chat mein apne words mein jawab do (3–5 lines):</p>
+<p>"Kernel PCA mein $K$ ko seedha eigen-decompose karne ke bajaye pehle $K^c=HKH$ kyun banate hain, aur input data centred hone par bhi yeh kyun zaroori hai? Saath mein: $K^c$ ka eigenvalue $\lambda$ hone par PC ka variance $\lambda/n$ kyun hota hai, aur kernel PCA mein nonzero PCs ki sankhya $d$ se zyada kaise ho sakti hai?"</p>
+<p class="note">Format: <code>Answer: … | Confidence: S/U/G | Reason: …</code></p>
+</div>
+</section>

@@ -1,0 +1,232 @@
+<section data-track="top">
+<p class="muted mono" style="margin:0">B27 · Phase 2 · Topic revision page</p>
+<h1>📄 T3 Kernels — Revision &amp; Cheat Sheet</h1>
+<p class="lead">Exam se 1–2 din pehle ke liye: feature maps (3.1), valid kernels (3.2), polynomial / Gaussian kernels (3.3) aur kernel PCA (3.4) ke saare formulas, conditions, traps, trigger→first-move aur ek 8-question quick test — ek page par. B13–B16 kholne ki zaroorat nahi honi chahiye.</p>
+<div class="box">
+<p><b>Is page mein:</b> 1) big picture · 2) cheat sheet · 3) exam pattern digest · 4) mistake log · 5) quick test (8 Q, ≈16 min) · 6) topic-closed checklist (ticks is browser mein save hote hain).</p>
+<p><b>Source:</b> B13–B16 ke published pages (memory cards, toolkits, statement banks, T3 timed set) se padha hua. Tags: <span class="tag t-src">[SRC]</span> PYQ se · <span class="tag t-add">[ADDED]</span> meri explanation / naya question · <span class="tag t-flag">[FLAG]</span> source error · <span class="tag t-q">[?]</span> missing / unreadable.</p>
+<p class="note">Bank frequency ≠ exam weightage: neeche ke counts sirf is bank ke hain.</p>
+</div>
+</section>
+
+<h2>🖼️ 1. Topic big picture</h2>
+<section data-track="picture">
+<p><b>Kernels kyun exist karte hain [ADDED]:</b> PCA sirf linear (seedhi) directions dhundhta hai. Agar structure curved hai, to pehle data ko $\phi(x)$ se higher-dimensional space mein bhejo, aur wahan linear method chalao. Magic yeh hai ki $\phi$ explicitly kabhi nahi banana padta — algorithms sirf dot products $\phi(x)^T\phi(y)=k(x,y)$ maangte hain, aur woh seedha formula se milta hai (kernel trick).</p>
+<figure class="viz diagram">
+  <p class="vt">T3 relational map — feature map se kernel PCA tak</p>
+  <p class="vs">Solid = "needs / feeds"; dashed = T2 se connection. <i>Schematic</i> — learning order nahi, ideas ka flow.</p>
+<svg viewBox="0 0 900 360" role="img" aria-label="T3 map: feature map, kernel as dot product, valid kernels, library kernels, kernel PCA, linked to dual PCA from T2">
+<defs><marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#a3a3a3"/></marker></defs>
+<rect x="10" y="40" width="200" height="100" rx="10" fill="none" stroke="#737373" stroke-dasharray="5 4"/>
+<text x="110" y="68" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">T2 · 2.6 Dual PCA</text>
+<text x="110" y="92" text-anchor="middle" fill="#a3a3a3" font-size="11.5">K = XᵀX (linear kernel)</text>
+<text x="110" y="110" text-anchor="middle" fill="#a3a3a3" font-size="11.5">Kβ = λβ</text>
+<rect x="250" y="40" width="200" height="100" rx="10" fill="#141c2b" stroke="#60A5FA"/>
+<text x="350" y="68" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">3.1 Feature map</text>
+<text x="350" y="92" text-anchor="middle" fill="#a3a3a3" font-size="11.5">k(x,y) = φ(x)ᵀφ(y)</text>
+<text x="350" y="110" text-anchor="middle" fill="#a3a3a3" font-size="11.5">term matching, φ unique nahi</text>
+<rect x="490" y="40" width="200" height="100" rx="10" fill="#141c2b" stroke="#60A5FA"/>
+<text x="590" y="68" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">3.2 Valid kernel?</text>
+<text x="590" y="92" text-anchor="middle" fill="#a3a3a3" font-size="11.5">Gram symmetric + PSD</text>
+<text x="590" y="110" text-anchor="middle" fill="#a3a3a3" font-size="11.5">closure rules · counterexample</text>
+<rect x="690" y="190" width="200" height="100" rx="10" fill="#141c2b" stroke="#60A5FA"/>
+<text x="790" y="218" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">3.3 Library kernels</text>
+<text x="790" y="242" text-anchor="middle" fill="#a3a3a3" font-size="11.5">(xᵀy + 1)ᵐ · Gaussian</text>
+<text x="790" y="260" text-anchor="middle" fill="#a3a3a3" font-size="11.5">e^(−‖x−y‖²/2σ²)</text>
+<rect x="250" y="190" width="380" height="100" rx="10" fill="#0f1d17" stroke="#34D399"/>
+<text x="440" y="218" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">3.4 Kernel PCA = dual PCA + centring</text>
+<text x="440" y="242" text-anchor="middle" fill="#a3a3a3" font-size="11.5">K^c = HKH · K^c β = λβ · variance λ/n</text>
+<text x="440" y="260" text-anchor="middle" fill="#a3a3a3" font-size="11.5">score z(x) = Σ αⱼ (k(x,xⱼ) − θⱼ)</text>
+<g stroke="#a3a3a3" marker-end="url(#a3)"><line x1="210" y1="90" x2="248" y2="90" stroke-dasharray="5 4"/><line x1="450" y1="90" x2="488" y2="90"/><line x1="590" y1="140" x2="740" y2="188"/><line x1="350" y1="140" x2="400" y2="188"/><line x1="690" y1="240" x2="632" y2="240"/></g>
+<text x="10" y="340" font-size="11.5" fill="#737373">Backbone: lift → kernel = dot → sirf k chahiye → valid ⇔ Gram PSD → library formulas → Gram ko centre karo → eigen → scores</text>
+</svg>
+  <figcaption><b>Interpretation:</b> Kernel PCA koi naya algorithm nahi — T2 ka dual PCA hai, bas Gram matrix K ko pehle feature space mein centre karna (<code>K^c = HKH</code>) aur φ ki jagah kernel k use karna.</figcaption>
+</figure>
+<div class="cards">
+<div class="card"><div class="k">Is bank mein T3</div><div class="v">78.5 marks</div><div class="s">22 scorable Qs · 9/10 papers [SRC]</div></div>
+<div class="card"><div class="k">Marks by subtopic</div><div class="v" style="font-size:16px;line-height:1.5">3.2: 34.5 · 3.4: 19<br>3.1: 18 · 3.3: 7</div><div class="s">[SRC] — count ≠ weightage</div></div>
+</div>
+<div class="box em">
+<p><b>Topic ki "exam story" [ADDED]:</b> "$\phi$ do → term matching; kernel do → valid hai ya nahi (symmetry, $k(x,x)\ge0$, closure, counterexample); formula do → polynomial $(x^Ty+1)^m$ / Gaussian; kernel PCA → $K^c$ aur $\div n$." Marks <b>$\sqrt2$/$\sqrt c$, polynomial ka $+1$, symmetry swap, aur centring ka $+P$</b> mein jaate hain.</p>
+</div>
+</section>
+
+<h2>📋 2. Consolidated cheat sheet</h2>
+<section data-track="cheat">
+<h3>T3 prerequisites (B13) — kernel as dot product</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Concept</th><th>Formula</th><th>When it applies</th><th>Common mix-up</th></tr></thead>
+<tbody>
+<tr><td>Kernel = dot</td><td>$k(x,y)=\phi(x)^T\phi(y)=\sum_j\phi_j(x)\phi_j(y)$</td><td>Wahi $\phi$ dono arguments par; $k(x,x)=\|\phi(x)\|^2\ge0$</td><td>Dono arguments par alag $\phi$ lena</td></tr>
+<tr><td>Kernel trick</td><td>Algorithm sirf $K_{ij}=k(x_i,x_j)$ chahta hai</td><td>High / infinite-dim $\phi$</td><td>$\phi$ explicitly nikalna zaroori maan lena</td></tr>
+<tr><td>$\phi$ unique nahi</td><td>$\phi'=Q\phi$ ($Q$ orthogonal) bhi valid; coordinates permute / sign flip bhi</td><td>"which $\phi$ <b>may</b> correspond"</td><td>$\phi$ ko unique maan lena</td></tr>
+<tr><td>Feature-space distance</td><td>$\|\phi(x)-\phi(y)\|^2=k(x,x)+k(y,y)-2k(x,y)$; Gaussian ⇒ $2-2k$</td><td>Distance / similarity</td><td>$k$ ko hi distance maan lena</td></tr>
+<tr><td>Gram matrix</td><td>$K_{ij}=k(x_i,x_j)$, $K=\Phi^T\Phi$</td><td>Har point-set par</td><td>$K$ ko $XX^T$ samajhna jab $n\times n$ chahiye</td></tr>
+</tbody></table></div>
+
+<h3>3.1 Feature maps and kernel transformations</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Concept</th><th>Formula / rule</th><th>When it applies</th><th>Common mix-up</th></tr></thead>
+<tbody>
+<tr><td>Term matching</td><td>$c\,f(x)f(y)\to$ coordinate $\sqrt c\,f(x)$ ($c>0$); $2\to\sqrt2$, $9\to3$</td><td>"find $\phi$ for $k=\dots$"</td><td>$\sqrt2$ / $\sqrt c$ bhoolna; $x_1^2y_1^2x_2y_2$ ko galat regroup</td></tr>
+<tr><td>$(x^Ty)^2$, $d=2$</td><td>$\phi=(x_1^2,\ \sqrt2x_1x_2,\ x_2^2)$</td><td>Homogeneous degree 2</td><td>Cross term bina $\sqrt2$</td></tr>
+<tr><td>$(x^Ty)^2+c$</td><td>$\phi=(x_1^2,\sqrt2x_1x_2,x_2^2,\sqrt c)$</td><td>Constant bhi ek coordinate hai</td><td>Constant ko "feature nahi" maan lena ($c$ vs $\sqrt c$)</td></tr>
+<tr><td>Scalar kernel</td><td>$K=a\,x_1^px_2^p\Rightarrow\phi(x)=\sqrt a\,x^p$ ($\phi:\mathbb R\to\mathbb R$)</td><td>1-D input</td><td>$\sqrt a$ ki jagah $a$</td></tr>
+<tr><td>#features</td><td>$(x^Ty+c)^m$, $c>0$: $\binom{d+m}{m}$; $(x^Ty)^m$: $\binom{d+m-1}{m}$</td><td>Polynomial kernel, input dim $d$</td><td>$d+m-1$ ($20$) vs $d+m$ ($35$)</td></tr>
+<tr><td>Option elimination</td><td>Degree / mixed terms / count se kaato, phir ek test pair</td><td>Options diye hon</td><td>—</td></tr>
+</tbody></table></div>
+
+<h3>3.3 Polynomial and Gaussian kernels</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Concept</th><th>Formula</th><th>When it applies</th><th>Common mix-up</th></tr></thead>
+<tbody>
+<tr><td>Polynomial kernel</td><td>$(x^Ty+1)^m$ — "polynomial kernel" ka course default ($c=1$)</td><td>Value maangi ho, $x^Ty$ pehle nikalo</td><td>$+1$ bhool ke homogeneous lena (P6: $16$ vs $1$); $x^Ty$ mein sign slip</td></tr>
+<tr><td>Gaussian kernel</td><td>$\exp\!\bigl(-\|x-y\|^2/2\sigma^2\bigr)$; $k(x,x)=1$, $0\lt k\le1$</td><td>$\sigma$ diya, value maangi</td><td>$\|x-y\|$ ka square bhoolna; $2\sigma^2$ ki jagah $\sigma^2$</td></tr>
+<tr><td>Dimension of $\phi$</td><td>Polynomial: finite; Gaussian: infinite-dim</td><td>"infinite-dimensional?"</td><td>—</td></tr>
+<tr><td>Key / range convention</td><td>Stem form na de to candidate formulas try karo, jo key ke andar aaye</td><td>Accepted-answer range diya</td><td>Homogeneous maan ke key chhod dena</td></tr>
+</tbody></table></div>
+
+<h3>3.2 Valid kernels, Gram matrices, closure</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Concept</th><th>Formula / rule</th><th>When it applies</th><th>Common mix-up</th></tr></thead>
+<tbody>
+<tr><td>Validity</td><td>valid $\iff$ har point-set par Gram symmetric + PSD $\iff k=\phi^T\phi$</td><td>Hamesha</td><td>PSD ko "entries $\ge0$" ya "diagonal positive kaafi" samajhna</td></tr>
+<tr><td>PSD tests</td><td>$c^TKc\ge0\ \forall c\iff$ eigenvalues $\ge0$; PD: leading minors $>0$; PSD: saare principal minors $\ge0$</td><td>Numeric $K$</td><td>Sirf leading minors se PSD declare karna</td></tr>
+<tr><td>$K$ PSD $\iff K=X^TX$</td><td>$X=\Lambda^{1/2}Q^T$ ya Cholesky $X=L^T$ ($K$ PD)</td><td>"appropriate as $X^TX$?"</td><td>Symmetry ya diagonal check bhoolna</td></tr>
+<tr><td>Necessary checks (chhanni)</td><td>symmetric; $k(x,x)\ge0$; $k(x,y)^2\le k(x,x)k(y,y)$</td><td>Invalid pakadne ke liye</td><td>Pass hona ≠ valid</td></tr>
+<tr><td>Closure ✓</td><td>$ak_1+bk_2$ ($a,b\ge0$), $k_1k_2$, $k_1^m$, $p(k_1)$ (coeffs $\ge0$), $e^{k_1}$, $f(x)k_1f(y)$, constant $c\ge0$</td><td>Formula ko pieces mein todo</td><td>Alag $g,h$ ($g(x)kh(y)$) ko valid maan lena</td></tr>
+<tr><td>Closure ✗ / no guarantee</td><td>$-k$, $k_1-k_2$, $g(x)kh(y)$ ($g\ne h$), $a(x)+b(y)$</td><td>Diagonal / symmetry / $2\times2$ Gram se counterexample</td><td>$x_1^2+y_2^2$, $\sin x\cos y\,k$ — symmetric nahi</td></tr>
+<tr><td>Normalised kernel</td><td>$\tilde k=\dfrac{k}{\sqrt{k(x,x)k(y,y)}}$, $\tilde\phi=\phi/\|\phi\|$; $\tilde k(x,x)=1$, $|\tilde k|\le1$</td><td>$k(x,x)>0$</td><td>Normalise karne par angle bachta hai, length nahi</td></tr>
+<tr><td>Scale / constant</td><td>$c\,k\Rightarrow\sqrt c\,\phi$; $c\tilde k+b\Rightarrow(\sqrt c\,\tilde\phi,\sqrt b)$; check $\|\phi_{\text{new}}\|^2=k_{\text{new}}(x,x)$</td><td>$c,b\ge0$; $\phi$ maanga ho</td><td>$\sqrt c$ ki jagah $c$ ya $\tfrac1c$ (P7: $10\phi/\|\phi\|$)</td></tr>
+<tr><td>Gaussian factorisation</td><td>$e^{-\|x-y\|^2/2\sigma^2}=e^{-\|x\|^2/2\sigma^2}\,e^{x^Ty/\sigma^2}\,e^{-\|y\|^2/2\sigma^2}$ ⇒ har $\sigma>0$ valid</td><td>Gaussian ka disguise ($\sqrt{K_2(x,x)}$ denominator)</td><td>$K_2(x,x)=1$ dekhna bhoolna</td></tr>
+<tr><td>Library verdicts</td><td>$(x^Ty+c)^d$ valid iff $c\ge0$, $d\in\mathbb N$ · Laplacian $e^{-\|x-y\|/\sigma}$ ✓ · $e^{-\|x-y\|^p}$: $p=1,2$ ✓, $p=3$ ✗ · raw $\|x-y\|$, $\|x-y\|^2$ ✗</td><td>"which are valid"</td><td>"exp laga hai to valid" (cube exponent ✗); raw distance ko valid</td></tr>
+<tr><td>$XX^T$ vs $X^TX$</td><td>nonzero eigenvalues same, trace same ($\sum X_{ij}^2$), eigenvectors alag ($v\mapsto Xv$)</td><td>Statement MCQ/MSQ</td><td>"Eigenvectors same" ✓ maan lena</td></tr>
+<tr><td>Numeric $K$ recipe</td><td>symmetric → diagonal $\ge0$ → PSD (eigenvalues / minors / Cholesky)</td><td>Matrix diya</td><td>$2\times2$ pass hone par $3\times3$ bhi pass maan lena ($K_2-0.5$)</td></tr>
+</tbody></table></div>
+
+<h3>3.4 Kernel PCA</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Concept</th><th>Formula</th><th>When it applies</th><th>Common mix-up</th></tr></thead>
+<tbody>
+<tr><td>Centred kernel matrix</td><td>$K^c=HKH$, $H=I-\tfrac1n\mathbf1\mathbf1^T$; $K^c_{ij}=k_{ij}-\theta_i-\theta_j+P$ ($\theta_i$ row mean, $P$ grand mean)</td><td>Hamesha, har kernel ke liye</td><td>$+P$ bhoolna; "input centred ⇒ skip centring" ($K\neq K^c$)</td></tr>
+<tr><td>$K^c$ properties</td><td>symmetric, PSD, rows ka jod $0$, diag $\ge0$, rank $\le n-1$</td><td>Options mein $K^c$ chunna (10-sec elimination)</td><td>—</td></tr>
+<tr><td>Variance</td><td>$\lambda_C=\lambda_{K^c}/n$; EVR $=\lambda_k/\operatorname{tr}K^c$ ($n$ cancel)</td><td>"covariance of transformed data"</td><td>$\lambda_{K^c}$ ko variance likhna ($\div n$ bhoolna); $\div(n-1)$</td></tr>
+<tr><td>#components</td><td>$\le\min(D_{\text{eff}},n-1)$; $(1+x^Ty)^m$: $D_{\text{eff}}=\binom{d+m}{m}-1$; $(x^Ty)^m$: $\binom{d+m-1}{m}$; Gaussian: $n-1$</td><td>"can $k$ exceed $d$?" — haan, nonlinear kernel mein</td><td>"components $\le d$"; constant gina ($15$ vs $14$)</td></tr>
+<tr><td>Scores</td><td>training $z_i=\sqrt\lambda\,\beta_i$; new point $z(x)=\sum_j\alpha_j\bigl(k(x,x_j)-\theta_j\bigr)$, $\alpha=\beta/\sqrt\lambda$, $\sum\alpha_j=0$</td><td>$K^c\beta=\lambda\beta$, $\|\beta\|=1$</td><td>Naye point mein $\theta_j$ bhoolna</td></tr>
+<tr><td>Linear kernel</td><td>Kernel PCA = standard PCA; $\lambda_{K^c}=n\lambda_C$; components $\le d$</td><td>$k=x^Ty$</td><td>—</td></tr>
+<tr><td>Interpretation</td><td>PC $\phi$-space mein hai, input space mein explicit vector nahi</td><td>Statement MCQ</td><td>"PC explicit hai"; "kernel PCA hamesha kam dimension deta hai"</td></tr>
+</tbody></table></div>
+</section>
+
+<h2>🔑 3. Exam pattern digest</h2>
+<section data-track="digest">
+<h3>Recurring question families [SRC]</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Family</th><th>Times in bank</th><th>Core move</th></tr></thead>
+<tbody>
+<tr><td>Kernel closure: sum / scaling / product / normalisation</td><td>7 IDs</td><td>Closure pieces; positive ✓, minus ✗</td></tr>
+<tr><td>Feature map $\phi$ for $(x^Ty)^2+1$</td><td>2 (identical)</td><td>Expand, match terms</td></tr>
+<tr><td>"Valid kernel" statement bank — $(x^Ty)^3$ ✓, $-(x^Ty)^3$ ✗, $XX^T$/$X^TX$ eigenvalues ✓ / eigenvectors ✗</td><td>repeats across papers</td><td>Verdict yaad + reason</td></tr>
+<tr><td>Kernel PCA statements ("always true")</td><td>5 blocks</td><td>Proof ya ek counterexample</td></tr>
+</tbody></table></div>
+<h3>Trigger → first move</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Trigger phrase</th><th>First move</th></tr></thead>
+<tbody>
+<tr><td>"find $\phi$ for $k=\dots$"</td><td>Har term ko $f(x)f(y)$ mein todo; coordinate $\sqrt c\,f$</td></tr>
+<tr><td>"which $\phi$ <b>may</b> correspond to $(x^Ty)^2+c$"</td><td>$x_1^2,\sqrt2x_1x_2,x_2^2,\sqrt c$ dhundo (order / sign free)</td></tr>
+<tr><td>"scalar $K=a\,x_1^px_2^p$"</td><td>$\phi=\sqrt a\,x^p$</td></tr>
+<tr><td>"polynomial kernel degree $m$, dim $d$, #features"</td><td>$\binom{d+m}{m}$</td></tr>
+<tr><td>"polynomial kernel" value</td><td>$(x^Ty+1)^m$</td></tr>
+<tr><td>"Gaussian kernel" value</td><td>$e^{-\|x-y\|^2/2\sigma^2}$; range check $0\lt k\le1$</td></tr>
+<tr><td>"valid kernel?" + formula</td><td>Symmetry → $k(x,x)$ → closure pieces</td></tr>
+<tr><td>Additive $a(x)+b(y)$, or $g(x)k\,h(y)$ with alag $g,h$</td><td>Swap test; $k\equiv1$ lekar symmetry / diagonal</td></tr>
+<tr><td>Minus laga kernel</td><td>$k(x,x)$ ka sign</td></tr>
+<tr><td>"matrix appropriate as $X^TX$"</td><td>Symmetric → diagonal → PSD</td></tr>
+<tr><td>"$\phi_1$ for $c\,k/\sqrt{k(x,x)k(y,y)}$"</td><td>$\sqrt c\,\phi/\|\phi\|$; check $\|\phi_1\|^2=c$</td></tr>
+<tr><td>Gaussian disguise (exp-products)</td><td>Exponents jodo ⇒ $-\|x-y\|^2/2\sigma^2$</td></tr>
+<tr><td>"centered kernel matrix"</td><td>$\theta_i$, $P$ ⇒ $k_{ij}-\theta_i-\theta_j+P$; rows ka jod $0$ check</td></tr>
+<tr><td>"covariance of transformed data", $K^c$ eigenvalue diya</td><td>$\lambda/n$</td></tr>
+<tr><td>"can $k>d$?" / "#nonzero eigenvalues"</td><td>$\min(D_{\text{eff}},n-1)$</td></tr>
+</tbody></table></div>
+<div class="box amber">
+<p><b>Top 5 traps (subtopic pages se):</b></p>
+<ol>
+<li><b>$\sqrt2$ / $\sqrt c$ bhoolna</b> aur $\phi$ ko unique maan lena; constant bhi ek coordinate hai.</li>
+<li><b>Polynomial kernel mein $+1$</b> bhoolna; feature count mein $d+m-1$ ($20$) vs $d+m$ ($35$); Gaussian mein norm ka square / $2\sigma^2$.</li>
+<li><b>Symmetry swap na karna</b> ($x_1^2+y_2^2$, $\sin x\cos y\,k$); minus sign ya negative coefficient bina diagonal dekhe valid maan lena.</li>
+<li><b>PSD ≠ entries $\ge0$ / diagonal positive</b>; Cauchy–Schwarz ya $2\times2$ pass ≠ valid ($3\times3$ Gram fail ho sakti hai); raw distance $\|x-y\|$ valid nahi.</li>
+<li><b>Kernel PCA mein centring</b>: $K$ ko $K^c$ maan lena, $+P$ bhoolna, $\lambda_{K^c}$ ko variance likhna ($\div n$), "components $\le d$".</li>
+</ol>
+</div>
+<h3>Method selector [ADDED]</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Question deta hai…</th><th>Use</th></tr></thead>
+<tbody>
+<tr><td>$\phi$ poochha, options hon</td><td>Degree / count se kaato, phir ek test pair</td></tr>
+<tr><td>$\phi$ poochha, options na hon</td><td>Term matching; scale ⇒ $\sqrt{\ }$; concatenate</td></tr>
+<tr><td>Validity list</td><td>Family pehchano; shak par $k(x,x)$ + $2\times2$ + chhota Gram</td></tr>
+<tr><td>Combination of kernels</td><td>Positive ✓ / minus ⇒ diagonal origin par</td></tr>
+<tr><td>Numeric matrix as $X^TX$</td><td>Symmetry → diagonal → PSD (minors / eigenvalues)</td></tr>
+<tr><td>Kernel PCA numbers</td><td>$\theta$, $P$, $K^c$ → $\lambda/n$; components $\min(D_{\text{eff}},n-1)$</td></tr>
+</tbody></table></div>
+</section>
+
+<h2>🩹 4. Mistake log summary</h2>
+<section data-track="mistakes">
+<div class="box">
+<p><b>[FLAG] in T3:</b> <b>koi nahi</b> — B13–B16 mein koi answer-key mismatch nahi mila.</p>
+</div>
+<div class="box amber">
+<p><b>[?] — missing / ambiguous in source (T3):</b></p>
+<ul>
+<li><b>3.1 P1</b> (5-term kernel $\phi$, 2023 Jul) — source mein answer mark nahi; derivation poori hai (term matching + sympy). <b>3.1 P2</b> ($(x^Ty)^2+1$, 2024 Feb) — is copy mein mark nahi; wahi sawaal P3 (2024 Oct) mein option 1 marked hai aur derivation bhi option 1.</li>
+<li><b>3.1 P4</b> (degree-3, input dim 4, 15 Mar 2026) — stem kernel ka form nahi deta; key $35$ tabhi aata hai jab $(x^Ty+1)^3$ ho ($(x^Ty)^3$ ⇒ $20$). <b>3.3 P6</b> (degree-4 value, 2024 Jul) — key $16$ sirf $(x^Ty+1)^4$ se. Default: "polynomial kernel" $=(x^Ty+1)^m$.</li>
+<li><b>3.2 P1</b> (2023 Jul) — mark nahi; derived options 1, 3 (P6 ki key se consistent). <b>3.2 P2</b> ($\sin x_1\cos x_2\,k$, 2024 Feb) — mark nahi; derived: No ("koi bhi valid $k$" claim — ek counterexample kaafi). <b>3.2 P9</b> ($2k_1+5k_2$, 15 Mar 2026) — koi option marked nahi; source note "standard positive combination" ⇒ True.</li>
+<li><b>3.4 P1</b> (2023 Jul) — mark nahi; derived options 2, 3. <b>3.4 P2</b> (2024 Feb, $d=20$, degree 3) — mark nahi; derived option 3.</li>
+</ul>
+</div>
+<div class="box">
+<p><b>Aapke logged errors:</b> abhi tak koi nahi — <code>needs_repair</code> khaali hai aur T3 par chat mein koi graded answer nahi aaya. Quick test / T3 timed set / checkpoint ke answers chat mein bhejoge to yahan error-tag ke saath judenge.</p>
+<p><b>Strategy note:</b> bahut saare T3 PYQ mein source ne answer mark nahi kiya; isliye verdicts ko <i>reason</i> ke saath yaad rakho (statement bank), sirf option number nahi.</p>
+</div>
+</section>
+
+<h2>⏱️ 5. Quick revision test</h2>
+<section data-track="test">
+<p><b>Rules:</b> 8 questions · 24 marks (3 each) · 16 minutes · poore T3 ka mix. B16 ke T3 timed set ke patterns par <b>naye numbers</b> (remix) <span class="tag t-add">[ADDED]</span>; answers hidden. Ek hi baithak, notes band, calculator allowed. Chat mein: <span class="mono">RT1: … | RT2: … | Confidence per Q: S/U/G</span></p>
+<ol>
+<li><p><b>RT1 · MSQ · 3 marks.</b> $x,y\in\mathbb R^2$, $k(x,y)=(x^Ty)^2+4$. Kaun se $\phi$ is kernel ke liye valid hain?</p>
+<p>(a) $(x_1^2,\ \sqrt2x_1x_2,\ x_2^2,\ 2)$ &nbsp; (b) $(x_1^2,\ x_1x_2,\ x_2^2,\ 2)$ &nbsp; (c) $(x_1^2,\ \sqrt2x_1x_2,\ x_2^2,\ 4)$ &nbsp; (d) $(x_1^2,\ x_2^2,\ \sqrt2x_1x_2,\ 2)$ &nbsp; (e) $-(x_1^2,\ \sqrt2x_1x_2,\ x_2^2,\ 2)$</p></li>
+<li><p><b>RT2 · SA · 3 marks.</b> Polynomial kernel of degree 3, $k(x,y)=(x^Ty+1)^3$, $x=(1,2)$, $y=(3,0)$. $k(x,y)$?</p></li>
+<li><p><b>RT3 · SA · 3 marks.</b> $k(x,y)=(1+x^Ty)^2$ on $\mathbb R^5$. Transformed space ke features ki sankhya?</p></li>
+<li><p><b>RT4 · SA · 3 marks.</b> Gaussian kernel $\sigma=2$, $\|x-y\|^2=8$. Feature space mein $\|\phi(x)-\phi(y)\|^2$ (3 decimals)?</p></li>
+<li><p><b>RT5 · MSQ · 3 marks.</b> $x,y\in\mathbb R$. Kaun se valid kernels hain?</p>
+<p>(a) $xy+5$ &nbsp; (b) $3-xy$ &nbsp; (c) $\cos(x-y)$ &nbsp; (d) $(xy+1)^2-1$ &nbsp; (e) $|x-y|$</p></li>
+<li><p><b>RT6 · SA · 3 marks.</b> $k$ valid, $k(x,x)=9$, $k(y,y)=16$, $k(x,y)=6$. $k'(x,y)=\dfrac{25\,k(x,y)}{\sqrt{k(x,x)\,k(y,y)}}$ kitna?</p></li>
+<li><p><b>RT7 · SA · 3 marks.</b> $K=\begin{bmatrix}3&1&2\\1&4&0\\2&0&5\end{bmatrix}$. Centered kernel matrix ka entry $K^c_{13}$ (3 decimals)?</p></li>
+<li><p><b>RT8 · MSQ · 3 marks.</b> Kernel PCA ke baare mein kaun se sach hain?</p>
+<p>(a) $n=12$, $K^c$ ka top eigenvalue $6$ ⇒ PC1 ka variance $0.5$ &nbsp; (b) $d=3$, $n=100$, $k=(1+x^Ty)^2$: nonzero eigenvalues wale PCs $\le9$ &nbsp; (c) Input centred ho to $K^c=K$ &nbsp; (d) Linear kernel par kernel PCA standard PCA ke barabar hai &nbsp; (e) PC direction input space mein ek explicit vector hota hai</p></li>
+</ol>
+<details class="reveal"><summary>Show all answers (timer khatam hone ke baad)</summary>
+<p><b>RT1: (a), (d), (e).</b> (a) $x_1^2y_1^2+2x_1x_2y_1y_2+x_2^2y_2^2+4=(x^Ty)^2+4$ ✓. (b) cross term $x_1x_2y_1y_2$ (coefficient 1, $\sqrt2$ nahi) ⇒ $\ne$ ✗. (c) last coordinate $4$ ⇒ $16$ jod deta hai, $4$ nahi ✗. (d) sirf coordinates ka order badla ✓ (N4). (e) $\phi'=-\phi$ ($Q=-I$) ⇒ same dot ✓. Code: random pairs par dot products match: a, d, e.</p>
+<p><b>RT2: 64.</b> $x^Ty=3+0=3$; $(3+1)^3=64$. Trap: $(x^Ty)^3=27$.</p>
+<p><b>RT3: 21.</b> $\binom{5+2}2=\binom72=21$ (constant shamil). Trap: $\binom{6}{2}=15$ (homogeneous $(x^Ty)^2$ ka count).</p>
+<p><b>RT4: 1.264.</b> $k=e^{-8/(2\cdot4)}=e^{-1}=0.3679$; $\|\phi(x)-\phi(y)\|^2=2-2k=1.264$. Trap: $k$ ko hi distance ($0.368$), ya $e^{-8/4}$ ($\sigma^2$ bina 2).</p>
+<p><b>RT5: (a), (c), (d).</b> (a) scale + constant ✓. (b) $k(2,2)=3-4=-1<0$ ✗. (c) $\cos x\cos y+\sin x\sin y$ = sum of $f(x)f(y)$ ⇒ valid ✓. (d) $(xy+1)^2-1=x^2y^2+2xy$ = positive-coefficient polynomial in $xy$ ⇒ ✓ (minus dikhne par bhi). (e) $k(x,x)=0$ aur Gram on $\{0,1\}$ $=\begin{bmatrix}0&1\\1&0\end{bmatrix}$ ka eigenvalue $-1$ ✗. Code: min Gram eigenvalue — (b) $-51.4$, (e) $-19.6$; baaki $\approx0$.</p>
+<p><b>RT6: 12.5.</b> $\tilde k=\dfrac6{\sqrt{9\cdot16}}=\dfrac6{12}=0.5$; $k'=25\times0.5=12.5$. ($25\tilde k$: $c=25\ge0$ ⇒ valid, $\phi'=5\tilde\phi$.)</p>
+<p><b>RT7: −0.333.</b> $\theta=(2,\tfrac53,\tfrac73)$, $P=\tfrac{18}9=2$. $K^c_{13}=2-2-\tfrac73+2=-\tfrac13$. Trap: $+P$ bhoolna ($-2.333$). Check: $K^c$ ki har row ka jod $0$ ✓ (code: pehli row $1,-\tfrac23,-\tfrac13$).</p>
+<p><b>RT8: (a), (b), (d).</b> (a) $\lambda/n=6/12=0.5$ ✓. (b) $D_{\text{eff}}=\binom{3+2}2-1=9$; $\min(9,99)=9$ ✓. (c) ✗ — input centred ≠ feature centred. (d) ✓ (N24). (e) ✗ — PC $\phi$-space mein hai; naye point ka score sirf kernel evaluations se.</p>
+<p class="note">Scoring: SA = full ya zero; MSQ = saare sahi options, koi galat nahi. 24 mein se 20+ = T3 revision-ready. Saare numerical answers numpy/scipy se code-verified. Galtiyan chat mein error-tag ke saath bhejo.</p>
+</details>
+</section>
+
+<h2>✅ 6. Topic-closed checklist</h2>
+<section>
+<p class="note">Har line ke liye: <b>"kya main yeh cold, exam time ke andar, bina hint ke kar sakta/sakti hoon?"</b> Tick tabhi jab quick test / timed set mein sach saabit hua ho. Ticks is browser mein save hote hain.</p>
+<div class="chkrow" data-check="3.1"><b>3.1 Feature maps</b> — term matching ($\sqrt2$, $\sqrt c$), "may correspond" (unique nahi), #features $\binom{d+m}m$ vs $\binom{d+m-1}m$.</div>
+<div class="chkrow" data-check="3.2"><b>3.2 Valid kernels</b> — symmetry → $k(x,x)$ → closure / counterexample; numeric $K$ PSD test; normalised-kernel $\phi$ ($\sqrt c\,\phi/\|\phi\|$); library verdicts bina soche.</div>
+<div class="chkrow" data-check="3.3"><b>3.3 Polynomial &amp; Gaussian</b> — $(x^Ty+1)^m$ value, Gaussian value + range check, feature-space distance $2-2k$.</div>
+<div class="chkrow" data-check="3.4"><b>3.4 Kernel PCA</b> — $K^c$ elementwise ($\theta_i,\theta_j,P$), $\lambda/n$, component count $\min(D_{\text{eff}},n-1)$, naye point ka score, statement bank.</div>
+<div class="chkrow" data-check="prereq"><b>T3 prerequisites (B13)</b> — $k=\phi^T\phi$, kernel trick, Gram matrix, $\phi$ unique nahi, feature-space distance formula.</div>
+</section>
