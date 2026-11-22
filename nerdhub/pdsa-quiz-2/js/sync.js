@@ -7,13 +7,14 @@
   var cfg = window.PDSA_FIREBASE || {};
   if (!cfg.enabled) return;
   var COLL = "pdsa";
-  var fb = {}, user = null, timer = null, busy = false, applying = false, lastOk = null, chip = null;
+  var wallMsg = null, fb = {}, user = null, timer = null, busy = false, applying = false, lastOk = null, chip = null;
 
   function domainOk(email) {
     var d = cfg.allowedDomains;
     email = (email || "").toLowerCase();
     return !d || !d.length || d.some(function (x) { return email.slice(-(x.length + 1)) === "@" + x.toLowerCase(); });
   }
+  function wallShow() { if (window.NH_WALL) NH_WALL.show(wallMsg || "Sign in with your IITM student Google account to use this site.", "Sign in with Google", signIn); }
   function toast(m) { if (window.PDSA && PDSA.toast) PDSA.toast(m); }
 
   function pick(a, b) { // a = local record, b = remote record: keep the one with more attempts, then the newer
@@ -116,10 +117,11 @@
         PDSA.save = function () { origSave.apply(this, arguments); schedulePush(); };
         document.addEventListener("visibilitychange", function () { if (!document.hidden && user) pull(); });
         fb.au.onAuthStateChanged(fb.auth, function (u) {
-          if (u && !(u.emailVerified && domainOk(u.email))) { toast("Only " + (cfg.allowedDomains || []).join(", ") + " accounts can sync."); fb.au.signOut(fb.auth); return; }
-          user = u ? { uid: u.uid, email: u.email } : null; paint(); if (user) pull();
+          if (u && !(u.emailVerified && domainOk(u.email))) { wallMsg = "That account isn't allowed. Use your " + (cfg.allowedDomains || []).join(", ") + " Google account."; toast("Only " + (cfg.allowedDomains || []).join(", ") + " accounts can sync."); fb.au.signOut(fb.auth); return; }
+          user = u ? { uid: u.uid, email: u.email } : null; paint();
+          if (user) { wallMsg = null; if (window.NH_WALL) NH_WALL.hide(); pull(); } else wallShow();
         });
-      }).catch(function () {});
+      }).catch(function () { if (window.NH_WALL) NH_WALL.show("Couldn't load sign-in. Check your connection and try again.", "Reload", function () { location.reload(); }); });
     }, 0);
   });
 })();

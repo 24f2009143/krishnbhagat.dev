@@ -34,7 +34,7 @@
     if (!M || !MERGE || !chip) return;
     const adapter = window.MLTQ_SYNC_ADAPTER || firebaseAdapter();
     const Store = M.Store;
-    let user = null, applying = false, timer = null, lastPull = 0, busy = false, lastOk = null;
+    let wallMsg = null, user = null, applying = false, timer = null, lastPull = 0, busy = false, lastOk = null;
 
     const domainOk = email => { const d = cfg.allowedDomains; return !d || !d.length || d.some(x => email.toLowerCase().endsWith('@' + x.toLowerCase())); };
     function paint(msg) {
@@ -44,6 +44,7 @@
       chip.textContent = user.email.split('@')[0] + (msg ? ' · ' + msg : lastOk ? ' · synced ' + when : '');
       chip.title = 'Signed in as ' + user.email + '. Click to sign out.';
     }
+    function wallShow() { if (window.NH_WALL) NH_WALL.show(wallMsg || 'Sign in with your IITM student Google account to use this site.', 'Sign in with Google', () => chip.click()); }
     function say(t) { const el = document.getElementById('toast'); if (el) { el.textContent = t; el.classList.add('on'); setTimeout(() => el.classList.remove('on'), 3000); } }
 
     function replaceLocal(state) {
@@ -86,10 +87,11 @@
     Promise.resolve(adapter.init()).then(() => {
       paint();
       adapter.onAuth(async u => {
-        if (u && !(u.verified && domainOk(u.email))) { say('Only ' + (cfg.allowedDomains || []).join(', ') + ' accounts can sync.'); await adapter.signOut(); return; }
-        user = u; paint(); if (u) pull();
+        if (u && !(u.verified && domainOk(u.email))) { wallMsg = "That account isn't allowed. Use your " + (cfg.allowedDomains || []).join(', ') + ' Google account.'; say('Only ' + (cfg.allowedDomains || []).join(', ') + ' accounts can sync.'); await adapter.signOut(); return; }
+        user = u; paint();
+        if (u) { wallMsg = null; if (window.NH_WALL) NH_WALL.hide(); pull(); } else wallShow();
       });
-    }).catch(() => { chip.hidden = true; });
+    }).catch(() => { chip.hidden = true; if (window.NH_WALL) NH_WALL.show("Couldn't load sign-in. Check your connection and try again.", 'Reload', () => location.reload()); });
   }
   if (window.MLTQ) start(); else window.addEventListener('load', () => setTimeout(start, 0));
 })();
