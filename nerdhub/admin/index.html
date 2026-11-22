@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>nerdhub admin</title>
+<style>
+:root{color-scheme:dark}
+body{margin:0;background:#0f1115;color:#e8eaed;font:15px/1.5 system-ui,-apple-system,sans-serif}
+main{max-width:1000px;margin:0 auto;padding:32px 20px}
+h1{margin:0 0 4px}h2{margin:32px 0 8px;font-size:1.1rem}
+.sub{color:#9aa0a6;margin:0 0 20px}
+button{padding:8px 16px;border:0;border-radius:8px;background:#7ee787;color:#0f1115;font:600 14px system-ui;cursor:pointer}
+table{width:100%;border-collapse:collapse;margin-top:6px}
+th,td{padding:8px 10px;border-bottom:1px solid #2a2f3a;text-align:left;font-size:.9rem}
+th{color:#9aa0a6;font-weight:600}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.err{color:#ff7b72}.mut{color:#9aa0a6}
+</style></head><body><main>
+<h1>nerdhub admin</h1>
+<p class="sub">Student progress from both study sites. Only the owner account can read this; Firestore rules enforce it.</p>
+<div id="auth"><button id="in" type="button">Sign in with Google</button></div>
+<div id="out"></div>
+</main>
+<script src="../mlt/js/firebase-config.js"></script>
+<script>
+(async function(){
+  var cfg=window.MLTQ_FIREBASE||{};
+  var $=function(i){return document.getElementById(i)};
+  function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+  var base="https://www.gstatic.com/firebasejs/10.14.1/";
+  var m=await Promise.all([import(base+"firebase-app.js"),import(base+"firebase-auth.js"),import(base+"firebase-firestore.js")]);
+  var app=m[0].initializeApp({apiKey:cfg.apiKey,authDomain:cfg.authDomain,projectId:cfg.projectId,appId:cfg.appId});
+  var au=m[1],fs=m[2],auth=au.getAuth(app),db=fs.getFirestore(app);
+  $("in").onclick=function(){var p=new au.GoogleAuthProvider();p.setCustomParameters({hd:cfg.allowedDomains[0]});au.signInWithPopup(auth,p).catch(function(){})};
+  au.onAuthStateChanged(auth,async function(u){
+    if(!u){$("auth").hidden=false;$("out").innerHTML="";return}
+    $("auth").hidden=true;$("out").innerHTML='<p class="mut">Loading as '+esc(u.email)+'…</p>';
+    try{
+      var pd=await fs.getDocs(fs.collection(db,"pdsa")),ml=await fs.getDocs(fs.collection(db,"users"));
+      render(u,pd,ml);
+    }catch(e){$("out").innerHTML='<p class="err">Not allowed or failed to load ('+esc(e.code||e.message)+'). Sign in with the owner account.</p><p><button id="so">Sign out</button></p>';$("so").onclick=function(){au.signOut(auth)}}
+  });
+  function when(t){return t?new Date(t).toLocaleString():""}
+  function render(u,pd,ml){
+    var rows=[],ptopic={},mtopic={};
+    pd.forEach(function(d){var x=d.data(),st={};try{st=JSON.parse(x.state)}catch(e){}
+      var ans=st.ans||{},ids=Object.keys(ans),ok=0,att=0;
+      ids.forEach(function(id){var r=ans[id],t=r.topic||"?";att++;if(r.ok)ok++;var p=ptopic[t]=ptopic[t]||{q:0,ok:0};p.q++;if(r.ok)p.ok++});
+      rows.push({email:x.email,site:"PDSA",upd:x.updatedAt,done:att,ok:ok,extra:Object.keys(st.read||{}).length+" sections read"});
+    });
+    ml.forEach(function(d){var x=d.data(),st={};try{st=JSON.parse(x.state)}catch(e){}
+      var T=st.topics||{},solved=0,tried=0;
+      Object.keys(T).forEach(function(tid){var py=T[tid].pyq||{},p=mtopic[tid]=mtopic[tid]||{tried:0,solved:0,mis:0};
+        Object.keys(py).forEach(function(q){tried++;p.tried++;if(py[q].status==="correct"){solved++;p.solved++}})});
+      (st.mistakes||[]).forEach(function(mi){var p=mtopic[mi.topic||"?"]=mtopic[mi.topic||"?"]||{tried:0,solved:0,mis:0};p.mis++});
+      rows.push({email:x.email,site:"MLT",upd:x.updatedAt,done:tried,ok:solved,extra:(st.mistakes||[]).length+" open mistakes"});
+    });
+    rows.sort(function(a,b){return (b.upd||0)-(a.upd||0)});
+    var h='<h2>Students ('+rows.length+' records)</h2><table><tr><th>Email</th><th>Site</th><th>Last sync</th><th class="n">Questions tried</th><th class="n">Correct</th><th>Other</th></tr>';
+    rows.forEach(function(r){h+="<tr><td>"+esc(r.email)+"</td><td>"+r.site+"</td><td>"+esc(when(r.upd))+'</td><td class="n">'+r.done+'</td><td class="n">'+r.ok+"</td><td>"+esc(r.extra)+"</td></tr>"});
+    h+="</table>";
+    h+='<h2>PDSA: accuracy by topic (all students)</h2><table><tr><th>Topic</th><th class="n">Answers</th><th class="n">Correct</th><th class="n">Accuracy</th></tr>';
+    Object.keys(ptopic).sort().forEach(function(t){var p=ptopic[t];h+="<tr><td>"+esc(t)+'</td><td class="n">'+p.q+'</td><td class="n">'+p.ok+'</td><td class="n">'+Math.round(100*p.ok/p.q)+"%</td></tr>"});
+    h+='</table><h2>MLT: PYQs by topic (all students)</h2><table><tr><th>Topic</th><th class="n">Tried</th><th class="n">Solved</th><th class="n">Open mistakes</th></tr>';
+    Object.keys(mtopic).sort().forEach(function(t){var p=mtopic[t];h+="<tr><td>"+esc(t)+'</td><td class="n">'+p.tried+'</td><td class="n">'+p.solved+'</td><td class="n">'+p.mis+"</td></tr>"});
+    h+='</table><p style="margin-top:24px"><button id="so">Sign out</button></p>';
+    $("out").innerHTML=h;$("so").onclick=function(){au.signOut(auth)};
+  }
+})();
+</script></body></html>

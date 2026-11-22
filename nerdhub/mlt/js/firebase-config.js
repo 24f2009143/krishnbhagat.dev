@@ -3,6 +3,8 @@
  */
 window.MLTQ_FIREBASE = {
   enabled: true,
+  /* true = the whole site is hidden behind a sign-in screen until an IITM account signs in */
+  required: true,
   apiKey: 'AIzaSyAuSN_OdlJhxu2vV1qCPINQ3k1IUqapEAY',
   authDomain: 'nerdhub-e95d0.firebaseapp.com',
   projectId: 'nerdhub-e95d0',
