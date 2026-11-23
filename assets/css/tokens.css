@@ -21,6 +21,8 @@
   --nh-sun-soft: rgba(242, 184, 75, 0.16);
   --nh-sun-wash: rgba(242, 184, 75, 0.05); /* faint fill inside the sun */
   --nh-chalk: #c3c8cf;       /* things made: fragments, diagrams, notes */
+  --nh-annot: #b1b7bf;       /* secondary annotations: notes, labels, notebook */
+  --nh-annot-faint: #8f96a0; /* captions, triggers, dates: quieter, still readable */
 
   /* type */
   --nh-font-sans: "NH Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
