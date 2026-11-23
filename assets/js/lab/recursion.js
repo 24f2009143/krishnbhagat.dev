@@ -20,6 +20,17 @@ export function verdict(a, b, d) {
   if (d < c) return { c, res: "O(" + pow(c) + ")", why: "the leaves do the most work", kind: "leaves" };
   return { c, res: "O(" + pow(d) + ")", why: "the root does the most work", kind: "root" };
 }
+/* The polynomial form of the master theorem, T(n) = a·T(n/b) + Θ(n^d), holds for a ≥ 1, b > 1, d ≥ 0,
+   and in this form the three cases are decided by d against log_b a alone (no regularity condition).
+   The level table also needs whole subproblem counts and sizes, so a and b must be integers and n = b^L. */
+export function check(a, b, d) {
+  if (![a, b, d].every(Number.isFinite)) return "Choose numbers for a, b and d.";
+  if (!Number.isInteger(a) || a < 1) return "a must be a whole number of subproblems, at least 1.";
+  if (!Number.isInteger(b) || b < 2) return "b must be a whole number greater than 1, so each subproblem is smaller.";
+  if (d < 0) return "d must be at least 0: the extra work cannot shrink below a constant.";
+  if (a > 8 || b > 4 || d > 3) return "This table supports a up to 8, b up to 4 and d up to 3.";
+  return null;
+}
 export function levels(a, b, d, L) {
   const n = Math.pow(b, L), rows = [];
   for (let i = 0; i <= L; i++) {
@@ -59,17 +70,18 @@ export function mount(host, data) {
   const sa = mk("a, the number of subproblems", [1, 2, 3, 4, 5, 6, 7, 8], "a");
   const sb = mk("b, how much smaller each subproblem is", [2, 3, 4], "b");
   const sd = mk("d, the exponent of the extra work", [0, 0.5, 1, 1.5, 2, 3], "d");
-  for (const s of [sa, sb, sd]) s.addEventListener("change", () => { a = +sa.value; b = +sb.value; d = +sd.value; sel = null; sync(); render(); });
+  for (const s of [sa, sb, sd]) s.addEventListener("change", () => { a = parseFloat(sa.value); b = parseFloat(sb.value); d = parseFloat(sd.value); sel = null; sync(); render(); });
   const reset = h("button", { type: "button", class: "inst-btn" }, "Reset");
   reset.addEventListener("click", () => { [a, b, d] = data.presets[data.start]; sel = null; sync(); render(); });
   abd.appendChild(reset);
 
+  const assume = h("p", { class: "inst-note" }, "Assumes T(n) = a·T(n/b) + Θ(nᵈ) with a ≥ 1, b > 1 and d ≥ 0. Here n is a power of b, so every size is a whole number.");
   const head = h("p", { class: "instrument__q" });
   const tableWrap = h("div", { class: "instrument__tablewrap" });
   const ratio = h("p", { class: "inst-read" });
   const verdictP = h("p", { class: "instrument__verdict" });
   const read = h("p", { class: "inst-read inst-read--topic", "aria-live": "polite" });
-  wrap.append(presets, abd, head, tableWrap, ratio, verdictP, read);
+  wrap.append(presets, abd, assume, head, tableWrap, ratio, verdictP, read);
   host.insertBefore(wrap, host.querySelector(".instrument__static"));
 
   function sync() {
@@ -78,6 +90,14 @@ export function mount(host, data) {
   }
 
   function render() {
+    const problem = check(a, b, d);
+    if (problem) {
+      // no table and no verdict unless the theorem's assumptions hold
+      head.textContent = "";
+      tableWrap.replaceChildren(h("p", { class: "inst-read rx__invalid", role: "alert" }, problem));
+      ratio.textContent = ""; verdictP.textContent = ""; read.textContent = "";
+      return;
+    }
     const { n, rows } = levels(a, b, d, L);
     const v = verdict(a, b, d);
     const max = Math.max(...rows.map((r) => r.total));

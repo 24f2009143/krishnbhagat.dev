@@ -108,7 +108,8 @@ export function mount(host, data) {
     return b;
   });
   const topicRead = h("p", { class: "inst-read inst-read--topic", "aria-live": "polite" }, "Pick a topic to see what it builds on and what builds on it.");
-  wrap.append(svg, controls, read, topicRow, topicRead);
+  const note = h("p", { class: "inst-note" }, "Each frame is rescaled to fit the box, as fr() does with its final answer, so distances are not comparable from one frame to the next.");
+  wrap.append(svg, note, controls, read, topicRow, topicRead);
   host.insertBefore(wrap, host.querySelector(".instrument__static"));
 
   // --- state and drawing

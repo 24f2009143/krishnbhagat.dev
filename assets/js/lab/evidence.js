@@ -17,7 +17,7 @@ export function mount(host, data) {
   const wrap = h("div", { class: "ex" });
   wrap.appendChild(h("p", { class: "ex__badge" }, `Simulated students · ${data.students.toLocaleString("en-US")} per setting · ${data.ideas} ideas · not real outcomes`));
   const choice = h("fieldset", { class: "inst-choice" });
-  choice.appendChild(h("legend", {}, "Setting"));
+  choice.appendChild(h("legend", {}, "Show recorded results for"));
   const radios = settings.map((st, k) => {
     const id = `ex-s${k}`;
     const r = h("input", { type: "radio", name: "ex-setting", id, value: String(k) });
@@ -57,7 +57,7 @@ export function mount(host, data) {
     if (svg) svg.replaceWith(next); else wrap.appendChild(next);
     svg = next;
   }
-  wrap.append(choice);
+  wrap.append(choice, h("p", { class: "inst-note" }, "Each setting shows numbers recorded by one offline run of the simulation. Switching settings only changes which record is shown; nothing is simulated in your browser."));
   build();
   const onNarrow = () => { build(); draw(); };
   narrowQ.addEventListener("change", onNarrow);
@@ -83,7 +83,7 @@ export function mount(host, data) {
     gapText.textContent = sign(+(ad[3] - mw[3]).toFixed(1));
     svg.setAttribute("aria-label", `${st.D} study days, ${st.K} questions a day: gain over random choice, in exam points. ` + st.rows.map((r) => `${r[0]} ${sign(r[3])}`).join("; "));
     read.replaceChildren(
-      h("p", {}, `Choosing ideas in proportion to their marks gains ${sign(mw[3])} points over random. The full adaptive model gains ${sign(ad[3])}, so its memory model adds ${sign(+(ad[3] - mw[3]).toFixed(1))} on top.`),
+      h("p", {}, `In the recorded run for ${st.D} days at ${st.K} questions a day, choosing ideas in proportion to their marks gained ${sign(mw[3])} points over random. The full adaptive model gained ${sign(ad[3])}, so its memory model added ${sign(+(ad[3] - mw[3]).toFixed(1))} on top.`),
       h("p", {}, `Working on the weakest topic first: ${sign(wk[3])}. The same adaptive model with every idea weighted equally: ${sign(eq[3])}. An oracle that sees what each simulated student truly knows: ${sign(or[3])}.`),
       h("p", { class: "ex__why" }, "Why marks matter so much here: weak ideas are often small ones, so time spent on them goes to marks that cannot be won back."),
     );
