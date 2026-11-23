@@ -206,9 +206,9 @@
 .instrument__tables { display: grid; gap: var(--nh-space-5); margin-top: var(--nh-space-4); }
 
 /* controls: small drafting instruments, not app chrome */
-.inst-btn, .inst-chip { font: 500 var(--nh-text-xs) / 1 var(--nh-font-mono); letter-spacing: 0.04em; color: var(--nh-chalk); background: none; border: 1px solid var(--nh-line); border-radius: 3px; padding: 0.55rem 0.75rem; min-height: 36px; cursor: pointer; }
+.inst-btn, .inst-chip { font: 500 var(--nh-text-xs) / 1 var(--nh-font-mono); letter-spacing: 0.04em; color: var(--nh-annot); background: none; border: 1px solid var(--nh-line-soft); border-radius: 3px; padding: 0.55rem 0.75rem; min-height: 36px; cursor: pointer; }
 .inst-btn:hover, .inst-chip:hover { border-color: var(--nh-annot-faint); color: var(--nh-text); }
-.inst-btn--main { border-color: var(--nh-annot-faint); color: var(--nh-text); min-width: 6.5rem; }
+.inst-btn--main { border-color: var(--nh-line); color: var(--nh-chalk); min-width: 6.5rem; }
 .inst-chip[aria-pressed="true"] { border-color: var(--nh-text); color: var(--nh-text); background: var(--nh-surface-hi); }
 .inst-scrub { display: inline-flex; flex-direction: column; gap: 0.3rem; flex: 1 1 180px; min-width: 150px; font: 400 var(--nh-text-xs) / 1 var(--nh-font-mono); color: var(--nh-annot-faint); }
 .inst-scrub input { width: 100%; accent-color: var(--nh-chalk); }
@@ -224,7 +224,7 @@
 
 /* KB-005 layout */
 .lx { display: grid; gap: var(--nh-space-3); }
-.lx__svg { width: 100%; max-width: 520px; height: auto; border: 1px solid var(--nh-line-soft); background: var(--nh-bg-deep); }
+.lx__svg { width: 100%; max-width: 600px; height: auto; border: 1px solid var(--nh-line-soft); background: var(--nh-bg-deep); }
 .lx__edge.is-sel { stroke: var(--nh-text); stroke-width: 1.6; }
 .lx__move { color: var(--nh-annot-faint); stroke-dasharray: 2 2; }
 .lx__node { cursor: pointer; }
@@ -232,7 +232,7 @@
 .lx__node.is-sel circle { stroke: var(--nh-text); stroke-width: 2; }
 .lx__node.is-sel .tx { fill: var(--nh-text); font-weight: 600; }
 .lx__node.is-dim { opacity: 0.35; }
-.lx__controls { display: flex; flex-wrap: wrap; align-items: end; gap: var(--nh-space-2); max-width: 520px; }
+.lx__controls { display: flex; flex-wrap: wrap; align-items: end; gap: var(--nh-space-2); max-width: 600px; }
 .lx__topics { display: flex; flex-wrap: wrap; gap: var(--nh-space-2); }
 
 /* KB-006 recursion */
@@ -250,6 +250,8 @@
 
 /* KB-004 evidence */
 .ex { display: grid; gap: var(--nh-space-3); }
+.inst-note { font: italic 400 var(--nh-text-xs) / 1.5 var(--nh-font-serif) !important; color: var(--nh-annot-faint) !important; max-width: 60ch; }
+.rx__invalid { font-style: italic; color: var(--nh-text) !important; border-left: 2px solid var(--nh-line); padding-left: var(--nh-space-3); }
 .ex__badge { justify-self: start; font: 500 var(--nh-text-xs) / 1.4 var(--nh-font-mono) !important; letter-spacing: 0.05em; text-transform: uppercase; color: var(--nh-text) !important; border: 1px dashed var(--nh-annot-faint); padding: 0.35rem 0.6rem; }
 .ex__svg { width: 100%; max-width: 640px; height: auto; border: 1px solid var(--nh-line-soft); background: var(--nh-bg-deep); }
 .ex__row .tx { fill: var(--nh-annot-faint); }
