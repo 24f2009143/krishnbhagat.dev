@@ -45,10 +45,10 @@
 .dot.hi { fill: var(--nh-text); }
 .fill { fill: currentColor; }
 .tx { fill: currentColor; font-family: var(--nh-font-mono); }
-.tx.dim { opacity: 0.55; }
-.nt { fill: currentColor; font-family: var(--nh-font-serif); font-style: italic; opacity: 0.8; }
+.tx.dim { opacity: 0.68; }
+.nt { fill: currentColor; font-family: var(--nh-font-serif); font-style: italic; opacity: 0.92; }
 .strike { text-decoration: line-through; opacity: 0.6; }
-.cap { fill: var(--nh-text-faint); font: 400 11px var(--nh-font-mono); letter-spacing: 0.04em; }
+.cap { fill: var(--nh-annot-faint); font: 400 11px var(--nh-font-mono); letter-spacing: 0.04em; }
 
 /* colour roles: chalk for things made, ink for the figure, gold only for the sun */
 .c-ink { color: var(--nh-text); }
@@ -70,28 +70,32 @@
 .path { color: var(--nh-chalk); stroke-dasharray: 1 5; opacity: 0.55; }
 .strike-line { color: var(--nh-text-dim); }
 .door { stroke-dasharray: 6 4; }
+/* the figure: drafting-compass linework, same weight family as the chalk */
+.torso { stroke-width: 1.2; }
+.harness { stroke-width: 1.5; }
 .sun-disc { stroke-width: 1.6; fill: var(--nh-sun-wash); }
 
 /* ---------- 06: the lab ---------- */
-.lab { position: relative; padding: clamp(var(--nh-space-8), 14vh, 9rem) 0 var(--nh-space-8); background: var(--nh-bg); border-top: 1px solid var(--nh-line-soft); }
-.lab__head { display: flex; align-items: flex-end; gap: var(--nh-space-5); margin-bottom: var(--nh-space-7); }
+.lab { position: relative; min-height: 100svh; padding: clamp(7rem, 20vh, 12rem) 0 clamp(6rem, 16vh, 10rem); background: var(--nh-bg); border-top: 1px solid var(--nh-line-soft); }
+.lab .nh-wrap { max-width: 1240px; }
+.lab__head { display: flex; align-items: flex-end; gap: var(--nh-space-5); margin-bottom: var(--nh-space-8); }
 .lab__door { width: 34px; flex: none; }
 .lab__title { margin-top: var(--nh-space-3); font: 500 clamp(1.6rem, 1.1rem + 1.8vw, 2.5rem) / 1.12 var(--nh-font-serif); max-width: 22ch; }
 
-.lab__floor { display: grid; gap: var(--nh-space-7); }
-@media (min-width: 960px) { .lab__floor { grid-template-columns: minmax(0, 1fr) 280px; } }
+.lab__floor { display: grid; gap: var(--nh-space-8); }
+@media (min-width: 960px) { .lab__floor { grid-template-columns: minmax(0, 1fr) 250px; } }
 
-.specimens { display: grid; gap: var(--nh-space-6) var(--nh-space-5); align-content: start; }
+.specimens { display: grid; gap: var(--nh-space-7) var(--nh-space-6); align-content: start; }
 @media (min-width: 640px) { .specimens { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 1200px) { .specimens { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
 .specimen { border-top: 1px solid var(--nh-line); padding-top: var(--nh-space-4); }
 .specimen summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: 1fr auto; gap: var(--nh-space-2) var(--nh-space-3); align-items: baseline; }
 .specimen summary::-webkit-details-marker { display: none; }
-.specimen__art { grid-column: 1 / -1; width: 100%; aspect-ratio: 220 / 130; height: auto; color: var(--nh-chalk); }
-.specimen__label { font-size: var(--nh-text-sm); color: var(--nh-text-dim); }
+.specimen__art { grid-column: 1 / -1; width: 100%; margin-bottom: var(--nh-space-2); aspect-ratio: 220 / 130; height: auto; color: var(--nh-chalk); }
+.specimen__label { font-size: var(--nh-text-sm); color: var(--nh-annot); }
 .specimen__no { font: 500 var(--nh-text-xs) / 1 var(--nh-font-mono); letter-spacing: 0.1em; color: var(--nh-text); margin-right: var(--nh-space-2); }
-.specimen__hint { font: italic 400 var(--nh-text-sm) / 1 var(--nh-font-serif); color: var(--nh-text-faint); }
+.specimen__hint { font: italic 400 var(--nh-text-sm) / 1 var(--nh-font-serif); color: var(--nh-annot-faint); }
 .specimen summary:hover .specimen__hint, .specimen[open] .specimen__hint { color: var(--nh-accent); }
 .specimen summary:hover .specimen__art { color: var(--nh-text); }
 .specimen--empty .specimen__label { font-style: italic; }
@@ -102,13 +106,13 @@
 .specimen__body .nh-btn { margin-top: var(--nh-space-4); }
 .specimen__doors { list-style: none; margin: var(--nh-space-4) 0 0; padding: 0; display: grid; gap: var(--nh-space-2); }
 .specimen__doors a { font-weight: 600; }
-.specimen__doors span { display: block; color: var(--nh-text-faint); font: 400 var(--nh-text-xs) / 1.5 var(--nh-font-mono); }
+.specimen__doors span { display: block; color: var(--nh-annot-faint); font: 400 var(--nh-text-xs) / 1.5 var(--nh-font-mono); }
 .specimen__fine { font-size: var(--nh-text-xs) !important; color: var(--nh-text-faint) !important; }
 
 .notebook { border-top: 1px solid var(--nh-line); padding-top: var(--nh-space-4); }
-.notebook__title { font: 500 var(--nh-text-xs) / 1 var(--nh-font-mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--nh-text-faint); }
-.notebook__log { list-style: none; margin: var(--nh-space-4) 0 0; padding: 0; display: grid; gap: var(--nh-space-4); font: italic 400 var(--nh-text-sm) / 1.55 var(--nh-font-serif); color: var(--nh-text-dim); }
-.notebook__log time { display: block; font: normal 400 var(--nh-text-xs) / 1.4 var(--nh-font-mono); color: var(--nh-text-faint); }
+.notebook__title { font: 500 var(--nh-text-xs) / 1 var(--nh-font-mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--nh-annot-faint); }
+.notebook__log { list-style: none; margin: var(--nh-space-4) 0 0; padding: 0; display: grid; gap: var(--nh-space-4); font: italic 400 var(--nh-text-sm) / 1.55 var(--nh-font-serif); color: var(--nh-annot); }
+.notebook__log time { display: block; font: normal 400 var(--nh-text-xs) / 1.4 var(--nh-font-mono); color: var(--nh-annot-faint); }
 
 /* ---------- mobile: a deliberate composition, not a scaled desktop ----------
    The drawing sits in the upper part of the screen, zoomed out a little so the
@@ -123,6 +127,9 @@
   .scene__text { position: relative; inset: auto; margin-top: var(--nh-space-2); }
   .mz { transform: scale(0.74); transform-origin: 600px 380px; transform-box: view-box; }
   .scene--idea .mz { transform: none; }
+  .scene--build .mz { transform: scale(0.6); transform-origin: 600px 330px; }
+  .scene--takeoff .scene__stage { height: 54svh; }
+  .scene--next .scene__stage { height: 50svh; min-height: 300px; }
   .d-only { display: none; }
   .m-only { display: inline; }
   .cap { font-size: 16px; }
