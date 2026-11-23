@@ -1,23 +1,49 @@
-/* /nerdhub/ landing page only. Calm and functional: no hero, no animation beyond hover. */
+/* /nerdhub/ landing page only. Calm and functional: no hero, no motion beyond hover.
+   Each study site is a "world" plate drawn from its own content, in its own colours. */
 
 .hub-header { padding: var(--nh-space-5) 0; border-bottom: 1px solid var(--nh-line-soft); }
 .hub-header .nh-wrap { display: flex; align-items: center; justify-content: space-between; gap: var(--nh-space-4); }
-.hub-back { color: var(--nh-text-dim); font-size: var(--nh-text-sm); text-decoration: none; }
+.hub-back { color: var(--nh-text-dim); font-size: var(--nh-text-sm); text-decoration: none; padding: var(--nh-space-2) 0; }
 .hub-back:hover { color: var(--nh-text); }
 .hub-mark { font: 600 var(--nh-text-sm) / 1 var(--nh-font-mono); letter-spacing: 0.06em; color: var(--nh-text-dim); }
 
-.hub-intro { padding: var(--nh-space-8) 0 var(--nh-space-6); }
-.hub-title { margin-top: var(--nh-space-3); font: 600 clamp(2rem, 1.4rem + 2.6vw, 3.2rem) / 1.05 var(--nh-font-serif); letter-spacing: -0.015em; }
-.hub-sub { margin-top: var(--nh-space-3); color: var(--nh-text-dim); max-width: 44ch; }
+.hub .nh-wrap { max-width: 1180px; }
+.hub-intro { padding: clamp(var(--nh-space-7), 10vh, var(--nh-space-8)) 0 var(--nh-space-7); }
+.hub-intro .nh-eyebrow a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--nh-line); }
+.hub-intro .nh-eyebrow a:hover { color: var(--nh-text); }
+.hub-title { margin-top: var(--nh-space-3); font: 500 clamp(2.4rem, 1.6rem + 3.4vw, 4rem) / 1 var(--nh-font-serif); letter-spacing: -0.015em; }
+.hub-sub { margin-top: var(--nh-space-4); color: var(--nh-text-dim); max-width: 52ch; font-size: var(--nh-text-lg); }
 
-.hub-grid { display: grid; gap: var(--nh-space-4); padding-bottom: var(--nh-space-7); }
-@media (min-width: 720px) { .hub-grid { grid-template-columns: 1fr 1fr; } }
+/* the two worlds */
+.worlds { display: grid; gap: var(--nh-space-7) var(--nh-space-6); padding-bottom: var(--nh-space-7); }
+@media (min-width: 860px) { .worlds { grid-template-columns: 1fr 1fr; } }
+.world { min-width: 0; display: flex; flex-direction: column; }
+.world__plate { display: grid; place-items: center; aspect-ratio: 4 / 3; padding: clamp(var(--nh-space-4), 3vw, var(--nh-space-6)); border: 1px solid var(--nh-line-soft); border-radius: var(--nh-radius); background: var(--nh-bg-deep); transition: border-color var(--nh-dur) var(--nh-ease); }
+.world__plate:hover { border-color: var(--nh-line); }
+.world__art { display: block; width: 100%; height: 100%; color: var(--nh-chalk); }
+.world__fig { margin-top: var(--nh-space-3); font: italic 400 var(--nh-text-sm) / 1.45 var(--nh-font-serif); color: var(--nh-annot-faint); }
+.world__name { margin-top: var(--nh-space-5); font: 500 clamp(1.5rem, 1.2rem + 1vw, 2rem) / 1.15 var(--nh-font-serif); }
+.world__line { margin-top: var(--nh-space-2); color: var(--nh-text-dim); max-width: 48ch; }
+.world__facts { margin-top: var(--nh-space-3); font: 500 var(--nh-text-xs) / 1.6 var(--nh-font-mono); letter-spacing: 0.06em; color: var(--nh-annot); }
+.world__tools { list-style: none; padding: 0; margin: var(--nh-space-3) 0 0; display: flex; flex-wrap: wrap; gap: var(--nh-space-1) var(--nh-space-4); font: 400 var(--nh-text-xs) / 1.6 var(--nh-font-mono); color: var(--nh-annot-faint); }
+.world__go { align-self: flex-start; margin-top: var(--nh-space-5); }
 
-.hub-card { display: flex; flex-direction: column; padding: var(--nh-space-5); border: 1px solid var(--nh-line); border-radius: var(--nh-radius); background: var(--nh-surface); color: inherit; text-decoration: none; transition: border-color var(--nh-dur) var(--nh-ease), background var(--nh-dur) var(--nh-ease); }
-.hub-card:hover { border-color: var(--nh-accent); background: var(--nh-surface-hi); }
-.hub-card h2 { font: 600 var(--nh-text-lg) / 1.3 var(--nh-font-sans); }
-.hub-card p { margin-top: var(--nh-space-2); color: var(--nh-text-dim); font-size: var(--nh-text-sm); }
-.hub-card .nh-eyebrow { margin-bottom: var(--nh-space-3); color: var(--nh-annot-faint); }
-.hub-card__go { margin-top: auto; padding-top: var(--nh-space-4); color: var(--nh-accent); font-size: var(--nh-text-sm); font-weight: 600; }
+/* drawing vocabulary for the plates (same names as the homepage, scoped here) */
+.hub .ln { fill: none; stroke: currentColor; stroke-width: 1; vector-effect: non-scaling-stroke; stroke-linecap: round; }
+.hub .ln.dim { opacity: 0.5; }
+.hub .dash { stroke-dasharray: 3 4; }
+.hub .tx { fill: currentColor; font-family: var(--nh-font-mono); }
+.hub .tx .dim { opacity: 0.6; }
+.hub .c-frag { color: var(--nh-chalk); }
+.hub .c-draft { color: var(--nh-chalk); }
+.hub .nb-head, .hub .nb-line { font-family: var(--nh-font-serif); font-style: italic; }
+.hub .nb-tag { font-family: var(--nh-font-mono); }
 
-.hub-note { padding: var(--nh-space-5) 0 var(--nh-space-7); border-top: 1px solid var(--nh-line-soft); color: var(--nh-text-faint); font-size: var(--nh-text-sm); }
+/* posts: the honest empty slot */
+.world--posts { flex-direction: row; align-items: center; gap: var(--nh-space-5); padding: var(--nh-space-5) 0 var(--nh-space-7); border-top: 1px solid var(--nh-line-soft); }
+.world--posts .world__art { width: 180px; height: auto; flex: none; opacity: 0.7; }
+.world--posts .world__name { margin-top: 0; font-size: var(--nh-text-lg); }
+.world--posts .world__line { font-style: italic; font-family: var(--nh-font-serif); color: var(--nh-annot); }
+@media (max-width: 520px) { .world--posts { flex-direction: column; align-items: flex-start; } .world--posts .world__art { width: 140px; height: auto; } }
+
+.hub-note { padding: var(--nh-space-5) 0 var(--nh-space-7); border-top: 1px solid var(--nh-line-soft); color: var(--nh-annot-faint); font-size: var(--nh-text-sm); }
