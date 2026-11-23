@@ -43,3 +43,12 @@ onMotionChange((level) => {
 });
 
 starting = start();
+
+/* The Lab's instruments and specimen links are interactions, not decoration, so they load
+   regardless of the motion preference (each instrument handles reduced motion itself).
+   Each module loads on its own: one failing leaves the others, and the static Lab, intact. */
+if (document.getElementById("lab")) {
+  for (const load of [() => import("./lab/instruments.js"), () => import("./lab/links.js")]) {
+    load().then((m) => m.init()).catch((e) => console.warn("lab module unavailable; static Lab kept", e));
+  }
+}

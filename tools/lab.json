@@ -3,14 +3,32 @@
   "catalogued": "2026-11-23",
   "repo": "https://github.com/krishnbhagat01/krishnbhagat.dev",
   "shelves": [
-    {"id": "built", "title": "Built", "line": "Things that exist and can be used."},
-    {"id": "experiments", "title": "Experiments", "line": "Things made to find something out."},
-    {"id": "notes", "title": "Notes", "line": "Things written down along the way."},
-    {"id": "unfinished", "title": "Unfinished", "line": "Not yet."}
+    {
+      "id": "built",
+      "title": "Built",
+      "line": "Things that exist and can be used."
+    },
+    {
+      "id": "experiments",
+      "title": "Experiments",
+      "line": "Things made to find something out."
+    },
+    {
+      "id": "notes",
+      "title": "Notes",
+      "line": "Things written down along the way."
+    },
+    {
+      "id": "unfinished",
+      "title": "Unfinished",
+      "line": "Not yet."
+    }
   ],
   "specimens": [
     {
-      "no": "KB-001", "shelf": "built", "art": "world",
+      "no": "KB-001",
+      "shelf": "built",
+      "art": "world",
       "title": "nerdhub",
       "hook": "a world of study sites",
       "body": [
@@ -18,63 +36,605 @@
         "Two sites live there now. PDSA Quiz 2 treats the course as a graph: every topic is marked visited, frontier or unvisited. The MLT platform reads like handwritten notes in pen-blue ink, with a formula drawer and search across every note and question."
       ],
       "facts": [
-        ["PDSA Quiz 2", "5 topics · 159 past questions from 10 papers · course map, practice, mock exam, flashcards, last-night sheet"],
-        ["MLT", "13 topics · 35 pages of Quiz 1 notes · practice next, mock test, cheatsheet, glossary, formula drawer"],
-        ["Sync", "progress follows a student across devices, limited to IITM accounts by Firestore rules"]
+        [
+          "PDSA Quiz 2",
+          "5 topics · 159 past questions from 10 papers · course map, practice, mock exam, flashcards, last-night sheet"
+        ],
+        [
+          "MLT",
+          "13 topics · 35 pages of Quiz 1 notes · practice next, mock test, cheatsheet, glossary, formula drawer"
+        ],
+        [
+          "Sync",
+          "progress follows a student across devices, limited to IITM accounts by Firestore rules"
+        ]
       ],
-      "doors": [["/nerdhub/", "Enter nerdhub →", "primary"], ["/nerdhub/pdsa-quiz-2/", "PDSA Quiz 2"], ["/nerdhub/mlt/", "MLT"]],
-      "fine": "The study sites ask for an IITM student sign-in."
+      "doors": [
+        [
+          "/nerdhub/",
+          "Enter nerdhub →",
+          "primary"
+        ],
+        [
+          "/nerdhub/pdsa-quiz-2/",
+          "PDSA Quiz 2"
+        ],
+        [
+          "/nerdhub/mlt/",
+          "MLT"
+        ]
+      ],
+      "fine": "The study sites ask for an IITM student sign-in.",
+      "figure": "anatomy",
+      "decisions": [
+        [
+          "nerdhub/mlt/js/manifest.js",
+          "Adding a topic = add one data file and flip status to \"ready\". The engine never changes."
+        ],
+        [
+          "nerdhub/mlt/js/cheat.js",
+          "Built from the loaded topic data, so it never goes out of date."
+        ],
+        [
+          "nerdhub/mlt/js/sync.js",
+          "The backend sits behind a small adapter (init, onAuth, signIn, signOut, load, save) so the logic can be tested without a network."
+        ],
+        [
+          "nerdhub/mlt/js/firebase-config.js",
+          "Firebase web config is public by design; who can read or write is decided by firestore.rules"
+        ]
+      ],
+      "related": [
+        [
+          "KB-005",
+          "draws the graphs in the PDSA site"
+        ],
+        [
+          "KB-004",
+          "ranks what to practise in the MLT site"
+        ],
+        [
+          "KB-009",
+          "keeps a student's progress whole across two devices"
+        ]
+      ]
     },
     {
-      "no": "KB-002", "shelf": "built", "art": "wings",
+      "no": "KB-002",
+      "shelf": "built",
+      "art": "wings",
       "title": "This site",
       "hook": "a pair of wings",
       "body": [
         "Drawn by hand in SVG, with no framework. Every fragment in the wings is redrawn from something worked out in nerdhub: a heap, a shortest-path graph, a recurrence, a decision tree, a regression fit, a nearest-neighbour sketch.",
         "The geometry is computed by a small script and written out as plain HTML, so the page needs nothing to run. The motion is a layer on top; switch it off and the drawing is all still here."
       ],
-      "facts": [["Source", "index.html, tools/build-home.py, assets/"]],
-      "doors": [["https://github.com/krishnbhagat01/krishnbhagat.dev", "Source on GitHub →"]]
+      "facts": [
+        [
+          "Source",
+          "index.html, tools/build-home.py, assets/"
+        ]
+      ],
+      "doors": [
+        [
+          "https://github.com/krishnbhagat01/krishnbhagat.dev",
+          "Source on GitHub →"
+        ]
+      ],
+      "related": [
+        [
+          "KB-001",
+          "where the fragments in the wings come from"
+        ]
+      ]
     },
     {
-      "no": "KB-004", "shelf": "experiments", "art": "evidence",
+      "no": "KB-004",
+      "shelf": "experiments",
+      "art": "evidence",
       "title": "Does adaptive practice help?",
       "hook": "a memory model, tested on 2,000 simulated students",
       "body": [
         "MLT's “Practice next” ranks ideas by the marks you are likely to lose on them. Each idea carries a chance that you know it, updated after every answer (Bayesian knowledge tracing), and a memory half-life that doubles after a confident right answer and halves after a miss.",
         "It was then tested against simpler ways of choosing. Most of the gain comes from weighting by marks: marks-weighted random gains 7.0 points over random, the full model 7.1. Over 30 days the memory model earns more (8.2 against 7.3). Practising your weakest topic first does worse than random.",
-        "The students are simulated, with a different forgetting law from the model, so it is tested on something it was not built for. It shows the method behaves sensibly. It does not show it helps real students."
+        "The students are simulated, with a different forgetting law from the model, so it is tested on something it was not built for. It shows the method behaves sensibly. It does not show it helps real students.",
+        "Below are the recorded results for all five settings the simulation was run in. Nothing is re-simulated here."
       ],
       "facts": [
-        ["Setting shown", "14 study days, 10 questions a day, 49 ideas, marks from the real past papers"],
-        ["Read", "nerdhub/mlt/js/adapt.js · nerdhub/mlt/js/evidence.js"]
+        [
+          "Settings",
+          "five: 7, 14 or 30 study days; 5, 10 or 20 questions a day; 49 ideas, marks from the real past papers"
+        ],
+        [
+          "Source",
+          "results from nerdhub/mlt/js/evidence.js; the simulation itself is not in this repository"
+        ],
+        [
+          "Read",
+          "nerdhub/mlt/js/adapt.js"
+        ]
       ],
-      "doors": [["https://github.com/krishnbhagat01/krishnbhagat.dev/blob/main/nerdhub/mlt/js/adapt.js", "Read the model →"], ["/nerdhub/mlt/#practice", "Practice next, in MLT"]]
+      "doors": [
+        [
+          "https://github.com/krishnbhagat01/krishnbhagat.dev/blob/main/nerdhub/mlt/js/adapt.js",
+          "Read the model →"
+        ],
+        [
+          "/nerdhub/mlt/#practice",
+          "Practice next, in MLT"
+        ]
+      ],
+      "instrument": {
+        "name": "evidence",
+        "source": "nerdhub/mlt/js/evidence.js",
+        "students": 2000,
+        "ideas": 49,
+        "columns": [
+          "strategy",
+          "score mean",
+          "score 95% CI",
+          "gain over random",
+          "gain 95% CI"
+        ],
+        "settings": [
+          {
+            "D": 14,
+            "K": 10,
+            "rows": [
+              [
+                "No practice",
+                33.3,
+                0.3,
+                -20.2,
+                0.1
+              ],
+              [
+                "Random concept",
+                53.5,
+                0.2,
+                0,
+                0
+              ],
+              [
+                "Syllabus order",
+                54,
+                0.2,
+                0.6,
+                0.1
+              ],
+              [
+                "Weakest accuracy",
+                50.1,
+                0.3,
+                -3.3,
+                0.2
+              ],
+              [
+                "Marks-weighted random",
+                60.5,
+                0.2,
+                7,
+                0.1
+              ],
+              [
+                "Adaptive (ours)",
+                60.6,
+                0.2,
+                7.1,
+                0.1
+              ],
+              [
+                "Adaptive, equal weights",
+                47.4,
+                0.2,
+                -6.1,
+                0.1
+              ],
+              [
+                "Oracle (sees truth)",
+                62.5,
+                0.2,
+                9,
+                0.1
+              ]
+            ]
+          },
+          {
+            "D": 7,
+            "K": 10,
+            "rows": [
+              [
+                "No practice",
+                35.8,
+                0.3,
+                -11.8,
+                0.1
+              ],
+              [
+                "Random concept",
+                47.6,
+                0.2,
+                0,
+                0
+              ],
+              [
+                "Syllabus order",
+                47.7,
+                0.2,
+                0.1,
+                0.1
+              ],
+              [
+                "Weakest accuracy",
+                44.1,
+                0.3,
+                -3.5,
+                0.1
+              ],
+              [
+                "Marks-weighted random",
+                52.5,
+                0.2,
+                4.9,
+                0.1
+              ],
+              [
+                "Adaptive (ours)",
+                53.1,
+                0.2,
+                5.5,
+                0.1
+              ],
+              [
+                "Adaptive, equal weights",
+                44.3,
+                0.3,
+                -3.3,
+                0.1
+              ],
+              [
+                "Oracle (sees truth)",
+                54.5,
+                0.2,
+                7,
+                0.1
+              ]
+            ]
+          },
+          {
+            "D": 14,
+            "K": 5,
+            "rows": [
+              [
+                "No practice",
+                33.3,
+                0.3,
+                -10.9,
+                0.1
+              ],
+              [
+                "Random concept",
+                44.1,
+                0.2,
+                0,
+                0
+              ],
+              [
+                "Syllabus order",
+                44,
+                0.2,
+                -0.2,
+                0.1
+              ],
+              [
+                "Weakest accuracy",
+                41.2,
+                0.3,
+                -2.9,
+                0.1
+              ],
+              [
+                "Marks-weighted random",
+                49,
+                0.2,
+                4.9,
+                0.1
+              ],
+              [
+                "Adaptive (ours)",
+                49.8,
+                0.2,
+                5.7,
+                0.1
+              ],
+              [
+                "Adaptive, equal weights",
+                41.1,
+                0.3,
+                -3.1,
+                0.1
+              ],
+              [
+                "Oracle (sees truth)",
+                51.5,
+                0.2,
+                7.3,
+                0.1
+              ]
+            ]
+          },
+          {
+            "D": 30,
+            "K": 10,
+            "rows": [
+              [
+                "No practice",
+                30.4,
+                0.3,
+                -34.2,
+                0.2
+              ],
+              [
+                "Random concept",
+                64.6,
+                0.2,
+                0,
+                0
+              ],
+              [
+                "Syllabus order",
+                65.5,
+                0.2,
+                0.9,
+                0.1
+              ],
+              [
+                "Weakest accuracy",
+                60.2,
+                0.2,
+                -4.4,
+                0.2
+              ],
+              [
+                "Marks-weighted random",
+                71.9,
+                0.2,
+                7.3,
+                0.1
+              ],
+              [
+                "Adaptive (ours)",
+                72.8,
+                0.2,
+                8.2,
+                0.1
+              ],
+              [
+                "Adaptive, equal weights",
+                56.5,
+                0.2,
+                -8.1,
+                0.1
+              ],
+              [
+                "Oracle (sees truth)",
+                72.6,
+                0.2,
+                8,
+                0.2
+              ]
+            ]
+          },
+          {
+            "D": 14,
+            "K": 20,
+            "rows": [
+              [
+                "No practice",
+                33.3,
+                0.3,
+                -34.4,
+                0.2
+              ],
+              [
+                "Random concept",
+                67.6,
+                0.2,
+                0,
+                0
+              ],
+              [
+                "Syllabus order",
+                68.8,
+                0.2,
+                1.2,
+                0.1
+              ],
+              [
+                "Weakest accuracy",
+                62.7,
+                0.2,
+                -5,
+                0.1
+              ],
+              [
+                "Marks-weighted random",
+                73.8,
+                0.1,
+                6.2,
+                0.1
+              ],
+              [
+                "Adaptive (ours)",
+                74.3,
+                0.2,
+                6.7,
+                0.1
+              ],
+              [
+                "Adaptive, equal weights",
+                61.9,
+                0.3,
+                -5.7,
+                0.2
+              ],
+              [
+                "Oracle (sees truth)",
+                73.2,
+                0.2,
+                5.6,
+                0.2
+              ]
+            ]
+          }
+        ]
+      },
+      "related": [
+        [
+          "KB-009",
+          "the ranking reads the answer log, which merging keeps whole"
+        ],
+        [
+          "KB-001",
+          "lives in the MLT site as Practice next"
+        ]
+      ]
     },
     {
-      "no": "KB-005", "shelf": "experiments", "art": "layout",
+      "no": "KB-005",
+      "shelf": "experiments",
+      "art": "layout",
       "title": "A graph that lays itself out",
       "hook": "nodes push apart, edges pull together, then it cools",
       "body": [
         "The PDSA site draws its graphs with its own force layout, about thirty lines long: every pair of nodes repels, every edge pulls its ends together, and each step is allowed to move a little less than the last, for 260 steps.",
-        "The drawing shows one run on real data: PDSA's five topics, joined to the topics each one builds on. Start, step 12 and step 260."
+        "Below, the same code runs in your browser on real data: PDSA's five topics, joined to the topics each one builds on. Scrub through the 260 steps, play them, or pick a topic to see what it connects to."
       ],
-      "facts": [["Read", "fr() in nerdhub/pdsa-quiz-2/js/core.js"]],
-      "doors": [["https://github.com/krishnbhagat01/krishnbhagat.dev/blob/main/nerdhub/pdsa-quiz-2/js/core.js", "Read the layout →"]]
+      "facts": [
+        [
+          "Read",
+          "fr() in nerdhub/pdsa-quiz-2/js/core.js"
+        ]
+      ],
+      "doors": [
+        [
+          "https://github.com/krishnbhagat01/krishnbhagat.dev/blob/main/nerdhub/pdsa-quiz-2/js/core.js",
+          "Read the layout →"
+        ]
+      ],
+      "instrument": {
+        "name": "layout",
+        "source": "fr() in nerdhub/pdsa-quiz-2/js/core.js; topics and uses from nerdhub/pdsa-quiz-2/js/data/manifest.js",
+        "W": 300,
+        "H": 240,
+        "iterations": 260,
+        "nodes": [
+          [
+            "dc",
+            "Divide & Conquer",
+            "D&C"
+          ],
+          [
+            "trees",
+            "Trees: Binary, BST and AVL",
+            "Trees"
+          ],
+          [
+            "heaps",
+            "Heaps and Priority Queues",
+            "Heaps"
+          ],
+          [
+            "greedy",
+            "Greedy Algorithms",
+            "Greedy"
+          ],
+          [
+            "graphs",
+            "Graph Algorithms",
+            "Graphs"
+          ]
+        ],
+        "uses": {
+          "dc": [],
+          "trees": [
+            "dc"
+          ],
+          "heaps": [
+            "trees"
+          ],
+          "greedy": [
+            "heaps"
+          ],
+          "graphs": [
+            "heaps",
+            "greedy",
+            "trees"
+          ]
+        }
+      },
+      "related": [
+        [
+          "KB-001",
+          "the PDSA site uses it for every graph it draws"
+        ]
+      ]
     },
     {
-      "no": "KB-006", "shelf": "experiments", "art": "master",
+      "no": "KB-006",
+      "shelf": "experiments",
+      "art": "master",
       "title": "A solver that shows where the work is",
       "hook": "type a recurrence; see which level of the tree pays",
       "body": [
         "A small widget in PDSA's divide and conquer topic. You type a, b and d for T(n) = a·T(n/b) + O(nᵈ) and it walks through the three steps of the master theorem, ending with why: the leaves do the most work, every level does the same, or the root does.",
-        "Drawn here as the work at each level of the recursion tree, for three recurrences."
+        "Below, choose a recurrence, or set a, b and d yourself, and read the work level by level down to the leaves."
       ],
-      "facts": [["Read", "P.widgets.master in nerdhub/pdsa-quiz-2/js/widgets.js"]],
-      "doors": [["https://github.com/krishnbhagat01/krishnbhagat.dev/blob/main/nerdhub/pdsa-quiz-2/js/widgets.js", "Read the solver →"]]
+      "facts": [
+        [
+          "Read",
+          "P.widgets.master in nerdhub/pdsa-quiz-2/js/widgets.js"
+        ]
+      ],
+      "doors": [
+        [
+          "https://github.com/krishnbhagat01/krishnbhagat.dev/blob/main/nerdhub/pdsa-quiz-2/js/widgets.js",
+          "Read the solver →"
+        ]
+      ],
+      "instrument": {
+        "name": "recursion",
+        "source": "P.widgets.master in nerdhub/pdsa-quiz-2/js/widgets.js",
+        "presets": [
+          [
+            4,
+            2,
+            1
+          ],
+          [
+            2,
+            2,
+            1
+          ],
+          [
+            2,
+            2,
+            2
+          ]
+        ],
+        "start": 1,
+        "levels": 5
+      },
+      "related": [
+        [
+          "KB-007",
+          "the same rule, as one remember line"
+        ]
+      ]
     },
     {
-      "no": "KB-007", "shelf": "notes",
+      "no": "KB-007",
+      "shelf": "notes",
       "title": "Remember lines",
       "quote": "Greedy = locally best, never undone. Fast, not always correct.",
       "hook": "one of 38 at the ends of PDSA's sections",
@@ -85,12 +645,26 @@
         "Height is cost. Balanced height is log n, a chain is n.",
         "Heap = complete tree + parent-child order. Not sorted.",
         "Relax: if dist[u]+w < dist[v], lower dist[v].",
-        "Divide, conquer (recursion + base case), combine."
+        "Divide, conquer (recursion + base case), combine.",
+        "Compare a with bᵈ: bigger → n^(log_b a); equal → nᵈ log n; smaller → nᵈ."
       ],
-      "facts": [["Read", "the \"remember\" fields in nerdhub/pdsa-quiz-2/js/data/"]]
+      "facts": [
+        [
+          "Read",
+          "the \"remember\" fields in nerdhub/pdsa-quiz-2/js/data/"
+        ]
+      ],
+      "lines_from": "from nerdhub/pdsa-quiz-2/js/data/, maths typeset as plain text",
+      "related": [
+        [
+          "KB-006",
+          "that line, as a solver you can try"
+        ]
+      ]
     },
     {
-      "no": "KB-008", "shelf": "notes",
+      "no": "KB-008",
+      "shelf": "notes",
       "title": "[FLAG]",
       "quote": "[FLAG] key 100; derived 50",
       "hook": "where the answer key was wrong, and the working",
@@ -99,14 +673,28 @@
         "Across the 35 pages that comes to roughly 376 [SRC], 447 [ADDED] and 116 [FLAG] tags. Each [FLAG] is a place where the source or its answer key disagreed with the working, shown next to it."
       ],
       "legend": "[SRC] = mere PYQ file se · [ADDED] = explanation / example / naya question · [FLAG] = source ya answer-key error, proof ke saath · [?] = unreadable / missing in source.",
-      "facts": [["Read", "nerdhub/mlt/q1/"]]
+      "facts": [
+        [
+          "Read",
+          "nerdhub/mlt/q1/"
+        ]
+      ],
+      "related": [
+        [
+          "KB-001",
+          "these notes are the MLT site's Quiz 1 pages"
+        ]
+      ]
     },
     {
-      "no": "KB-009", "shelf": "notes",
+      "no": "KB-009",
+      "shelf": "notes",
       "title": "Two copies, one state",
       "quote": "Merge two copies of the study state without losing either.",
       "hook": "the rules at the top of merge.js",
-      "body": ["When the same student studies on two devices, both copies have to survive. The rules, as written in the file:"],
+      "body": [
+        "When the same student studies on two devices, both copies have to survive. The rules, as written in the file:"
+      ],
       "lines": [
         "the answer log: union, de-duplicated",
         "past-question results: the newer attempt wins",
@@ -114,28 +702,81 @@
         "sections read: union",
         "a reset bumps the epoch, and a new epoch replaces instead of merging"
       ],
-      "facts": [["Read", "nerdhub/mlt/js/merge.js"]],
-      "doors": [["https://github.com/krishnbhagat01/krishnbhagat.dev/blob/main/nerdhub/mlt/js/merge.js", "Read the rules →"]]
+      "facts": [
+        [
+          "Read",
+          "nerdhub/mlt/js/merge.js"
+        ]
+      ],
+      "doors": [
+        [
+          "https://github.com/krishnbhagat01/krishnbhagat.dev/blob/main/nerdhub/mlt/js/merge.js",
+          "Read the rules →"
+        ]
+      ],
+      "lines_from": "from the comment at the top of nerdhub/mlt/js/merge.js, lightly shortened",
+      "related": [
+        [
+          "KB-004",
+          "the answer log it merges is what Practice next reads"
+        ]
+      ]
     },
     {
-      "no": "KB-010", "shelf": "unfinished", "art": "page",
+      "no": "KB-010",
+      "shelf": "unfinished",
+      "art": "page",
       "title": "Posts",
       "hook": "promised on the nerdhub page; none written yet",
-      "body": ["The nerdhub page has said “study sites, notes and posts” from the start. The posts do not exist yet."]
+      "body": [
+        "The nerdhub page has said “study sites, notes and posts” from the start. The posts do not exist yet."
+      ],
+      "related": [
+        [
+          "KB-001",
+          "the page that promised them"
+        ]
+      ]
     },
     {
-      "no": "KB-003", "shelf": "unfinished", "art": "empty",
+      "no": "KB-003",
+      "shelf": "unfinished",
+      "art": "empty",
       "title": "not built yet",
       "hook": "reserved",
-      "body": ["Reserved for whatever comes next."]
+      "body": [
+        "Reserved for whatever comes next."
+      ]
     }
   ],
   "notebook": [
-    ["2026-11-22", "Initial site: home, nerdhub, PDSA Quiz 2 and MLT study sites."],
-    ["2026-11-22", "Cloud sync for MLT and PDSA, limited to IITM accounts. Firestore rules. Privacy page."],
-    ["2026-11-22", "Sign-in wall and an owner-only admin page."],
-    ["2026-11-23", "Drew the wings: six scenes in SVG."],
-    ["2026-11-23", "Taught the wings to move."],
-    ["2026-11-23", "Opened the lab."]
+    [
+      "2026-11-22",
+      "Initial site: home, nerdhub, PDSA Quiz 2 and MLT study sites."
+    ],
+    [
+      "2026-11-22",
+      "Cloud sync for MLT and PDSA, limited to IITM accounts. Firestore rules. Privacy page."
+    ],
+    [
+      "2026-11-22",
+      "Sign-in wall and an owner-only admin page."
+    ],
+    [
+      "2026-11-23",
+      "Drew the wings: six scenes in SVG."
+    ],
+    [
+      "2026-11-23",
+      "Taught the wings to move."
+    ],
+    [
+      "2026-11-23",
+      "Opened the lab."
+    ],
+    [
+      "2026-11-23",
+      "Made three specimens explorable."
+    ]
   ]
 }
