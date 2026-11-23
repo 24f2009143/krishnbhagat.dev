@@ -203,7 +203,7 @@
 .instrument__uses { list-style: none; padding: 0; display: grid; gap: var(--nh-space-1); font-size: var(--nh-text-sm); color: var(--nh-annot); }
 .instrument__more summary { cursor: pointer; font: italic 400 var(--nh-text-sm) / 1.4 var(--nh-font-serif); color: var(--nh-annot-faint); }
 .instrument__more summary:hover { color: var(--nh-text); }
-.instrument__tables { display: grid; gap: var(--nh-space-5); margin-top: var(--nh-space-4); }
+.instrument__tables { display: grid; gap: var(--nh-space-5); margin-top: var(--nh-space-4); overflow-x: auto; }
 
 /* controls: small drafting instruments, not app chrome */
 .inst-btn, .inst-chip { font: 500 var(--nh-text-xs) / 1 var(--nh-font-mono); letter-spacing: 0.04em; color: var(--nh-annot); background: none; border: 1px solid var(--nh-line-soft); border-radius: 3px; padding: 0.55rem 0.75rem; min-height: 36px; cursor: pointer; }
