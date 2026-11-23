@@ -418,6 +418,192 @@ def mini_empty():
 DOOR = ('<svg class="lab__door" viewBox="0 0 40 64" aria-hidden="true" focusable="false"><g class="c-sun">'
         '<path class="ln" d="M4 62 V4 H36 V62"/><line class="ln" x1="0" y1="62" x2="40" y2="62"/></g></svg>')
 
+# ---------------------------------------------------------------- the lab (Phase 3): rendered from tools/lab.json
+import json, html as _html
+from datetime import date as _date
+
+LAB = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "lab.json"), encoding="utf-8"))
+esc = lambda t: _html.escape(str(t), quote=True)
+
+def fr_snapshots(nodes, edges, W, H, snaps):
+    """A line-for-line port of fr() in nerdhub/pdsa-quiz-2/js/core.js, with snapshots."""
+    n = len(nodes); R = min(W, H) / 2 - 50
+    pos = {v: [W / 2 + R * math.cos(2 * math.pi * i / n - math.pi / 2), H / 2 + R * math.sin(2 * math.pi * i / n - math.pi / 2)] for i, v in enumerate(nodes)}
+    k = math.sqrt(W * H / n) * 0.75
+    def norm():
+        xs = [pos[v][0] for v in nodes]; ys = [pos[v][1] for v in nodes]
+        x0, x1, y0, y1 = min(xs), max(xs), min(ys), max(ys)
+        return {v: (40 + ((W - 80) / 2 if x1 == x0 else (pos[v][0] - x0) / (x1 - x0) * (W - 80)),
+                    34 + ((H - 68) / 2 if y1 == y0 else (pos[v][1] - y0) / (y1 - y0) * (H - 68))) for v in nodes}
+    out = {0: norm()} if 0 in snaps else {}
+    for it in range(260):
+        d = {v: [0.0, 0.0] for v in nodes}
+        for i in range(n):
+            for j in range(i + 1, n):
+                a, b = pos[nodes[i]], pos[nodes[j]]
+                dx, dy = a[0] - b[0], a[1] - b[1]; L = math.sqrt(dx * dx + dy * dy) or 0.01; f = k * k / L
+                d[nodes[i]][0] += dx / L * f; d[nodes[i]][1] += dy / L * f
+                d[nodes[j]][0] -= dx / L * f; d[nodes[j]][1] -= dy / L * f
+        for e0, e1 in edges:
+            a, b = pos[e0], pos[e1]
+            dx, dy = a[0] - b[0], a[1] - b[1]; L = math.sqrt(dx * dx + dy * dy) or 0.01; f = L * L / k
+            d[e0][0] -= dx / L * f; d[e0][1] -= dy / L * f; d[e1][0] += dx / L * f; d[e1][1] += dy / L * f
+        t = (1 - it / 260) * W / 8 + 1
+        for v in nodes:
+            dd = d[v]; L = math.sqrt(dd[0] ** 2 + dd[1] ** 2) or 0.01
+            pos[v][0] += dd[0] / L * min(L, t); pos[v][1] += dd[1] / L * min(L, t)
+        if it + 1 in snaps: out[it + 1] = norm()
+    return out
+
+def _svg(vb, body, cls="specimen__art"):
+    return f'<svg class="{cls}" viewBox="{vb}" aria-hidden="true" focusable="false">{body}</svg>'
+
+def art_layout():
+    # PDSA's five topics and the topics each one uses (nerdhub/pdsa-quiz-2/js/data/manifest.js)
+    nodes = ["dc", "trees", "heaps", "greedy", "graphs"]
+    label = {"dc": "D&C", "trees": "Trees", "heaps": "Heaps", "greedy": "Greedy", "graphs": "Graphs"}
+    edges = [("trees", "dc"), ("heaps", "trees"), ("greedy", "heaps"), ("graphs", "heaps"), ("graphs", "greedy"), ("graphs", "trees")]
+    W, H = 300, 240
+    snaps = fr_snapshots(nodes, edges, W, H, {0, 12, 260})
+    b = ['<g class="c-frag">']
+    for col, step in enumerate((0, 12, 260)):
+        ox, sc = 8 + col * 122, 0.36
+        p = {v: (ox + x * sc, 24 + y * sc) for v, (x, y) in snaps[step].items()}
+        for a, c in edges:
+            b.append(f'<line class="ln{"" if step == 260 else " dim"}" x1="{n(p[a][0])}" y1="{n(p[a][1])}" x2="{n(p[c][0])}" y2="{n(p[c][1])}"/>')
+        mx = sum(x for x, _ in p.values()) / len(p); my = sum(y for _, y in p.values()) / len(p)
+        for v, (x, y) in p.items():
+            b.append(f'<circle class="ln bg" cx="{n(x)}" cy="{n(y)}" r="3.4"/>')
+            if step == 260:
+                # labels sit outside the drawing, pushed away from its centre
+                dx, dy = x - mx, y - my; L = math.hypot(dx, dy) or 1
+                lx, ly = x + dx / L * 8, y + dy / L * 8 + 2.5
+                anchor = "start" if dx > 4 else "end" if dx < -4 else "middle"
+                b.append(f'<text class="tx" x="{n(lx)}" y="{n(ly)}" font-size="7" text-anchor="{anchor}">{label[v]}</text>')
+        b.append(f'<text class="tx dim" x="{n(ox + 54)}" y="128" font-size="7.5" text-anchor="middle">{"start" if step == 0 else "step " + str(step)}</text>')
+        if col < 2:
+            b.append(f'<line class="ln dim dash" x1="{n(ox + 114)}" y1="30" x2="{n(ox + 114)}" y2="112"/>')
+    b.append("</g>")
+    return _svg("0 0 380 136", "".join(b))
+
+def art_evidence():
+    # gain over random, in exam points: 14 days, 10 questions a day (nerdhub/mlt/js/evidence.js)
+    rows = [("No practice", -20.2), ("Weakest accuracy", -3.3), ("Adaptive, equal weights", -6.1), ("Random concept", 0),
+            ("Syllabus order", 0.6), ("Marks-weighted random", 7.0), ("Adaptive (ours)", 7.1), ("Oracle (sees truth)", 9.0)]
+    X = lambda v: 156 + (v + 21) * 5.6
+    b = ['<g class="c-frag">', f'<line class="ln dim" x1="{n(X(0))}" y1="8" x2="{n(X(0))}" y2="150"/>',
+         f'<text class="tx dim" x="{n(X(0))}" y="162" font-size="7" text-anchor="middle">random</text>',
+         f'<text class="tx dim" x="{n(X(-20))}" y="162" font-size="7" text-anchor="middle">−20</text>',
+         f'<text class="tx dim" x="{n(X(9))}" y="162" font-size="7" text-anchor="middle">+9</text>']
+    for i, (name, v) in enumerate(rows):
+        y = 16 + i * 17
+        me = name == "Adaptive (ours)"
+        b.append(f'<text class="tx{"" if me else " dim"}" x="148" y="{y + 2.6}" font-size="7.5" text-anchor="end">{esc(name)}</text>')
+        b.append(f'<line class="ln{"" if me else " dim"}" x1="{n(X(0))}" y1="{y}" x2="{n(X(v))}" y2="{y}"/>')
+        b.append(f'<circle class="{"dot" if name != "Oracle (sees truth)" else "ln bg"}" cx="{n(X(v))}" cy="{y}" r="{3 if me else 2.4}"/>')
+    b.append("</g>")
+    return _svg("0 0 340 168", "".join(b))
+
+def art_master():
+    # work per level of the recursion tree, for three recurrences (as the PDSA solver explains them)
+    cases = [("4T(n/2) + n", "O(n²)", "leaves", [1, 2, 4, 8]), ("2T(n/2) + n", "O(n log n)", "every level", [4, 4, 4, 4]),
+             ("2T(n/2) + n²", "O(n²)", "root", [8, 4, 2, 1])]
+    b = ['<g class="c-frag">']
+    for c, (rec, res, where, w) in enumerate(cases):
+        cx = 56 + c * 112
+        for lv, ww in enumerate(w):
+            half = ww * 5.5
+            b.append(f'<rect class="{"dot" if ww == max(w) else "ln"}" x="{n(cx - half)}" y="{14 + lv * 18}" width="{n(2 * half)}" height="9"/>')
+        b.append(f'<text class="tx" x="{cx}" y="100" font-size="7.5" text-anchor="middle">{esc(rec)}</text>')
+        b.append(f'<text class="tx dim" x="{cx}" y="112" font-size="7" text-anchor="middle">{esc(res)}</text>')
+        b.append(f'<text class="nt" x="{cx}" y="128" font-size="9" text-anchor="middle">{where}</text>')
+    b.append("</g>")
+    return _svg("0 0 336 136", "".join(b))
+
+def art_page():
+    b = ['<g class="c-draft"><rect class="ln dash" x="98" y="12" width="104" height="112"/>']
+    for i in range(6):
+        b.append(f'<line class="ln dim dash" x1="110" y1="{34 + i * 15}" x2="{190 - (i % 3) * 14}" y2="{34 + i * 15}"/>')
+    b.append('<text class="nt" x="150" y="26" font-size="9" text-anchor="middle">posts</text></g>')
+    return _svg("0 0 300 136", "".join(b))
+
+ART = {"world": lambda: mini_world(), "wings": lambda: mini_wing(), "empty": lambda: mini_empty(),
+       "evidence": art_evidence, "layout": art_layout, "master": art_master, "page": art_page}
+
+def _fmt(d):
+    y, m, dd = map(int, d.split("-"))
+    return f"{dd} {_date(y, m, dd).strftime('%b')} {y}"
+
+def specimen(sp):
+    shelf = sp["shelf"]
+    note = shelf == "notes"
+    top = (f'<span class="specimen__quote">{esc(sp["quote"])}</span>' if note
+           else ART[sp["art"]]() if sp.get("art") else "")
+    summ = (f'<summary>{top}'
+            f'<span class="specimen__label"><span class="specimen__no">{esc(sp["no"])}</span> '
+            f'<span class="specimen__title">{esc(sp["title"])}</span></span>'
+            f'<span class="specimen__hint" aria-hidden="true">inspect</span>'
+            f'<span class="specimen__hook">{esc(sp["hook"])}</span></summary>')
+    body = sp.get("body", [])
+    sheet = []
+    for i, para in enumerate(body):
+        sheet.append(f"<p>{esc(para)}</p>")
+        if i == 0 and sp.get("legend"):
+            sheet.append(f'<blockquote class="specimen__legend" lang="hi-Latn">{esc(sp["legend"])}</blockquote>')
+    if sp.get("lines"):
+        sheet.append('<ul class="specimen__lines">' + "".join(f"<li>{esc(l)}</li>" for l in sp["lines"]) + "</ul>")
+    if sp.get("facts"):
+        sheet.append('<dl class="specimen__facts">' + "".join(f"<div><dt>{esc(k)}</dt><dd>{esc(v)}</dd></div>" for k, v in sp["facts"]) + "</dl>")
+    if sp.get("doors"):
+        links = []
+        for d in sp["doors"]:
+            cls = "nh-btn nh-btn--ghost" if len(d) > 2 and d[2] == "primary" else "specimen__door"
+            links.append(f'<a class="{cls}" href="{esc(d[0])}">{esc(d[1])}</a>')
+        sheet.append('<p class="specimen__doors">' + " ".join(links) + "</p>")
+    if sp.get("fine"):
+        sheet.append(f'<p class="specimen__fine">{esc(sp["fine"])}</p>')
+    return (f'<details class="specimen specimen--{shelf}" id="{esc(sp["no"].lower())}" name="lab">'
+            f'{summ}<div class="specimen__sheet">{"".join(sheet)}</div></details>')
+
+def lab_section():
+    shelves = []
+    for sh in LAB["shelves"]:
+        items = [s for s in LAB["specimens"] if s["shelf"] == sh["id"]]
+        if not items:
+            continue
+        shelves.append(
+            f'<section class="shelf shelf--{sh["id"]}" aria-labelledby="shelf-{sh["id"]}">'
+            f'<header class="shelf__head"><h3 class="shelf__title" id="shelf-{sh["id"]}">{esc(sh["title"])}</h3>'
+            f'<p class="shelf__line">{esc(sh["line"])}</p><span class="shelf__count" aria-hidden="true">{len(items):02d}</span></header>'
+            f'<div class="shelf__items">{"".join(specimen(s) for s in items)}</div></section>')
+    log = "".join(f'<li><time datetime="{d}">{_fmt(d)}</time> {esc(t)}</li>' for d, t in LAB["notebook"])
+    count = len(LAB["specimens"])
+    return f"""<section class="lab" id="lab" data-scene="06" aria-labelledby="t-lab">
+    <div class="nh-wrap">
+      <header class="lab__head">
+        {DOOR}
+        <div>
+          <p class="chapter">06 — The lab</p>
+          <h2 class="lab__title" id="t-lab">Things I’ve made, and things I’m still making.</h2>
+        </div>
+      </header>
+      <p class="lab__census">{count} specimens on {len(shelves)} shelves · catalogued <time datetime="{LAB['catalogued']}">{_fmt(LAB['catalogued'])}</time> · open any one to inspect it</p>
+
+      <div class="lab__floor">
+        <div class="cabinet">
+          {"".join(shelves)}
+        </div>
+
+        <aside class="notebook" aria-labelledby="t-notebook">
+          <h3 class="notebook__title" id="t-notebook">Notebook</h3>
+          <ol class="notebook__log">{log}</ol>
+        </aside>
+      </div>
+      <p class="lab__loop">The collection grows when something new gets made. <a href="#idea">↑ 01, again</a></p>
+    </div>
+  </section>"""
+
+
 def page():
     return f"""<!doctype html>
 <html lang="en">
@@ -496,73 +682,7 @@ def page():
     </div>
   </section>
 
-  <section class="lab" id="lab" data-scene="06" aria-labelledby="t-lab">
-    <div class="nh-wrap">
-      <header class="lab__head">
-        {DOOR}
-        <div>
-          <p class="chapter">06 — The lab</p>
-          <h2 class="lab__title" id="t-lab">Things I’ve made, and things I’m still making.</h2>
-        </div>
-      </header>
-
-      <div class="lab__floor">
-        <div class="specimens">
-          <details class="specimen" id="kb-001">
-            <summary>
-              {mini_world()}
-              <span class="specimen__label"><span class="specimen__no">KB-001</span> a world of study sites</span>
-              <span class="specimen__hint">inspect</span>
-            </summary>
-            <div class="specimen__body">
-              <h3>nerdhub</h3>
-              <p>Study sites I built for my own courses: notes, past-paper practice, mocks and flashcards. The heap and the decision tree in the wings above came from here.</p>
-              <ul class="specimen__doors">
-                <li><a href="/nerdhub/pdsa-quiz-2/">PDSA Quiz 2</a> <span>5 topics · 159 past questions from 10 papers</span></li>
-                <li><a href="/nerdhub/mlt/">MLT</a> <span>13 topics · 35 pages of Quiz 1 notes</span></li>
-              </ul>
-              <a class="nh-btn nh-btn--ghost" href="/nerdhub/">Enter nerdhub →</a>
-              <p class="specimen__fine">The study sites ask for an IITM student sign-in.</p>
-            </div>
-          </details>
-
-          <details class="specimen" id="kb-002">
-            <summary>
-              {mini_wing()}
-              <span class="specimen__label"><span class="specimen__no">KB-002</span> a pair of wings</span>
-              <span class="specimen__hint">inspect</span>
-            </summary>
-            <div class="specimen__body">
-              <h3>This site</h3>
-              <p>Drawn by hand in SVG, with no framework. Every fragment in the wings is redrawn from something worked out in nerdhub: a heap, a shortest-path graph, a recurrence, a decision tree, a regression fit, a nearest-neighbour sketch.</p>
-              <a class="nh-btn nh-btn--ghost" href="https://github.com/krishnbhagat01/krishnbhagat.dev">Source on GitHub →</a>
-            </div>
-          </details>
-
-          <details class="specimen specimen--empty" id="kb-003">
-            <summary>
-              {mini_empty()}
-              <span class="specimen__label"><span class="specimen__no">KB-003</span> not built yet</span>
-              <span class="specimen__hint">inspect</span>
-            </summary>
-            <div class="specimen__body">
-              <p>Reserved for whatever comes next.</p>
-            </div>
-          </details>
-        </div>
-
-        <aside class="notebook" aria-labelledby="t-notebook">
-          <h3 class="notebook__title" id="t-notebook">Notebook</h3>
-          <ol class="notebook__log">
-            <li><time datetime="2026-11-22">22 Nov 2026</time> Initial site: home, nerdhub, PDSA Quiz 2 and MLT study sites.</li>
-            <li><time datetime="2026-11-22">22 Nov 2026</time> Cloud sync for MLT and PDSA, limited to IITM accounts. Firestore rules. Privacy page.</li>
-            <li><time datetime="2026-11-22">22 Nov 2026</time> Sign-in wall and an owner-only admin page.</li>
-            <li><time datetime="2026-11-23">23 Nov 2026</time> Started drawing the wings.</li>
-          </ol>
-        </aside>
-      </div>
-    </div>
-  </section>
+  {lab_section()}
 </main>
 
 <footer class="home-footer">

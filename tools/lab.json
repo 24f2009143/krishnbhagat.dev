@@ -1,0 +1,141 @@
+{
+  "_readme": "The Lab's contents. Add a specimen: give it the next KB number, a shelf, and a drawing ('art' names a drawing in build-home.py, or leave it out for a note). Then run: python3 tools/build-home.py. Only write what is true and can be pointed at.",
+  "catalogued": "2026-11-23",
+  "repo": "https://github.com/krishnbhagat01/krishnbhagat.dev",
+  "shelves": [
+    {"id": "built", "title": "Built", "line": "Things that exist and can be used."},
+    {"id": "experiments", "title": "Experiments", "line": "Things made to find something out."},
+    {"id": "notes", "title": "Notes", "line": "Things written down along the way."},
+    {"id": "unfinished", "title": "Unfinished", "line": "Not yet."}
+  ],
+  "specimens": [
+    {
+      "no": "KB-001", "shelf": "built", "art": "world",
+      "title": "nerdhub",
+      "hook": "a world of study sites",
+      "body": [
+        "Study sites I built for my own courses. Each one turns a course's past papers into a place to read, practise and revise: notes, past questions, mock tests, flashcards, a mistakes list and a study plan.",
+        "Two sites live there now. PDSA Quiz 2 treats the course as a graph: every topic is marked visited, frontier or unvisited. The MLT platform reads like handwritten notes in pen-blue ink, with a formula drawer and search across every note and question."
+      ],
+      "facts": [
+        ["PDSA Quiz 2", "5 topics · 159 past questions from 10 papers · course map, practice, mock exam, flashcards, last-night sheet"],
+        ["MLT", "13 topics · 35 pages of Quiz 1 notes · practice next, mock test, cheatsheet, glossary, formula drawer"],
+        ["Sync", "progress follows a student across devices, limited to IITM accounts by Firestore rules"]
+      ],
+      "doors": [["/nerdhub/", "Enter nerdhub →", "primary"], ["/nerdhub/pdsa-quiz-2/", "PDSA Quiz 2"], ["/nerdhub/mlt/", "MLT"]],
+      "fine": "The study sites ask for an IITM student sign-in."
+    },
+    {
+      "no": "KB-002", "shelf": "built", "art": "wings",
+      "title": "This site",
+      "hook": "a pair of wings",
+      "body": [
+        "Drawn by hand in SVG, with no framework. Every fragment in the wings is redrawn from something worked out in nerdhub: a heap, a shortest-path graph, a recurrence, a decision tree, a regression fit, a nearest-neighbour sketch.",
+        "The geometry is computed by a small script and written out as plain HTML, so the page needs nothing to run. The motion is a layer on top; switch it off and the drawing is all still here."
+      ],
+      "facts": [["Source", "index.html, tools/build-home.py, assets/"]],
+      "doors": [["https://github.com/krishnbhagat01/krishnbhagat.dev", "Source on GitHub →"]]
+    },
+    {
+      "no": "KB-004", "shelf": "experiments", "art": "evidence",
+      "title": "Does adaptive practice help?",
+      "hook": "a memory model, tested on 2,000 simulated students",
+      "body": [
+        "MLT's “Practice next” ranks ideas by the marks you are likely to lose on them. Each idea carries a chance that you know it, updated after every answer (Bayesian knowledge tracing), and a memory half-life that doubles after a confident right answer and halves after a miss.",
+        "It was then tested against simpler ways of choosing. Most of the gain comes from weighting by marks: marks-weighted random gains 7.0 points over random, the full model 7.1. Over 30 days the memory model earns more (8.2 against 7.3). Practising your weakest topic first does worse than random.",
+        "The students are simulated, with a different forgetting law from the model, so it is tested on something it was not built for. It shows the method behaves sensibly. It does not show it helps real students."
+      ],
+      "facts": [
+        ["Setting shown", "14 study days, 10 questions a day, 49 ideas, marks from the real past papers"],
+        ["Read", "nerdhub/mlt/js/adapt.js · nerdhub/mlt/js/evidence.js"]
+      ],
+      "doors": [["https://github.com/krishnbhagat01/krishnbhagat.dev/blob/main/nerdhub/mlt/js/adapt.js", "Read the model →"], ["/nerdhub/mlt/#practice", "Practice next, in MLT"]]
+    },
+    {
+      "no": "KB-005", "shelf": "experiments", "art": "layout",
+      "title": "A graph that lays itself out",
+      "hook": "nodes push apart, edges pull together, then it cools",
+      "body": [
+        "The PDSA site draws its graphs with its own force layout, about thirty lines long: every pair of nodes repels, every edge pulls its ends together, and each step is allowed to move a little less than the last, for 260 steps.",
+        "The drawing shows one run on real data: PDSA's five topics, joined to the topics each one builds on. Start, step 12 and step 260."
+      ],
+      "facts": [["Read", "fr() in nerdhub/pdsa-quiz-2/js/core.js"]],
+      "doors": [["https://github.com/krishnbhagat01/krishnbhagat.dev/blob/main/nerdhub/pdsa-quiz-2/js/core.js", "Read the layout →"]]
+    },
+    {
+      "no": "KB-006", "shelf": "experiments", "art": "master",
+      "title": "A solver that shows where the work is",
+      "hook": "type a recurrence; see which level of the tree pays",
+      "body": [
+        "A small widget in PDSA's divide and conquer topic. You type a, b and d for T(n) = a·T(n/b) + O(nᵈ) and it walks through the three steps of the master theorem, ending with why: the leaves do the most work, every level does the same, or the root does.",
+        "Drawn here as the work at each level of the recursion tree, for three recurrences."
+      ],
+      "facts": [["Read", "P.widgets.master in nerdhub/pdsa-quiz-2/js/widgets.js"]],
+      "doors": [["https://github.com/krishnbhagat01/krishnbhagat.dev/blob/main/nerdhub/pdsa-quiz-2/js/widgets.js", "Read the solver →"]]
+    },
+    {
+      "no": "KB-007", "shelf": "notes",
+      "title": "Remember lines",
+      "quote": "Greedy = locally best, never undone. Fast, not always correct.",
+      "hook": "one of 38 at the ends of PDSA's sections",
+      "body": [
+        "Every section of the PDSA site ends in one line meant to survive the night before the exam. A few more:"
+      ],
+      "lines": [
+        "Height is cost. Balanced height is log n, a chain is n.",
+        "Heap = complete tree + parent-child order. Not sorted.",
+        "Relax: if dist[u]+w < dist[v], lower dist[v].",
+        "Divide, conquer (recursion + base case), combine."
+      ],
+      "facts": [["Read", "the \"remember\" fields in nerdhub/pdsa-quiz-2/js/data/"]]
+    },
+    {
+      "no": "KB-008", "shelf": "notes",
+      "title": "[FLAG]",
+      "quote": "[FLAG] key 100; derived 50",
+      "hook": "where the answer key was wrong, and the working",
+      "body": [
+        "The MLT Quiz 1 notes tag every claim with where it came from, in the voice I wrote them in:",
+        "Across the 35 pages that comes to roughly 376 [SRC], 447 [ADDED] and 116 [FLAG] tags. Each [FLAG] is a place where the source or its answer key disagreed with the working, shown next to it."
+      ],
+      "legend": "[SRC] = mere PYQ file se · [ADDED] = explanation / example / naya question · [FLAG] = source ya answer-key error, proof ke saath · [?] = unreadable / missing in source.",
+      "facts": [["Read", "nerdhub/mlt/q1/"]]
+    },
+    {
+      "no": "KB-009", "shelf": "notes",
+      "title": "Two copies, one state",
+      "quote": "Merge two copies of the study state without losing either.",
+      "hook": "the rules at the top of merge.js",
+      "body": ["When the same student studies on two devices, both copies have to survive. The rules, as written in the file:"],
+      "lines": [
+        "the answer log: union, de-duplicated",
+        "past-question results: the newer attempt wins",
+        "counters: the larger count wins, because counters cannot be added without a log",
+        "sections read: union",
+        "a reset bumps the epoch, and a new epoch replaces instead of merging"
+      ],
+      "facts": [["Read", "nerdhub/mlt/js/merge.js"]],
+      "doors": [["https://github.com/krishnbhagat01/krishnbhagat.dev/blob/main/nerdhub/mlt/js/merge.js", "Read the rules →"]]
+    },
+    {
+      "no": "KB-010", "shelf": "unfinished", "art": "page",
+      "title": "Posts",
+      "hook": "promised on the nerdhub page; none written yet",
+      "body": ["The nerdhub page has said “study sites, notes and posts” from the start. The posts do not exist yet."]
+    },
+    {
+      "no": "KB-003", "shelf": "unfinished", "art": "empty",
+      "title": "not built yet",
+      "hook": "reserved",
+      "body": ["Reserved for whatever comes next."]
+    }
+  ],
+  "notebook": [
+    ["2026-11-22", "Initial site: home, nerdhub, PDSA Quiz 2 and MLT study sites."],
+    ["2026-11-22", "Cloud sync for MLT and PDSA, limited to IITM accounts. Firestore rules. Privacy page."],
+    ["2026-11-22", "Sign-in wall and an owner-only admin page."],
+    ["2026-11-23", "Drew the wings: six scenes in SVG."],
+    ["2026-11-23", "Taught the wings to move."],
+    ["2026-11-23", "Opened the lab."]
+  ]
+}
