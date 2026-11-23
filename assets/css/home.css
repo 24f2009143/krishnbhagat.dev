@@ -134,3 +134,23 @@
   .m-only { display: inline; }
   .cap { font-size: 16px; }
 }
+
+/* ---------- motion layer (Phase 2B) ----------
+   Nothing here applies until assets/js arms a scene ([data-armed]) or turns motion on.
+   Without JS, or with reduced motion, these selectors never match: the static drawing is the page. */
+[data-armed] .rv {
+  opacity: 0;
+  transform: translateY(6px);
+  stroke-dasharray: 320px;            /* inherited by plain strokes inside: they draw on */
+  stroke-dashoffset: 320px;
+  transition:
+    opacity 700ms var(--nh-ease) calc(var(--i, 0) * 70ms),
+    transform 900ms var(--nh-ease) calc(var(--i, 0) * 70ms),
+    stroke-dashoffset 1200ms var(--nh-ease) calc(var(--i, 0) * 70ms);
+}
+[data-armed][data-in] .rv { opacity: 1; transform: none; stroke-dashoffset: 0; }
+[data-armed] [data-draw] { transition: stroke-dashoffset 1100ms var(--nh-ease) calc(var(--i, 0) * 110ms); }
+
+/* scene 04: earlier positions on the climb appear once the figure has passed them */
+.motion-on [data-at] { transition: opacity 400ms var(--nh-ease); }
+.motion-on .scene [data-at].is-ahead { opacity: 0; }

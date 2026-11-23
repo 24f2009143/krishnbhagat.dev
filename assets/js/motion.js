@@ -1,27 +1,26 @@
-/* Motion preferences shared by landing-page effects.
-   Small on purpose: answers "should we animate at all, and how much?" */
+/* The motion gate for the landing pages: should anything move at all?
+   "full"    = run the motion layer
+   "reduced" = keep the static composition exactly as drawn
+   Only explicit signals reduce motion: the OS setting, or Save-Data. Device guesses
+   (core count, memory) are used elsewhere only to skip nonessential effects. */
+import { prefersReducedMotion, onReducedMotionChange, isConstrained } from "./core/env.js";
 
-const reducedQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-
-export function prefersReducedMotion() {
-  return reducedQuery.matches;
+function saveData() {
+  const c = navigator.connection;
+  return Boolean(c && c.saveData);
 }
 
-/* Heuristic for devices where a continuous canvas is not worth the battery. */
-export function isLowPower() {
-  const nav = navigator;
-  const conn = nav.connection || {};
-  if (conn.saveData) return true;
-  if (nav.deviceMemory && nav.deviceMemory <= 4) return true;
-  if (nav.hardwareConcurrency && nav.hardwareConcurrency <= 4) return true;
-  return false;
-}
-
-/* "full" = run effects, "reduced" = static frame only. */
 export function motionLevel() {
-  return prefersReducedMotion() || isLowPower() ? "reduced" : "full";
+  return prefersReducedMotion() || saveData() ? "reduced" : "full";
 }
 
 export function onMotionChange(callback) {
-  reducedQuery.addEventListener("change", () => callback(motionLevel()));
+  return onReducedMotionChange(() => callback(motionLevel()));
 }
+
+/* For effects that add life but carry no meaning (e.g. drift). */
+export function allowNonessential() {
+  return !isConstrained();
+}
+
+export { prefersReducedMotion };
