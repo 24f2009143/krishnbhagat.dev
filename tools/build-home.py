@@ -1,17 +1,20 @@
 """Offline authoring helper for krishnbhagat.dev's homepage. NOT a build step.
 
-The site is plain static files. This script only (re)writes /index.html, whose
+The site is plain static files. This script (re)writes the generated pages, whose
 inline SVG geometry (wings, fragments, scenes) is easier to compute than to type.
-Edit the geometry here, run it, and commit the resulting index.html.
+Edit the geometry or tools/lab.json here, run it, and commit the results.
 
-    python3 tools/build-home.py              # writes ../index.html
-    python3 tools/build-home.py /tmp/out.html
+    python3 tools/build-home.py              # writes into the repository root
+    python3 tools/build-home.py /tmp/site    # writes the same files under another root
+
+Writes index.html, nerdhub/index.html and the share-image sources tools/og/*.svg.
+The share images (assets/og/*.png, 1200x630) are those SVGs rendered by a browser.
 
 Every fragment is redrawn from material in /nerdhub/ (PDSA and MLT study sites).
 """
 import math, os, re, sys
 
-OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "index.html")
+OUTROOT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 
 def n(x):
     s = f"{x:.1f}"
@@ -721,6 +724,176 @@ def lab_section():
   </section>"""
 
 
+# ---------------------------------------------------------------- /nerdhub/ landing (generated since Phase 6)
+PDSA_TOPICS = [  # nerdhub/pdsa-quiz-2/js/data/manifest.js: id, short name, accent, marks, uses
+    ("dc", "D&C", "#2f6fdf", 121, []), ("trees", "Trees", "#1c9a6c", 102, ["dc"]), ("heaps", "Heaps", "#c9811a", 59, ["trees"]),
+    ("greedy", "Greedy", "#b04a8f", 84, ["heaps"]), ("graphs", "Graphs", "#d0463b", 134, ["heaps", "greedy", "trees"])]
+MLT_Q2 = ["Linear regression and gradient descent", "Ridge, Lasso and MAP", "Kernel regression", "k-NN", "Decision Trees",
+          "Naive Bayes and generative models", "Cross-validation and model comparison", "Legacy: logistic, softmax, SVM"]
+MLT_Q1 = ["K-means clustering", "PCA", "Kernels and Kernel PCA", "Probability, MLE and MAP", "GMM and EM, plus regression and GD"]
+MLT_PEN, MLT_HL = "#93B0FF", "#E8C547"     # nerdhub/mlt/css/theme.css, dark theme: pen-blue ink, highlighter
+
+def art_pdsa_map(cls="world__art"):
+    """The PDSA course map: topics laid out by fr(), sized by past-paper marks, in each topic's own accent."""
+    ids = [t[0] for t in PDSA_TOPICS]
+    edges = [(t[0], u) for t in PDSA_TOPICS for u in t[4]]
+    W, H = 300, 240
+    pos = fr_snapshots(ids, edges, W, H, {260})[260]
+    k = 1.15; ox, oy = 10, 0
+    p = {v: (ox + x * k, oy + y * k) for v, (x, y) in pos.items()}
+    mx = sum(x for x, _ in p.values()) / len(p); my = sum(y for _, y in p.values()) / len(p)
+    b = ['<g class="c-frag">']
+    for a, c in edges:
+        b.append(f'<line class="ln dim" x1="{n(p[a][0])}" y1="{n(p[a][1])}" x2="{n(p[c][0])}" y2="{n(p[c][1])}"/>')
+    for tid, short, col, marks, _ in PDSA_TOPICS:
+        x, y = p[tid]; r = 4 + math.sqrt(marks) * 1.05
+        b.append(f'<circle cx="{n(x)}" cy="{n(y)}" r="{n(r)}" fill="{col}" fill-opacity=".22" stroke="{col}" stroke-width="1.4"/>')
+        dx, dy = x - mx, y - my; L = math.hypot(dx, dy) or 1
+        lx, ly = x + dx / L * (r + 9), y + dy / L * (r + 9) + 3
+        anchor = "start" if dx > 6 else "end" if dx < -6 else "middle"
+        b.append(f'<text class="tx" x="{n(lx)}" y="{n(ly)}" font-size="10" text-anchor="{anchor}">{esc(short)}'
+                 f'<tspan class="dim" font-size="8.5"> {marks}</tspan></text>')
+    b.append("</g>")
+    return _svg("-36 -22 418 316", "".join(b), cls)
+
+def art_mlt_page(cls="world__art"):
+    """An MLT notebook page: the real topic list, in the MLT site's pen-blue ink, one line highlighted."""
+    b = [f'<g><rect x="0" y="0" width="360" height="268" rx="4" fill="#141A23" stroke="#2A3340"/>',
+         '<line x1="34" y1="0" x2="34" y2="268" stroke="#B42318" stroke-opacity=".35"/>']
+    y = 30
+    def ruled(yy): return f'<line x1="0" y1="{yy + 6}" x2="360" y2="{yy + 6}" stroke="#2A3340"/>'
+    for title, items in (("Quiz 2 · weeks 5 to 8", MLT_Q2), ("Quiz 1", MLT_Q1)):
+        b.append(ruled(y))
+        b.append(f'<text x="44" y="{y}" font-size="11.5" fill="{MLT_PEN}" class="nb-head">{esc(title)}</text>')
+        y += 17
+        for t in items:
+            if t == "Decision Trees":
+                b.append(f'<rect x="58" y="{y - 10}" width="{len(t) * 5.9 + 8}" height="13" fill="{MLT_HL}" fill-opacity=".22"/>')
+            b.append(ruled(y))
+            b.append(f'<text x="44" y="{y}" font-size="10" fill="{MLT_PEN}" class="nb-line">— {esc(t)}</text>')
+            y += 15.5
+        y += 6
+    b.append(f'<text x="350" y="{30}" font-size="9" text-anchor="end" fill="{MLT_HL}" class="nb-tag">[FLAG]</text></g>')
+    return _svg("0 0 360 268", "".join(b), cls)
+
+def art_posts(cls="world__art"):
+    b = ['<g class="c-draft"><rect class="ln dash" x="1" y="1" width="358" height="98" rx="4"/>']
+    for i in range(3):
+        b.append(f'<line class="ln dim dash" x1="24" y1="{34 + i * 18}" x2="{300 - i * 60}" y2="{34 + i * 18}"/>')
+    b.append("</g>")
+    return _svg("0 0 360 100", "".join(b), cls)
+
+def nerdhub_page():
+    pdsa_feat = ["course map", "practice", "mock exam", "flashcards", "mistakes", "study plan", "last-night sheet", "glossary"]
+    mlt_feat = ["practice next", "mock test", "cheatsheet", "plan", "flashcards", "glossary", "mistakes", "formula drawer", "search"]
+    li = lambda xs: "".join(f"<li>{esc(x)}</li>" for x in xs)
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>nerdhub · Krishn Bhagat</title>
+<meta name="description" content="nerdhub: study sites Krishn Bhagat built for his own courses — PDSA Quiz 2 and MLT — turning past papers into places to read, practise and revise.">
+<meta name="theme-color" content="#0f1115">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="canonical" href="https://krishnbhagat.dev/nerdhub/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Krishn Bhagat">
+<meta property="og:title" content="nerdhub · Krishn Bhagat">
+<meta property="og:description" content="Study sites built for my own courses: PDSA Quiz 2 and MLT.">
+<meta property="og:url" content="https://krishnbhagat.dev/nerdhub/">
+<meta property="og:image" content="https://krishnbhagat.dev/assets/og/nerdhub.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="nerdhub: the PDSA course map and a page of MLT notes.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="/assets/css/tokens.css">
+<link rel="stylesheet" href="/assets/css/base.css">
+<link rel="stylesheet" href="/assets/css/nerdhub.css">
+<script type="module" src="/assets/js/main.js"></script>
+</head>
+<body class="hub">
+<a class="nh-skip" href="#main">Skip to content</a>
+
+<header class="hub-header">
+  <div class="nh-wrap">
+    <a class="hub-back" href="/">← krishnbhagat.dev</a>
+    <span class="hub-mark">nerdhub</span>
+  </div>
+</header>
+
+<main id="main">
+  <div class="nh-wrap">
+    <section class="hub-intro" aria-labelledby="hub-title">
+      <p class="nh-eyebrow"><a href="/#kb-001">KB-001</a> · a world of study sites</p>
+      <h1 class="hub-title" id="hub-title">nerdhub</h1>
+      <p class="hub-sub">Study sites I built for my own courses. Each one turns a course's past papers into a place to read, practise and revise.</p>
+    </section>
+
+    <section class="worlds" aria-label="Study sites">
+      <article class="world world--pdsa" aria-labelledby="w-pdsa">
+        <a class="world__plate" href="/nerdhub/pdsa-quiz-2/" tabindex="-1" aria-hidden="true">{art_pdsa_map()}</a>
+        <p class="world__fig">fig. — the five topics, sized by past-paper marks, joined to what each builds on</p>
+        <h2 class="world__name" id="w-pdsa">PDSA Quiz 2</h2>
+        <p class="world__line">The course is a graph. Every topic is marked visited, frontier or unvisited as you work through it.</p>
+        <p class="world__facts">5 topics · 159 past questions · 10 papers · 500 marks</p>
+        <ul class="world__tools" aria-label="In the site">{li(pdsa_feat)}</ul>
+        <a class="nh-btn nh-btn--primary world__go" href="/nerdhub/pdsa-quiz-2/">Open PDSA Quiz 2 →</a>
+      </article>
+
+      <article class="world world--mlt" aria-labelledby="w-mlt">
+        <a class="world__plate" href="/nerdhub/mlt/" tabindex="-1" aria-hidden="true">{art_mlt_page()}</a>
+        <p class="world__fig">fig. — the topic list, in the site's own pen-blue ink</p>
+        <h2 class="world__name" id="w-mlt">MLT</h2>
+        <p class="world__line">Machine Learning Techniques, written like handwritten notes, with every claim tagged by where it came from.</p>
+        <p class="world__facts">13 topics · 35 pages of Quiz 1 notes</p>
+        <ul class="world__tools" aria-label="In the site">{li(mlt_feat)}</ul>
+        <a class="nh-btn nh-btn--primary world__go" href="/nerdhub/mlt/">Open MLT →</a>
+      </article>
+    </section>
+
+    <section class="world world--posts" aria-labelledby="w-posts">
+      {art_posts()}
+      <div>
+        <h2 class="world__name" id="w-posts">Posts</h2>
+        <p class="world__line">Promised here from the start. None written yet.</p>
+      </div>
+    </section>
+
+    <p class="hub-note">The study sites ask for an IITM student Google sign-in; your progress then follows you across devices. <a href="/nerdhub/privacy.html">Privacy</a></p>
+  </div>
+</main>
+</body>
+</html>
+"""
+
+# ---------------------------------------------------------------- share images (sources; rendered to assets/og/*.png)
+OG_FONTS = ('<style>@font-face{font-family:"NH Source Serif";src:url(../../assets/fonts/source-serif-4-latin-wght-normal.woff2)}'
+            '@font-face{font-family:"NH JetBrains Mono";src:url(../../assets/fonts/jetbrains-mono-latin-wght-normal.woff2)}'
+            '.ln{fill:none;stroke:currentColor;stroke-width:1.3;stroke-linecap:round}.ln.bg{fill:#0a0c10}.ln.dim{opacity:.5}.dash{stroke-dasharray:3 4}'
+            '.dot,.fill{fill:currentColor}.tx{fill:currentColor;font-family:"NH JetBrains Mono",monospace}.tx.dim,.dim{opacity:.6}'
+            '.nt{fill:currentColor;font-family:"NH Source Serif",serif;font-style:italic;opacity:.9}.strike{text-decoration:line-through}'
+            '.c-ink{color:#e8eaed}.c-frag{color:#c3c8cf}.c-sun{color:#f2b84b}.spar{opacity:.75}.spar.lead{stroke-width:2}.rib{color:#c3c8cf;opacity:.35}'
+            '.joint{fill:#0a0c10;stroke:#c3c8cf}.torso{stroke-width:1.4}.harness{stroke-width:1.7}.sun-disc{stroke-width:2.2;fill:rgba(242,184,75,.05)}'
+            '.nb-head,.nb-line{font-family:"NH Source Serif",serif;font-style:italic}.nb-tag{font-family:"NH JetBrains Mono",monospace}</style>')
+
+def og_svg(kind):
+    defs = "<defs>" + "".join(f'<symbol id="f-{k}" viewBox="0 0 {w} {h}" overflow="visible">{body}</symbol>' for k, (w, h, body) in FRAGS.items()) + "</defs>"
+    if kind == "home":
+        art = (f'<g transform="translate(600 268) scale(.9) translate(-600 -330)">'
+               + wing(600, 330, -1, LEFT, "built") + wing(600, 330, 1, RIGHT, "built") + fig(600, 330) + "</g>"
+               + sun(1100, 80, 22))
+        text = ('<text x="64" y="548" font-family="NH Source Serif" font-size="58" fill="#e8eaed">Krishn Bhagat</text>'
+                '<text x="66" y="586" font-family="NH JetBrains Mono" font-size="16" letter-spacing="3.5" fill="#9aa0a6">CREATIVE BUILDER · KRISHNBHAGAT.DEV</text>')
+    else:
+        sized = lambda svg, w, h: svg.replace('<svg class="og" ', f'<svg width="{w}" height="{h}" ', 1)
+        art = (f'<g transform="translate(40 40)">' + sized(art_pdsa_map("og"), 520, 393) + "</g>"
+               + f'<g transform="translate(640 70)">' + sized(art_mlt_page("og"), 500, 372) + "</g>")
+        text = ('<text x="64" y="556" font-family="NH Source Serif" font-size="56" fill="#e8eaed">nerdhub</text>'
+                '<text x="66" y="592" font-family="NH JetBrains Mono" font-size="16" letter-spacing="3.5" fill="#9aa0a6">STUDY SITES · KRISHNBHAGAT.DEV/NERDHUB</text>')
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1200 630" width="1200" height="630">'
+            f'{OG_FONTS}{defs}<rect width="1200" height="630" fill="#0a0c10"/>{art}{text}</svg>')
+
 # accurate structured data only: the site, and the person it belongs to
 JSONLD = ('<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Krishn Bhagat","url":"https://krishnbhagat.dev/","author":{"@type":"Person","name":"Krishn Bhagat","url":"https://krishnbhagat.dev/","sameAs":["https://github.com/krishnbhagat01"]}}</script>')
 
@@ -740,7 +913,11 @@ def page():
 <meta property="og:title" content="Krishn Bhagat — creative builder">
 <meta property="og:description" content="Krishn Bhagat builds things to find out what they can become. A lab of experiments, notes and study sites, including nerdhub.">
 <meta property="og:url" content="https://krishnbhagat.dev/">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="https://krishnbhagat.dev/assets/og/home.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A figure with engineered wings, drawn from things worked out in nerdhub. Krishn Bhagat, creative builder.">
+<meta name="twitter:card" content="summary_large_image">
 {JSONLD}
 <link rel="preload" href="/assets/fonts/source-serif-4-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/assets/css/tokens.css">
@@ -823,5 +1000,14 @@ def page():
 </html>
 """
 
-open(OUT, "w").write(page())
-print("wrote", OUT)
+def write(rel, text):
+    path = os.path.join(OUTROOT, rel)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(text)
+    print("wrote", rel)
+
+write("index.html", page())
+write("nerdhub/index.html", nerdhub_page())
+write("tools/og/home.svg", og_svg("home"))
+write("tools/og/nerdhub.svg", og_svg("nerdhub"))
