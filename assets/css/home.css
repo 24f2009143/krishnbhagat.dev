@@ -1,0 +1,129 @@
+/* Homepage (/) only. Loaded after tokens.css and base.css.
+   Phase 2A: static composition. Six scenes share one 1200x800 drawing space,
+   so later phases can move between them instead of swapping pictures. */
+
+/* ---------- header / footer ---------- */
+.home-header { position: absolute; inset: 0 0 auto 0; z-index: 10; padding: var(--nh-space-5) 0; }
+.home-header .nh-wrap { display: flex; align-items: center; justify-content: space-between; gap: var(--nh-space-4); }
+.home-mark { font: 600 var(--nh-text-sm) / 1 var(--nh-font-mono); letter-spacing: 0.06em; color: var(--nh-text); text-decoration: none; }
+.home-nav { display: flex; gap: var(--nh-space-5); }
+.home-nav a { color: var(--nh-text-dim); font-size: var(--nh-text-sm); text-decoration: none; padding: var(--nh-space-2) 0; }
+.home-nav a:hover { color: var(--nh-text); }
+
+.home-footer { padding: var(--nh-space-6) 0 var(--nh-space-7); color: var(--nh-text-faint); font-size: var(--nh-text-sm); background: var(--nh-bg-deep); }
+.home-footer .nh-wrap { display: flex; flex-wrap: wrap; gap: var(--nh-space-3) var(--nh-space-5); justify-content: space-between; }
+
+.home { background: var(--nh-bg-deep); }
+.sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+.m-only { display: none; }
+
+/* ---------- scenes ---------- */
+.scene { position: relative; min-height: 100svh; overflow: hidden; background: var(--nh-bg-deep); }
+.scene__stage { position: absolute; inset: 0; }
+.scene__stage svg { width: 100%; height: 100%; overflow: visible; }
+
+.scene__text { position: absolute; inset: auto 0 clamp(var(--nh-space-6), 9vh, var(--nh-space-8)) 0; z-index: 2; }
+.scene__text--top { inset: clamp(5.5rem, 13vh, 8rem) 0 auto 0; }
+
+.chapter { font: 500 var(--nh-text-xs) / 1 var(--nh-font-mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--nh-text-faint); }
+.scene__title { margin-top: var(--nh-space-3); font: 500 clamp(1.7rem, 1.1rem + 2.2vw, 2.9rem) / 1.08 var(--nh-font-serif); letter-spacing: -0.01em; max-width: 18ch; }
+.scene__lede { margin-top: var(--nh-space-3); color: var(--nh-text-dim); max-width: 36ch; }
+
+/* 01: almost nothing */
+.idea__name { font: 500 clamp(2.2rem, 1.4rem + 3.4vw, 4.2rem) / 1 var(--nh-font-serif); letter-spacing: -0.015em; }
+.idea__role { margin-top: var(--nh-space-3); font: 500 var(--nh-text-sm) / 1 var(--nh-font-mono); letter-spacing: 0.22em; text-transform: uppercase; color: var(--nh-text-dim); }
+.scroll-cue { display: inline-block; margin-top: var(--nh-space-6); font: italic 400 var(--nh-text-base) / 1.4 var(--nh-font-serif); color: var(--nh-text-faint); text-decoration: none; }
+.scroll-cue:hover { color: var(--nh-text); }
+
+/* ---------- drawing vocabulary (inline SVG) ---------- */
+.ln { fill: none; stroke: currentColor; stroke-width: 1; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-linejoin: round; }
+.ln.bg { fill: var(--nh-bg-deep); }
+.ln.dim { opacity: 0.5; }
+.ln.hi { stroke: var(--nh-text); stroke-width: 1.6; }
+.dash { stroke-dasharray: 3 4; }
+.dot { fill: currentColor; }
+.dot.hi { fill: var(--nh-text); }
+.fill { fill: currentColor; }
+.tx { fill: currentColor; font-family: var(--nh-font-mono); }
+.tx.dim { opacity: 0.55; }
+.nt { fill: currentColor; font-family: var(--nh-font-serif); font-style: italic; opacity: 0.8; }
+.strike { text-decoration: line-through; opacity: 0.6; }
+.cap { fill: var(--nh-text-faint); font: 400 11px var(--nh-font-mono); letter-spacing: 0.04em; }
+
+/* colour roles: chalk for things made, ink for the figure, gold only for the sun */
+.c-ink { color: var(--nh-text); }
+.c-frag { color: var(--nh-chalk); }
+.c-ghost { color: var(--nh-chalk); opacity: 0.28; }
+.c-ghost2 { color: var(--nh-chalk); opacity: 0.12; }
+.c-fade { color: var(--nh-chalk); opacity: 0.18; }
+.c-faint { color: var(--nh-chalk); opacity: 0.35; }
+.c-land { color: var(--nh-chalk); opacity: 0.55; }
+.c-draft { color: var(--nh-chalk); }
+.c-sun { color: var(--nh-sun); }
+
+.horizon { stroke: var(--nh-text-faint); opacity: 0.45; }
+.spar { color: var(--nh-text); opacity: 0.75; }
+.spar.lead { stroke-width: 1.6; opacity: 0.95; }
+.rib { color: var(--nh-chalk); opacity: 0.35; }
+.joint { fill: var(--nh-bg-deep); stroke: var(--nh-chalk); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.slot { color: var(--nh-chalk); stroke-dasharray: 2 3; opacity: 0.45; }
+.path { color: var(--nh-chalk); stroke-dasharray: 1 5; opacity: 0.55; }
+.strike-line { color: var(--nh-text-dim); }
+.door { stroke-dasharray: 6 4; }
+.sun-disc { stroke-width: 1.6; fill: var(--nh-sun-wash); }
+
+/* ---------- 06: the lab ---------- */
+.lab { position: relative; padding: clamp(var(--nh-space-8), 14vh, 9rem) 0 var(--nh-space-8); background: var(--nh-bg); border-top: 1px solid var(--nh-line-soft); }
+.lab__head { display: flex; align-items: flex-end; gap: var(--nh-space-5); margin-bottom: var(--nh-space-7); }
+.lab__door { width: 34px; flex: none; }
+.lab__title { margin-top: var(--nh-space-3); font: 500 clamp(1.6rem, 1.1rem + 1.8vw, 2.5rem) / 1.12 var(--nh-font-serif); max-width: 22ch; }
+
+.lab__floor { display: grid; gap: var(--nh-space-7); }
+@media (min-width: 960px) { .lab__floor { grid-template-columns: minmax(0, 1fr) 280px; } }
+
+.specimens { display: grid; gap: var(--nh-space-6) var(--nh-space-5); align-content: start; }
+@media (min-width: 640px) { .specimens { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1200px) { .specimens { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.specimen { border-top: 1px solid var(--nh-line); padding-top: var(--nh-space-4); }
+.specimen summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: 1fr auto; gap: var(--nh-space-2) var(--nh-space-3); align-items: baseline; }
+.specimen summary::-webkit-details-marker { display: none; }
+.specimen__art { grid-column: 1 / -1; width: 100%; aspect-ratio: 220 / 130; height: auto; color: var(--nh-chalk); }
+.specimen__label { font-size: var(--nh-text-sm); color: var(--nh-text-dim); }
+.specimen__no { font: 500 var(--nh-text-xs) / 1 var(--nh-font-mono); letter-spacing: 0.1em; color: var(--nh-text); margin-right: var(--nh-space-2); }
+.specimen__hint { font: italic 400 var(--nh-text-sm) / 1 var(--nh-font-serif); color: var(--nh-text-faint); }
+.specimen summary:hover .specimen__hint, .specimen[open] .specimen__hint { color: var(--nh-accent); }
+.specimen summary:hover .specimen__art { color: var(--nh-text); }
+.specimen--empty .specimen__label { font-style: italic; }
+
+.specimen__body { padding: var(--nh-space-4) 0 var(--nh-space-2); }
+.specimen__body h3 { font: 600 var(--nh-text-lg) / 1.3 var(--nh-font-sans); }
+.specimen__body p { margin-top: var(--nh-space-2); color: var(--nh-text-dim); font-size: var(--nh-text-sm); }
+.specimen__body .nh-btn { margin-top: var(--nh-space-4); }
+.specimen__doors { list-style: none; margin: var(--nh-space-4) 0 0; padding: 0; display: grid; gap: var(--nh-space-2); }
+.specimen__doors a { font-weight: 600; }
+.specimen__doors span { display: block; color: var(--nh-text-faint); font: 400 var(--nh-text-xs) / 1.5 var(--nh-font-mono); }
+.specimen__fine { font-size: var(--nh-text-xs) !important; color: var(--nh-text-faint) !important; }
+
+.notebook { border-top: 1px solid var(--nh-line); padding-top: var(--nh-space-4); }
+.notebook__title { font: 500 var(--nh-text-xs) / 1 var(--nh-font-mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--nh-text-faint); }
+.notebook__log { list-style: none; margin: var(--nh-space-4) 0 0; padding: 0; display: grid; gap: var(--nh-space-4); font: italic 400 var(--nh-text-sm) / 1.55 var(--nh-font-serif); color: var(--nh-text-dim); }
+.notebook__log time { display: block; font: normal 400 var(--nh-text-xs) / 1.4 var(--nh-font-mono); color: var(--nh-text-faint); }
+
+/* ---------- mobile: a deliberate composition, not a scaled desktop ----------
+   The drawing sits in the upper part of the screen, zoomed out a little so the
+   wings survive, with secondary fragments removed. Text sits below it. */
+@media (max-width: 720px) {
+  .home-nav { gap: var(--nh-space-4); }
+  .scene { min-height: 0; padding-bottom: var(--nh-space-8); }
+  .scene__stage { position: relative; inset: auto; height: 62svh; min-height: 340px; overflow: hidden; }
+  /* 01-03 happen above the horizon: show only the upper part of the drawing */
+  .scene--idea .scene__stage, .scene--experiment .scene__stage, .scene--build .scene__stage { height: 48svh; min-height: 300px; }
+  .scene--idea .scene__stage svg, .scene--experiment .scene__stage svg, .scene--build .scene__stage svg { height: 150%; }
+  .scene__text { position: relative; inset: auto; margin-top: var(--nh-space-2); }
+  .mz { transform: scale(0.74); transform-origin: 600px 380px; transform-box: view-box; }
+  .scene--idea .mz { transform: none; }
+  .d-only { display: none; }
+  .m-only { display: inline; }
+  .cap { font-size: 16px; }
+}

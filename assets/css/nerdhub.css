@@ -1,0 +1,23 @@
+/* /nerdhub/ landing page only. Calm and functional: no hero, no animation beyond hover. */
+
+.hub-header { padding: var(--nh-space-5) 0; border-bottom: 1px solid var(--nh-line-soft); }
+.hub-header .nh-wrap { display: flex; align-items: center; justify-content: space-between; gap: var(--nh-space-4); }
+.hub-back { color: var(--nh-text-dim); font-size: var(--nh-text-sm); text-decoration: none; }
+.hub-back:hover { color: var(--nh-text); }
+.hub-mark { font: 600 var(--nh-text-sm) / 1 var(--nh-font-mono); letter-spacing: 0.06em; color: var(--nh-text-dim); }
+
+.hub-intro { padding: var(--nh-space-8) 0 var(--nh-space-6); }
+.hub-title { margin-top: var(--nh-space-3); font: 600 clamp(2rem, 1.4rem + 2.6vw, 3.2rem) / 1.05 var(--nh-font-serif); letter-spacing: -0.015em; }
+.hub-sub { margin-top: var(--nh-space-3); color: var(--nh-text-dim); max-width: 44ch; }
+
+.hub-grid { display: grid; gap: var(--nh-space-4); padding-bottom: var(--nh-space-7); }
+@media (min-width: 720px) { .hub-grid { grid-template-columns: 1fr 1fr; } }
+
+.hub-card { display: flex; flex-direction: column; padding: var(--nh-space-5); border: 1px solid var(--nh-line); border-radius: var(--nh-radius); background: var(--nh-surface); color: inherit; text-decoration: none; transition: border-color var(--nh-dur) var(--nh-ease), background var(--nh-dur) var(--nh-ease); }
+.hub-card:hover { border-color: var(--nh-accent); background: var(--nh-surface-hi); }
+.hub-card h2 { font: 600 var(--nh-text-lg) / 1.3 var(--nh-font-sans); }
+.hub-card p { margin-top: var(--nh-space-2); color: var(--nh-text-dim); font-size: var(--nh-text-sm); }
+.hub-card .nh-eyebrow { margin-bottom: var(--nh-space-3); }
+.hub-card__go { margin-top: auto; padding-top: var(--nh-space-4); color: var(--nh-accent); font-size: var(--nh-text-sm); font-weight: 600; }
+
+.hub-note { padding: var(--nh-space-5) 0 var(--nh-space-7); border-top: 1px solid var(--nh-line-soft); color: var(--nh-text-faint); font-size: var(--nh-text-sm); }
