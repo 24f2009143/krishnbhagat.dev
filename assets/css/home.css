@@ -185,3 +185,94 @@
 /* scene 04: earlier positions on the climb appear once the figure has passed them */
 .motion-on [data-at] { transition: opacity 400ms var(--nh-ease); }
 .motion-on .scene [data-at].is-ahead { opacity: 0; }
+
+/* ---------- 06: instruments (Phase 4) ----------
+   Instruments live inside an open specimen's sheet. Their static content is real (a table, a list);
+   JS adds controls on top and hides the static copy only once it has mounted ([.is-live]). */
+.instrument { margin-top: var(--nh-space-5); }
+.instrument.is-live .instrument__static { display: none; }
+.instrument__q { font: 500 var(--nh-text-sm) / 1.4 var(--nh-font-mono); color: var(--nh-chalk); }
+.instrument__verdict { font: italic 400 var(--nh-text-base) / 1.5 var(--nh-font-serif); color: var(--nh-chalk) !important; }
+.instrument__tablewrap { overflow-x: auto; }
+.instrument__table { width: 100%; border-collapse: collapse; font: 400 var(--nh-text-xs) / 1.4 var(--nh-font-mono); color: var(--nh-annot); font-variant-numeric: tabular-nums; }
+.instrument__table caption { text-align: left; padding-bottom: var(--nh-space-2); font: italic 400 var(--nh-text-sm) / 1.4 var(--nh-font-serif); color: var(--nh-annot-faint); }
+.instrument__table th, .instrument__table td { padding: 0.35rem 0.6rem 0.35rem 0; border-bottom: 1px solid var(--nh-line-soft); text-align: right; white-space: nowrap; }
+.instrument__table th:first-child { text-align: left; }
+.instrument__table thead th { color: var(--nh-annot-faint); font-weight: 500; }
+.instrument__table tr.is-leaf th, .instrument__table tr.is-leaf td { border-bottom-style: dashed; }
+.instrument__uses { list-style: none; padding: 0; display: grid; gap: var(--nh-space-1); font-size: var(--nh-text-sm); color: var(--nh-annot); }
+.instrument__more summary { cursor: pointer; font: italic 400 var(--nh-text-sm) / 1.4 var(--nh-font-serif); color: var(--nh-annot-faint); }
+.instrument__more summary:hover { color: var(--nh-text); }
+.instrument__tables { display: grid; gap: var(--nh-space-5); margin-top: var(--nh-space-4); }
+
+/* controls: small drafting instruments, not app chrome */
+.inst-btn, .inst-chip { font: 500 var(--nh-text-xs) / 1 var(--nh-font-mono); letter-spacing: 0.04em; color: var(--nh-chalk); background: none; border: 1px solid var(--nh-line); border-radius: 3px; padding: 0.55rem 0.75rem; min-height: 36px; cursor: pointer; }
+.inst-btn:hover, .inst-chip:hover { border-color: var(--nh-annot-faint); color: var(--nh-text); }
+.inst-btn--main { border-color: var(--nh-annot-faint); color: var(--nh-text); min-width: 6.5rem; }
+.inst-chip[aria-pressed="true"] { border-color: var(--nh-text); color: var(--nh-text); background: var(--nh-surface-hi); }
+.inst-scrub { display: inline-flex; flex-direction: column; gap: 0.3rem; flex: 1 1 180px; min-width: 150px; font: 400 var(--nh-text-xs) / 1 var(--nh-font-mono); color: var(--nh-annot-faint); }
+.inst-scrub input { width: 100%; accent-color: var(--nh-chalk); }
+.inst-read { font-size: var(--nh-text-sm); color: var(--nh-annot) !important; min-height: 1.5em; }
+.inst-read--topic { font-family: var(--nh-font-serif); font-style: italic; }
+.inst-choice { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--nh-space-2) var(--nh-space-4); }
+.inst-choice legend { float: left; margin-right: var(--nh-space-4); font: 500 var(--nh-text-xs) / 2 var(--nh-font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--nh-annot-faint); }
+.inst-choice input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.inst-choice label { font: 400 var(--nh-text-xs) / 1.6 var(--nh-font-mono); color: var(--nh-annot-faint); cursor: pointer; border-bottom: 1px solid transparent; padding: 0.35rem 0; }
+.inst-choice label:hover { color: var(--nh-text); }
+.inst-choice input:checked + label { color: var(--nh-text); border-bottom-color: var(--nh-text); }
+.inst-choice input:focus-visible + label { outline: 2px solid var(--nh-accent); outline-offset: 3px; border-radius: 2px; }
+
+/* KB-005 layout */
+.lx { display: grid; gap: var(--nh-space-3); }
+.lx__svg { width: 100%; max-width: 520px; height: auto; border: 1px solid var(--nh-line-soft); background: var(--nh-bg-deep); }
+.lx__edge.is-sel { stroke: var(--nh-text); stroke-width: 1.6; }
+.lx__move { color: var(--nh-annot-faint); stroke-dasharray: 2 2; }
+.lx__node { cursor: pointer; }
+.lx__node .tx { font-size: 9px; }
+.lx__node.is-sel circle { stroke: var(--nh-text); stroke-width: 2; }
+.lx__node.is-sel .tx { fill: var(--nh-text); font-weight: 600; }
+.lx__node.is-dim { opacity: 0.35; }
+.lx__controls { display: flex; flex-wrap: wrap; align-items: end; gap: var(--nh-space-2); max-width: 520px; }
+.lx__topics { display: flex; flex-wrap: wrap; gap: var(--nh-space-2); }
+
+/* KB-006 recursion */
+.rx { display: grid; gap: var(--nh-space-4); }
+.rx__abd { display: flex; flex-wrap: wrap; align-items: center; gap: var(--nh-space-3) var(--nh-space-4); font: 400 var(--nh-text-xs) / 1 var(--nh-font-mono); color: var(--nh-annot-faint); }
+.rx__abd label { display: inline-flex; align-items: center; gap: var(--nh-space-2); }
+.rx__abd select { font: 500 var(--nh-text-xs) / 1 var(--nh-font-mono); color: var(--nh-text); background: var(--nh-bg-deep); border: 1px solid var(--nh-line); border-radius: 3px; padding: 0.45rem 0.5rem; min-height: 36px; }
+.rx__lvl { font: inherit; color: var(--nh-annot); background: none; border: 0; padding: 0.2rem 0; cursor: pointer; text-decoration: underline dotted var(--nh-line); text-underline-offset: 3px; }
+.rx__lvl[aria-pressed="true"], .rx__lvl:hover { color: var(--nh-text); }
+.rx__table tr.is-sel th, .rx__table tr.is-sel td { color: var(--nh-text); background: var(--nh-surface); }
+.rx__barcell { width: 32%; min-width: 80px; }
+.rx__bar { display: block; height: 7px; background: var(--nh-line); }
+.rx__bar.is-max { background: var(--nh-chalk); }
+.rx__sum th, .rx__sum td { border-bottom: 0 !important; color: var(--nh-chalk); }
+
+/* KB-004 evidence */
+.ex { display: grid; gap: var(--nh-space-3); }
+.ex__badge { justify-self: start; font: 500 var(--nh-text-xs) / 1.4 var(--nh-font-mono) !important; letter-spacing: 0.05em; text-transform: uppercase; color: var(--nh-text) !important; border: 1px dashed var(--nh-annot-faint); padding: 0.35rem 0.6rem; }
+.ex__svg { width: 100%; max-width: 640px; height: auto; border: 1px solid var(--nh-line-soft); background: var(--nh-bg-deep); }
+.ex__row .tx { fill: var(--nh-annot-faint); }
+.ex__row.is-key .tx { fill: var(--nh-text); }
+.ex__row.is-key .dot { fill: var(--nh-text); }
+.ex__gap { color: var(--nh-text); }
+.ex__read p + p { margin-top: var(--nh-space-2); }
+.ex__why { font-family: var(--nh-font-serif); font-style: italic; }
+
+/* KB-001: anatomy and decisions; connections */
+.specimen__figure { width: 100%; max-width: 640px; height: auto; color: var(--nh-chalk); margin: var(--nh-space-4) 0; }
+.specimen__from { font: 500 var(--nh-text-xs) / 1.4 var(--nh-font-mono) !important; letter-spacing: 0.06em; text-transform: uppercase; color: var(--nh-annot-faint) !important; }
+.specimen__decisions ul { list-style: none; padding: 0; margin: var(--nh-space-2) 0 0; display: grid; gap: var(--nh-space-3); }
+.specimen__decisions q { font: italic 400 var(--nh-text-base) / 1.45 var(--nh-font-serif); color: var(--nh-chalk); quotes: "“" "”"; }
+.specimen__src { display: block; font: 400 var(--nh-text-xs) / 1.5 var(--nh-font-mono); color: var(--nh-annot-faint); overflow-wrap: anywhere; }
+.specimen__rel ul { list-style: none; padding: 0; margin: var(--nh-space-2) 0 0; display: grid; gap: var(--nh-space-2); font-size: var(--nh-text-sm); color: var(--nh-annot-faint); }
+.specimen__rel-link { color: var(--nh-text); text-decoration: none; border-bottom: 1px solid var(--nh-line); }
+.specimen__rel-link:hover { border-bottom-color: var(--nh-text); }
+.specimen__rel-link .specimen__no { margin-right: 0.35rem; }
+.lx__node { -webkit-tap-highlight-color: transparent; }
+.lx__node:focus { outline: none; }
+/* phones: the bars are the point of the table; the per-call columns are read out per level instead */
+@media (max-width: 560px) {
+  .rx__table th:nth-child(3), .rx__table td:nth-child(3), .rx__table th:nth-child(4), .rx__table td:nth-child(4) { display: none; }
+  .rx__barcell { width: 40%; min-width: 0; }
+}

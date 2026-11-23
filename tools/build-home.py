@@ -530,6 +530,110 @@ def art_page():
 ART = {"world": lambda: mini_world(), "wings": lambda: mini_wing(), "empty": lambda: mini_empty(),
        "evidence": art_evidence, "layout": art_layout, "master": art_master, "page": art_page}
 
+# ---------------------------------------------------------------- Phase 4: instruments (static fallbacks) and inspection figures
+def _num(x):
+    if abs(x - round(x)) < 1e-9:
+        return f"{int(round(x)):,}".replace(",", " ")
+    return f"{x:.3g}"
+
+def _pow_n(e):
+    sup = str.maketrans("0123456789.", "⁰¹²³⁴⁵⁶⁷⁸⁹·")
+    if abs(e) < 1e-12: return "1"
+    if abs(e - 1) < 1e-12: return "n"
+    s = f"{e:.3f}".rstrip("0").rstrip(".")
+    return "n" + s.translate(sup)
+
+def master_verdict(a, b, d):
+    """The same three-way comparison as P.widgets.master in nerdhub/pdsa-quiz-2/js/widgets.js."""
+    c = math.log(a) / math.log(b)
+    if abs(d - c) < 1e-9:
+        res = ("log n" if abs(d) < 1e-12 else "n log n" if abs(d - 1) < 1e-12 else _pow_n(d) + " log n")
+        return c, f"O({res})", "every level does the same work"
+    if d < c:
+        return c, f"O({_pow_n(c)})", "the leaves do the most work"
+    return c, f"O({_pow_n(d)})", "the root does the most work"
+
+def recursion_rows(a, b, d, L):
+    nn = b ** L
+    rows = []
+    for i in range(L + 1):
+        count = a ** i; size = nn / b ** i; per = size ** d
+        rows.append((i, count, size, per, count * per))
+    return nn, rows
+
+LEAF = ' class="is-leaf"'
+
+def recursion_fallback(a, b, d, L):
+    nn, rows = recursion_rows(a, b, d, L)
+    c, res, why = master_verdict(a, b, d)
+    rec = f"T(n) = {'' if a == 1 else a}T(n/{b}) + {_pow_n(d) if d else '1'}"
+    body = "".join(
+        f'<tr{LEAF if i == L else ""}><th scope="row">{"leaves" if i == L else i}</th>'
+        f"<td>{_num(cnt)}</td><td>{_num(size)}</td><td>{_num(per)}</td><td>{_num(tot)}</td></tr>"
+        for i, cnt, size, per, tot in rows)
+    return (f'<p class="instrument__q">{esc(rec)}, with n = {_num(nn)}</p>'
+            '<div class="instrument__tablewrap"><table class="instrument__table"><caption>Work at each level of the recursion tree</caption>'
+            '<thead><tr><th scope="col">level</th><th scope="col">subproblems</th><th scope="col">size of each</th>'
+            '<th scope="col">work in each</th><th scope="col">level total</th></tr></thead>'
+            f"<tbody>{body}</tbody></table></div>"
+            f'<p class="instrument__verdict">log<sub>{b}</sub> {a} = {c:.3f}'.rstrip("0").rstrip(".")
+            + f" against d = {_num(d)}: {esc(why)}, so T(n) = {esc(res)}.</p>")
+
+def evidence_fallback(ins):
+    parts = []
+    for st in ins["settings"]:
+        rows = "".join(f'<tr><th scope="row">{esc(r[0])}</th><td>{r[1]:.1f} ± {r[2]:.1f}</td><td>{r[3]:+.1f}</td></tr>' for r in st["rows"])
+        parts.append(f'<table class="instrument__table"><caption>{st["D"]} study days, {st["K"]} questions a day</caption>'
+                     '<thead><tr><th scope="col">way of choosing</th><th scope="col">exam score %</th><th scope="col">gain over random</th></tr></thead>'
+                     f"<tbody>{rows}</tbody></table>")
+    return ('<details class="instrument__more"><summary>All five recorded settings, as tables</summary>'
+            f'<div class="instrument__tables">{"".join(parts)}</div></details>')
+
+def layout_fallback(ins):
+    name = {k: lab for k, _, lab in ins["nodes"]}
+    items = "".join(f"<li><b>{esc(name[k])}</b> uses {esc(', '.join(name[u] for u in ins['uses'][k]) or 'nothing earlier')}</li>"
+                    for k, _, _ in ins["nodes"])
+    return f'<ul class="instrument__uses">{items}</ul>'
+
+def instrument(ins):
+    data = json.dumps(ins, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    nm = ins["name"]
+    if nm == "recursion":
+        a, b, d = ins["presets"][ins["start"]]
+        fb = recursion_fallback(a, b, d, ins["levels"])
+    elif nm == "evidence":
+        fb = ""
+    else:
+        fb = layout_fallback(ins)
+    after = evidence_fallback(ins) if nm == "evidence" else ""
+    return (f'<div class="instrument instrument--{nm}" data-instrument="{nm}">'
+            f'<script type="application/json" class="instrument__data">{data}</script>'
+            f'<div class="instrument__static">{fb}</div></div>{after}')
+
+def fig_anatomy():
+    def box(x, y, w, h, lines, cls="ln"):
+        t = "".join(f'<text class="tx{" dim" if j else ""}" x="{x + w / 2}" y="{y + 15 + j * 12}" font-size="{8.5 if j == 0 else 7.5}" text-anchor="middle">{esc(l)}</text>' for j, l in enumerate(lines))
+        return f'<rect class="{cls}" x="{x}" y="{y}" width="{w}" height="{h}" rx="3"/>{t}'
+    def arrow(x1, y1, x2, y2):
+        return f'<line class="ln dim" x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" marker-end="url(#anat-arrow)"/>'
+    b = ['<defs><marker id="anat-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 1L9 5L0 9" class="ln"/></marker></defs><g class="c-frag">']
+    for x, title, data, eng, pages in [(20, "PDSA Quiz 2", "5 topic data files", ("one engine", "core · blocks · pages · widgets"), "map · practice · mock · cards"),
+                                       (330, "MLT", "13 topic files · 35 Quiz 1 pages", ("one engine", "nothing in it is topic specific"), "practice next · mock · cheatsheet")]:
+        b.append(f'<text class="nt" x="{x + 125}" y="14" font-size="11" text-anchor="middle">{title}</text>')
+        b.append(box(x, 24, 250, 34, ["topics, as plain data", data]))
+        b.append(arrow(x + 125, 58, x + 125, 76))
+        b.append(box(x, 78, 250, 34, list(eng)))
+        b.append(arrow(x + 125, 112, x + 125, 130))
+        b.append(box(x, 132, 250, 34, ["pages", pages]))
+        b.append(arrow(x + 125, 166, 300, 190))
+    b.append(box(150, 192, 300, 34, ["sign-in: Google, IITM accounts only", "one record of progress per student"], "ln dash"))
+    b.append(f'<text class="nt" x="300" y="246" font-size="10" text-anchor="middle">who may read it is decided by the rules, not by hiding the config</text>')
+    b.append("</g>")
+    return _svg("0 0 600 254", "".join(b), "specimen__figure")
+
+FIGURES = {"anatomy": fig_anatomy}
+SPEC_TITLE = {}
+
 def _fmt(d):
     y, m, dd = map(int, d.split("-"))
     return f"{dd} {_date(y, m, dd).strftime('%b')} {y}"
@@ -550,8 +654,16 @@ def specimen(sp):
         sheet.append(f"<p>{esc(para)}</p>")
         if i == 0 and sp.get("legend"):
             sheet.append(f'<blockquote class="specimen__legend" lang="hi-Latn">{esc(sp["legend"])}</blockquote>')
+    if sp.get("figure"):
+        sheet.append(FIGURES[sp["figure"]]())
+    if sp.get("decisions"):
+        sheet.append('<div class="specimen__decisions"><p class="specimen__from">Decisions, in the code’s own words</p><ul>'
+                     + "".join(f'<li><q>{esc(q)}</q> <span class="specimen__src">{esc(f)}</span></li>' for f, q in sp["decisions"]) + "</ul></div>")
+    if sp.get("instrument"):
+        sheet.append(instrument(sp["instrument"]))
     if sp.get("lines"):
-        sheet.append('<ul class="specimen__lines">' + "".join(f"<li>{esc(l)}</li>" for l in sp["lines"]) + "</ul>")
+        frm = f'<p class="specimen__from">{esc(sp["lines_from"])}</p>' if sp.get("lines_from") else ""
+        sheet.append(frm + '<ul class="specimen__lines">' + "".join(f"<li>{esc(l)}</li>" for l in sp["lines"]) + "</ul>")
     if sp.get("facts"):
         sheet.append('<dl class="specimen__facts">' + "".join(f"<div><dt>{esc(k)}</dt><dd>{esc(v)}</dd></div>" for k, v in sp["facts"]) + "</dl>")
     if sp.get("doors"):
@@ -560,6 +672,11 @@ def specimen(sp):
             cls = "nh-btn nh-btn--ghost" if len(d) > 2 and d[2] == "primary" else "specimen__door"
             links.append(f'<a class="{cls}" href="{esc(d[0])}">{esc(d[1])}</a>')
         sheet.append('<p class="specimen__doors">' + " ".join(links) + "</p>")
+    if sp.get("related"):
+        title = {x["no"]: x["title"] for x in LAB["specimens"]}
+        sheet.append('<div class="specimen__rel"><p class="specimen__from">Connected</p><ul>' + "".join(
+            f'<li><a class="specimen__rel-link" href="#{esc(no.lower())}"><span class="specimen__no">{esc(no)}</span> {esc(title[no])}</a> '
+            f'<span>— {esc(why)}</span></li>' for no, why in sp["related"]) + "</ul></div>")
     if sp.get("fine"):
         sheet.append(f'<p class="specimen__fine">{esc(sp["fine"])}</p>')
     return (f'<details class="specimen specimen--{shelf}" id="{esc(sp["no"].lower())}" name="lab">'
