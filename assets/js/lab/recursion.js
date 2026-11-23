@@ -106,7 +106,8 @@ export function mount(host, data) {
     const t = h("table", { class: "instrument__table rx__table" });
     t.appendChild(h("caption", {}, "Work at each level of the recursion tree. Choose a level to read it."));
     const th = h("tr");
-    for (const c of ["level", "subproblems", "size of each", "work in each", "level total", ""]) th.appendChild(h("th", { scope: "col" }, c));
+    for (const c of ["level", "subproblems", "size of each", "work in each", "level total"]) th.appendChild(h("th", { scope: "col" }, c));
+    th.appendChild(h("td", { "aria-hidden": "true" }));
     t.appendChild(h("thead")).appendChild(th);
     const tb = t.appendChild(h("tbody"));
     for (const r of rows) {

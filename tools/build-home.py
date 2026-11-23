@@ -479,7 +479,7 @@ def art_layout():
                 dx, dy = x - mx, y - my; L = math.hypot(dx, dy) or 1
                 lx, ly = x + dx / L * 8, y + dy / L * 8 + 2.5
                 anchor = "start" if dx > 4 else "end" if dx < -4 else "middle"
-                b.append(f'<text class="tx" x="{n(lx)}" y="{n(ly)}" font-size="7" text-anchor="{anchor}">{label[v]}</text>')
+                b.append(f'<text class="tx" x="{n(lx)}" y="{n(ly)}" font-size="7" text-anchor="{anchor}">{esc(label[v])}</text>')
         b.append(f'<text class="tx dim" x="{n(ox + 54)}" y="128" font-size="7.5" text-anchor="middle">{"start" if step == 0 else "step " + str(step)}</text>')
         if col < 2:
             b.append(f'<line class="ln dim dash" x1="{n(ox + 114)}" y1="30" x2="{n(ox + 114)}" y2="112"/>')
@@ -721,6 +721,9 @@ def lab_section():
   </section>"""
 
 
+# accurate structured data only: the site, and the person it belongs to
+JSONLD = ('<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Krishn Bhagat","url":"https://krishnbhagat.dev/","author":{"@type":"Person","name":"Krishn Bhagat","url":"https://krishnbhagat.dev/","sameAs":["https://github.com/krishnbhagat01"]}}</script>')
+
 def page():
     return f"""<!doctype html>
 <html lang="en">
@@ -730,7 +733,15 @@ def page():
 <title>Krishn Bhagat — creative builder</title>
 <meta name="description" content="Krishn Bhagat builds things to find out what they can become. A lab of experiments, notes and study sites, including nerdhub.">
 <meta name="theme-color" content="#0a0c10">
-<link rel="icon" href="data:,">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="canonical" href="https://krishnbhagat.dev/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Krishn Bhagat">
+<meta property="og:title" content="Krishn Bhagat — creative builder">
+<meta property="og:description" content="Krishn Bhagat builds things to find out what they can become. A lab of experiments, notes and study sites, including nerdhub.">
+<meta property="og:url" content="https://krishnbhagat.dev/">
+<meta name="twitter:card" content="summary">
+{JSONLD}
 <link rel="preload" href="/assets/fonts/source-serif-4-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/assets/css/tokens.css">
 <link rel="stylesheet" href="/assets/css/base.css">
@@ -742,7 +753,7 @@ def page():
 {sprite()}
 <header class="home-header">
   <div class="nh-wrap">
-    <a class="home-mark" href="/" aria-label="Krishn Bhagat, home">KB</a>
+    <a class="home-mark" href="/" aria-label="KB — Krishn Bhagat, home">KB</a>
     <nav class="home-nav" aria-label="Primary">
       <a href="#lab">Lab</a>
       <a href="/nerdhub/">nerdhub</a>

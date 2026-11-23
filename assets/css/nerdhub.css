@@ -17,7 +17,7 @@
 .hub-card:hover { border-color: var(--nh-accent); background: var(--nh-surface-hi); }
 .hub-card h2 { font: 600 var(--nh-text-lg) / 1.3 var(--nh-font-sans); }
 .hub-card p { margin-top: var(--nh-space-2); color: var(--nh-text-dim); font-size: var(--nh-text-sm); }
-.hub-card .nh-eyebrow { margin-bottom: var(--nh-space-3); }
+.hub-card .nh-eyebrow { margin-bottom: var(--nh-space-3); color: var(--nh-annot-faint); }
 .hub-card__go { margin-top: auto; padding-top: var(--nh-space-4); color: var(--nh-accent); font-size: var(--nh-text-sm); font-weight: 600; }
 
 .hub-note { padding: var(--nh-space-5) 0 var(--nh-space-7); border-top: 1px solid var(--nh-line-soft); color: var(--nh-text-faint); font-size: var(--nh-text-sm); }
