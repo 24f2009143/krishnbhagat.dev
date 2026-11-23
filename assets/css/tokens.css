@@ -1,0 +1,58 @@
+/* Design tokens for the landing pages (/ and /nerdhub/) only.
+   Every custom property is prefixed --nh- so it can never collide with the
+   unscoped variables inside /nerdhub/mlt/ and /nerdhub/pdsa-quiz-2/.
+   Do NOT link this file from those apps. */
+:root {
+  color-scheme: dark;
+
+  /* colour: same base as the existing pages, so the sign-in wall and admin feel continuous */
+  --nh-bg: #0f1115;
+  --nh-bg-deep: #0a0c10;
+  --nh-surface: #161a22;
+  --nh-surface-hi: #1c212b;
+  --nh-line: #2a2f3a;
+  --nh-line-soft: #1e232d;
+  --nh-text: #e8eaed;
+  --nh-text-dim: #9aa0a6;
+  --nh-text-faint: #7b828c;
+  --nh-accent: #7ee787;      /* existing green: links, primary actions */
+  --nh-accent-ink: #0f1115;  /* text on accent */
+  --nh-sun: #f2b84b;         /* warm gold, reserved for the homepage hero */
+  --nh-sun-soft: rgba(242, 184, 75, 0.16);
+  --nh-sun-wash: rgba(242, 184, 75, 0.05); /* faint fill inside the sun */
+  --nh-chalk: #c3c8cf;       /* things made: fragments, diagrams, notes */
+
+  /* type */
+  --nh-font-sans: "NH Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --nh-font-serif: "NH Source Serif", Georgia, "Times New Roman", serif;
+  --nh-font-mono: "NH JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --nh-text-xs: 0.78rem;
+  --nh-text-sm: 0.9rem;
+  --nh-text-base: 1rem;
+  --nh-text-lg: 1.2rem;
+  --nh-text-xl: clamp(1.4rem, 1.1rem + 1.2vw, 1.9rem);
+  --nh-text-display: clamp(2.6rem, 1.4rem + 5.5vw, 5.6rem);
+
+  /* space (4px base) */
+  --nh-space-1: 0.25rem;
+  --nh-space-2: 0.5rem;
+  --nh-space-3: 0.75rem;
+  --nh-space-4: 1rem;
+  --nh-space-5: 1.5rem;
+  --nh-space-6: 2rem;
+  --nh-space-7: 3rem;
+  --nh-space-8: 5rem;
+
+  /* shape and layout */
+  --nh-radius: 14px;
+  --nh-radius-sm: 9px;
+  --nh-width: 1080px;
+  --nh-width-narrow: 760px;
+  --nh-gutter: clamp(1.25rem, 4vw, 2.5rem);
+
+  /* motion */
+  --nh-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --nh-dur-fast: 140ms;
+  --nh-dur: 260ms;
+}
