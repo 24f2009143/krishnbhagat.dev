@@ -9,7 +9,7 @@ Edit the geometry here, run it, and commit the resulting index.html.
 
 Every fragment is redrawn from material in /nerdhub/ (PDSA and MLT study sites).
 """
-import math, os, sys
+import math, os, re, sys
 
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "index.html")
 
@@ -190,7 +190,7 @@ def pt(cx, cy, side, ang, r, sweep=0):
     a = math.radians(ang + sweep)
     return cx + side * (ROOT + r * math.cos(a)), cy + r * math.sin(a)
 
-def wing(cx, cy, side, panels, state="built", sweep=0):
+def wing(cx, cy, side, panels, state="built", sweep=0, hooks=False):
     """state: built | draft (construction drawing, parts still arriving)"""
     draft = state == "draft"
     sp = "ln spar dash" if draft else "ln spar"
@@ -200,15 +200,18 @@ def wing(cx, cy, side, panels, state="built", sweep=0):
         x, y = pt(cx, cy, side, ang, L, sweep)
         tips.append((x, y))
         lead = " lead" if i == 0 else ""
-        s.append(f'<line class="{sp}{lead}" x1="{n(cx + side * ROOT)}" y1="{n(cy)}" x2="{n(x)}" y2="{n(y)}"/>')
+        el = f'<line class="{sp}{lead}" x1="{n(cx + side * ROOT)}" y1="{n(cy)}" x2="{n(x)}" y2="{n(y)}"/>'
+        s.append(dr(el, i) if hooks and not draft else el)
     edge = " ".join(f"{n(x)},{n(y)}" for x, y in tips)
-    s.append(f'<polyline class="ln spar{" dash" if draft else ""}" points="{edge}"/>')
-    for r in RIBS:
+    el = f'<polyline class="ln spar{" dash" if draft else ""}" points="{edge}"/>'
+    s.append(dr(el, 5) if hooks and not draft else el)
+    for ri, r in enumerate(RIBS):
         ps = [pt(cx, cy, side, a, r, sweep) for a, L in SPARS if L >= r]
-        s.append(f'<polyline class="ln rib{" dash" if draft else ""}" points="{" ".join(f"{n(x)},{n(y)}" for x, y in ps)}"/>')
+        el = f'<polyline class="ln rib{" dash" if draft else ""}" points="{" ".join(f"{n(x)},{n(y)}" for x, y in ps)}"/>'
+        s.append(dr(el, 6 + ri) if hooks and not draft else el)
         if not draft:
-            for x, y in ps:
-                s.append(f'<rect class="joint" x="{n(x - 2)}" y="{n(y - 2)}" width="4" height="4"/>')
+            js = "".join(f'<rect class="joint" x="{n(x - 2)}" y="{n(y - 2)}" width="4" height="4"/>' for x, y in ps)
+            s.append(rv(js, 9 + ri) if hooks else js)
     for idx, (k, i, r, sc) in enumerate(panels):
         am = (SPARS[i][0] + SPARS[i + 1][0]) / 2
         x, y = pt(cx, cy, side, am, r, sweep)
@@ -219,9 +222,20 @@ def wing(cx, cy, side, panels, state="built", sweep=0):
             s.append(f'<g transform="translate({n(x)} {n(y)}) rotate({n(rot)})"><rect class="ln slot" x="{n(-w * sc / 2)}" y="{n(-h * sc / 2)}" width="{n(w * sc)}" height="{n(h * sc)}"/></g>')
             ox, oy = x + side * 46, y + (58 if idx % 4 == 0 else -52)
             s.append(f'<path class="ln path" d="M{n(ox)} {n(oy)} Q{n((ox + x) / 2 + side * 30)} {n((oy + y) / 2)} {n(x)} {n(y)}"/>')
-            s.append(use(k, ox, oy, rot + side * 13, sc, "c-frag"))
+            r0 = rot + side * 13
+            if hooks:
+                # the motion layer moves this part a little way along its own construction path
+                w, h, _ = FRAGS[k]
+                qx, qy = (ox + x) / 2 + side * 30, (oy + y) / 2
+                reach = .72 if idx % 4 == 0 else .48        # never fully locked
+                s.append(f'<g class="c-frag" data-travel="{n(ox)} {n(oy)} {n(qx)} {n(qy)} {n(x)} {n(y)} {n(r0)} {n(rot)} {sc} {reach}" '
+                         f'transform="translate({n(ox)} {n(oy)}) rotate({n(r0)}) scale({sc})">'
+                         f'<use href="#f-{k}" x="{n(-w / 2)}" y="{n(-h / 2)}" width="{w}" height="{h}"/></g>')
+            else:
+                s.append(use(k, ox, oy, r0, sc, "c-frag"))
         else:
-            s.append(use(k, x, y, rot, sc, "c-frag"))
+            u = use(k, x, y, rot, sc, "c-frag")
+            s.append(rv(u, 12 + idx) if hooks and not draft else u)
     return "".join(s)
 
 def draft_annotations(cx, cy, side):
@@ -258,6 +272,14 @@ def note(x, y, text, size=13, rot=0, cls=""):
     t = f' transform="rotate({rot} {n(x)} {n(y)})"' if rot else ""
     return f'<text class="nt {cls}" x="{n(x)}" y="{n(y)}" font-size="{size}"{t}>{text}</text>'
 
+def rv(markup, i, attrs=""):
+    """A part that the motion layer may reveal. Static rendering is unchanged."""
+    return f'<g class="rv" style="--i:{i}"{attrs}>{markup}</g>'
+
+def dr(el, i):
+    """Mark one stroked element as drawable (motion layer draws it on with dashoffset)."""
+    return re.sub(r"^<(line|polyline|path)", lambda m: f'<{m.group(1)} data-draw style="--i:{i}"', el, count=1)
+
 def stage(body, label):
     return (f'<div class="scene__stage" aria-hidden="true"><svg viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice" focusable="false">'
             f'<g class="mz">{body}</g></svg></div>')
@@ -275,39 +297,42 @@ def s02():
     loose = [("graph", 300, 190, -11, 1.0, ""), ("dtree", 870, 300, 7, 1.0, ""), ("lasso", 420, 400, 14, .95, ""),
              ("regress", 800, 470, -5, .95, "d-only"), ("heap", 230, 330, 4, .9, "d-only"), ("knn", 760, 150, -18, .9, ""),
              ("recur", 1010, 430, 9, .9, "d-only"), ("relax", 470, 110, -3, 1.1, "d-only"), ("cv", 980, 250, 22, .85, "d-only")]
-    for k, x, y, r, sc, extra in loose:
-        b.append(use(k, x, y, r, sc, f"c-frag {extra}".strip()))
+    for i, (k, x, y, r, sc, extra) in enumerate(loose):
+        dx, dy = (FX - x) * .03, (FY - y) * .03          # drift: a few units toward the figure
+        b.append(rv(f'<g data-drift="{n(dx)} {n(dy)}">{use(k, x, y, r, sc, f"c-frag {extra}".strip())}</g>', i))
     # repeats: the same attempt made again, slightly shifted
-    b.append(use("graph", 312, 202, -6, 1.0, "c-ghost"))
-    b.append(use("graph", 324, 214, -1, 1.0, "c-ghost2"))
+    b.append(rv(use("graph", 312, 202, -6, 1.0, "c-ghost"), 10))
+    b.append(rv(use("graph", 324, 214, -1, 1.0, "c-ghost2"), 12))
     # unfinished: half a decision tree, clipped mid-construction
     b.append('<clipPath id="half"><rect x="-200" y="-200" width="190" height="400"/></clipPath>')
-    b.append(f'<g clip-path="url(#half)" transform="translate(140 445)">{use("dtree", 0, 0, -9, 1.1, "c-frag d-only")}</g>')
+    b.append(rv(f'<g clip-path="url(#half)" transform="translate(140 445)">{use("dtree", 0, 0, -9, 1.1, "c-frag d-only")}</g>', 6))
     # failed and fading: an attempt that didn't fit
-    b.append(use("entropy", 980, 560, 6, 1.1, "c-fade d-only"))
-    b.append(use("array", 640, 560, -2, 1.0, "c-frag"))
-    b.append('<line class="ln strike-line" x1="575" y1="545" x2="705" y2="574"/>')
-    b.append(note(712, 590, "didn’t fit. keep it.", 13, -2))
-    b.append(note(110, 245, "why not greedy here?", 13, -4, "d-only"))
-    b.append(note(880, 380, "try k = 5?", 13, 3))
+    b.append(rv(use("entropy", 980, 560, 6, 1.1, "c-fade d-only"), 9))
+    b.append(rv(use("array", 640, 560, -2, 1.0, "c-frag"), 8))
+    b.append(dr('<line class="ln strike-line" x1="575" y1="545" x2="705" y2="574"/>', 13))
+    b.append(rv(note(712, 590, "didn’t fit. keep it.", 13, -2), 14))
+    b.append(rv(note(110, 245, "why not greedy here?", 13, -4, "d-only"), 11))
+    b.append(rv(note(880, 380, "try k = 5?", 13, 3), 11))
     return stage("".join(b), "experiment")
 
 def s03():
     b = [horizon(FY + 169, 300, 900), sun(SUNX, SUNY, 12)]
-    b.append(wing(FX, FY, -1, LEFT, "built"))
-    b.append(wing(FX, FY, 1, RIGHT, "draft"))
+    b.append(wing(FX, FY, -1, LEFT, "built", hooks=True))
+    b.append(wing(FX, FY, 1, RIGHT, "draft", hooks=True))
     b.append(draft_annotations(FX, FY, 1))
     b.append(fig(FX, FY))
-    b.append(note(FX - 330, FY + 120, "locked in", 13, 0, "d-only"))
+    b.append(rv(note(FX - 330, FY + 120, "locked in", 13, 0, "d-only"), 18))
     b.append(note(FX + 250, FY + 150, "still arriving", 13, 0, "d-only"))
     return stage("".join(b), "build")
 
 def s04():
     # smaller and higher than scene 03, on a visible climb off a raised horizon
-    cx, cy, tilt, sweep, k = 690, 230, -12, -9, .68
-    H = 710                                   # captions sit above the landmarks, never on the scene edge
-    b = [horizon(H)]
-    b.append(sun(1080, 105, 34))
+    cx, cy, tilt, sweep, k = 690, 245, -12, -9, .68
+    H = 672                                   # leaves room under the horizon at 1280x720 too
+    # wide screens: the ground starts just before the take-off mark, clear of the text column
+    b = [horizon(H, 540, 1200).replace('class="ln horizon"', 'class="ln horizon d-only"'),
+         horizon(H).replace('class="ln horizon"', 'class="ln horizon m-only"')]
+    b.append(sun(1080, 105, 34, "c-sun d-only") + sun(960, 110, 34, "c-sun m-only"))   # phones: fully inside 390px
     b.append(f'<g class="c-faint d-only">{use("graph", 230, 470, -4, 1.45)}</g>')
     b.append(caption(118, 395, "fig. a — PDSA graph, read as a map", "start").replace('class="cap"', 'class="cap d-only"'))
     b.append(f'<g class="c-land">{use("heap", 840, H - 86, 0, 1.75)}</g>')
@@ -322,11 +347,13 @@ def s04():
     fx, fy = cx, cy + 150 * k
     b.append(f'<path class="ln path climb" d="M{x0} {H} C {x0 + 30} {H - 150}, {n(fx - 90)} {n(fy + 110)}, {n(fx)} {n(fy)}"/>')
     for t, (gx, gy) in enumerate([(x0 + 38, H - 150), (x0 + 112, H - 262)]):
-        b.append(f'<g class="c-ghost{"2" if t == 0 else ""}" transform="translate({gx} {gy}) scale(.3)">'
+        b.append(f'<g class="c-ghost{"2" if t == 0 else ""}" data-at="{(.3, .55)[t]}" transform="translate({gx} {gy}) scale(.3)">'
                  f'<use href="#f-figure" x="-20" y="-27" width="40" height="200"/></g>')
     b.append(note(x0 + 18, H - 10, "left the ground here", 12, 0, "d-only"))
-    b.append(f'<g transform="translate({cx} {cy}) scale({k}) translate({-cx} {-cy}) rotate({tilt} {cx} {cy})">'
-             + wing(cx, cy, -1, LEFT, "built", sweep) + wing(cx, cy, 1, RIGHT, "built", sweep) + fig(cx, cy) + "</g>")
+    # data-fly: the climb curve; the motion layer moves the figure along it (static = arrived)
+    b.append(f'<g data-fly="{x0} {H} {x0 + 30} {H - 150} {n(fx - 90)} {n(fy + 110)} {n(fx)} {n(fy)}">'
+             f'<g transform="translate({cx} {cy}) scale({k}) translate({-cx} {-cy}) rotate({tilt} {cx} {cy})">'
+             + wing(cx, cy, -1, LEFT, "built", sweep) + wing(cx, cy, 1, RIGHT, "built", sweep) + fig(cx, cy) + "</g></g>")
     return stage("".join(b), "takeoff")
 
 def s05():
@@ -334,25 +361,26 @@ def s05():
     b = [horizon(742, 0, 1200)]
     # the sun as a blueprint: half of it still burns, half is construction drawing
     b.append(f'<g class="c-sun"><path class="ln sun-disc" d="M{sx} {sy + r} A{r} {r} 0 0 1 {sx} {sy - r}"/></g>')
-    b.append(f'<g class="c-draft"><path class="ln dash" d="M{sx} {sy - r} A{r} {r} 0 0 1 {sx} {sy + r}"/>'
-             f'<line class="ln dim" x1="{sx - r - 30}" y1="{sy}" x2="{sx + r + 30}" y2="{sy}"/>'
-             f'<line class="ln dim" x1="{sx}" y1="{sy - r - 30}" x2="{sx}" y2="{sy + r + 30}"/>'
-             f'<line class="ln" x1="{sx}" y1="{sy}" x2="{n(sx + r * math.cos(math.radians(-35)))}" y2="{n(sy + r * math.sin(math.radians(-35)))}"/>'
-             f'{note(sx + 70, sy - 70, "r = ?", 14)}'
+    b.append('<g class="c-draft">'
+             + rv(f'<path class="ln dash" d="M{sx} {sy - r} A{r} {r} 0 0 1 {sx} {sy + r}"/>', 0)
+             + dr(f'<line class="ln dim" x1="{sx - r - 30}" y1="{sy}" x2="{sx + r + 30}" y2="{sy}"/>', 1)
+             + dr(f'<line class="ln dim" x1="{sx}" y1="{sy - r - 30}" x2="{sx}" y2="{sy + r + 30}"/>', 2)
+             + dr(f'<line class="ln" x1="{sx}" y1="{sy}" x2="{n(sx + r * math.cos(math.radians(-35)))}" y2="{n(sy + r * math.sin(math.radians(-35)))}"/>', 4)
+             + rv(note(sx + 70, sy - 70, "r = ?", 14), 6)
              # an opening: a doorway drawn inside the sun
-             f'<rect class="ln door" x="{sx - 42}" y="{sy - 40}" width="84" height="{r + 40 - 22}"/>'
-             f'<line class="ln dim" x1="{sx - 42}" y1="{sy - 52}" x2="{sx + 42}" y2="{sy - 52}"/>'
-             f'{note(sx - 40, sy - 58, "84", 10)}'
-             f'{note(sx + 50, sy + 70, "a door?", 13)}'
-             '</g>')
+             + rv(f'<rect class="ln door" x="{sx - 42}" y="{sy - 40}" width="84" height="{r + 40 - 22}"/>', 5)
+             + dr(f'<line class="ln dim" x1="{sx - 42}" y1="{sy - 52}" x2="{sx + 42}" y2="{sy - 52}"/>', 6)
+             + rv(note(sx - 40, sy - 58, "84", 10), 7)
+             + rv(note(sx + 50, sy + 70, "a door?", 13), 8)
+             + '</g>')
     # a new system starts growing out of it: nodes with almost no connections yet
     nodes = [(1005, 250), (1060, 205), (1100, 290), (1040, 345), (1130, 180), (1150, 360)]
     g = ['<g class="c-draft d-only">']
-    g.append(f'<line class="ln" x1="{sx + r}" y1="{sy}" x2="1005" y2="250"/><line class="ln" x1="1005" y1="250" x2="1060" y2="205"/>')
-    g.append('<line class="ln dash" x1="1060" y1="205" x2="1100" y2="290"/>')
-    for x, y in nodes:
-        g.append(f'<circle class="ln bg" cx="{x}" cy="{y}" r="6"/>')
-    g.append(note(1050, 410, "not built yet", 13))
+    g.append(dr(f'<line class="ln" x1="{sx + r}" y1="{sy}" x2="1005" y2="250"/>', 7) + dr('<line class="ln" x1="1005" y1="250" x2="1060" y2="205"/>', 9))
+    g.append(rv('<line class="ln dash" x1="1060" y1="205" x2="1100" y2="290"/>', 11))
+    for j, (x, y) in enumerate(nodes):
+        g.append(rv(f'<circle class="ln bg" cx="{x}" cy="{y}" r="6"/>', 8 + j))
+    g.append(rv(note(1050, 410, "not built yet", 13), 14))
     g.append("</g>")
     b.append("".join(g))
     # the figure arrives, small, still carrying the same wings
@@ -360,9 +388,9 @@ def s05():
     b.append(f'<g transform="translate({fx} {fy}) scale(.34) translate({-fx} {-fy}) rotate(-14 {fx} {fy})">'
              + wing(fx, fy, -1, LEFT, "built", -7) + wing(fx, fy, 1, RIGHT, "built", -7) + fig(fx, fy) + "</g>")
     # and the loop: arriving here points back to the start
-    b.append(f'<path class="ln path" d="M{sx - 140} {sy + 140} C {sx - 300} {sy + 260}, 260 520, 150 400" marker-end="url(#arrow)"/>')
+    b.append(rv(f'<path class="ln path" d="M{sx - 140} {sy + 140} C {sx - 300} {sy + 260}, 260 520, 150 400" marker-end="url(#arrow)"/>', 12))
     b.append('<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 1L9 5L0 9" class="ln"/></marker></defs>')
-    b.append(note(60, 380, "→ 01, again", 13))
+    b.append(rv(note(60, 380, "→ 01, again", 13), 14))
     return stage("".join(b), "next")
 
 # ---------------------------------------------------------------- lab drawings (small, inline)
@@ -432,7 +460,7 @@ def page():
     </div>
   </section>
 
-  <section class="scene scene--experiment" id="experiment" data-scene="02" aria-labelledby="t-exp">
+  <section class="scene scene--experiment" id="experiment" data-scene="02" data-fx="reveal drift" aria-labelledby="t-exp">
     {s02()}
     <div class="scene__text nh-wrap">
       <p class="chapter">02 — Experiment</p>
@@ -441,7 +469,7 @@ def page():
     </div>
   </section>
 
-  <section class="scene scene--build" id="build" data-scene="03" aria-labelledby="t-build">
+  <section class="scene scene--build" id="build" data-scene="03" data-fx="reveal travel" aria-labelledby="t-build">
     {s03()}
     <div class="scene__text nh-wrap">
       <p class="chapter">03 — Build</p>
@@ -450,7 +478,7 @@ def page():
     </div>
   </section>
 
-  <section class="scene scene--takeoff" id="takeoff" data-scene="04" aria-labelledby="t-takeoff">
+  <section class="scene scene--takeoff" id="takeoff" data-scene="04" data-fx="fly" aria-labelledby="t-takeoff">
     {s04()}
     <div class="scene__text nh-wrap">
       <p class="chapter">04 — Takeoff</p>
@@ -459,7 +487,7 @@ def page():
     </div>
   </section>
 
-  <section class="scene scene--next" id="next" data-scene="05" aria-labelledby="t-next">
+  <section class="scene scene--next" id="next" data-scene="05" data-fx="reveal" aria-labelledby="t-next">
     {s05()}
     <div class="scene__text nh-wrap">
       <p class="chapter">05 — The next idea</p>
@@ -506,7 +534,7 @@ def page():
             </summary>
             <div class="specimen__body">
               <h3>This site</h3>
-              <p>Drawn by hand in SVG, with no framework. Every fragment in the wings is redrawn from something in nerdhub: the left wing from PDSA, the right from MLT.</p>
+              <p>Drawn by hand in SVG, with no framework. Every fragment in the wings is redrawn from something worked out in nerdhub: a heap, a shortest-path graph, a recurrence, a decision tree, a regression fit, a nearest-neighbour sketch.</p>
               <a class="nh-btn nh-btn--ghost" href="https://github.com/krishnbhagat01/krishnbhagat.dev">Source on GitHub →</a>
             </div>
           </details>
