@@ -922,5 +922,122 @@ def tr_user_999():
 def tr_java_lower():
     eq(st(flask(CODE["6406531021275"][0], [("GET", "/course/java?id=CS2005")])), [400], "status")
 
+
+# ================= part 4: PYQs error-handling (10)
+@check("Tflask-core-122")
+def pyq_640653586805():
+    r = flask(CODE["640653586805"][0], [("GET", "//"), ("GET", "//", {}, True)])
+    eq((r[0]["status"], r[0]["location"].rstrip("/").endswith("localhost")), (308, True), "// is merged to / (Werkzeug 3.1)")
+    eq((r[1]["status"], r[1]["body"]), (200, "This is generate1"), "browser ends on generate1")
+
+
+@check("Tflask-core-123")
+def pyq_640653690119():
+    r = flask(CODE["640653690119"][0], [("GET", "/home/user_4"), ("POST", "/home/user_4"), ("POST", "/home/admin")])
+    eq([(x["status"], x["body"]) for x in r], [(200, "<h1>Please check the web request.</h1>"), (200, "<h1>The user you are looking for is invalid.</h1>"), (200, "<h1>Hello admin, Welcome!</h1>")], "GET hits 405 first")
+
+
+@check("Tflask-core-124")
+def pyq_640653771128():
+    eq(bodies(flask(CODE["640653771128"][0], [("GET", "/home/"), ("GET", "/home")])), ["This is homepage 2", "This is homepage 1"], "bodies")
+
+
+@check("Tflask-core-125")
+def pyq_6406531325148():
+    o, e, rc = run_py("import flask\nflask.Flask.run = lambda *a, **k: None\n" + CODE["6406531325148"][0])
+    eq((rc != 0, "ValueError: '407' is not a recognized HTTP error code" in e), (True, True), "app fails while loading")
+    fixed = CODE["6406531325148"][0].replace("@app.errorhandler (407)\ndef user_error_4(error):\n    return \"<h1>Proxy authentication required.</h1>\"\n", "")
+    eq(("@app.errorhandler (407)" in CODE["6406531325148"][0], "errorhandler (407)" in fixed), (True, False), "407 handler removed")
+    eq(bodies(flask(fixed, [("GET", "/home/user_4")])), ["<h1>Please check the web request.</h1>"], "without that handler: 405 handler for a browser GET")
+
+
+@check("Tflask-core-126")
+def pyq_640653690105():
+    r = flask(CODE["640653690105"][0], [("GET", "/MAD1?uname=102"), ("GET", "/102?uname=MAD1")])
+    eq((r[0]["status"], r[0]["body"]), (200, "<h1>Good Username</h1>"), "MAD1"); eq((r[1]["status"], "<p>Bad Request</p>" in r[1]["body"]), (400, True), "102")
+
+
+@check("Tflask-core-127")
+def pyq_640653771129():
+    r = flask(CODE["640653771129"][0], [("GET", u) for u in ("/validate/4", "/validate?number=5", "/validate/5")])
+    eq(st(r), [400, 404, 200], "status"); eq(("Bad Request: Invalid number provided" in r[0]["body"], r[2]["body"]), (True, "<h1>Valid Number: 5</h1>"), "bodies")
+
+
+@check("Tflask-core-128")
+def pyq_640653856977():
+    r = flask(CODE["640653856977"][0], [("GET", u) for u in ("/login?id=MAD-I", "/login/", "/login/CS2003", "/login/PDSA")])
+    eq(st(r), [404, 404, 200, 400], "status"); eq(r[2]["body"], "<h1>Your ID is: CS2003</h1>", "C")
+
+
+@check("Tflask-core-129")
+def pyq_6406531021273():
+    r = flask(CODE["6406531021273"][0], [("GET", u) for u in ("/login?id=MAD-I", "/login/", "/login/CS2003", "/login/PDSA")])
+    eq(st(r), [404, 404, 400, 400], "status"); eq("Not Found" in r[0]["body"], True, "A shows Not Found")
+
+
+@check("Tflask-core-130")
+def pyq_6406531173011():
+    r = flask(CODE["6406531173011"][0], [("GET", "/endpoint/user1/developer"), ("GET", "/endpoint/user1")])
+    eq((r[0]["status"], json.loads(r[0]["body"])), (200, {"message": "invalid endpoint!"}), "404 handler output with status 200")
+    eq((r[1]["status"], json.loads(r[1]["body"])), (200, {"username": "user1"}), "one segment works")
+
+
+@check("Tflask-core-131")
+def pyq_6406532180392():
+    r = flask(CODE["6406532180392"][0], [("GET", u, {}, True) for u in ("/learn/web/Python?level=advanced", "/course/ML/Python?topic=NLP", "/learn/basics/Python?level=beginner", "/course/Java/React?type=Framework")])
+    eq(bodies(r), ["Welcome to Python course!", "Welcome to Python course!", "Welcome to Python course!", "<h2>Course not available!</h2>"], "bodies")
+    first = flask(CODE["6406532180392"][0], [("GET", "/learn/web/Python?level=advanced")])[0]
+    eq((first["status"], first["location"]), (302, "/course/web/Python"), "A redirects, query dropped")
+
+
+# ---- transfers of part 4
+@check("Tflask-core-132")
+def tr_generate_triple():
+    r = flask(CODE["640653586805"][0], [("GET", "/x"), ("GET", "///", {}, True)])
+    eq((r[0]["status"], r[0]["body"], r[1]["body"]), (200, "page not found", "This is generate1"), "handler 200; /// merged")
+
+
+@check("Tflask-core-133")
+def tr_post_user1():
+    eq(bodies(flask(CODE["640653690119"][0], [("POST", "/home/user_1")])), ["<h1>Hello user_1, Welcome!</h1>"], "body")
+
+
+@check("Tflask-core-134")
+def tr_homepage_other():
+    r = flask(CODE["640653771128"][0], [("GET", "/home//"), ("GET", "/homes")])
+    eq(r[1]["body"], "page not found", "/homes handled by 404 handler")
+
+
+@check("Tflask-core-135")
+def tr_uname_digit_inside():
+    eq(bodies(flask(CODE["640653690105"][0], [("GET", "/a1")])), ["<h1>Good Username</h1>"], "only the first character is tested")
+
+
+@check("Tflask-core-136")
+def tr_validate_10():
+    r = flask(CODE["640653771129"][0], [("GET", "/validate/10")])
+    eq(r[0]["status"], 400, "10 % 2 == 0 and 10 % 3 == 1")
+
+
+@check("Tflask-core-137")
+def tr_login_hyphen():
+    eq(bodies(flask(CODE["640653856977"][0], [("GET", "/login/MAD-I")])), ["<h1>Your ID is: MAD-I</h1>"], "hyphen is not a letter")
+
+
+@check("Tflask-core-138")
+def tr_login_alnum_hyphen():
+    eq(bodies(flask(CODE["6406531021273"][0], [("GET", "/login/MAD-I")])), ["<h1>Your ID is: MAD-I</h1>"], "isalnum False")
+
+
+@check("Tflask-core-139")
+def tr_endpoint_status():
+    fixed = CODE["6406531173011"][0].replace('"message": "invalid endpoint!"\n    }', '"message": "invalid endpoint!"\n    }, 404')
+    eq(flask(fixed, [("GET", "/endpoint/a/b")])[0]["status"], 404, "status with the tuple")
+
+
+@check("Tflask-core-140")
+def tr_learn_java():
+    eq(bodies(flask(CODE["6406532180392"][0], [("GET", "/learn/Java", {}, True)])), ["<h2>Course not available!</h2>"], "body")
+
 if __name__ == "__main__":
     main()
