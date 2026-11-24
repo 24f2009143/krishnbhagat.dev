@@ -140,8 +140,8 @@ A.qcard=function(q,opt){
     w.innerHTML=sec("What is asked",rr(s.asked))+sec("What is given",rr(s.given))+sec("Clue words",rr(s.clues))+sec("The governing idea",rr(s.idea))
       +(s.method?'<div class="method-card"><span>Method card</span>'+A.inline(s.method)+"</div>":"")+'<h4>Worked method, one step at a time</h4><div data-slot="steps"></div>'
       +optionNotesHTML(s.optionNotes)
-      +sec("Other methods",typeof s.other==="string"?rr(s.other):(s.other||[]).map(function(o){return '<div class="other"><b>'+A.inline(o.idea)+"</b><p><i>Cue:</i> "+A.inline(o.cue||"")+"</p><p><i>Trade-off:</i> "+A.inline(o.tradeoff||"")+"</p>"+(o.work?'<div class="prose">'+A.renderRich(o.work)+"</div>":"")+"</div>"}).join(""))
-      +sec("Verification",rr(s.verify)+(s.asserts&&s.asserts.length?'<p class="asserts">Checked by: '+s.asserts.map(function(a){return '<code>'+esc(a)+"</code>"}).join(" ")+"</p>":"")+(s.range?"<p>Accepted range: "+A.inline(s.range)+"</p>":""))
+      +sec("Other methods",typeof s.other==="string"?(/^one practical method$/i.test(s.other.trim())?"":rr(s.other)):(s.other||[]).map(function(o){return '<div class="other"><b>'+A.inline(o.idea)+"</b><p><i>Cue:</i> "+A.inline(o.cue||"")+"</p><p><i>Trade-off:</i> "+A.inline(o.tradeoff||"")+"</p>"+(o.work?'<div class="prose">'+A.renderRich(o.work)+"</div>":"")+"</div>"}).join(""))
+      +sec("Verification",rr(s.verify)+(s.asserts&&s.asserts.length?'<p class="asserts" title="'+esc(s.asserts.join(", "))+'">Checked by running the code in the pinned environment.</p>':"")+(s.range?"<p>Accepted range: "+A.inline(s.range)+"</p>":""))
       +sec("Trap",rr(s.trap))+sec("Recognition rule",rr(s.rule))
       +(s.transfer?'<h4>Transfer question</h4><div data-slot="transfer"></div>':"")
       +'<p class="keysrc">Key: '+badgeFor(q)+(q.repeatOf?' · same idea as <a href="#pyq/'+esc(q.repeatOf)+'">'+esc(q.repeatOf)+"</a> (this variant's own working is above)":"")+"</p>";
@@ -150,7 +150,7 @@ A.qcard=function(q,opt){
     return w;
   }
   function solutionQ(){
-    var w=el("div","sol");w.innerHTML='<h4>Why</h4><div class="prose">'+A.renderRich(q.explain||"")+"</div>"+optionNotesHTML(q.optionNotes)+(q.asserts&&q.asserts.length?'<p class="asserts">Checked by: '+q.asserts.map(function(a){return "<code>"+esc(a)+"</code>"}).join(" ")+"</p>":"");
+    var w=el("div","sol");w.innerHTML='<h4>Why</h4><div class="prose">'+A.renderRich(q.explain||"")+"</div>"+optionNotesHTML(q.optionNotes)+(q.asserts&&q.asserts.length?'<p class="asserts" title="'+esc(q.asserts.join(", "))+'">Checked by running the code.</p>':"");
     return w;
   }
   function errorPicker(rec){

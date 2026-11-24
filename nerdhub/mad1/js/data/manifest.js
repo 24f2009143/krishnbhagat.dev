@@ -4,7 +4,7 @@ APP.manifest={
  subject:"Modern Application Development I",
  short:"MAD 1",
  dataVersion:1,
- engineVersion:"mad1-engine-1.0.0",
+ engineVersion:"mad1-engine-1.0.1",
  toolkit:["PRACTICAL","CODE","THEORY","MATHS"],
  defaultExam:"q2",
  hubUrl:"../",

@@ -4,7 +4,8 @@ window.APP = window.APP || {};
 (function(){
 "use strict";
 var A = window.APP;
-A.ENGINE_VERSION = "mad1-engine-1.0.0";   /* stamped at B1-C; after the pilot only bug fixes, each bumping this */
+A.ENGINE_VERSION = "mad1-engine-1.0.1";   /* 1.0.1: review fixes (inline code in callouts, solution polish, phone layout) */
+/* 1.0.0 frozen at B1-C */   /* stamped at B1-C; after the pilot only bug fixes, each bumping this */
 A.topics = A.topics || {};
 A.packs = A.packs || {};          /* packs[exam][topicId] = {pyqs, patterns, extraNotes, extraTraps, parts} */
 A.patchesApplied = A.patchesApplied || {};
@@ -93,7 +94,7 @@ function inline(s,seen){
   var out="",src=String(s==null?"":s).replace(/\\\$/g,DOLLAR),parts=src.split("`");
   if(parts.length%2===0){parts[parts.length-2]+="`"+parts.pop()} /* unbalanced backtick: keep it literal */
   for(var i=0;i<parts.length;i++){
-    if(i%2===1){out+='<code class="ic">'+esc(parts[i]).replace(new RegExp(DOLLAR,"g"),"\\$")+"</code>";continue}
+    if(i%2===1){out+='<code class="icode">'+esc(parts[i]).replace(new RegExp(DOLLAR,"g"),"\\$")+"</code>";continue}
     var re=/\$\$[\s\S]+?\$\$|\$[^$\n]+?\$/g,last=0,m,seg=parts[i],buf="",maths=[];
     while((m=re.exec(seg))){buf+=inlineText(seg.slice(last,m.index))+"\u0001"+maths.length+"\u0002";maths.push(esc(m[0]));last=m.index+m[0].length}
     buf+=inlineText(seg.slice(last));
@@ -337,6 +338,7 @@ A.countsFor=function(e){var C=A.counts&&A.counts.exams?A.counts:A.liveCounts();i
   var o={pyqs:0,marks:0,papers:[],topics:{},blocks:{}};Object.keys(C.exams).forEach(function(k){var E=C.exams[k];o.pyqs+=E.pyqs;o.marks+=E.marks;o.papers=o.papers.concat(E.papers);
     Object.keys(E.topics).forEach(function(t){var T=o.topics[t]=o.topics[t]||{pyqs:0,marks:0,subs:{}};T.pyqs+=E.topics[t].pyqs;T.marks+=E.topics[t].marks});
     Object.keys(E.blocks).forEach(function(b){o.blocks[b]=(o.blocks[b]||0)+E.blocks[b]})});return o};
+A.paperTime=function(p){var t=Date.parse(/^\d/.test(p)?p:"01 "+p);return isNaN(t)?0:t};
 A.fmt=function(n){return String(+(+n).toFixed(2))};
 A.days=function(d){if(!d)return null;var t=new Date(d+"T09:00:00");if(isNaN(t))return null;return Math.ceil((t-Date.now())/864e5)};
 A.examDate=function(e){var S=A.load();return (S.prefs.examDates||{})[e]||(A.manifest.exams[e]&&A.manifest.exams[e].examDate)||""};

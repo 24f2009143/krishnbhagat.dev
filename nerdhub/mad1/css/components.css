@@ -497,7 +497,7 @@ h1{font:700 1.9rem/1.2 var(--display);margin:0 0 8px}
 .opt .cb{margin:4px 0}
 .hl-k{color:#7a3e9d}.hl-s{color:#1d6b3a}.hl-c{color:var(--mute);font-style:italic}.hl-f{color:#1f5fa8}.hl-nu{color:#a0522d}.hl-j{color:#b5531f;font-weight:600}
 [data-theme=dark] .hl-k{color:#d4a5f5}[data-theme=dark] .hl-s{color:#8fd6a0}[data-theme=dark] .hl-f{color:#8fbff5}[data-theme=dark] .hl-nu{color:#f0b37e}[data-theme=dark] .hl-j{color:#f5a46c}
-code.ic{font:.88em var(--mono);background:var(--code);padding:1px 5px;border-radius:5px;overflow-wrap:anywhere}
+code.icode{font:.88em var(--mono);background:var(--code);padding:1px 5px;border-radius:5px;overflow-wrap:anywhere}
 .code-lex{border:1px solid var(--line);border-top:0;border-radius:0 0 10px 10px;margin:-12px 0 12px;padding:8px 12px;font-size:.92rem;background:var(--card)}
 .code-lex ol{margin:6px 0 0;padding-left:0;list-style:none}.code-lex li{display:flex;gap:10px;margin:3px 0}
 .code-lex-n{font:600 .78rem var(--mono);color:var(--mute);flex:none;width:4.2em}
@@ -615,3 +615,9 @@ body.railmin .rail-exam,body.railmin .hubback{display:none}
 .lesson-banner div{grid-template-columns:11em minmax(0,1fr)}.lesson-banner dd{min-width:0}
 @media (max-width:640px){.lesson-banner div{grid-template-columns:minmax(0,1fr)}}
 .lesson-banner dd{font-size:1rem}
+
+/* 1.0.1 */
+.sync-chip.in-rail{position:static;display:block;margin:10px 14px;width:calc(100% - 28px);text-align:left;box-shadow:none}
+body.railmin .sync-chip.in-rail{display:none}
+.asserts{font-size:.8rem}
+.flow text{font-size:13px}

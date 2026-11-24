@@ -14,5 +14,8 @@ APP.registerGlossary([
  {term:"ORM",alias:["object-relational mapper"],def:"A library that lets you treat database rows as Python objects (Flask-SQLAlchemy is one)."},
  {term:"DOM",alias:["Document Object Model"],def:"The browser's tree of objects for a page. JavaScript reads and changes the page through it."},
  {term:"stateless",def:"Each request is handled on its own; the server keeps no memory of earlier requests unless something (such as a cookie) carries it."},
+ {term:"Werkzeug",def:"The library Flask is built on. It parses requests, matches URLs to routes (including the trailing-slash rules) and provides the HTTP error classes used by `abort`."},
+ {term:"Content-Type",def:"A response header naming the format of the body, such as `text/html` for a page or `application/json` for JSON."},
+ {term:"request context",def:"What Flask sets up while handling a request, so `request` and `url_for` work. Outside a request, `app.test_request_context()` creates one."},
  {term:"bandwidth",def:"How much data can move per second, in bits per second (network) or bytes per second (memory)."}
 ]);

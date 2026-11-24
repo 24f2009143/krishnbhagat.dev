@@ -6,7 +6,7 @@ function rich(s){return A.renderRich(s)}
 function pathBar(m,on){
   var S=A.load(),st=A.topicStats(m),stp=S.steps[m.id]||{};
   var done=[st.secs&&st.read===st.secs,st.pyqs&&st.solved>=st.pyqs*0.8,!!stp.test,!!stp.revise,!!stp.check];
-  var href=["lesson","pyqs","test","revise","revise"];
+  var href=["lesson","pyqs","test","revise","test#checklist"];
   return '<ol class="path" aria-label="Path through this topic">'+["Learn","Practice PYQs","Topic test","Revise","Checklist"].map(function(s,i){return '<li class="'+(done[i]?"done ":"")+(on===i?"on":"")+'"><a href="#topic/'+m.id+(i===0?"":"/"+href[i])+'">'+s+"</a></li>"}).join("")+"</ol>";
 }
 A.conceptMarks=function(id,ex){
@@ -72,7 +72,7 @@ function plannedTopic(root,m){
   var C=A.countsFor(A.exam()).topics[m.id]||{pyqs:0,marks:0},S=A.load();
   var rf=A.refreshers.filter(function(r){return r.upgradesTo===m.id});
   root.innerHTML='<div class="page"><nav class="crumb"><a href="#home">Course</a><span>'+esc(m.name)+'</span></nav><h1>'+esc(m.name)+' <span class="pill">'+esc(m.status)+'</span></h1><p class="lead">'+esc(m.why)+"</p>"
-    +'<div class="box"><p>This topic is not written yet. It covers weeks '+m.weeks.join(", ")+(C.pyqs?" and carries "+C.pyqs+" PYQs worth "+A.fmt(C.marks)+" marks in "+esc(A.examLabel(A.exam())):"")+'.</p><h3 class="h3">What it will cover</h3><ul>'+(m.subs||[]).map(function(s){var c=(C.subs||{})[s.name];return "<li>"+esc(s.name)+(c?" <small class='mute'>("+c.pyqs+" PYQs, "+A.fmt(c.marks)+" marks)</small>":"")+"</li>"}).join("")+"</ul>"
+    +'<div class="box"><p>This topic is not written yet. It covers weeks '+m.weeks.join(", ")+(C.pyqs?" and carries "+C.pyqs+" PYQs worth "+A.fmt(C.marks)+" marks in "+esc(A.examLabel(A.exam())):"")+'.</p><h3 class="h3">What it will cover</h3><ul>'+(m.subs||[]).map(function(s){var c=(C.subs||{})[s.name];return "<li>"+A.inline(s.name)+(c?" <small class='mute'>("+c.pyqs+" PYQ"+(c.pyqs===1?"":"s")+", "+A.fmt(c.marks)+" marks)</small>":"")+"</li>"}).join("")+"</ul>"
     +(rf.length?'<h3 class="h3">Until then, the short refresher</h3><div class="rfs">'+rf.map(refresherCard).join("")+"</div>":"")+'<p><a class="btn" href="#home">Back to the course</a></p></div></div>';
 }
 /* ---------- topic page ---------- */
@@ -85,6 +85,7 @@ A.pages.topic=function(root,parts){
   if(view==="lesson"){cur=secs.findIndex(function(x){return x.id===parts[2]});if(cur<0)view=""}
   if(view==="sub"){subId=parts[2]}
   var tabView=view==="lesson"||view===""?"learn":view==="sub"?"pyqs":view;
+  if(view==="test#checklist")tabView="test";
   var st=A.topicStats(m),base="#topic/"+id,pyqs=A.pyqsOf(id,ex);
   var wrap=el("div","topic"),head=el("header","t-head");
   var mins=secs.reduce(function(a,s){return a+A.sectionMins(s)},0)+pyqs.reduce(function(a,q){return a+(q.seconds||180)/60},0)+(t.test||[]).length*2;
@@ -136,6 +137,8 @@ A.pages.topic=function(root,parts){
     pane.appendChild(nav);
   }
   root.appendChild(wrap);A.math(wrap);
+  if(cur>=0&&window.innerWidth<900)A._after=function(){var a=wrap.querySelector(".lesson");if(a)a.scrollIntoView({block:"start",behavior:"instant"})};
+  if(tabView==="test"&&/#checklist$/.test(location.hash))A._after=function(){var c=wrap.querySelector(".checklist");if(c)c.scrollIntoView({block:"start",behavior:"instant"})};
 };
 /* ---------- scope pill (this exam only / all course) ---------- */
 A.scopePill=function(onChange){
@@ -146,15 +149,16 @@ A.scopePill=function(onChange){
 };
 function buildPyqs(sp,t,m,subId,focus){
   var S=A.load(),ex=A.exam(),all=A.pyqsOf(t.id,ex),pk=A.packOf(t.id,ex)||{};
-  sp.insertAdjacentHTML("beforeend",'<h2 class="pane-h">Past questions'+(subId?": "+esc((m.subs.find(function(s){return s.id===subId})||{}).name||subId):"")+'</h2><p class="sub">Try each question before opening the solution. Hints go from what to look for to the first move.</p>');
+  sp.insertAdjacentHTML("beforeend",'<h2 class="pane-h">Past questions'+(subId?": "+A.inline((m.subs.find(function(s){return s.id===subId})||{}).name||subId):"")+'</h2><p class="sub">Try each question before opening the solution. Hints go from what to look for to the first move.</p>');
   var sc=A.scopePill(function(){A._keepScroll=true;A.route()});if(sc)sp.appendChild(sc);
   if(!all.length){sp.appendChild(el("div","box","<p>No PYQs for this topic in "+esc(A.examLabel(ex))+" yet.</p>"));return}
   if(pk.patterns&&pk.patterns.length)sp.appendChild(el("div",null,'<h3 class="h3">Patterns and your first move</h3><div class="patterns">'+pk.patterns.map(function(p){return '<div class="pat"><b>'+esc(p.name)+"</b><span>"+A.inline(p.cue||"")+"</span><span><i>First move:</i> "+A.inline(p.firstMove||"")+"</span><small>"+esc(p.count)+" PYQs</small></div>"}).join("")+"</div>"));
   var subs=(m.subs||[]).filter(function(s){return all.some(function(q){return q.sub===s.id})});
   var f=el("div","filters"),papers=[];all.forEach(function(q){if(papers.indexOf(q.paper)<0)papers.push(q.paper)});
+  papers.sort(function(a,b){return A.paperTime(a)-A.paperTime(b)});
   f.innerHTML='<label>Paper <select id="f-paper" class="field"><option value="">All</option>'+papers.map(function(p){return "<option>"+esc(p)+"</option>"}).join("")+'</select></label><label class="chk"><input type="checkbox" id="f-hide"> Hide solved</label><span id="f-count" class="mute"></span>';
   sp.appendChild(f);
-  if(!subId)sp.appendChild(el("p","subnav","Sub-topics: "+subs.map(function(s){return '<a href="#topic/'+t.id+"/sub/"+s.id+'">'+esc(s.name)+"</a>"}).join(" · ")));
+  if(!subId)sp.appendChild(el("p","subnav","Sub-topics: "+subs.map(function(s){return '<a href="#topic/'+t.id+"/sub/"+s.id+'">'+A.inline(s.name)+"</a>"}).join(" · ")));
   var groups=el("div");sp.appendChild(groups);
   function filt(q){var fp=$("#f-paper",f).value,fh=$("#f-hide",f).checked;return (!fp||q.paper===fp)&&!(fh&&S.ans[q.uid]&&S.ans[q.uid].ok)}
   function updCount(){var s=all.filter(function(q){return S.ans[q.uid]&&S.ans[q.uid].ok}).length;$("#f-count",f).textContent=all.filter(filt).length+" shown · "+s+" of "+all.length+" solved"}
@@ -163,7 +167,7 @@ function buildPyqs(sp,t,m,subId,focus){
     var qs=all.filter(function(q){return q.sub===s.id}),marks=qs.reduce(function(a,q){return a+(+q.marks||0)},0),d=el("details","pgroup");
     var fq=focus&&qs.find(function(q){return q.id===focus||q.uid===focus});
     d.open=subId?true:fq?true:gi===0;
-    d.innerHTML='<summary><span>'+esc(s.name)+"</span><small>"+qs.length+" PYQs, "+A.fmt(marks)+" marks</small></summary><div class='gb'></div>";
+    d.innerHTML='<summary><span>'+A.inline(s.name)+"</span><small>"+qs.length+" PYQ"+(qs.length===1?"":"s")+", "+A.fmt(marks)+" marks</small></summary><div class='gb'></div>";
     function fill(){var box=d.querySelector(".gb");box.innerHTML="";var list=qs.filter(filt);if(!list.length)box.innerHTML='<p class="mute">No questions match the filters.</p>';list.forEach(function(q){var c=A.qcard(q,{onDone:updCount});c.id="q-"+q.id;box.appendChild(c)})}
     d._fill=fill;d.addEventListener("toggle",function(){if(d.open&&!d._done){d._done=true;fill()}});if(d.open){d._done=true;fill()}
     groups.appendChild(d);dets.push(d);
