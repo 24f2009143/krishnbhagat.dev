@@ -176,7 +176,7 @@ Object.keys(APP.packs).forEach(ex => Object.keys(APP.packs[ex]).forEach(tid => {
     ["id", "uid", "exam", "paper", "date", "qno", "marks", "type", "concept", "sub", "sec", "seconds", "tag", "stem", "sol"].forEach(f => { if (q[f] == null || q[f] === "") E(w, "missing " + f) });
     if (typeof q.id !== "string") E(w, "bank id must be a string");
     if (q.uid !== ex + ":" + q.id) E(w, "uid must be " + ex + ":" + q.id);
-    if (uids[q.uid]) E(w, "duplicate uid"); uids[q.uid] = 1;
+    if (uids[q.uid] && uids[q.uid] !== "fixture" && tid !== "fixture") E(w, "duplicate uid"); uids[q.uid] = tid === "fixture" ? "fixture" : 1;  /* the test fixture reuses five real PYQs */
     if (ids[q.id] && ids[q.id] !== ex) E(w, "bank id also used in exam " + ids[q.id]); ids[q.id] = ex;
     if (!["MCQ", "MSQ", "NUM", "SA", "TF", "COMP"].includes(q.type)) E(w, "bad type " + q.type);
     if (!TAGS.includes(q.tag) || q.tag === "[ADDED]") E(w, "PYQ tag must be [SRC], [DERIVED] or [FLAG]");
