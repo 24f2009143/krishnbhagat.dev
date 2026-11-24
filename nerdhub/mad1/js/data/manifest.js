@@ -37,11 +37,11 @@ APP.manifest={
   {num:8,title:"Database operations",goal:"Create, read, update and delete rows from Flask.",topicIds:["db-sql"],outcomes:["Predict what a query prints"],flag:"Proposed week map; please confirm"}
  ],
  topics:[
-  {id:"web-arch",name:"Web Architecture, Protocols & Rendering",short:"Web architecture",mark:"Web",weeks:[1],status:"planned",uses:[],
+  {id:"web-arch",name:"Web Architecture, Protocols & Rendering",short:"Web architecture",mark:"Web",weeks:[1],status:"ready",uses:[],
    why:"The HTTP request cycle, statelessness, rendering location and scaling vocabulary.",
    subs:[{id:"http-cookies-stateless",name:"HTTP Protocols, Cookies & Stateless Architecture",aliases:["http","cookies","stateless"]},
          {id:"ssr-csr",name:"Server-Side Rendering (SSR) vs. Client-Side Rendering (CSR)",aliases:["ssr","csr","rendering"]},
-         {id:"cloud-scaling",name:"Cloud Models, Scaling, Redundancy & Replication",aliases:["cloud","scaling","replication"]}],expected:{q2:{pyqs:11,marks:23.0}},packs:{},patches:[]},
+         {id:"cloud-scaling",name:"Cloud Models, Scaling, Redundancy & Replication",aliases:["cloud","scaling","replication"]}],expected:{q2:{pyqs:11,marks:23.0}},packs:{q2:["web-arch.js"]},patches:[]},
   {id:"sys-perf",name:"System Performance, Hardware & Encoding",short:"Systems and numbers",mark:"Sys",weeks:[1,2],status:"planned",uses:["web-arch"],
    why:"The numbers behind encoding, time, disks, memory and server capacity.",
    subs:[{id:"bit-encoding",name:"Information Representation & Bit Encoding",aliases:["bits","encoding"]},
