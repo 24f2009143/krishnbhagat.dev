@@ -209,8 +209,17 @@ APP.refreshers.forEach(r => {
 });
 const gt = {}; APP.glossary.forEach(g => { if (!g.term || !g.def) E("glossary", "entry needs term and def"); if (gt[g.term.toLowerCase()]) E("glossary", "duplicate term " + g.term); gt[g.term.toLowerCase()] = 1 });
 /* ---------- every concept: at least 3 questions counting PYQs and [ADDED] practice ---------- */
-/* A topic built in parts gets its PYQs in later parts: until any PYQ of it is loaded the rule is reported, not failed. */
-Object.keys(APP.topics).forEach(id => { const m = M.topics.find(x => x.id === id); if (!m || m.status !== "ready") return; const hasPyqs = Object.keys(APP.packs).some(ex => APP.packs[ex][id] && APP.packs[ex][id].pyqs.length); Object.keys(APP.topics[id].concepts).forEach(c => { const n = (perConcept[id + ":" + c] || []).length; if (n < 3) (hasPyqs ? E : W)("topic-" + id + " concept " + c, "only " + n + " PYQ+practice questions (needs 3)" + (hasPyqs ? "" : "; checked again when its PYQ packs are added")) }) });
+/* A topic built in parts: the rule waits until every PYQ the manifest expects for it is loaded (topics[].expected). */
+Object.keys(APP.topics).forEach(id => {
+  const m = M.topics.find(x => x.id === id); if (!m || m.status !== "ready") return;
+  let loaded = 0, want = 0, marks = 0;
+  Object.keys(APP.packs).forEach(ex => { const pk = APP.packs[ex][id]; if (pk) { loaded += pk.pyqs.length; marks += pk.pyqs.reduce((a, q) => a + (+q.marks || 0), 0) } });
+  Object.keys(m.expected || {}).forEach(ex => { want += m.expected[ex].pyqs || 0 });
+  if (want && loaded > want) E("topic " + id, loaded + " PYQs loaded but the manifest expects " + want);
+  const complete = !m.fixture && want > 0 ? loaded === want : loaded > 0;
+  if (complete && m.expected) Object.keys(m.expected).forEach(ex => { const pk = APP.packs[ex] && APP.packs[ex][id], mk = pk ? pk.pyqs.reduce((a, q) => a + (+q.marks || 0), 0) : 0; if (Math.abs(mk - m.expected[ex].marks) > 1e-9) E("topic " + id, ex + " marks " + mk + " differ from expected " + m.expected[ex].marks) });
+  Object.keys(APP.topics[id].concepts).forEach(c => { const n = (perConcept[id + ":" + c] || []).length; if (n < 3) (complete ? E : W)("topic-" + id + " concept " + c, "only " + n + " PYQ+practice questions (needs 3)" + (complete ? "" : "; " + loaded + " of " + want + " PYQs loaded, checked again when the last pack is added")) });
+});
 /* ---------- counts are generated, never typed ---------- */
 if (!FIX) { const live = JSON.stringify(APP.liveCounts()); const fileTxt = fs.readFileSync(path.join(ROOT, "js/counts.js"), "utf8"); if (fileTxt.indexOf(live) < 0) E("counts.js", "stale: run node tests/gen_counts.js") }
 /* ---------- expected totals per exam (when every topic of the exam is ready) ---------- */

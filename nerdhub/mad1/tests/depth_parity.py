@@ -18,6 +18,8 @@ for tid in ready:
     kinds = [b["t"] for b in blocks]
     ex_per_sec = [sum(1 for b in s.get("core", []) + s.get("deep", []) if b["t"] == "ex") for s in t["sections"]]
     quiz = [len(s.get("quiz", [])) for s in t["sections"]]
+    meta = next(x for x in data["manifest"]["topics"] if x["id"] == tid)
+    want = sum(v.get("pyqs", 0) for v in (meta.get("expected") or {}).values()) or 0
     pyqs = []
     for ex in data["packs"].values():
         pyqs += ex.get(tid, {}).get("pyqs", [])
@@ -33,7 +35,7 @@ for tid in ready:
          "min q/concept": min(per_concept.values() or [0]), "PYQs": len(pyqs), "full PYQ sols": sol_ok}
     checks = [("min ex/section", m["min ex/section"] >= 2), ("quiz 3-4", 3 <= m["quiz min"] and m["quiz max"] <= 4), ("player", m["player"] >= 1),
               ("yourMove", m["yourMove"] >= 1), ("handTrace", m["handTrace"] >= 1), ("interactives", m["interactives"] >= 3),
-              ("flash", m["flash"] >= 8), ("test 6-8", 6 <= m["test"] <= 8), ("q/concept", m["min q/concept"] >= 3 or not pyqs),  # parts without PYQs yet: checked once packs land
+              ("flash", m["flash"] >= 8), ("test 6-8", 6 <= m["test"] <= 8), ("q/concept", m["min q/concept"] >= 3 or len(pyqs) < want),  # checked once every expected PYQ is loaded
               ("PYQ sols", m["full PYQ sols"] == m["PYQs"])]
     met = sum(1 for _, ok in checks if ok)
     for name, ok in checks:
@@ -50,8 +52,10 @@ for score, tid, m in rows:
 w = min(rows, key=lambda r: (r[0], r[2]["min ex/section"] + r[2]["flash"]))
 print("weakest topic: %s (%d%% of minimums met)" % (w[1], round(100 * w[0])))
 for score, tid, m in rows:
-    if not m["PYQs"]:
-        print("note: %s has no PYQ pack yet; questions per concept are checked when packs are added" % tid)
+    meta = next(x for x in data["manifest"]["topics"] if x["id"] == tid)
+    want = sum(v.get("pyqs", 0) for v in (meta.get("expected") or {}).values())
+    if want and m["PYQs"] < want:
+        print("note: %s has %d of %d PYQs; questions per concept are checked when the last pack is added" % (tid, m["PYQs"], want))
 for f in fails:
     print("FAIL " + f)
 sys.exit(1 if fails else 0)
