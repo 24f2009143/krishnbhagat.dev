@@ -152,7 +152,7 @@ function buildPyqs(sp,t,m,subId,focus){
   sp.insertAdjacentHTML("beforeend",'<h2 class="pane-h">Past questions'+(subId?": "+A.inline((m.subs.find(function(s){return s.id===subId})||{}).name||subId):"")+'</h2><p class="sub">Try each question before opening the solution. Hints go from what to look for to the first move.</p>');
   var sc=A.scopePill(function(){A._keepScroll=true;A.route()});if(sc)sp.appendChild(sc);
   if(!all.length){sp.appendChild(el("div","box","<p>No PYQs for this topic in "+esc(A.examLabel(ex))+" yet.</p>"));return}
-  if(pk.patterns&&pk.patterns.length)sp.appendChild(el("div",null,'<h3 class="h3">Patterns and your first move</h3><div class="patterns">'+pk.patterns.map(function(p){return '<div class="pat"><b>'+esc(p.name)+"</b><span>"+A.inline(p.cue||"")+"</span><span><i>First move:</i> "+A.inline(p.firstMove||"")+"</span><small>"+esc(p.count)+" PYQs</small></div>"}).join("")+"</div>"));
+  if(pk.patterns&&pk.patterns.length)sp.appendChild(el("div",null,'<h3 class="h3">Patterns and your first move</h3><div class="patterns">'+pk.patterns.map(function(p){return '<div class="pat"><b>'+esc(p.name)+"</b><span>"+A.inline(p.cue||"")+"</span><span><i>First move:</i> "+A.inline(p.firstMove||"")+"</span><small>"+esc(p.count)+" PYQ"+(+p.count===1?"":"s")+"</small></div>"}).join("")+"</div>"));
   var subs=(m.subs||[]).filter(function(s){return all.some(function(q){return q.sub===s.id})});
   var f=el("div","filters"),papers=[];all.forEach(function(q){if(papers.indexOf(q.paper)<0)papers.push(q.paper)});
   papers.sort(function(a,b){return A.paperTime(a)-A.paperTime(b)});
