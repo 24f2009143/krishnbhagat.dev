@@ -6,7 +6,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from assertlib import check, run_py, out_of, eq, main  # noqa: E402
 
 RUNNER = r'''
-import json, os, flask
+import json, os, sys, flask
+if ARGV:
+    sys.argv = ARGV
 for _p, _t in FILES.items():
     os.makedirs(os.path.dirname(_p) or ".", exist_ok=True)
     open(_p, "w").write(_t)
@@ -25,11 +27,11 @@ print(json.dumps(out))
 HEAD = "from flask import Flask, request, abort, redirect, url_for\napp = Flask(__name__)\n"
 
 
-def flask(app_src, reqs, files=None):
+def flask(app_src, reqs, files=None, argv=None):
     """reqs: list of (method, url) or (method, url, kwargs, follow). files: {relative path: text} written first
     (templates/...). Returns list of dicts."""
     norm = [(r[0], r[1], r[2] if len(r) > 2 else {}, r[3] if len(r) > 3 else False) for r in reqs]
-    src = "APP_SRC = %r\nREQS = %r\nFILES = %r\n" % (app_src, norm, files or {}) + RUNNER
+    src = "APP_SRC = %r\nREQS = %r\nFILES = %r\nARGV = %r\n" % (app_src, norm, files or {}, argv) + RUNNER
     o, e, rc = run_py(src)
     if rc != 0:
         raise AssertionError("app failed: " + e[-600:])
@@ -746,6 +748,179 @@ def tr_add_empty():
 def tr_invalid_red():
     html = CODE["6406531021280"][0].replace("input:valid {border: 2px solid red;}", "input:invalid {border: 2px solid red;}")
     eq(render(html, "getComputedStyle(document.querySelector('input')).borderTopColor"), "rgb(255, 0, 0)", "blank field red")
+
+
+# ================= part 3: PYQs request-params (14, two comprehension sets)
+PARENT_COURSE = CODE["parent:640653856973"][0]
+PARENT_USERS = CODE["parent:640653856980"][0]
+
+
+@check("Tflask-core-95")
+def pyq_640653586806():
+    app = "from flask import Flask, request\napp = Flask(__name__)\n" + CODE["640653586806"][0]
+    r = flask(app, [("GET", u) for u in ("/student/Electrical/Diploma/MAD1", "/Electrical/Diploma/MAD1", "/student?dept=Electrical&level=Diploma&course=MAD1", "/?endpoint=student&dept=Electrical&level=Diploma&course=MAD1")])
+    eq(st(r), [404, 404, 200, 404], "status"); eq(json.loads(r[2]["body"]), {"Department": "Electrical", "Course-level": "Diploma", "Course": "MAD1"}, "C body")
+
+
+@check("Tflask-core-96")
+def pyq_6406531173005():
+    r = flask(CODE["6406531173005"][0], [("GET", u) for u in ("/response/n=6", "/response/", "/response&n=6", "/response?n=6")])
+    eq(st(r), [404, 404, 404, 200], "status")
+    eq(r[3]["body"], "even : 1\nodd : 2\neven : 3\nodd : 4\neven : 5\nodd : 6\n", "D body (is_odd really tests for even)")
+
+
+@check("Tflask-core-97")
+def pyq_6406531325146():
+    eq(bodies(flask(CODE["6406531325146"][0], [("GET", "/signin?uid=professor&pwd=54321")])), ["You are unauthorized!!"], "body")
+
+
+@check("Tflask-core-98")
+def pyq_6406532035112():
+    eq(bodies(flask(CODE["6406532035112"][0], [("GET", "/welcome?user=Alice&role=ADMIN")])), ["Hello ALICE! Your role is admin."], "body")
+
+
+@check("Tflask-core-99")
+def pyq_640653586810():
+    r = flask(CODE["640653586810"][0], [("GET", u) for u in ("/?num=abc", "/?num=", "/?num=12")])
+    eq(bodies(r), ["<html><body><h1>Enter a valid number</h1></body></html>", "<html><body> <h1>Invalid number</h1></body></html>", "<html><body> <h1>The output is 144</h1></body></html>"], "bodies")
+
+
+@check("Tflask-core-100")
+def pyq_640653771130():
+    r = flask(CODE["640653771130"][0], [("GET", u) for u in ("/?uname=MAD-II", "/process", "/process?uname", "/process?uname=101MU")])
+    eq(st(r), [404, 200, 200, 200], "status")
+    eq(bodies(r)[1:], ["<h1>Valid Username: MAD-I</h1>", "<h1>Valid Username: </h1>", "<h1>Valid Username: 101MU</h1>"], "bodies")
+
+
+@check("Tflask-core-101")
+def pyq_640653771131():
+    r = flask(CODE["640653771131"][0], [("GET", u) for u in ("/MAD-I?id=CS2003", "/course/Java?id=CS2005", "/course?course_name=MAD-II&id=CS2004", "/course/MAD-II?id=CS2003")])
+    eq(st(r), [404, 200, 404, 400], "status"); eq(r[1]["body"], "<h1>The Course ID for Java is: CS2005</h1>", "B")
+    eq("Bad Request: Invalid data" in r[3]["body"], True, "D message")
+
+
+@check("Tflask-core-102")
+def pyq_640653856972():
+    r = flask(CODE["640653856972"][0], [("GET", u) for u in ("/home?method=GET", "/home?method=POST", "/home")])
+    eq(st(r), [200, 200, 200], "status"); eq(r[2]["body"], "Invalid Method", "C/D")
+    probe = "(function(){var n=[...document.body.querySelectorAll('p,span')].find(function(x){return x.textContent==='MADRAS'});var g=document.createRange();g.selectNodeContents(n);var b=g.getBoundingClientRect();return [Math.round(b.top),Math.round(b.left),Math.round(b.width),getComputedStyle(n).color,getComputedStyle(n).fontWeight]})()"
+    eq(render(r[0]["body"], probe), render(r[1]["body"], probe), "MADRAS drawn at the same place, size, colour and weight")
+
+
+@check("Tflask-core-103")
+def pyq_6406531021275():
+    r = flask(CODE["6406531021275"][0], [("GET", u) for u in ("/PDSA?id=CS2003", "/course/Java?id=CS2005", "/course?course_name=DBMS&id=CS2004", "/course/DBMS?id=CS2003")])
+    eq(st(r), [404, 200, 404, 400], "status")
+
+
+@check("Tflask-core-104")
+def pyq_6406532035121():
+    bad = {"uid": "admin", "pwd": "xyz"}; good = {"uid": "admin", "pwd": "12345"}
+    r = flask(CODE["6406532035121"][0], [("POST", "/login", {"json": bad}), ("GET", "/login", {"json": bad}), ("GET", "/login"), ("POST", "/login", {"json": good}), ("POST", "/login", {"json": good})])
+    eq(st(r), [200, 405, 405, 200, 200], "A-E (curl --json without -X is POST)"); eq((r[0]["body"], r[3]["body"]), ("Invalid credentials...", "Welcome Admin!"), "bodies")
+
+
+@check("Tflask-core-105")
+def curl_json_is_post():
+    eq(subprocess.run(["curl", "--version"], capture_output=True, text=True).returncode, 0, "curl present")
+    o = subprocess.run(["curl", "-s", "-o", "/dev/null", "-w", "%{method}", "--json", '{"a":1}', "http://127.0.0.1:9/"], capture_output=True, text=True).stdout
+    eq(o, "POST", "curl --json uses POST")
+    o = subprocess.run(["curl", "-s", "-o", "/dev/null", "-w", "%{method}", "-X", "GET", "--json", '{"a":1}', "http://127.0.0.1:9/"], capture_output=True, text=True).stdout
+    eq(o, "GET", "-X GET overrides")
+
+
+@check("Tflask-core-106")
+def pyq_640653856975():
+    argv = ["app.py"] + shlex.split("Application Development DBMS")
+    r = flask(PARENT_COURSE, [("GET", "/?course=DBMS"), ("GET", "/course?course=DBMS")], argv=argv)
+    eq(r[0]["status"], 404, "URL has no /course path: Not Found"); eq(r[1]["body"], "Welcome to DBMS!", "with the /course path it would be")
+
+
+@check("Tflask-core-107")
+def pyq_640653856974():
+    res = []
+    for cmd, url in (("Application Development Java", "/course?course=Java"), ("Application Development Java", "/course=Application Development"),
+                     ('"Application Development" Java', "/course?course=Java"), ('"Application Development" DBMS', "/course?course=Application%20Development")):
+        r = flask(PARENT_COURSE, [("GET", url)], argv=["app.py"] + shlex.split(cmd))[0]
+        res.append(r["body"] if r["status"] == 200 else r["status"])
+    eq(res, ["Welcome to Java!", 404, "Welcome to Application Development!", "Welcome to Application Development!"], "A-D")
+
+
+@check("Tflask-core-108")
+def pyq_640653856982():
+    r = flask(PARENT_USERS, [("GET", u) for u in ("/104", "/user/104", "/?id=104", "/user?id=104")])
+    eq(st(r), [404, 200, 404, 200], "status")
+    eq(json.loads(r[3]["body"]), {"id": "104", "name": "Robert", "city": "Delhi"}, "D comes from get_user")
+
+
+@check("Tflask-core-109")
+def pyq_640653856981():
+    r = flask(PARENT_USERS, [("GET", u) for u in ("/103", "/user/103", "/?id=103", "/user?id=103")])
+    eq(st(r), [404, 200, 404, 200], "status"); eq(json.loads(r[1]["body"])["name"], "Rahim", "user 103")
+
+
+# ---- transfers of part 3
+@check("Tflask-core-110")
+def tr_student_missing():
+    app = "from flask import Flask, request\napp = Flask(__name__)\n" + CODE["640653586806"][0]
+    eq(st(flask(app, [("GET", "/student?dept=Electrical&level=Diploma")])), [400], "missing course")
+
+
+@check("Tflask-core-111")
+def tr_response_3():
+    eq(bodies(flask(CODE["6406531173005"][0], [("GET", "/response?n=3")])), ["even : 1\nodd : 2\neven : 3"], "body")
+
+
+@check("Tflask-core-112")
+def tr_signin_student():
+    eq(bodies(flask(CODE["6406531325146"][0], [("GET", "/signin?uid=student&pwd=12345")])), ["You are authorized!!"], "body")
+
+
+@check("Tflask-core-113")
+def tr_welcome_default():
+    eq(bodies(flask(CODE["6406532035112"][0], [("GET", "/welcome")])), ["Hello GUEST! Your role is member."], "body")
+
+
+@check("Tflask-core-114")
+def tr_num_missing():
+    eq(st(flask(CODE["640653586810"][0], [("GET", "/")])), [400], "status")
+
+
+@check("Tflask-core-115")
+def tr_uname_digits():
+    r = flask(CODE["640653771130"][0], [("GET", "/process?uname=2024")])
+    eq((r[0]["status"], "Bad Request: Numeric username provided" in r[0]["body"]), (400, True), "abort")
+
+
+@check("Tflask-core-116")
+def tr_course_noid():
+    eq(st(flask(CODE["640653771131"][0], [("GET", "/course/Java")])), [400], "status")
+
+
+@check("Tflask-core-117")
+def tr_home_get_lower():
+    eq(bodies(flask(CODE["640653856972"][0], [("GET", "/home?method=get")])), ["Invalid Method"], "case-sensitive comparison")
+
+
+@check("Tflask-core-118")
+def tr_login_put():
+    eq(st(flask(CODE["6406532035121"][0], [("PUT", "/login", {"json": {"uid": "admin", "pwd": "12345"}})])), [405], "status")
+
+
+@check("Tflask-core-119")
+def tr_argv_java_dbms():
+    r = flask(PARENT_COURSE, [("GET", "/course?course=DBMS")], argv=["app.py", "Java", "DBMS"])
+    eq(r[0]["body"], "Welcome to Java!", "argv[1] wins")
+
+
+@check("Tflask-core-120")
+def tr_user_999():
+    eq(st(flask(PARENT_USERS, [("GET", "/user/999")])), [500], "None from the view")
+
+
+@check("Tflask-core-121")
+def tr_java_lower():
+    eq(st(flask(CODE["6406531021275"][0], [("GET", "/course/java?id=CS2005")])), [400], "status")
 
 if __name__ == "__main__":
     main()
