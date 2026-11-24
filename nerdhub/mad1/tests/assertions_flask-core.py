@@ -6,7 +6,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from assertlib import check, run_py, out_of, eq, main  # noqa: E402
 
 RUNNER = r'''
-import json, flask
+import json, os, flask
+for _p, _t in FILES.items():
+    os.makedirs(os.path.dirname(_p) or ".", exist_ok=True)
+    open(_p, "w").write(_t)
 flask.Flask.run = lambda *a, **k: None
 from flask import *
 ns = {"__name__": "appmod"}
@@ -22,10 +25,11 @@ print(json.dumps(out))
 HEAD = "from flask import Flask, request, abort, redirect, url_for\napp = Flask(__name__)\n"
 
 
-def flask(app_src, reqs):
-    """reqs: list of (method, url) or (method, url, kwargs, follow). Returns list of dicts."""
+def flask(app_src, reqs, files=None):
+    """reqs: list of (method, url) or (method, url, kwargs, follow). files: {relative path: text} written first
+    (templates/...). Returns list of dicts."""
     norm = [(r[0], r[1], r[2] if len(r) > 2 else {}, r[3] if len(r) > 3 else False) for r in reqs]
-    src = "APP_SRC = %r\nREQS = %r\n" % (app_src, norm) + RUNNER
+    src = "APP_SRC = %r\nREQS = %r\nFILES = %r\n" % (app_src, norm, files or {}) + RUNNER
     o, e, rc = run_py(src)
     if rc != 0:
         raise AssertionError("app failed: " + e[-600:])
@@ -525,6 +529,223 @@ def t_course():
     r = flask(src, [("GET", u) for u in ("/course/MAD?id=7", "/course?name=MAD&id=7", "/course/MAD", "/MAD?id=7")])
     eq(st(r), [200, 404, 200, 404], "status"); eq((r[0]["body"], r[2]["body"]), ("MAD 7", "MAD ?"), "bodies")
 
+
+
+# ================= part 2: PYQs routing-urlfor (12) and forms-validation (3); code from the bank, verbatim
+import subprocess  # noqa: E402
+from bank_code_q2 import CODE  # noqa: E402
+HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+def placeholder(qid, expr):
+    """Run a PYQ whose code has '#== print statement ==#' with expr substituted; errors print their class name."""
+    src = CODE[qid][0].replace("    #== print statement ==#", "    try:\n        print(%s)\n    except Exception as e:\n        print(type(e).__name__)" % expr)
+    return out_of(src)
+
+
+def render(html, expr):
+    with open(os.path.join(HERE, "_render_tmp.html"), "w") as f:
+        f.write(html)
+    try:
+        o = subprocess.run(["node", os.path.join(HERE, "render_html.js"), os.path.join(HERE, "_render_tmp.html"), expr], capture_output=True, text=True, timeout=60).stdout
+    finally:
+        os.remove(os.path.join(HERE, "_render_tmp.html"))
+    return json.loads(o)
+
+
+@check("Tflask-core-65")
+def pyq_640653586796():
+    r = flask(CODE["640653586796"][0], [("GET", "/home"), ("GET", "/work")])
+    eq(st(r), [200, 200], "both endpoints"); eq(r[0]["body"], "<h1>Hello! Reporting for my task</h1>", "body")
+
+
+@check("Tflask-core-66")
+def pyq_640653771135():
+    eq(st(flask(CODE["640653771135"][0], [("GET", "/greet/")])), [404], "status")
+
+
+@check("Tflask-core-67")
+def pyq_640653351985():
+    app, tpl = CODE["640653351985"]
+    files = {"templates/index.html": tpl}
+    r = flask(app, [("GET", "/XYZ/"), ("GET", "/second_index"), ("GET", "/ABC/"), ("GET", "/first_index/XYZ"), ("GET", "/first_index/ABC")], files)
+    eq((r[0]["status"], r[0]["body"]), (200, "Hi XYZ! This is your home page."), "A: /XYZ/")
+    eq('href="/ABC/"' in r[1]["body"], True, "B: Go back link points to /ABC/")
+    eq(r[2]["body"], "Hi ABC! This is your home page.", "B: page behind the link")
+    eq((r[3]["status"], r[3]["location"]), (302, "/XYZ/"), "C: /first_index/XYZ")
+    eq((r[4]["status"], r[4]["location"]), (302, "/second_index"), "D: /first_index/ABC")
+
+
+@check("Tflask-core-68")
+def pyq_640653586804():
+    got = [placeholder("640653586804", e) for e in ("url_for('home')", "url_for('profile', username='Harry')", "url_for('profile', username='Harry', next='course')", "url_for('index', username='Harry')")]
+    eq(got, ["BuildError", "/user/Harry", "/user/Harry?next=course", "/home?username=Harry"], "outputs")
+
+
+@check("Tflask-core-69")
+def pyq_640653690103():
+    got = [placeholder("640653690103", e) for e in ("url_for('index')", "url_for('profile', student_name='John', student_id= 101)", "url_for('profile', student_name='John', student_id=101)")]
+    eq(got, ["/home", "/student/John/101", "/student/John/101"], "outputs")
+
+
+@check("Tflask-core-70")
+def pyq_6406531021283():
+    r = flask(CODE["6406531021283"][0], [("GET", "/"), ("GET", "/numbers/5"), ("GET", "/7")])
+    eq(bodies(r)[:2], ["0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10", "0, 1, 2, 3, 4, 5"], "A, B"); eq(r[2]["status"], 404, "C/D: /7")
+
+
+@check("Tflask-core-71")
+def pyq_6406531173010():
+    r = flask(CODE["6406531173010"][0], [("GET", u) for u in ("/user/2001", "/user/id=2001", "/id=2001", "/2001")])
+    eq(st(r), [200, 200, 404, 404], "status"); eq(r[1]["body"], "User Id : id=2001", "B body")
+
+
+@check("Tflask-core-72")
+def pyq_6406531173013():
+    r = flask(CODE["6406531173013"][0], [("GET", u) for u in ("/user/John", "/user/07", "/profile/10", "/user/")])
+    eq(st(r), [200, 200, 200, 404], "status"); eq(bodies(r)[:3], ["Hello, John!", "Hello, 07!", "User Profile ID: 10"], "bodies")
+
+
+@check("Tflask-core-73")
+def pyq_6406531173015():
+    r = flask(CODE["6406531173015"][0], [("GET", "/choice/for"), ("GET", "/choice/if")])
+    eq(bodies(r), ["/for", "/if"], "bodies")
+
+
+@check("Tflask-core-74")
+def pyq_6406532035113():
+    res = []
+    for rule in ('"/user/id"', '"/user/<int:id>"', '"/user/<id>"', '"/user/<float:id>"'):
+        arg = "id" if "<" in rule else ""
+        res.append(flask(HEAD + "@app.route(%s)\ndef u(%s):\n    return 'ok'\n" % (rule, arg), [("GET", "/user/55")])[0]["status"])
+    eq(res, [404, 200, 200, 404], "A-D")
+
+
+@check("Tflask-core-75")
+def pyq_6406532035120():
+    r = flask(CODE["6406532035120"][0], [("GET", u) for u in ("/user/IITM", "/user/101", "/user/10/greet", "/user", "/user/BS?id=101")])
+    eq(st(r), [200, 200, 404, 404, 200], "status"); eq(r[4]["body"], "<p>Welcome BS</p>", "E body")
+
+
+@check("Tflask-core-76")
+def pyq_640653586809():
+    r = flask(CODE["640653586809"][0], [("GET", "/user/admin?guest=appdev1"), ("GET", "/user/admin?guest=appdev1", {}, True)])
+    eq((r[0]["status"], r[0]["location"]), (302, "/admin"), "redirect"); eq(r[1]["body"], "Hello Admin", "final (bank key: Hello Admin)")
+
+
+FORM_HEAD = "from flask import Flask, request, redirect, url_for, render_template\napp = Flask(__name__)\n"
+
+
+@check("Tflask-core-77")
+def pyq_640653586802():
+    app = FORM_HEAD + CODE["640653586802"][0]
+    r = flask(app, [("GET", "/signup"), ("POST", "/signup", {"data": {"username": "ana", "password": "abcdefgh"}}), ("POST", "/signup", {"data": {"username": "ana", "password": "abc"}})])
+    eq((r[0]["status"], "required minlength=\"8\"" in r[0]["body"]), (200, True), "GET returns the form with HTML5 attributes")
+    eq(r[1]["body"], "<h1>Welcome, ana!</h1>", "valid POST")
+    eq(r[2]["status"], 500, "short password: url_for(signup) gets a function, not a name, so the redirect fails")
+
+
+@check("Tflask-core-78")
+def pyq_640653690116():
+    app = FORM_HEAD + CODE["640653690116"][0]
+    r = flask(app, [("GET", "/add"), ("POST", "/add", {"data": {"name": "", "category": "x"}}), ("POST", "/add", {"data": {"name": "Pen", "category": "Stationery"}})])
+    eq(('minlength="2"' in r[0]["body"], "required" in r[0]["body"]), (True, True), "frontend attributes")
+    eq((r[1]["status"], r[1]["location"]), (302, "/add"), "backend check redirects"); eq(r[2]["body"], "Product Pen is added in Stationery category.", "valid")
+
+
+@check("Tflask-core-79")
+def pyq_6406531021280():
+    html, route = CODE["6406531021280"]
+    app = FORM_HEAD + route
+    r = flask(app, [("POST", "/submit_form", {"data": {"e-mail": "a@b.c"}}), ("POST", "/submit_form", {"data": {"e-mail": "abc"}})], {"templates/form.html": html})
+    eq(r[0]["body"], "Form is validated", "backend accepts @"); eq("<form" in r[1]["body"], True, "backend rejects: form again")
+    v = render(html, "[getComputedStyle(document.querySelector('input')).borderTopColor, document.querySelector('input').matches(':invalid')]")
+    eq(v, ["rgb(118, 118, 118)", True], "blank required input is :invalid, so the :valid red border does not apply")
+
+
+# ---- transfer questions of part 2
+@check("Tflask-core-80")
+def tr_work_case():
+    eq(st(flask(CODE["640653586796"][0], [("GET", "/Work")])), [404], "status")
+
+
+@check("Tflask-core-81")
+def tr_greet_slash():
+    eq(st(flask(CODE["640653771135"][0], [("GET", "/greet/Ravi/"), ("GET", "/greet/Ravi")])), [404, 200], "status")
+
+
+@check("Tflask-core-82")
+def tr_first_index_abc():
+    app, tpl = CODE["640653351985"]
+    r = flask(app, [("GET", "/first_index/abc", {}, True)], {"templates/index.html": tpl})
+    eq("You are on the incorrect page." in r[0]["body"], True, "final page")
+
+
+@check("Tflask-core-83")
+def tr_urlfor_page():
+    eq(placeholder("640653586804", "url_for('profile', username='Harry', page=2)"), "/user/Harry?page=2", "url_for")
+
+
+@check("Tflask-core-84")
+def tr_student_year():
+    eq(placeholder("640653690103", "url_for('profile', student_name='Asha', student_id=7, year=2)"), "/student/Asha/7?year=2", "url_for")
+
+
+@check("Tflask-core-85")
+def tr_numbers_3():
+    r = flask(CODE["6406531021283"][0], [("GET", "/numbers/3"), ("GET", "/numbers/-2")])
+    eq((r[0]["body"], r[1]["status"]), ("0, 1, 2, 3", 404), "results")
+
+
+@check("Tflask-core-86")
+def tr_user_slash():
+    eq(st(flask(CODE["6406531173010"][0], [("GET", "/user/7/")])), [404], "status")
+
+
+@check("Tflask-core-87")
+def tr_profile_abc():
+    eq(st(flask(CODE["6406531173013"][0], [("GET", "/profile/abc")])), [404], "status")
+
+
+@check("Tflask-core-88")
+def tr_choice_while():
+    eq(st(flask(CODE["6406531173015"][0], [("GET", "/choice/while")])), [500], "status")
+
+
+@check("Tflask-core-89")
+def tr_user_float():
+    res = []
+    for rule in ('"/user/<int:id>"', '"/user/<float:id>"', '"/user/<id>"', '"/user/<path:id>"'):
+        res.append(flask(HEAD + "@app.route(%s)\ndef u(id):\n    return 'ok'\n" % rule, [("GET", "/user/5.5")])[0]["status"])
+    eq(res, [404, 200, 200, 200], "A-D")
+
+
+@check("Tflask-core-90")
+def tr_user_iitm_slash():
+    eq(st(flask(CODE["6406532035120"][0], [("GET", "/user/IITM/")])), [404], "status")
+
+
+@check("Tflask-core-91")
+def tr_guest_ravi():
+    eq(bodies(flask(CODE["640653586809"][0], [("GET", "/user/Ravi?guest=x", {}, True)])), ["Hello Ravi as Guest"], "final")
+
+
+@check("Tflask-core-92")
+def tr_signup_short():
+    r = flask(FORM_HEAD + CODE["640653586802"][0], [("POST", "/signup", {"data": {"username": "ana", "password": "abc"}})])
+    eq(r[0]["status"], 500, "status")
+
+
+@check("Tflask-core-93")
+def tr_add_empty():
+    r = flask(FORM_HEAD + CODE["640653690116"][0], [("POST", "/add", {"data": {"name": "", "category": "Toys"}})])
+    eq((r[0]["status"], r[0]["location"]), (302, "/add"), "redirect")
+
+
+@check("Tflask-core-94")
+def tr_invalid_red():
+    html = CODE["6406531021280"][0].replace("input:valid {border: 2px solid red;}", "input:invalid {border: 2px solid red;}")
+    eq(render(html, "getComputedStyle(document.querySelector('input')).borderTopColor"), "rgb(255, 0, 0)", "blank field red")
 
 if __name__ == "__main__":
     main()
