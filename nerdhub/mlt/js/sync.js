@@ -44,7 +44,7 @@
       chip.textContent = user.email.split('@')[0] + (msg ? ' · ' + msg : lastOk ? ' · synced ' + when : '');
       chip.title = 'Signed in as ' + user.email + '. Click to sign out.';
     }
-    function wallShow() { if (window.NH_WALL) NH_WALL.show(wallMsg || 'Sign in with your IITM student Google account to use this site.', 'Sign in with Google', () => chip.click()); }
+    function wallShow() { if (window.NH_WALL) NH_WALL.show(wallMsg || 'Sign in with your Google account to use this site.', 'Sign in with Google', () => chip.click()); }
     function say(t) { const el = document.getElementById('toast'); if (el) { el.textContent = t; el.classList.add('on'); setTimeout(() => el.classList.remove('on'), 3000); } }
 
     function replaceLocal(state) {
@@ -80,7 +80,7 @@
     window.addEventListener('mltq-saved', schedulePush);
     document.addEventListener('visibilitychange', () => { if (!document.hidden && user && Date.now() - lastPull > 60000) pull(); });
     chip.addEventListener('click', async () => {
-      if (!user) { if (!window.confirm('Sign in with your IITM student Google account to sync your progress.\n\nYour study progress and quiz answers are stored in a database run by the site owner (Krishn Bhagat) and are visible to him. Nothing else is collected. Continue?')) return; try { await adapter.signIn(); } catch (e) { say('Sign-in was cancelled or failed.'); } return; }
+      if (!user) { if (!window.confirm('Sign in with your Google account to sync your progress.\n\nYour study progress and quiz answers are stored in a database run by the site owner (Krishn Bhagat) and are visible to him. Nothing else is collected. Continue?')) return; try { await adapter.signIn(); } catch (e) { say('Sign-in was cancelled or failed.'); } return; }
       if (window.confirm('Sign out? Your progress stays on this device and in your cloud copy.')) await adapter.signOut();
     });
 

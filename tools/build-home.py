@@ -629,7 +629,7 @@ def fig_anatomy():
         b.append(arrow(x + 125, 112, x + 125, 130))
         b.append(box(x, 132, 250, 34, ["pages", pages]))
         b.append(arrow(x + 125, 166, 300, 190))
-    b.append(box(150, 192, 300, 34, ["sign-in: Google, IITM accounts only", "one record of progress per student"], "ln dash"))
+    b.append(box(150, 192, 300, 34, ["sign-in: optional, any Google account", "one record of progress per student"], "ln dash"))
     b.append(f'<text class="nt" x="300" y="246" font-size="10" text-anchor="middle">who may read it is decided by the rules, not by hiding the config</text>')
     b.append("</g>")
     return _svg("0 0 600 254", "".join(b), "specimen__figure")
@@ -776,6 +776,29 @@ def art_mlt_page(cls="world__art"):
     b.append(f'<text x="350" y="{30}" font-size="9" text-anchor="end" fill="{MLT_HL}" class="nb-tag">[FLAG]</text></g>')
     return _svg("0 0 360 268", "".join(b), cls)
 
+# MAD 1 (nerdhub/mad1/js/data/manifest.js): the course route, topics in week order, sized by Quiz 2 marks; dashed = not written yet
+MAD1_TOPICS = [  # id, mark, first week, Quiz 2 marks (topic spec A3), status
+    ("web-arch", "Web", 1, 23.0, "planned"), ("sys-perf", "Sys", 1, 56.5, "planned"), ("frontend", "FE", 2, 49.0, "planned"),
+    ("python-fund", "Py", 3, 37.5, "planned"), ("flask-core", "Fl", 4, 121.0, "planned"), ("templating", "Tp", 5, 33.5, "planned"),
+    ("rest-api", "API", 6, 78.5, "planned"), ("db-sql", "DB", 7, 101.0, "planned")]
+
+def art_mad1_route(cls="world__art"):
+    """MAD 1's route: eight topics in week order on one path, each sized by its Quiz 2 marks; planned ones are dashed."""
+    b = ['<g class="c-frag">']
+    xs = [24 + i * 44 for i in range(len(MAD1_TOPICS))]
+    ys = [150 + (-34 if i % 2 else 34) for i in range(len(MAD1_TOPICS))]
+    for i in range(len(xs) - 1):
+        b.append(f'<line class="ln dim" x1="{n(xs[i])}" y1="{n(ys[i])}" x2="{n(xs[i + 1])}" y2="{n(ys[i + 1])}"/>')
+    for (tid, mark, wk, marks, st), x, y in zip(MAD1_TOPICS, xs, ys):
+        r = 3 + math.sqrt(marks) * 1.2
+        dash = ' stroke-dasharray="3 3"' if st != "ready" else ""
+        b.append(f'<circle cx="{n(x)}" cy="{n(y)}" r="{n(r)}" fill="#1D6B5F" fill-opacity=".18" stroke="#5DBFAA" stroke-width="1.4"{dash}/>')
+        ty = y - r - 8 if y < 150 else y + r + 15
+        b.append(f'<text class="tx" x="{n(x)}" y="{n(ty)}" font-size="10" text-anchor="middle">{esc(mark)}<tspan class="dim" font-size="8.5"> {n(marks)}</tspan></text>')
+        b.append(f'<text class="tx dim" x="{n(x)}" y="{n(276)}" font-size="8" text-anchor="middle">w{wk}</text>')
+    b.append('<text class="tx dim" x="24" y="36" font-size="9">Quiz 2 · weeks 1 to 8 · marks per topic</text></g>')
+    return _svg("0 0 360 290", "".join(b), cls)
+
 def art_posts(cls="world__art"):
     b = ['<g class="c-draft"><rect class="ln dash" x="1" y="1" width="358" height="98" rx="4"/>']
     for i in range(3):
@@ -785,6 +808,7 @@ def art_posts(cls="world__art"):
 
 def nerdhub_page():
     pdsa_feat = ["course map", "practice", "mock exam", "flashcards", "mistakes", "study plan", "last-night sheet", "glossary"]
+    mad1_feat = ["course route", "exam switcher", "practice next", "mock exam", "flashcards", "mistakes", "works offline"]
     mlt_feat = ["practice next", "mock test", "cheatsheet", "plan", "flashcards", "glossary", "mistakes", "formula drawer", "search"]
     li = lambda xs: "".join(f"<li>{esc(x)}</li>" for x in xs)
     return f"""<!doctype html>
@@ -793,14 +817,14 @@ def nerdhub_page():
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>nerdhub · Krishn Bhagat</title>
-<meta name="description" content="nerdhub: study sites Krishn Bhagat built for his own courses — PDSA Quiz 2 and MLT — turning past papers into places to read, practise and revise.">
+<meta name="description" content="nerdhub: study sites Krishn Bhagat built for his own courses — PDSA Quiz 2, MLT and MAD 1 — turning past papers into places to read, practise and revise.">
 <meta name="theme-color" content="#0f1115">
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
 <link rel="canonical" href="https://krishnbhagat.dev/nerdhub/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Krishn Bhagat">
 <meta property="og:title" content="nerdhub · Krishn Bhagat">
-<meta property="og:description" content="Study sites built for my own courses: PDSA Quiz 2 and MLT.">
+<meta property="og:description" content="Study sites built for my own courses: PDSA Quiz 2, MLT and MAD 1.">
 <meta property="og:url" content="https://krishnbhagat.dev/nerdhub/">
 <meta property="og:image" content="https://krishnbhagat.dev/assets/og/nerdhub.png">
 <meta property="og:image:width" content="1200">
@@ -850,6 +874,15 @@ def nerdhub_page():
         <ul class="world__tools" aria-label="In the site">{li(mlt_feat)}</ul>
         <a class="nh-btn nh-btn--primary world__go" href="/nerdhub/mlt/">Open MLT →</a>
       </article>
+      <article class="world world--mad1" aria-labelledby="w-mad1">
+        <a class="world__plate" href="/nerdhub/mad1/" tabindex="-1" aria-hidden="true">{art_mad1_route()}</a>
+        <p class="world__fig">fig. — the eight topics in week order, sized by Quiz 2 marks; dashed ones are not written yet</p>
+        <h2 class="world__name" id="w-mad1">MAD 1</h2>
+        <p class="world__line">Modern Application Development I: Flask, templates, REST APIs and databases, taught from zero. Being built, one topic at a time.</p>
+        <p class="world__facts">8 topics · 160 past questions · 10 papers · 500 marks</p>
+        <ul class="world__tools" aria-label="In the site">{li(mad1_feat)}</ul>
+        <a class="nh-btn nh-btn--primary world__go" href="/nerdhub/mad1/">Open MAD 1 →</a>
+      </article>
     </section>
 
     <section class="world world--posts" aria-labelledby="w-posts">
@@ -860,7 +893,7 @@ def nerdhub_page():
       </div>
     </section>
 
-    <p class="hub-note">The study sites ask for an IITM student Google sign-in; your progress then follows you across devices. <a href="/nerdhub/privacy.html">Privacy</a></p>
+    <p class="hub-note">Every study site works without signing in; progress stays in your browser. Sign in with any Google account to sync it across devices. <a href="/nerdhub/privacy.html">Privacy</a></p>
   </div>
 </main>
 </body>

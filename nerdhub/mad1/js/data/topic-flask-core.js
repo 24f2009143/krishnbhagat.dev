@@ -1,0 +1,438 @@
+/* flask-core, part 1: lessons, revise page, topic test. Teaching prose is [ADDED] (bank-only mode).
+ * Every output and status code printed here is checked in tests/assertions_flask-core.py (Flask 3.1.3, Werkzeug 3.1.9, Python 3.12.12). */
+APP.registerTopic("flask-core",{
+ name:"Flask Web Framework",
+ tagline:"How a URL becomes a Python function call, and what comes back to the browser.",
+ story:"A browser only ever sends **requests** and receives **responses**. Flask is the small Python program in the middle. It reads the URL of each request, finds the one function you wrote for that URL, runs it, and sends back whatever that function returns.\n\nEvery Flask PYQ is a version of one question: *for this exact URL and this exact method, which function runs, what does it return, and with which status code?* If you can answer that step by step, you can answer all 39 Flask PYQs. This topic builds that skill one piece at a time: routes, the parts of a URL, building URLs, redirects, reading data, errors, forms, and return values.",
+ mindmap:{center:"Flask",branches:[
+  {t:"Routes",kids:["@app.route(\"/path\")","stacked routes","trailing slash","<converters>"]},
+  {t:"Reading the request",kids:["request.args (query)","request.form (POST form)","request.get_json()","methods=[\"GET\", \"POST\"]"]},
+  {t:"Building responses",kids:["str, dict, list","(body, status)","redirect(url_for(...))","None is an error"]},
+  {t:"Errors",kids:["404 no route","405 wrong method","400 bad data","abort() and @app.errorhandler"]},
+  {t:"Forms",kids:["GET shows, POST sends","HTML5 = frontend","checks in view = backend"]}]},
+ connect:[["route","view function","the route table picks exactly one function for a URL"],["converters","view arguments","each <placeholder> becomes a keyword argument"],["url_for","redirect","url_for builds the address that redirect sends the browser to"],["request.args","abort","bad or missing data is turned into a 400 by abort"],["abort","errorhandler","a handler catches the status that was actually raised"],["methods","405","the method check happens before the view runs"]],
+ roadmap:[["One request, one function","cycle"],["Routes and the trailing slash","routes"],["Dynamic parts of a URL","converters"],["Building URLs with url_for","url-for"],["Redirects","redirects"],["Reading what the browser sent","request-data"],["abort and error handlers","errors"],["Forms and validation","forms"],["What a view may return","returns"]],
+ prereqs:["rf-http","rf-decorators","rf-forms"],
+ prereqCheck:[
+  {id:"fc-pre-1",concept:"view-return",type:"MCQ",stem:"In `http://127.0.0.1:5000/user/7?tab=info`, which part is the **query string**?",options:["`127.0.0.1:5000`","`/user/7`","`tab=info`","`http`"],key:"C",diff:"easy",hints:["It comes after the question mark."],explain:"Everything after `?` is the query string; `/user/7` is the path."},
+  {id:"fc-pre-2",concept:"view-return",type:"MCQ",stem:"`@shout` is written above `def greet`. What does Python do?",options:["Runs `greet` once at start-up","`greet = shout(greet)`","Calls `shout` every time the program starts a request","Nothing until `greet` is called"],key:"B",diff:"easy",hints:["The @ line is shorthand."],explain:"`@shout` above `def greet` means `greet = shout(greet)`, done once when the definition is read. `@app.route` works the same way."},
+  {id:"fc-pre-3",concept:"view-return",type:"MCQ",stem:"A server answers **404**. What does that mean?",options:["The request worked","The server crashed","Nothing exists at that path","The method is not allowed"],key:"C",diff:"easy",hints:["Not Found."],explain:"404 is Not Found: no route matches the path."}],
+ concepts:{
+  "view-return":{name:"What a view function returns becomes the response",sub:"routing-urlfor",ease:1,repair:"Think of the view function as the only author of the reply. Whatever it returns is turned into the response: a string becomes an HTML page with status 200, a dict or list becomes JSON, and a tuple can add a status code. If it returns nothing (None), Flask cannot build a reply and the browser gets a 500 error."},
+  "route-match":{name:"Matching a URL to a route",sub:"routing-urlfor",ease:1,repair:"Write down the route table: each rule and the function under it. Then compare the requested path with each rule character by character; only an exact match (or a placeholder that fits) counts. Several `@app.route` lines on one function simply add more rules for the same function, and a path that matches no rule is a 404."},
+  "trailing-slash":{name:"The trailing slash",sub:"routing-urlfor",ease:2,repair:"A rule that ends in `/` behaves like a folder: asking for it without the slash gets a 308 redirect to the slashed address. A rule without the slash behaves like a file: asking for it with a slash is a 404. If both `/home` and `/home/` are defined, each URL goes to its own function."},
+  "dynamic-segment":{name:"Placeholders capture one non-empty segment",sub:"routing-urlfor",ease:2,repair:"A placeholder such as `<name>` stands for exactly one piece of the path between two slashes, and that piece cannot be empty. So `/greet/` does not match `/greet/<name>` and gives 404, and `/greet/a/b` does not match either. The captured text arrives as a string argument with the same name as the placeholder."},
+  "converters":{name:"Converters: string, int, float, path",sub:"routing-urlfor",ease:2,repair:"A converter is a filter on the placeholder. `int` accepts only digits (no sign, no dot), `float` needs a dot, `string` is the default and refuses `/`, and `path` accepts slashes. If the text does not pass the filter, the rule simply does not match, so the result is 404, never a Python error."},
+  "url-for":{name:"url_for builds a URL from an endpoint name",sub:"routing-urlfor",ease:2,repair:"`url_for` works backwards from a function name to its address. Its first argument is the endpoint (the view function's name), never the URL. Keyword arguments fill the placeholders of that route, and any extra keyword becomes part of the query string after `?`."},
+  "redirect-flow":{name:"Redirects make the browser ask again",sub:"routing-urlfor",ease:2,repair:"A redirect is not a page: it is a short reply that says \"ask over there instead\" (status 302 with a Location header). The browser then sends a second request to that address and shows whatever that second request returns. Trace both requests separately."},
+  "query-vs-path":{name:"Path versus query string",sub:"request-params",ease:1,repair:"Split every URL at the `?`. The part before it is the path and must match a route; the part after it is the query string and is only read by `request.args` inside the view. A value in the query string never fills a `<placeholder>` in the route."},
+  "args-missing":{name:"Reading request.args safely",sub:"request-params",ease:2,repair:"`request.args` is a dictionary of query-string values, always strings. `request.args['k']` with no `k` sends 400 Bad Request, while `request.args.get('k')` gives `None` and `.get('k', 'x')` gives the default. A key written with no value, as in `?k` or `?k=`, is present with the empty string."},
+  "methods-body":{name:"HTTP methods and request bodies",sub:"request-params",ease:2,repair:"A route accepts only the methods in its `methods=[...]` list (GET by default), and Flask checks this before the view runs, so a wrong method is 405 whatever the view says. Form fields sent by POST are in `request.form`; a JSON body is read with `request.get_json()`. With curl, `--json` sends JSON and uses POST unless `-X` names another method."},
+  "abort-status":{name:"abort stops the view with a status",sub:"error-handling",ease:2,repair:"`abort(code, text)` raises an exception at once, so no line after it runs. Flask turns it into an error page with that status code and the text as its message. Decide first whether the view is even reached (route and method), then follow the `if` that leads to `abort`."},
+  "errorhandler-status":{name:"Error handlers and the status they return",sub:"error-handling",ease:3,repair:"`@app.errorhandler(404)` replaces Flask's page for that status, whether the 404 came from an unknown URL or from `abort(404)`. Its return value becomes the response, and a plain string is sent with status 200 unless you return `(body, 404)`. Only the handler for the status that actually happened runs."},
+  "validation-rendering":{name:"Frontend versus backend validation; dynamic pages",sub:"forms-validation",ease:2,repair:"Frontend validation lives in the HTML: attributes such as `required` and `minlength` make the browser refuse to submit. Backend validation lives in the view: `if` checks on `request.form` values after the data arrives. A page whose HTML is produced by Python for each request (a returned string or a template) is dynamically generated and server-side rendered."}
+ },
+ sections:[
+ {id:"cycle",title:"One request, one function, one response",studying:"what Flask does between the browser's request and the page you see",why:"every Flask PYQ starts by finding which function a URL runs",plain:"Flask reads the URL, runs the matching function, and sends back what it returns.",concepts:["view-return"],
+  diagnostic:{id:"fc-diag-cycle",concept:"view-return",type:"MCQ",stem:"A Flask app has one route, `@app.route(\"/\")`, whose function returns `\"Hi\"`. The browser opens `http://127.0.0.1:5000/about`. What does it get?",options:["Hi","An empty page","Not Found (404)","The Python source code"],key:"C",diff:"easy",hints:["Is there a rule for `/about`?"],explain:"No rule matches `/about`, so Flask answers 404 before any function runs.",asserts:["Tflask-core-01"]},
+  core:[
+   {t:"p",text:"When you open `http://127.0.0.1:5000/` the browser sends an **HTTP request** to the program listening on port 5000 of your own computer. That program is your Flask app. A request carries a **method** (usually `GET`) and a **path** (here `/`)."},
+   {t:"co",kind:"analogy",text:"Flask is a waiter with a menu. The menu lists dishes (paths) and the cook who makes each one (a view function). The waiter takes your order, gives it to that one cook, and brings back whatever the cook hands over. The analogy breaks in one place: if the cook hands back nothing, the waiter does not improvise; you get an error."},
+   {t:"co",kind:"def",title:"Definitions",text:"A **route** is a rule that connects a URL path to a function, written `@app.route(\"/path\")` above the function. That function is a **view function**. Its return value becomes the **response body**, and Flask adds a **status code** (200 when all is well)."},
+   {t:"code",lang:"python",title:"app.py",src:String.raw`from flask import Flask
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Hello, MAD 1!"
+
+app.run(debug=True)`,lines:[[1,"Import the `Flask` class."],[3,"Create the application object; `__name__` tells Flask where the file lives (used to find templates later)."],[5,"Register a rule: the path `/` belongs to the function defined next."],[6,"The view function. It runs only when a request for `/` arrives, not at start-up."],[7,"The returned string becomes the page. The browser shows `Hello, MAD 1!` with status 200. [assert:Tflask-core-01]"],[9,"Start the development server at `http://127.0.0.1:5000`. `debug=True` reloads on code changes and shows error details."]]},
+   {t:"flow",caption:"One request through Flask",W:560,H:390,nodes:[{id:"a",text:"browser: GET /",x:280,y:30,kind:"start"},{id:"b",text:"does a route match\nthe path?",x:280,y:115,kind:"decision",w:190,h:70},{id:"c",text:"404 Not Found",x:470,y:115,kind:"end",w:130},{id:"d",text:"run the view function",x:280,y:215},{id:"e",text:"return value becomes\nthe response (200)",x:280,y:300,w:190,h:46},{id:"f",text:"browser shows the body",x:280,y:370,kind:"end",w:180}],edges:[["a","b"],["b","c","no"],["b","d","yes"],["d","e"],["e","f"]]},
+   {t:"table",title:"What travels each way",head:["Request (browser → Flask)","Response (Flask → browser)"],rows:[["method: `GET`, `POST` and others","status code: 200, 302, 404 and others"],["path: `/user/7`","headers, such as `Content-Type`"],["query string: `?tab=info`","body: the HTML or JSON you returned"],["body (for POST): form fields or JSON",""]]},
+   {t:"ex",level:"foundation",title:"Two URLs against one route",problem:"Using `app.py` above, what does the browser show for `http://127.0.0.1:5000/` and for `http://127.0.0.1:5000/about`?",asked:"The page and status code for each URL.",idea:"Find the rule for each path; only then run the function.",steps:["The route table has one rule: `/` → `home`.","`/` matches, so `home()` runs and returns `Hello, MAD 1!`: status 200.","`/about` matches no rule, so no function runs: Flask sends its Not Found page, status 404."],answer:"`/` shows `Hello, MAD 1!` (200); `/about` shows Not Found (404)",mistake:"Thinking `home()` runs for every URL because it is the only function.",asserts:["Tflask-core-01"]},
+   {t:"ex",level:"exam",title:"Paths are case-sensitive",problem:"An app has `@app.route(\"/hello\")` above `def hello(): name = \"MAD\"; return f\"<h1>Hello {name}</h1>\"`. What do `/hello` and `/Hello` give?",code:String.raw`@app.route("/hello")
+def hello():
+    name = "MAD"
+    return f"<h1>Hello {name}</h1>"`,lang:"python",asked:"The rendered output and status for each.",idea:"Paths are compared exactly, letter case included.",steps:["`/hello` matches the rule exactly: the function runs.","It returns the HTML `<h1>Hello MAD</h1>`, so the browser shows **Hello MAD** as a heading, status 200.","`/Hello` has a capital H, so it is a different path: no rule matches and the result is 404."],answer:"`/hello`: heading **Hello MAD** (200); `/Hello`: Not Found (404)",mistake:"Assuming URLs ignore case the way domain names do.",asserts:["Tflask-core-02"]},
+   {t:"co",kind:"notice",text:"The browser shows the *rendered* HTML. A returned `<h1>Hello MAD</h1>` appears as the words **Hello MAD** in large type, not as the tags."},
+   {t:"co",kind:"tip",text:"In every Flask question, write the route table first: one line per rule, `path → function (methods)`. Most traps vanish once the table is on paper."}
+  ],
+  deep:[
+   {t:"p",text:"**When does each line run?** Lines at the top level of `app.py` (imports, `app = Flask(...)`, the `@app.route` registrations) run once, when you start the program. A view function's body runs later, once per matching request. `app.run()` blocks: it keeps the server listening until you stop it with Ctrl+C."},
+   {t:"code",lang:"python",title:"Checking a page without a browser",src:String.raw`from flask import Flask
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Hello, MAD 1!"
+
+client = app.test_client()
+r = client.get("/about")
+print(r.status_code)`,lines:[[9,"`test_client()` sends requests to the app directly, with no server or browser."],[10,"A GET request for `/about`."],[11,"Prints `404`, because no rule matches. This is how the answers on this site were checked. [assert:Tflask-core-01]"]]},
+   {t:"player",title:"One request, step by step",frames:[
+    {state:{code:String.raw`@app.route("/")
+def home():
+    return "Hello, MAD 1!"`,lang:"python",hl:[1],vars:{"request":"GET /"}},caption:"The request `GET /` arrives. Flask looks through its route table and finds the rule `/`."},
+    {state:{code:String.raw`@app.route("/")
+def home():
+    return "Hello, MAD 1!"`,lang:"python",hl:[2,3],vars:{"running":"home()"}},caption:"Flask calls `home()`. Only now does the body run."},
+    {state:{code:String.raw`@app.route("/")
+def home():
+    return "Hello, MAD 1!"`,lang:"python",hl:[3],vars:{"status":"200","body":"Hello, MAD 1!"},out:"Hello, MAD 1!"},caption:"The returned string becomes the response body with status 200, and the browser displays it."}]},
+   {t:"compare",title:"`127.0.0.1` versus `localhost`",cols:["","`127.0.0.1:5000`","`localhost:5000`"],rows:[["What it is","the loopback IP address","a name that resolves to the loopback address"],["Reaches","your own machine, port 5000","the same server"],["In PYQs","used interchangeably","used interchangeably"]]}
+  ],
+  remember:["A route connects one path to one view function.","The view runs only when a matching request arrives.","No matching rule means 404, and no function runs.","Paths are case-sensitive."],
+  teachBack:{prompt:"In one line: what happens when a browser requests a path that no route matches?",model:"Flask finds no rule for the path, runs no view function, and replies 404 Not Found."},
+  quiz:[
+   {id:"fc-cyc-q1",concept:"view-return",type:"MCQ",stem:"An app has only `@app.route(\"/home\")`. What does `http://127.0.0.1:5000/Home` give?",options:["The home page","Not Found (404)","Method Not Allowed (405)","A redirect to `/home`"],key:"B",diff:"easy",hints:["Compare the letters exactly."],explain:"`/Home` and `/home` differ in case, so no rule matches: 404.",optionNotes:{A:{why:"Paths are case-sensitive.",cause:"Assuming URLs ignore case."},B:{why:"No rule matches `/Home`."},C:{why:"405 needs a matching path with the wrong method.",cause:"Mixing up 404 and 405."},D:{why:"Flask does not fix letter case.",cause:"Confusing this with the trailing-slash redirect."}},asserts:["Tflask-core-03"]},
+   {id:"fc-cyc-q2",concept:"view-return",type:"MCQ",stem:"A view function ends with `return \"<b>Done</b>\"`. What does the browser display?",options:["`<b>Done</b>` with the tags visible","**Done** in bold","Nothing: Flask needs `print`","A 500 error"],key:"B",diff:"easy",hints:["The browser renders HTML."],explain:"The returned string is sent as HTML and the browser renders it: the word **Done** in bold.",asserts:["Tflask-core-04"]},
+   {id:"fc-cyc-q3",concept:"view-return",type:"TF",stem:"Flask runs every view function once when the server starts.",key:"B",diff:"easy",hints:["When does a view body run?"],explain:"False. Registration happens at start-up, but a view's body runs only when a matching request arrives."}
+  ]},
+ {id:"routes",title:"Routes, stacked routes and the trailing slash",studying:"how Flask decides whether a path matches a rule, including rules that end in `/`",why:"stacked-route and trailing-slash questions appear in three papers (July 2022, Aug 2023, 24 Mar 2024)",plain:"Several rules can share a function; a final slash changes what matches.",concepts:["route-match","trailing-slash"],
+  core:[
+   {t:"p",text:"Each `@app.route(...)` line adds one rule to the **route table**. You may write several of them above the same function: each adds another path that runs that function. The order of the stacked lines does not matter for matching."},
+   {t:"code",lang:"python",src:String.raw`@app.route("/start")
+@app.route("/begin")
+def start():
+    return "Let us begin"`,lines:[[1,"Rule 1: `/start` runs `start`."],[2,"Rule 2: `/begin` also runs `start`. Both paths return `Let us begin` with status 200. [assert:Tflask-core-05]"],[3,"One function, two addresses."]]},
+   {t:"co",kind:"analogy",text:"A trailing slash works like the difference between a folder and a file. `/docs/` is a folder: if you leave the slash off, Flask politely sends you to the folder (a redirect). `/about` is a file: if you add a slash, there is no such folder, so it is Not Found."},
+   {t:"table",title:"The trailing-slash rules (Werkzeug 3.1)",head:["Rule in the code","URL requested","Result"],rows:[["`/about`","`/about`","200"],["`/about`","`/about/`","404 Not Found"],["`/docs/`","`/docs/`","200"],["`/docs/`","`/docs`","308 redirect to `/docs/`, then 200"],["`/home` and `/home/` both","`/home` / `/home/`","each goes to its own function"]]},
+   {t:"yourMove",id:"fc-move-slash",title:"A missing slash",state:{code:String.raw`@app.route("/docs/")
+def docs():
+    return "Docs"`,lang:"python",vars:{"request":"GET /docs"}},prompt:"The browser asks for `/docs` (no slash). What does Flask do first?",choices:["Reply 404 Not Found","Reply 308, sending the browser to `/docs/`","Run `docs()` straight away","Reply 405 Method Not Allowed"],key:"B",why:["Not for a rule that ends in a slash: that is the case for rules without one.","Yes: the rule is a \"folder\", so Flask redirects to the slashed URL; the browser then gets `Docs`.","The path `/docs` is not exactly the rule `/docs/`; the redirect comes first.","The method is GET, which the rule allows."]},
+   {t:"ex",level:"foundation",title:"Stacked routes",problem:"With the `start` function above, what do `/start`, `/begin` and `/stop` return?",asked:"Output and status for each URL.",idea:"Each stacked line is its own rule for the same function.",steps:["Route table: `/start` → `start`, `/begin` → `start`.","`/start` matches rule 1: `Let us begin`, 200.","`/begin` matches rule 2: the same function runs: `Let us begin`, 200.","`/stop` matches no rule: 404."],answer:"`Let us begin` (200), `Let us begin` (200), Not Found (404)",mistake:"Thinking only the line nearest `def` counts.",asserts:["Tflask-core-05"]},
+   {t:"ex",level:"exam",title:"A folder-style rule",problem:"`@app.route(\"/menu/\")` returns `\"Menu\"`. What happens for `/menu`, `/menu/` and `/menu/x`?",code:String.raw`@app.route("/menu/")
+def menu():
+    return "Menu"`,lang:"python",asked:"What the browser ends up showing for each URL.",idea:"A rule ending in `/` redirects the slash-less URL to itself; extra segments match nothing.",steps:["`/menu/` matches exactly: `Menu`, 200.","`/menu` is the same rule without its slash: Flask replies 308 with `Location: /menu/`.","The browser follows the redirect, requests `/menu/` and shows `Menu`.","`/menu/x` has an extra segment that no rule has: 404."],answer:"`/menu` → redirect, then `Menu`; `/menu/` → `Menu`; `/menu/x` → Not Found",mistake:"Answering 404 for `/menu`.",asserts:["Tflask-core-06"]},
+   {t:"co",kind:"warn",text:"Learn the table both ways round. The slash-less URL of a slashed rule is **redirected**; the slashed URL of a slash-less rule is **404**."}
+  ],
+  deep:[
+   {t:"p",text:"**Why 308 and not 302?** Werkzeug, the library under Flask, answers a missing trailing slash with **308 Permanent Redirect**. A 308 tells the browser to repeat the *same method*, so a POST stays a POST. The browser follows it silently, so in an exam \"the browser renders\" means the page at the end of the redirect."},
+   {t:"p",text:"**Repeated slashes.** Werkzeug treats a run of slashes in the requested path, such as `//`, as one slash and redirects (308) to the merged URL. Example: with only `@app.route(\"/\")`, a request for `//` is redirected to `/`. [assert:Tflask-core-07]"},
+   {t:"code",lang:"python",title:"Both forms defined",src:String.raw`@app.route("/home")
+def home1():
+    return "homepage 1"
+
+@app.route("/home/")
+def home2():
+    return "homepage 2"`,lines:[[1,"Rule for the file-style path `/home`."],[5,"A separate rule for the folder-style path `/home/`."],[7,"`/home` gives `homepage 1`, `/home/` gives `homepage 2`: no redirect is needed because each URL has an exact rule. [assert:Tflask-core-08]"]]},
+   {t:"compare",title:"404 versus 405",cols:["","404 Not Found","405 Method Not Allowed"],rows:[["Path matches a rule?","no","yes"],["Method allowed?","(not checked)","no"],["View function runs?","no","no"]]}
+  ],
+  remember:["Each `@app.route` line adds one rule; stacked lines share one function.","Rule `/x/`, URL `/x` → 308 redirect to `/x/`.","Rule `/x`, URL `/x/` → 404.","A path that matches no rule is 404 and no view runs."],
+  teachBack:{prompt:"Explain in one line why `/docs` works when the rule is `/docs/`, but `/about/` fails when the rule is `/about`.",model:"A slashed rule redirects its slash-less URL to itself, but a slash-less rule has no slashed version, so that URL matches nothing."},
+  quiz:[
+   {id:"fc-rt-q1",concept:"route-match",type:"MSQ",stem:"```python\n@app.route(\"/a\")\n@app.route(\"/b\")\ndef ab():\n    return \"AB\"\n```\n\nWhich URLs return `AB` with status 200?",options:["`/a`","`/b`","`/ab`","`/a/b`"],key:["A","B"],diff:"easy",hints:["One rule per @ line."],explain:"Only the two registered paths match; `/ab` and `/a/b` match no rule.",asserts:["Tflask-core-09"]},
+   {id:"fc-rt-q2",concept:"trailing-slash",type:"MCQ",stem:"The only rule is `@app.route(\"/about\")`. What does `/about/` give?",options:["The about page","A redirect to `/about`","Not Found (404)","Method Not Allowed (405)"],key:"C",diff:"medium",hints:["Is `/about` a folder-style rule?"],explain:"A rule without a trailing slash does not match the slashed URL, and Flask does not redirect in that direction: 404.",asserts:["Tflask-core-10"]},
+   {id:"fc-rt-q3",concept:"trailing-slash",type:"MCQ",stem:"The only rule is `@app.route(\"/docs/\")` returning `\"Docs\"`. A browser opens `/docs`. What does it finally show?",options:["Not Found","Docs","An empty page","Method Not Allowed"],key:"B",diff:"medium",hints:["Follow the redirect."],explain:"Flask answers 308 to `/docs/`; the browser follows it and shows `Docs`.",asserts:["Tflask-core-11"]}
+  ]},
+ {id:"converters",title:"Dynamic parts of a URL: placeholders and converters",studying:"rules such as `/user/<name>` and `/n/<int:n>` that match many URLs",why:"which URL matches a dynamic rule is asked in six of the ten papers",plain:"A placeholder grabs one piece of the path; a converter decides what that piece may look like.",concepts:["dynamic-segment","converters"],
+  core:[
+   {t:"p",text:"A rule may contain a **placeholder** in angle brackets: `@app.route(\"/user/<name>\")`. It matches `/user/` followed by **one non-empty segment** (text with no `/`). The segment is passed to the view as a keyword argument with the same name."},
+   {t:"code",lang:"python",src:String.raw`@app.route("/user/<name>")
+def user(name):
+    return f"Hello, {name}!"`,lines:[[1,"`<name>` matches one segment after `/user/`."],[2,"The parameter must be called `name`, like the placeholder."],[3,"`/user/Ana` gives `Hello, Ana!`. `/user/07` gives `Hello, 07!`: the value is the text `07`. [assert:Tflask-core-12]"]]},
+   {t:"co",kind:"def",title:"Converter",text:"A **converter** is written `<type:name>`. It filters the segment and converts it: `string` (default) is any text without `/`; `int` is digits only; `float` is digits with a dot; `path` is like string but also accepts `/`."},
+   {t:"table",title:"Converters (Werkzeug 3.1)",head:["Rule","Matches","Does not match (404)","Value passed"],rows:[["`/u/<name>`","`/u/Ana`, `/u/07`","`/u/`, `/u/a/b`","`str`"],["`/n/<int:n>`","`/n/5`, `/n/007`","`/n/-1`, `/n/5.0`, `/n/abc`","`int`"],["`/f/<float:x>`","`/f/5.5`","`/f/55`, `/f/abc`","`float`"],["`/p/<path:x>`","`/p/a/b/c`","`/p/`","`str` with slashes"]]},
+   {t:"handTrace",title:"Fill in the status codes",prompt:"Rules: `/n/<int:n>` returns `str(n)` and `/f/<float:x>` returns `str(x)`. Type the status code for each request.",cols:["request","matches?","status"],given:[["/n/5","yes","?"],["/n/-1","no","?"],["/n/5.0","no","?"],["/f/55","no","?"],["/f/5.5","yes","?"]],blanks:[[0,2],[1,2],[2,2],[3,2],[4,2]],key:["200","404","404","404","200"]},
+   {t:"ex",level:"foundation",title:"An empty segment",problem:"With the `user` rule above, what do `/user/Ana`, `/user/07` and `/user/` give?",asked:"Output or status for each.",idea:"A placeholder needs one non-empty segment; the default converter gives text.",steps:["`/user/Ana`: segment `Ana` → `Hello, Ana!` (200).","`/user/07`: segment `07` is text, so `Hello, 07!` (200); nothing turns it into the number 7.","`/user/`: the segment after `/user/` is empty, so the rule does not match: 404."],answer:"`Hello, Ana!`, `Hello, 07!`, Not Found",mistake:"Expecting `/user/` to call `user` with an empty name.",asserts:["Tflask-core-12"]},
+   {t:"ex",level:"exam",title:"`path` versus the default converter",problem:"Rule A is `@app.route(\"/files/<path:p>\")` returning `p`; rule B, in a different app, is `@app.route(\"/docs/<p>\")` returning `p`. What do `/files/a/b.txt` and `/docs/a/b.txt` give?",asked:"Output or status for each.",idea:"Only `path` lets a placeholder span slashes.",steps:["`/files/a/b.txt`: the `path` converter takes `a/b.txt`, slashes included: output `a/b.txt` (200).","`/docs/a/b.txt`: the default converter stops at a slash, so `<p>` could only be `a`, leaving `/b.txt` unmatched.","No rule matches the whole path: 404."],answer:"`a/b.txt` (200) and Not Found (404)",mistake:"Thinking the default converter takes the rest of the URL.",asserts:["Tflask-core-13"]},
+   {t:"co",kind:"warn",text:"A converter mismatch is never a Python error. `/n/abc` with `<int:n>` does not reach the view at all: it is a plain 404."}
+  ],
+  deep:[
+   {t:"p",text:"**What arrives in the function.** For `int` the argument is an `int`, so `n + 1` works. For `string` and `path` it is a `str`, so `name + 1` would crash. Query-string values are never passed as arguments; they stay in `request.args` (next lessons)."},
+   {t:"code",lang:"python",title:"A name mismatch",src:String.raw`@app.route("/item/<item_id>")
+def item(id):
+    return id`,lines:[[1,"The placeholder is called `item_id`."],[2,"But the parameter is called `id`. Flask calls `item(item_id='7')`, Python raises `TypeError`, and the browser gets **500 Internal Server Error**. [assert:Tflask-core-14]"]]},
+   {t:"compare",title:"Placeholder versus query string",cols:["","`/user/<id>`","`/user?id=7`"],rows:[["Where the value is","in the path","after the `?`"],["How the view gets it","as a parameter `id`","`request.args.get(\"id\")`"],["Missing value","404 (rule does not match)","`None` (the view still runs)"]]}
+  ],
+  remember:["A placeholder matches exactly one non-empty segment.","`int` accepts digits only; `float` needs a dot; `path` accepts slashes.","A converter mismatch is a 404, not a Python error.","The parameter name must equal the placeholder name."],
+  teachBack:{prompt:"Why does `/n/5.0` give 404 for the rule `/n/<int:n>`?",model:"The int converter accepts only digits, so `5.0` fails the filter and no rule matches the path."},
+  quiz:[
+   {id:"fc-cv-q1",concept:"converters",type:"MSQ",stem:"Which URLs match `@app.route(\"/order/<int:n>\")`?",options:["`/order/12`","`/order/-3`","`/order/1.5`","`/order/007`"],key:["A","D"],diff:"medium",hints:["Digits only."],explain:"`12` and `007` are digits only. A sign or a dot fails the int converter.",asserts:["Tflask-core-15"]},
+   {id:"fc-cv-q2",concept:"dynamic-segment",type:"MCQ",stem:"Rule: `@app.route(\"/greet/<name>\")`. What does `/greet/` give?",options:["`greet` runs with `name = \"\"`","`greet` runs with `name = None`","Not Found (404)","Bad Request (400)"],key:"C",diff:"easy",hints:["Can a placeholder be empty?"],explain:"The segment after `/greet/` is empty, so the rule does not match: 404.",asserts:["Tflask-core-16"]},
+   {id:"fc-cv-q3",concept:"converters",type:"MCQ",stem:"Rule: `@app.route(\"/price/<float:p>\")`. Which URL matches?",options:["`/price/55`","`/price/55.0`","`/price/abc`","`/price/`"],key:"B",diff:"medium",hints:["What does float need?"],explain:"The float converter needs a dot: only `55.0` matches.",asserts:["Tflask-core-17"]}
+  ]},
+ {id:"url-for",title:"Building URLs with url_for",studying:"how `url_for` turns a function name and some values into a URL",why:"three PYQs ask for the exact text that `url_for(...)` produces",plain:"`url_for` works backwards: from a function name to its address.",concepts:["url-for"],
+  core:[
+   {t:"p",text:"Hard-coding addresses such as `\"/user/Ana\"` breaks when a route changes. `url_for` builds the address from the route table instead. Its first argument is the **endpoint**: the name of the view function (not the URL)."},
+   {t:"co",kind:"def",title:"url_for",text:"`url_for(endpoint, **values)` returns the URL of the route whose function is `endpoint`. Values whose names match placeholders fill them in; every other value is added to the **query string**."},
+   {t:"code",lang:"python",src:String.raw`from flask import Flask, url_for
+
+app = Flask(__name__)
+
+@app.route("/user/<username>")
+def profile(username):
+    return f"{username}'s page"
+
+with app.test_request_context():
+    print(url_for("profile", username="Ana"))
+    print(url_for("profile", username="Ana", tab="posts"))`,lines:[[5,"The route `/user/<username>` belongs to the endpoint `profile`."],[9,"`url_for` needs an application context; `test_request_context()` gives one outside a request, so `print` works."],[10,"`username` fills the placeholder: prints `/user/Ana`. [assert:Tflask-core-18]"],[11,"`tab` is not a placeholder, so it goes to the query string: prints `/user/Ana?tab=posts`. [assert:Tflask-core-18]"]]},
+   {t:"table",title:"Reading a url_for call",head:["Call","Result","Why"],rows:[["`url_for(\"profile\", username=\"Ana\")`","`/user/Ana`","fills `<username>`"],["`url_for(\"profile\", username=\"Ana\", tab=\"posts\")`","`/user/Ana?tab=posts`","extra value → query string"],["`url_for(\"/user/Ana\")`","error (BuildError)","a URL is not an endpoint name"],["`url_for(\"profile\")`","error (BuildError)","the placeholder has no value"]]},
+   {t:"ex",level:"foundation",title:"Placeholders and extras",problem:"Route `@app.route(\"/item/<int:id>\")` on `def item(id)`. Inside `test_request_context()`, what does `print(url_for(\"item\", id=7, page=2))` print?",asked:"The printed URL.",idea:"Fill placeholders first; leftovers become `?key=value`.",steps:["The endpoint is `item`, whose rule is `/item/<int:id>`.","`id=7` fills the placeholder: `/item/7`.","`page=2` has no placeholder, so it is appended as `?page=2`."],answer:"`/item/7?page=2`",mistake:"Writing `/item/7/2`: extra values never become path segments.",asserts:["Tflask-core-19"]},
+   {t:"ex",level:"exam",title:"Endpoint name versus path",problem:"`@app.route(\"/home\")` sits above `def index(): ...`. What do `url_for(\"index\")` and `url_for(\"home\")` give?",asked:"Both results.",idea:"The endpoint is the function name, so `home` names nothing.",steps:["The rule `/home` is registered under the endpoint `index`.","`url_for(\"index\")` returns `/home`.","No function is called `home`, so `url_for(\"home\")` raises `BuildError`."],answer:"`/home`, and an error (`BuildError`)",mistake:"Passing the path word (`home`) instead of the function name (`index`).",asserts:["Tflask-core-20"]},
+   {t:"co",kind:"warn",text:"`url_for` returns text. It does not run the view, so `print(url_for(\"index\"))` prints `/home`, never the page content."},
+   {t:"co",kind:"tip",text:"For \"what does `url_for(...)` print\" questions: (1) find the function by name, (2) copy its rule, (3) fill placeholders, (4) put every other value after `?`."}
+  ],
+  deep:[
+   {t:"p",text:"**Spaces and special characters** in query values are encoded: `url_for(\"post\", q=\"a b\")` gives `?q=a+b`. **Order:** extra values appear in the order you pass them, joined by `&`. [assert:Tflask-core-21]"},
+   {t:"player",title:"Building a URL",frames:[
+    {state:{text:"`url_for(\"profile\", username=\"Ana\", tab=\"posts\")`"},caption:"Step 1: find the function called `profile`. Its rule is `/user/<username>`."},
+    {state:{text:"`/user/<username>` → `/user/Ana`"},caption:"Step 2: fill each placeholder from a keyword argument of the same name."},
+    {state:{text:"`/user/Ana` + `?tab=posts`"},caption:"Step 3: any keyword left over becomes the query string."}]},
+   {t:"p",text:"**Returning a URL.** A view that does `return url_for(\"other\")` sends the *text* of the URL as the page, for example `/for`; it does not go to that page. To send the browser there you need `redirect(...)`, the next lesson. [assert:Tflask-core-22]"}
+  ],
+  remember:["`url_for` takes the function name, not the path.","Keyword values fill placeholders; extras go after `?`.","`url_for` returns a string; it never runs the view.","Outside a request, wrap it in `app.test_request_context()`."],
+  teachBack:{prompt:"What does `url_for` do with a keyword argument that matches no placeholder?",model:"It appends it to the query string as `?name=value`."},
+  quiz:[
+   {id:"fc-uf-q1",concept:"url-for",type:"MCQ",stem:"`@app.route(\"/course/<code>\")` is above `def course(code)`. What does `url_for(\"course\", code=\"MAD1\", sem=\"jan\")` return?",options:["`/course/MAD1/jan`","`/course/MAD1?sem=jan`","`/course?code=MAD1&sem=jan`","`/course/MAD1`"],key:"B",diff:"medium",hints:["Which value fills the placeholder?"],explain:"`code` fills `<code>`; `sem` is extra, so it becomes `?sem=jan`.",asserts:["Tflask-core-23"]},
+   {id:"fc-uf-q2",concept:"url-for",type:"MCQ",stem:"`@app.route(\"/home\")` is above `def index()`, which returns `\"Welcome\"`. What does `print(url_for(\"index\"))` print inside `test_request_context()`?",options:["`Welcome`","`/home`","`/index`","`index`"],key:"B",diff:"easy",hints:["url_for returns an address."],explain:"`url_for` returns the URL of the `index` endpoint, `/home`; it does not run the view.",asserts:["Tflask-core-20"]},
+   {id:"fc-uf-q3",concept:"url-for",type:"MCQ",stem:"A view does `return url_for(\"about\")`, and `about` has the rule `/about`. What does the browser show?",options:["The about page","The text `/about`","A redirect to `/about`","Not Found"],key:"B",diff:"medium",hints:["Is anything redirecting?"],explain:"The view returns the string `/about`, so that text is the page body.",asserts:["Tflask-core-22"]}
+  ]},
+ {id:"redirects",title:"Redirects",studying:"`redirect(...)`: a response that tells the browser to request another URL",why:"redirect questions ask what the browser finally renders",plain:"A redirect says \"go there instead\"; the browser makes a second request.",concepts:["redirect-flow"],
+  core:[
+   {t:"p",text:"`redirect(location)` does not build a page. It returns a short response with status **302 Found** and a `Location` header. The browser reads the header, sends a **new GET request** to that address, and shows whatever that second request returns."},
+   {t:"co",kind:"analogy",text:"A receptionist who says \"that office moved to room 302\". You walk to room 302 and talk to whoever is there. What you finally hear depends only on room 302."},
+   {t:"code",lang:"python",src:String.raw`from flask import Flask, redirect, url_for
+
+app = Flask(__name__)
+
+@app.route("/old")
+def old():
+    return redirect(url_for("new"))
+
+@app.route("/new")
+def new():
+    return "New page"`,lines:[[7,"Build the address of `new` (`/new`) and answer 302 with `Location: /new`. [assert:Tflask-core-24]"],[10,"The browser's second request runs `new`, so it shows `New page`. [assert:Tflask-core-24]"]]},
+   {t:"flow",caption:"Two requests behind one click",W:560,H:300,nodes:[{id:"a",text:"GET /old",x:120,y:40,kind:"start"},{id:"b",text:"old() returns\n302, Location: /new",x:120,y:140,w:170,h:46},{id:"c",text:"browser sends GET /new",x:400,y:140,w:180},{id:"d",text:"new() returns\n\"New page\" (200)",x:400,y:240,kind:"end",w:170,h:46}],edges:[["a","b"],["b","c","follows"],["c","d"]]},
+   {t:"ex",level:"foundation",title:"Following one redirect",problem:"With the app above, the browser opens `/old`. List both responses and say what is shown.",asked:"Status of each response and the final page.",idea:"A redirect is a pointer; read the page at its target.",steps:["`GET /old` runs `old()`, which returns `redirect(\"/new\")`: status 302, `Location: /new`.","The browser sends `GET /new`, which runs `new()`: status 200, body `New page`.","The address bar now shows `/new` and the page shows `New page`."],answer:"302 then 200; the browser shows `New page`",mistake:"Answering with something from `old()`; it returns no page at all.",asserts:["Tflask-core-24"]},
+   {t:"ex",level:"exam",title:"A redirect that depends on the path",problem:"Trace `GET /user/bob?x=1` through the app below.",code:String.raw`@app.route("/admin")
+def hello_admin():
+    return "Hello Admin"
+
+@app.route("/guest/<guest>")
+def hello_guest(guest):
+    return "Hello " + guest + " as Guest"
+
+@app.route("/user/<name>")
+def hello_user(name):
+    if name == "admin":
+        return redirect(url_for("hello_admin"))
+    return redirect(url_for("hello_guest", guest=name))`,lang:"python",asked:"The text the browser finally shows.",idea:"The query string `?x=1` is ignored by every view here; only the path decides.",steps:["`/user/bob` matches `/user/<name>` with `name = \"bob\"`; `?x=1` is not used.","`name` is not `\"admin\"`, so it returns `redirect(url_for(\"hello_guest\", guest=\"bob\"))`, which points to `/guest/bob`.","The browser requests `/guest/bob`: `hello_guest(\"bob\")` returns `Hello bob as Guest`."],answer:"`Hello bob as Guest`",mistake:"Letting `?x=1` change the answer; nothing reads `request.args`.",asserts:["Tflask-core-25"]},
+   {t:"co",kind:"notice",text:"Two different redirects appear in Flask questions: **302** from your own `redirect(...)` call, and **308** that Werkzeug adds for a missing trailing slash. Either way the browser follows it, so \"what does the browser render\" means the page at the end."}
+  ],
+  deep:[
+   {t:"p",text:"**`redirect` needs a string.** `redirect(url_for(\"signup\"))` is right. `url_for(signup)` (the function object, without quotes) raises an error inside the view, so that request gets a 500. [assert:Tflask-core-26]"},
+   {t:"code",lang:"python",title:"Checking a redirect in code",src:String.raw`client = app.test_client()
+r = client.get("/old")
+print(r.status_code, r.headers["Location"])
+r = client.get("/old", follow_redirects=True)
+print(r.status_code, r.get_data(as_text=True))`,lines:[[2,"Without following, you see the redirect itself."],[3,"Prints `302 /new`. [assert:Tflask-core-24]"],[4,"`follow_redirects=True` behaves like a browser."],[5,"Prints `200 New page`. [assert:Tflask-core-24]"]]}
+  ],
+  remember:["`redirect(url)` answers 302 with a `Location` header.","The browser then sends a new GET to that URL.","The page shown is whatever the target route returns.","Pass `url_for` an endpoint name in quotes."],
+  teachBack:{prompt:"Why is the answer to a redirect question never the redirecting function's own text?",model:"That function returns only a 302 pointer; the browser then requests the target URL and displays that route's response."},
+  quiz:[
+   {id:"fc-rd-q1",concept:"redirect-flow",type:"MCQ",stem:"What status code does `return redirect(\"/home\")` send?",options:["200","302","404","500"],key:"B",diff:"easy",hints:["Found."],explain:"`redirect` uses 302 Found by default.",asserts:["Tflask-core-24"]},
+   {id:"fc-rd-q2",concept:"redirect-flow",type:"MCQ",stem:"Using the `hello_user` app from the exam-level example, what does `/user/admin?guest=x` finally show?",options:["Hello x as Guest","Hello admin as Guest","Hello Admin","Not Found"],key:"C",diff:"medium",hints:["Which branch does `name == \"admin\"` take?"],explain:"`name` is `admin`, so it redirects to `/admin`, which returns `Hello Admin`. The query string is never read.",asserts:["Tflask-core-27"]},
+   {id:"fc-rd-q3",concept:"redirect-flow",type:"TF",stem:"After a redirect, the browser's address bar shows the URL it was redirected to.",key:"A",diff:"easy",hints:["The browser made a new request."],explain:"True: the browser requested the new URL, so that is the address it shows."}
+  ]},
+ {id:"request-data",title:"Reading what the browser sent",studying:"`request.args`, `request.form`, `request.get_json()` and the `methods` list",why:"14 PYQs (42 marks) are about request data: the biggest sub-topic",plain:"Data arrives in the path, the query string, or the body; each has its own reader.",concepts:["query-vs-path","args-missing","methods-body"],
+  core:[
+   {t:"p",text:"A request can carry data in three places. The **path** is matched against routes (placeholders). The **query string** after `?` is read with `request.args`. The **body** of a POST is read with `request.form` (HTML forms) or `request.get_json()` (JSON). `request` must be imported from `flask`."},
+   {t:"table",title:"Where data comes from",head:["Data in","Example","Read with","Missing value"],rows:[["path","`/user/7` with `/user/<id>`","view parameter `id`","rule does not match: 404"],["query string","`/search?q=flask`","`request.args.get(\"q\")`","`None` (or your default)"],["form body (POST)","`<input name=\"q\">`","`request.form.get(\"q\")`","`None`"],["JSON body (POST)","`{\"q\": \"flask\"}`","`request.get_json()[\"q\"]`","Python `KeyError` → 500"]]},
+   {t:"code",lang:"python",src:String.raw`from flask import Flask, request
+
+app = Flask(__name__)
+
+@app.route("/search")
+def search():
+    q = request.args.get("q")
+    page = request.args.get("page", "1")
+    return q + " " + page`,lines:[[1,"`request` holds the current request."],[7,"Value of `q` in the query string, or `None` if absent."],[8,"Value of `page`, or `\"1\"` if absent. Values are always strings."],[9,"`/search?q=flask&page=2` gives `flask 2`; `/search?q=flask` gives `flask 1`. [assert:Tflask-core-28]"]]},
+   {t:"co",kind:"warn",title:"Two ways to read, two outcomes",text:"`request.args[\"k\"]` with no `k` in the URL stops the request with **400 Bad Request**. `request.args.get(\"k\")` returns `None` and the view carries on. `?k` or `?k=` gives the empty string `\"\"`."},
+   {t:"co",kind:"def",title:"Methods",text:"A route accepts only the methods listed in `methods=[...]`; the default is `[\"GET\"]`. A browser address bar always sends GET. Flask checks the method **before** the view runs: a disallowed method gets **405 Method Not Allowed**."},
+   {t:"ex",level:"foundation",title:"Query values with defaults",problem:"With `search` above, what do `/search?q=flask&page=2`, `/search?q=flask` and `/search?page=2` give?",asked:"Output or status for each.",idea:"`.get` returns the value, the default, or `None`.",steps:["First URL: `q = \"flask\"`, `page = \"2\"`: returns `flask 2`.","Second URL: no `page`, so the default `\"1\"`: returns `flask 1`.","Third URL: no `q`, so `q = None`. `None + \" \"` raises `TypeError` in the view, and the response is 500 Internal Server Error."],answer:"`flask 2`, `flask 1`, Internal Server Error (500)",mistake:"Expecting a 400 for the third URL; `.get` never raises, the later `+` does.",asserts:["Tflask-core-28"]},
+   {t:"ex",level:"exam",title:"A POST-only JSON route and curl",problem:"Predict the status for each command against the route below.",code:String.raw`@app.route("/login", methods=["POST"])
+def login():
+    data = request.get_json()
+    if data["uid"] == "admin" and data["pwd"] == "12345":
+        return "Welcome Admin!"
+    return "Invalid credentials..."`,lang:"python",asked:"Status and text for: (1) `curl --json '{\"uid\":\"admin\",\"pwd\":\"12345\"}' URL`, (2) `curl -X GET --json '{...}' URL`, (3) opening the URL in a browser.",idea:"Check the method first; only then read the body.",steps:["(1) `--json` sends a JSON body with POST by default. POST is allowed, the credentials match: `Welcome Admin!` (200).","(2) `-X GET` overrides the method. GET is not in `methods`, so Flask answers 405 before the view runs.","(3) The address bar sends GET: 405 Method Not Allowed."],answer:"(1) 200 `Welcome Admin!`, (2) 405, (3) 405",mistake:"Answering `Invalid credentials...` for a GET; the view never runs.",asserts:["Tflask-core-29"]}
+  ],
+  deep:[
+   {t:"compare",title:"args versus form versus JSON",cols:["","`request.args`","`request.form`","`request.get_json()`"],rows:[["Comes from","query string","POST form body","JSON body"],["Sent by","any URL, GET","`<form method=\"post\">`","`curl --json`, `fetch`"],["Type","dict-like, string values","dict-like, string values","whatever the JSON holds"],["Wrong content type","n/a","empty","415 Unsupported Media Type (Flask 3)"]]},
+   {t:"p",text:"**Flask 3 detail.** `request.get_json()` on a body that is not marked as JSON (for example plain text) stops the request with **415 Unsupported Media Type**. [assert:Tflask-core-29]"},
+   {t:"p",text:"**HEAD and OPTIONS come free.** A GET route also answers HEAD, and every route answers OPTIONS. A POST-only route therefore allows `OPTIONS, POST`."},
+   {t:"code",lang:"python",title:"Command-line arguments next to a Flask app",src:String.raw`import sys
+print(sys.argv[1:])`,lines:[[2,"`python app.py Application Development DBMS` prints `['Application', 'Development', 'DBMS']`: spaces split arguments. With quotes, `python app.py \"Application Development\" DBMS` prints `['Application Development', 'DBMS']`. [assert:Tflask-core-30]"]]},
+   {t:"co",kind:"tip",text:"For any \"which URL works\" question: (1) cut the URL at `?`; (2) match the path against the route table (404 if nothing); (3) check the method (405); (4) only now run the view, reading the query part with `request.args`."}
+  ],
+  remember:["Path → route placeholders; query string → `request.args`; body → `request.form` or `request.get_json()`.","`args[\"k\"]` missing → 400; `args.get(\"k\")` missing → `None`.","`?k` and `?k=` give `\"\"`.","Wrong method → 405, before the view runs."],
+  teachBack:{prompt:"Why can a value in the query string never fill a `<placeholder>`?",model:"Routes are matched against the path only, which ends at the `?`; the query string is read later, inside the view, through `request.args`."},
+  quiz:[
+   {id:"fc-rq-q1",concept:"args-missing",type:"MCQ",stem:"```python\n@app.route(\"/greet\")\ndef greet():\n    return \"Hi \" + request.args[\"name\"]\n```\n\nWhat does `/greet` (no query string) give?",options:["Hi","Hi None","400 Bad Request","404 Not Found"],key:"C",diff:"medium",hints:["Square brackets, missing key."],explain:"Indexing `request.args` with a missing key makes Flask answer 400 Bad Request.",asserts:["Tflask-core-31"]},
+   {id:"fc-rq-q2",concept:"args-missing",type:"MCQ",stem:"```python\n@app.route(\"/u\")\ndef u():\n    return repr(request.args.get(\"name\", \"Guest\"))\n```\n\nWhat does `/u?name` give?",options:["`'Guest'`","`''`","`None`","`'name'`"],key:"B",diff:"hard",hints:["The key is present, with no value."],explain:"`?name` sends the key `name` with an empty value, so `.get` returns `''` and the default is not used.",asserts:["Tflask-core-32"]},
+   {id:"fc-rq-q3",concept:"query-vs-path",type:"MCQ",stem:"Rule: `@app.route(\"/user/<id>\")`. What does `/user?id=5` give?",options:["The user with id 5","Not Found (404)","Bad Request (400)","The user with id `None`"],key:"B",diff:"medium",hints:["Cut at the `?` first."],explain:"The path is `/user`, which has no segment for `<id>`, so no rule matches: 404.",asserts:["Tflask-core-33"]},
+   {id:"fc-rq-q4",concept:"methods-body",type:"MCQ",stem:"`@app.route(\"/save\", methods=[\"POST\"])`. A student opens `/save` in the browser. What happens?",options:["The view runs and returns its text","405 Method Not Allowed","404 Not Found","The browser sends POST automatically"],key:"B",diff:"easy",hints:["What method does the address bar use?"],explain:"The address bar sends GET, which the rule does not allow: 405, and the view never runs.",asserts:["Tflask-core-34"]}
+  ]},
+ {id:"errors",title:"abort and error handlers",studying:"stopping a view with `abort(code)` and replacing error pages with `@app.errorhandler(code)`",why:"10 PYQs (33 marks) test which error page appears and with which status",plain:"`abort` stops with an error code; an error handler decides what that error looks like.",concepts:["abort-status","errorhandler-status"],
+  core:[
+   {t:"p",text:"`abort(code, description)` raises an exception immediately: no line after it runs. Flask catches it and sends an error page with that status code. The description becomes the message on the page."},
+   {t:"code",lang:"python",src:String.raw`from flask import Flask, abort
+
+app = Flask(__name__)
+
+@app.route("/check/<word>")
+def check(word):
+    if word.isalpha():
+        abort(400, "Bad Request: letters only")
+    return f"Accepted: {word}"`,lines:[[7,"`isalpha()` is `True` only if every character is a letter."],[8,"For `/check/abc`, stop here with status 400. The page shows the title **Bad Request** and the message `Bad Request: letters only`. [assert:Tflask-core-35]"],[9,"For `/check/ab1` (not all letters) this line runs: `Accepted: ab1`, 200. [assert:Tflask-core-35]"]]},
+   {t:"co",kind:"def",title:"Error handler",text:"`@app.errorhandler(404)` above a function makes it the page for every 404, whether it came from an unknown URL or from `abort(404)`. Its return value becomes the response. **A plain string is sent with status 200**: to keep 404 you must return `(body, 404)`."},
+   {t:"table",title:"Which status, which page",head:["What happens","Status raised","Handler that runs"],rows:[["path matches no rule","404","`errorhandler(404)`, if any"],["path matches, method not allowed","405","`errorhandler(405)`, if any"],["view calls `abort(400, ...)`","400","`errorhandler(400)`, if any"],["view raises a Python error","500","`errorhandler(500)`, if any"]]},
+   {t:"ex",level:"foundation",title:"abort stops the view",problem:"With `check` above, what do `/check/abc` and `/check/ab1` give?",asked:"Status and text for each.",idea:"Follow the `if`; `abort` ends the function.",steps:["`\"abc\".isalpha()` is `True`, so `abort(400, ...)` runs: status 400, page **Bad Request** with `Bad Request: letters only`.","The `return` line is never reached for `abc`.","`\"ab1\".isalpha()` is `False` (the digit), so the `return` runs: `Accepted: ab1`, 200."],answer:"400 Bad Request with the message; `Accepted: ab1` (200)",mistake:"Thinking the `return` after `abort` still runs.",asserts:["Tflask-core-35"]},
+   {t:"ex",level:"exam",title:"A handler's status code",problem:"An app has `@app.errorhandler(404)` returning `\"custom\"`. A browser requests a URL that matches no route. What is the body and the status? What changes if the handler returns `(\"custom\", 404)`?",asked:"Body and status in both versions.",idea:"The handler's return value is used exactly like a view's.",steps:["No rule matches, so Flask raises 404 and looks for a 404 handler.","The handler returns the string `custom`: body `custom`, and a plain string means status **200**.","With `return \"custom\", 404` the tuple sets the status: body `custom`, status 404."],answer:"`custom` with 200; then `custom` with 404",mistake:"Assuming the handler keeps the 404 automatically.",asserts:["Tflask-core-36"]},
+   {t:"ex",level:"tricky",title:"The method check comes first",problem:"Predict the page for a browser visiting `/home/user_9`.",code:String.raw`@app.route("/home/<string:username>", methods=["POST"])
+def home(username):
+    abort(404)
+
+@app.errorhandler(404)
+def e404(error):
+    return "No such user"
+
+@app.errorhandler(405)
+def e405(error):
+    return "Check the request method"`,lang:"python",asked:"The rendered text.",idea:"Routing and the method check happen before the view; `abort(404)` is never reached.",steps:["The path `/home/user_9` matches the rule.","The browser sends GET, but only POST is allowed, so Flask raises 405 without calling `home`.","The 405 handler runs and returns `Check the request method`."],answer:"`Check the request method`",mistake:"Following the view's `abort(404)`: the view never runs.",asserts:["Tflask-core-37"]}
+  ],
+  deep:[
+   {t:"compare",title:"String tests used in abort questions",cols:["Method","True when","`\"MAD-I\"`","`\"CS2003\"`","`\"101\"`"],rows:[["`isalpha()`","all letters","False","False","False"],["`isalnum()`","all letters or digits","False","True","True"],["`isnumeric()` / `isdigit()`","all digits","False","False","True"]]},
+   {t:"p",text:"The checks in the table above were run in Python 3.12. [assert:Tflask-core-38] A hyphen is neither a letter nor a digit, so any string containing `-` fails all three."},
+   {t:"code",lang:"python",title:"An unusual status code",src:String.raw`@app.route("/proxy")
+def proxy():
+    abort(407)`,lines:[[3,"407 is a real HTTP status (Proxy Authentication Required), but Werkzeug 3.1 has no exception class for it, so `abort(407)` raises `LookupError: no exception for 407` and the browser gets **500**, not 407. Worse, writing `@app.errorhandler(407)` raises `ValueError: '407' is not a recognized HTTP error code` as soon as the file is loaded, so such an app never starts. Only codes Werkzeug knows (400, 401, 403, 404, 405, 406, 408 and so on) work with `abort` and `errorhandler`. [assert:Tflask-core-39]"]]},
+   {t:"co",kind:"tip",text:"Order of checks for any error question: route match (404) → method (405) → view runs (`abort` or a Python error) → the handler for the status that actually happened."}
+  ],
+  remember:["`abort(code, msg)` stops the view at once.","The handler for the status actually raised is the one that runs.","A handler returning a plain string sends status 200.","404 and 405 are raised before the view runs."],
+  teachBack:{prompt:"Why can a POST-only route's `abort(404)` never show the 404 handler to a browser visit?",model:"The browser sends GET, Flask raises 405 during the method check, and the view with the abort is never called."},
+  quiz:[
+   {id:"fc-er-q1",concept:"errorhandler-status",type:"MCQ",stem:"`@app.errorhandler(404)` returns `{\"message\": \"invalid endpoint!\"}`. A browser requests an unknown URL. What is the status code?",options:["404","200","500","302"],key:"B",diff:"hard",hints:["What status does a plain return value get?"],explain:"The handler's dict becomes a JSON response with the default status 200, because no status was returned with it.",asserts:["Tflask-core-40"]},
+   {id:"fc-er-q2",concept:"abort-status",type:"MCQ",stem:"```python\n@app.route(\"/v/<int:n>\")\ndef v(n):\n    if n % 2 == 0:\n        abort(400, \"Even\")\n    return f\"Odd {n}\"\n```\n\nWhat does `/v?n=4` give?",options:["Bad Request: Even","Odd 4","Not Found","Odd None"],key:"C",diff:"medium",hints:["Does the path match the rule?"],explain:"The path `/v` has no segment for `<int:n>`, so no rule matches: 404. The query string is never read.",asserts:["Tflask-core-41"]},
+   {id:"fc-er-q3",concept:"abort-status",type:"MSQ",stem:"```python\n@app.route(\"/id/<code>\")\ndef id_(code):\n    if code.isalnum():\n        abort(400, \"Invalid\")\n    return \"OK \" + code\n```\n\nWhich URLs give `OK ...` with status 200?",options:["`/id/CS2003`","`/id/MAD-I`","`/id/abc`","`/id/a_b`"],key:["B","D"],diff:"hard",hints:["Which codes contain a non-alphanumeric character?"],explain:"`MAD-I` and `a_b` contain `-` or `_`, so `isalnum()` is False and the view returns `OK ...`. The others abort with 400.",asserts:["Tflask-core-42"]}
+  ]},
+ {id:"forms",title:"Forms, frontend and backend validation",studying:"a view that shows a form on GET and checks it on POST",why:"validation and \"dynamic or static\" questions are worth 12 marks",plain:"The browser checks the HTML rules; your Python checks the rest.",concepts:["validation-rendering"],
+  core:[
+   {t:"p",text:"A typical form route accepts both GET and POST. On **GET** it returns the HTML form. When the user submits, the browser sends **POST** with the form fields in the body, and the same view reads them with `request.form`."},
+   {t:"code",lang:"python",src:String.raw`@app.route("/signup", methods=["GET", "POST"])
+def signup():
+    if request.method == "GET":
+        return """<form method="post">
+          <input name="user" required>
+          <input name="pwd" type="password" minlength="8">
+          <button>Join</button></form>"""
+    pwd = request.form.get("pwd", "")
+    if len(pwd) < 8:
+        return redirect(url_for("signup"))
+    return "Welcome, " + request.form.get("user") + "!"`,lines:[[1,"Both methods are allowed."],[3,"`request.method` tells the two cases apart."],[5,"`required`: the browser will not submit while this is empty (frontend validation)."],[6,"`minlength=\"8\"`: the browser refuses fewer than 8 characters once the user has typed (frontend validation)."],[9,"The same rule checked again in Python (backend validation). A POST with `pwd=abc` is redirected back to the form. [assert:Tflask-core-43]"],[11,"A valid POST gets `Welcome, ana!`. [assert:Tflask-core-43]"]]},
+   {t:"compare",title:"Frontend versus backend validation",cols:["","Frontend (HTML5)","Backend (in the view)"],rows:[["Written as","`required`, `minlength`, `maxlength`, `type=\"email\"`","`if` checks on `request.form` values"],["Runs in","the browser, before sending","Flask, after the request arrives"],["Can be skipped","yes (curl, edited HTML)","no"],["Message","the browser's own, e.g. \"Please fill out this field.\"","whatever your view returns"]]},
+   {t:"co",kind:"def",title:"Dynamic and server-side rendered",text:"A page is **dynamically generated** when Python builds its HTML for each request (a returned string or a template), and **server-side rendered** (SSR) when that HTML is built on the server and sent complete. A static page is a fixed file sent as it is."},
+   {t:"ex",level:"foundation",title:"The backend check catches what HTML missed",problem:"Someone posts to `/signup` with curl, skipping the browser: `user=ana`, `pwd=abc`. Then again with `pwd=abcdefgh`. What happens?",asked:"The response each time.",idea:"curl ignores HTML attributes, so only the Python check stands.",steps:["curl sends POST directly, so `required` and `minlength` never run.","First request: `len(\"abc\") = 3 < 8`, so the view returns a redirect (302) to `/signup`.","Second request: the length is 8, so it returns `Welcome, ana!` (200)."],answer:"A redirect back to the form, then `Welcome, ana!`",mistake:"Believing HTML5 attributes protect the server.",asserts:["Tflask-core-43"]},
+   {t:"ex",level:"exam",title:"Classify the validation",problem:"Classify the `signup` view: is the form static or dynamic? Which validation types does it use?",asked:"Rendering type and validation types.",idea:"Look for HTML attributes (frontend) and Python `if` checks (backend).",steps:["The form HTML is returned by a Python function for each GET, so it is dynamically generated and server-side rendered.","`required` and `minlength` are HTML5 attributes: frontend validation.","`if len(pwd) < 8` in the view: backend validation."],answer:"Dynamic (SSR); both frontend and backend validation",mistake:"Calling it static because the HTML text never changes; what matters is that Python sends it per request."}
+  ],
+  deep:[
+   {t:"p",text:"**Missing fields.** `request.form.get(\"pwd\")` is `None` when the field was not sent at all, and `\"\"` when it was sent empty. `request.form[\"pwd\"]` with no such field is a 400, like `request.args`. [assert:Tflask-core-44]"},
+   {t:"p",text:"**`:valid` and `:invalid` styles** follow the live state of each input as the user types: a CSS rule such as `input:invalid { border: 2px solid red; }` colours an empty `required` field at once. That belongs to the frontend topic; here it is enough to know it is frontend validation."}
+  ],
+  remember:["GET shows the form; POST sends the fields in the body.","HTML5 attributes = frontend validation (the browser).","`if` checks in the view = backend validation (the server).","HTML built by Python per request = dynamic, server-side rendered."],
+  teachBack:{prompt:"Why do you still need backend validation when the form has `required` on every field?",model:"Requests can be sent without the browser (curl, edited HTML), so only checks in the view are guaranteed to run."},
+  quiz:[
+   {id:"fc-fm-q1",concept:"validation-rendering",type:"MSQ",stem:"A view returns a form containing `<input name=\"age\" type=\"number\" required>` and, on POST, checks `if int(request.form[\"age\"]) < 18: return \"Too young\"`. Which statements are true?",options:["It has frontend validation","It has backend validation","The form is static","The form is server-side rendered"],key:["A","B","D"],diff:"medium",hints:["Look for both kinds of check."],explain:"`required` and `type=\"number\"` are frontend; the `if` in the view is backend; Python returns the HTML per request, so it is SSR, not static."},
+   {id:"fc-fm-q2",concept:"validation-rendering",type:"MCQ",stem:"A POST request has no field called `email`. What is `request.form.get(\"email\")`?",options:["`\"\"`","`None`","A 400 error","`\"email\"`"],key:"B",diff:"easy",hints:["`.get` never raises."],explain:"`.get` returns `None` for a missing key.",asserts:["Tflask-core-44"]},
+   {id:"fc-fm-q3",concept:"validation-rendering",type:"TF",stem:"HTML5 `required` stops a curl command from sending an empty field to the server.",key:"B",diff:"easy",hints:["Who checks `required`?"],explain:"False. `required` is checked by the browser; curl skips it entirely."}
+  ]},
+ {id:"returns",title:"What a view may return",studying:"the kinds of values a view can return and the response each one makes",why:"return values decide the status and format in many PYQs",plain:"Strings make HTML, dicts and lists make JSON, tuples add a status, None is an error.",concepts:["view-return"],
+  core:[
+   {t:"table",title:"Return value → response (Flask 3.1)",head:["The view returns","Body","Status","Content-Type"],rows:[["`\"text\"` or an HTML string","the string","200","`text/html`"],["`{\"a\": 1}`","`{\"a\":1}`","200","`application/json`"],["`[1, 2]`","`[1,2]`","200","`application/json`"],["`(\"made\", 201)`","`made`","201","`text/html`"],["`redirect(...)`","short redirect page","302","`text/html`"],["`None` (or no return)","error page","500","`text/html`"]]},
+   {t:"co",kind:"analogy",text:"The view is a parcel desk. Hand over a letter (a string) and it is posted as a page; hand over a form with boxes (a dict) and it is posted as JSON; staple a note with a number (a tuple) and that number is the status. Hand over nothing and the desk refuses: 500."},
+   {t:"ex",level:"foundation",title:"A dict with a status",problem:"A view ends with `return {\"user\": \"ana\"}, 201`. What does the client receive?",asked:"Body, status and content type.",idea:"The tuple's second item is the status; the dict becomes JSON.",steps:["The first item is a dict, so Flask converts it to JSON: `{\"user\":\"ana\"}`.","The second item, 201, becomes the status code.","The Content-Type is `application/json`."],answer:"`{\"user\":\"ana\"}`, status 201, JSON",mistake:"Expecting the Python `repr` with single quotes.",asserts:["Tflask-core-45"]},
+   {t:"ex",level:"exam",title:"A return inside a loop",problem:"What does `/signin?uid=bob&pwd=2` return?",code:String.raw`users = [{"uid": "ana", "pwd": "1"}, {"uid": "bob", "pwd": "2"}]
+
+@app.route("/signin")
+def signin():
+    for u in users:
+        if u["uid"] == request.args["uid"] and u["pwd"] == request.args["pwd"]:
+            return "Authorized"
+        else:
+            return "Unauthorized"`,lang:"python",asked:"The text shown.",idea:"`return` ends the function, so the loop never reaches the second user.",steps:["First iteration: `u` is ana. `\"ana\" == \"bob\"` is False, so the `else` branch runs.","`return \"Unauthorized\"` ends the function on the first user.","bob is never checked, even though his details match."],answer:"`Unauthorized`",mistake:"Answering `Authorized` because bob is in the list.",asserts:["Tflask-core-46"]}
+  ],
+  deep:[
+   {t:"p",text:"**Why None is a 500.** Flask's `make_response` raises `TypeError` (\"The view function ... did not return a valid response\") when it receives `None`. The development server shows a traceback in debug mode; the browser sees **500 Internal Server Error**. [assert:Tflask-core-47]"},
+   {t:"code",lang:"python",title:"Return values side by side",src:String.raw`@app.route("/a")
+def a():
+    return ["x", "y"]
+
+@app.route("/b")
+def b():
+    return "Created", 201
+
+@app.route("/c")
+def c():
+    print("done")`,lines:[[3,"A list becomes JSON `[\"x\",\"y\"]` with 200 (Flask 2.2 and later). [assert:Tflask-core-48]"],[7,"Body `Created`, status 201. [assert:Tflask-core-48]"],[11,"`print` writes to the server's terminal, not the page; the function returns `None`, so the browser gets 500. [assert:Tflask-core-48]"]]}
+  ],
+  remember:["str → HTML, 200.","dict or list → JSON, 200.","`(body, status)` sets the status.","No return → 500."],
+  teachBack:{prompt:"What does `print(\"done\")` in a view show in the browser?",model:"Nothing: print goes to the server terminal, and a view that returns nothing makes the browser show a 500 error."},
+  quiz:[
+   {id:"fc-rv-q1",concept:"view-return",type:"MCQ",stem:"A view's last line is `print(\"saved\")` and it has no `return`. What does the browser show?",options:["saved","An empty page with 200","500 Internal Server Error","404 Not Found"],key:"C",diff:"medium",hints:["What does the function return?"],explain:"The function returns `None`, which Flask cannot turn into a response: 500. The print goes to the terminal.",asserts:["Tflask-core-47"]},
+   {id:"fc-rv-q2",concept:"view-return",type:"MCQ",stem:"`return [\"a\", \"b\"]` in Flask 3.1 gives:",options:["`['a', 'b']` as HTML","JSON `[\"a\",\"b\"]`","500 error","`ab`"],key:"B",diff:"medium",hints:["Lists are JSON since Flask 2.2."],explain:"Flask 2.2+ converts a list to a JSON array.",asserts:["Tflask-core-48"]},
+   {id:"fc-rv-q3",concept:"view-return",type:"NUM",stem:"A view returns `\"Saved\", 201`. What status code does the client get?",key:201,diff:"easy",hints:["The second item of the tuple."],explain:"The second item of the returned tuple is the status: 201.",asserts:["Tflask-core-48"]}
+  ]}
+ ],
+ practice:[
+  {id:"fc-p1",concept:"route-match",type:"MSQ",stem:"```python\n@app.route(\"/\")\n@app.route(\"/index\")\ndef index():\n    return \"Home\"\n\n@app.route(\"/help\")\ndef help_page():\n    return \"Help\"\n```\n\nWhich URLs show `Home`?",options:["`/`","`/index`","`/help`","`/home`"],key:["A","B"],diff:"easy",hints:["List the route table."],explain:"`/` and `/index` are both rules of `index`. `/help` shows `Help`; `/home` has no rule (404).",optionNotes:{A:{why:"First rule of `index`."},B:{why:"Second rule of `index`."},C:{why:"`/help` belongs to `help_page`.",cause:"Assuming one app has one page."},D:{why:"No rule for `/home`: 404.",cause:"Guessing the path from the function name."}},asserts:["Tflask-core-49"]},
+  {id:"fc-p2",concept:"trailing-slash",type:"MCQ",stem:"The only rules are `@app.route(\"/shop/\")` (returns `\"Shop\"`) and `@app.route(\"/cart\")` (returns `\"Cart\"`). What do `/shop` and `/cart/` finally show?",options:["Shop, Cart","Shop, Not Found","Not Found, Cart","Not Found, Not Found"],key:"B",diff:"medium",hints:["Folder-style versus file-style rules."],explain:"`/shop` is redirected (308) to `/shop/` and shows `Shop`. `/cart/` has no rule: 404.",asserts:["Tflask-core-50"]},
+  {id:"fc-p3",concept:"redirect-flow",type:"MCQ",stem:"```python\n@app.route(\"/a\")\ndef a():\n    return redirect(url_for(\"b\"))\n\n@app.route(\"/b\")\ndef b():\n    return redirect(url_for(\"c\", x=1))\n\n@app.route(\"/c\")\ndef c():\n    return \"C got \" + request.args.get(\"x\", \"none\")\n```\n\nWhat does the browser finally show for `/a`?",options:["C got none","C got 1","A redirect page","Not Found"],key:"B",diff:"medium",hints:["Follow both redirects; where does x go?"],explain:"`/a` → `/b` → `/c?x=1`; `c` reads `x` from the query string: `C got 1`.",asserts:["Tflask-core-51"]},
+  {id:"fc-p4",concept:"methods-body",type:"MSQ",stem:"`@app.route(\"/item\", methods=[\"GET\", \"POST\"])` returns `request.method`. Which requests get **405**?",options:["`curl http://127.0.0.1:5000/item`","`curl -X POST http://127.0.0.1:5000/item`","`curl -X DELETE http://127.0.0.1:5000/item`","`curl -X PUT http://127.0.0.1:5000/item`"],key:["C","D"],diff:"medium",hints:["Which methods are listed?"],explain:"GET and POST are allowed and print their method. DELETE and PUT are not: 405.",asserts:["Tflask-core-52"]},
+  {id:"fc-p5",concept:"view-return",type:"MCQ",stem:"A view returns `{\"ok\": True}`. What body does the browser receive?",options:["`{'ok': True}`","`{\"ok\":true}`","`True`","500 error"],key:"B",diff:"easy",hints:["Dicts become JSON."],explain:"Flask turns the dict into JSON, where `True` is written `true`.",asserts:["Tflask-core-53"]},
+  {id:"fc-p6",concept:"view-return",type:"MCQ",stem:"```python\n@app.route(\"/sum/<int:a>/<int:b>\")\ndef s(a, b):\n    return a + b\n```\n\nWhat does `/sum/2/3` give?",options:["5","`23`","500 Internal Server Error","404 Not Found"],key:"C",diff:"hard",hints:["Is an int a valid return value?"],explain:"The path matches and `a + b = 5`, but an `int` is not a valid response type, so Flask raises `TypeError`: 500. `str(a + b)` would work.",asserts:["Tflask-core-54"]},
+  {id:"fc-p7",concept:"view-return",type:"NUM",stem:"A view returns `(\"Gone\", 410)`. What status code does the browser receive?",key:410,diff:"easy",hints:["Second item."],explain:"The tuple's second item sets the status: 410.",asserts:["Tflask-core-55"]},
+  {id:"fc-p8",concept:"converters",type:"MCQ",stem:"Rule: `@app.route(\"/wiki/<path:page>\")` returning `page.upper()`. What does `/wiki/a/b` show?",options:["A/B","A","Not Found","a/b"],key:"A",diff:"medium",hints:["path accepts slashes."],explain:"`page` is `a/b`; `.upper()` gives `A/B`.",asserts:["Tflask-core-56"]},
+  {id:"fc-p9",concept:"args-missing",type:"MCQ",stem:"```python\n@app.route(\"/sq\")\ndef sq():\n    n = request.args[\"n\"]\n    return str(int(n) * int(n))\n```\n\nWhat do `/sq?n=12` and `/sq` give?",options:["144 and 0","1212 and 400","144 and 400 Bad Request","144 and 500"],key:"C",diff:"medium",hints:["Values are strings; int() converts."],explain:"`int(\"12\") * int(\"12\") = 144`. Without `n`, `request.args[\"n\"]` answers 400.",asserts:["Tflask-core-57"]}
+ ],
+ test:[
+  {id:"fc-t1",concept:"dynamic-segment",type:"MCQ",stem:"Rule `@app.route(\"/book/<title>\")`. Which URL calls the view?",options:["`/book/`","`/book?title=Dune`","`/book/Dune`","`/book/Dune/2`"],key:"C",diff:"easy",hints:["One non-empty segment."],explain:"Only `/book/Dune` has exactly one non-empty segment after `/book/`.",asserts:["Tflask-core-58"]},
+  {id:"fc-t2",concept:"url-for",type:"MCQ",stem:"`@app.route(\"/p/<int:pid>\")` is above `def post(pid)`. What is `url_for(\"post\", pid=3, ref=\"mail\")`?",options:["`/p/3/mail`","`/p/3?ref=mail`","`/post/3?ref=mail`","`/p?pid=3&ref=mail`"],key:"B",diff:"medium",hints:["Rule of the endpoint `post`."],explain:"`pid` fills the rule `/p/<int:pid>`; `ref` goes to the query string.",asserts:["Tflask-core-59"]},
+  {id:"fc-t3",concept:"methods-body",type:"MCQ",stem:"`curl -X GET --json '{\"a\":1}' http://127.0.0.1:5000/add` against `@app.route(\"/add\", methods=[\"POST\"])`. Result?",options:["The view runs with a = 1","405 Method Not Allowed","415 Unsupported Media Type","200 with an empty body"],key:"B",diff:"medium",hints:["-X wins over --json's default method."],explain:"The method is GET, which the rule does not allow: 405 before the view runs.",asserts:["Tflask-core-60"]},
+  {id:"fc-t4",concept:"errorhandler-status",type:"MCQ",stem:"`@app.errorhandler(404)` returns `\"Oops\", 404`. A URL with no route is requested. Body and status?",options:["Oops, 200","Oops, 404","Not Found, 404","Oops, 500"],key:"B",diff:"medium",hints:["The tuple sets the status."],explain:"The handler runs for the 404 and returns a tuple, so the status stays 404.",asserts:["Tflask-core-61"]},
+  {id:"fc-t5",concept:"abort-status",type:"MCQ",stem:"```python\n@app.route(\"/age/<int:a>\")\ndef age(a):\n    if a < 18:\n        abort(403)\n    return \"Welcome\"\n```\n\nWhat does `/age/15` give?",options:["Welcome","403 Forbidden","404 Not Found","400 Bad Request"],key:"B",diff:"easy",hints:["15 < 18."],explain:"The rule matches with `a = 15`, the `if` is true, so `abort(403)`: Forbidden.",asserts:["Tflask-core-62"]},
+  {id:"fc-t6",concept:"redirect-flow",type:"MCQ",stem:"A view returns `redirect(\"/login\")` and `/login` returns `\"Please log in\"`. What status does the *first* response have?",options:["200","302","308","401"],key:"B",diff:"easy",hints:["redirect's default."],explain:"`redirect` answers 302; the browser's second request gets the 200 page.",asserts:["Tflask-core-63"]},
+  {id:"fc-t7",concept:"query-vs-path",type:"MSQ",stem:"```python\n@app.route(\"/course/<name>\")\ndef course(name):\n    return name + \" \" + request.args.get(\"id\", \"?\")\n```\n\nWhich are true?",options:["`/course/MAD?id=7` shows `MAD 7`","`/course?name=MAD&id=7` shows `MAD 7`","`/course/MAD` shows `MAD ?`","`/MAD?id=7` shows `MAD 7`"],key:["A","C"],diff:"hard",hints:["The path decides the route; the query string only feeds .get."],explain:"A and C match the rule. B's path `/course` and D's path `/MAD` match no rule: 404.",asserts:["Tflask-core-64"]},
+  {id:"fc-t8",concept:"validation-rendering",type:"MCQ",stem:"Which is backend validation?",options:["`<input required>`","`<input minlength=\"8\">`","`if len(request.form[\"pwd\"]) < 8:` in the view","`input:invalid { color: red; }`"],key:"C",diff:"easy",hints:["Where does the check run?"],explain:"Only the Python check runs on the server; the others are HTML or CSS in the browser."}
+ ],
+ remember:{
+  facts:["A route maps one path (and methods) to one view function; the view's return value is the response.","Placeholders match one non-empty segment; converters filter it (`int` digits, `float` needs a dot, `path` takes slashes).","Rule `/x/` + URL `/x` → 308 redirect; rule `/x` + URL `/x/` → 404.","`url_for(endpoint, **values)`: placeholders filled, extras to `?query`.","`redirect` sends 302; the browser shows the target page.","`request.args[\"k\"]` missing → 400; `.get(\"k\")` → None; `?k` → `\"\"`.","Wrong method → 405 before the view; `abort` stops the view; an error handler's plain return is status 200."],
+  traps:[{text:"`?id=5` filling a `<id>` placeholder.",cause:"reading the whole URL instead of cutting at `?`"},{text:"Assuming the view's `abort(404)` runs on a POST-only route visited by a browser.",cause:"forgetting the method check comes first (405)"},{text:"Expecting an error handler to keep its status code.",cause:"a plain string return means 200"},{text:"Passing the URL to `url_for`.",cause:"url_for takes the function name"},{text:"`/user/` matching `/user/<name>` with an empty name.",cause:"placeholders cannot be empty"},{text:"Answering with the redirecting view's text.",cause:"the browser shows the redirect target"},{text:"Returning an int, or nothing.",cause:"only str, dict, list, tuple or Response are valid: 500"}],
+  formulas:[{tex:"\\text{status} = \\begin{cases}404 & \\text{no rule matches}\\\\405 & \\text{method not allowed}\\\\ \\text{view decides} & \\text{otherwise}\\end{cases}",means:"the order Flask checks a request in",when:"any \"what does the browser render\" question"}],
+  cues:[["\"which URL will render ... / will not throw Not Found\"","cut at `?`, match the path against every rule"],["\"`#== print statement ==#` replaced by `url_for(...)`\"","find the function, copy its rule, fill placeholders, extras to `?`"],["\"`methods=['POST']`\" and a browser URL","405 before anything else"],["\"`@app.errorhandler(...)`\"","find the status actually raised, then that handler's return value and status"],["\"curl -X ... --json\"","`-X` sets the method; `--json` alone means POST"],["\"frontend / backend validation\"","HTML attributes vs `if` in the view"]],
+  selector:[["matching the path first","guessing from the function name","route table, then method, then view"],["`.get(key, default)` reasoning","assuming missing keys are always None","check `[]` (400) versus `.get` (None)"],["follow redirects to the end","stopping at the 302","trace each request separately"]],
+  examMoves:[["Which URLs work (MSQ)","route table, cut at `?`, test each option","60–90 s","each option independently"],["url_for output","function → rule → fill → `?extras`","45 s","no `/` added for extras"],["Error page and status","404 → 405 → view → handler","60 s","handler string = 200"],["Validation classification","attributes vs view checks","30 s","both can be present"]],
+  hooks:["Path picks the cook; query string is a note for the cook.","Slash = folder: no slash gets you sent to the folder; extra slash on a file is nothing.","Method is checked at the door (405) before the cook sees you."]
+ },
+ methodCards:[{qType:"Which URL renders X",recipe:"Write the route table; cut each URL at `?`; match the path (404 if none); check the method (405); run the view with `request.args`."},{qType:"url_for output",recipe:"Endpoint = function name → copy its rule → fill placeholders → extras as `?k=v`."},{qType:"Redirect output",recipe:"302 to the target; trace the target request; that page is the answer."},{qType:"Error page",recipe:"Which status is raised first (404 route, 405 method, abort code)? Run that handler; plain return = 200."},{qType:"Form validation",recipe:"HTML attributes = frontend; `if` on `request.form` = backend; Python-built HTML = dynamic SSR."}],
+ flash:[
+  {front:"What decides which view runs?",back:"The **path** (and method) matched against the route table. The query string plays no part.",kind:"idea"},
+  {front:"Rule `/docs/`, URL `/docs`?",back:"308 redirect to `/docs/`, then the page.",kind:"trap"},
+  {front:"Rule `/about`, URL `/about/`?",back:"404 Not Found.",kind:"trap"},
+  {front:"What does `<int:n>` reject?",back:"Anything but digits: `-1`, `5.0`, `abc` all give 404.",kind:"idea"},
+  {front:"`url_for(\"f\", x=1)` when `f`'s rule has no `<x>`?",back:"The rule's URL plus `?x=1`.",kind:"formula"},
+  {front:"Status of `redirect(...)`?",back:"302 Found; the browser then GETs the Location.",kind:"idea"},
+  {front:"`request.args[\"k\"]` with no k?",back:"400 Bad Request.",kind:"trap"},
+  {front:"`request.args.get(\"k\", \"d\")` for `?k`?",back:"`\"\"` (the key is present, empty), not `\"d\"`.",kind:"trap"},
+  {front:"Browser visits a POST-only route?",back:"405 Method Not Allowed; the view never runs.",kind:"trap"},
+  {front:"Error handler returns a plain string: status?",back:"200, unless it returns `(body, code)`.",kind:"trap"},
+  {front:"View returns None or an int?",back:"500 Internal Server Error.",kind:"idea"},
+  {front:"Wording: \"frontend validation\"",back:"HTML5 attributes: `required`, `minlength`, `maxlength`, `type`.",kind:"cue"},
+  {front:"Wording: \"curl -X GET --json ...\" on a POST route",back:"405: `-X` sets the method.",kind:"cue"},
+  {front:"`print()` in a view shows where?",back:"In the server's terminal, never on the page.",kind:"idea"}
+ ],
+ checklist:["I can write the route table of any Flask snippet and say which function a URL runs.","I can predict 404, 405, 400 and 308 for a URL.","I can say which URLs match a rule with a converter.","I can write the exact output of `url_for(...)`.","I can follow a redirect to the page the browser shows.","I can read query values with `[]` and `.get` and say what happens when one is missing.","I can say which error handler runs and with what status.","I can classify validation as frontend or backend."],
+ cheat:{methods:["Route table first: `path → function (methods)`.","Cut the URL at `?`; match the path; check the method; then run the view.","url_for: function → rule → fill → `?extras`.","Redirect: answer = the target page.","Error: 404 → 405 → view/abort → that status's handler."],traps:["Query string never fills `<placeholder>`.","Empty segment, sign or dot vs `int` → 404.","Slash rules: `/x/` redirects, `/x` does not.","Handler string = 200.","Return in a loop ends it on the first item.","None or int return → 500."]}
+});
