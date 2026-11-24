@@ -63,7 +63,7 @@ APP.manifest={
    subs:[{id:"routing-urlfor",name:"Routing, URL Building (`url_for`) & Redirects",aliases:["route","url_for","redirect"]},
          {id:"request-params",name:"Request Handling & Query/Path Parameters",aliases:["request.args","query string","path"]},
          {id:"error-handling",name:"Error Handling (`abort` & `@app.errorhandler`)",aliases:["abort","errorhandler","404"]},
-         {id:"forms-validation",name:"Forms & Server-Side vs. Client-Side Validation",aliases:["forms","request.form"]}],expected:{q2:{pyqs:39,marks:121.0}},packs:{q2:["flask-core-p2.js"]},patches:[]},
+         {id:"forms-validation",name:"Forms & Server-Side vs. Client-Side Validation",aliases:["forms","request.form"]}],expected:{q2:{pyqs:39,marks:121.0}},packs:{q2:["flask-core-p2.js","flask-core-p3.js"]},patches:[]},
   {id:"templating",name:"Templating & HTML Generation",short:"Templates",mark:"Tp",weeks:[5],status:"planned",uses:["flask-core","python-fund"],
    why:"Turning data into HTML with Template, PyHTML and Jinja2.",
    subs:[{id:"string-template-pyhtml",name:"Python `string.Template` & PyHTML",aliases:["Template","substitute","pyhtml"]},
