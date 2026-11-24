@@ -86,15 +86,16 @@ A.pages.home=function(root){
     A.pyqsOf(m.id,ex).forEach(function(q){var a=S.ans[q.uid];if(a&&a.ok)tot.mk+=+q.marks||0})});
   if(!tot.p){tot.p=C.pyqs;tot.m=C.marks}
   var nx=A.nextStep(),nh;
-  if(nx.kind==="lesson")nh='<p class="nx-k">Today</p><h2>'+esc(nx.m.name)+", lesson "+nx.no+'</h2><p class="nx-m">'+esc(nx.sec.title)+" · about "+nx.mins+' min <small>(reading at 170 words a minute, plus 2 min per worked example or interactive and 1.5 min per check)</small></p><a class="btn" href="'+nx.href+'">'+(nx.no===1&&!S.read[nx.m.id+":"+nx.sec.id]?"Start":"Resume")+"</a>";
-  else if(nx.kind==="pyqs")nh='<p class="nx-k">Today</p><h2>Solve the '+esc(nx.m.short)+' PYQs</h2><p class="nx-p">'+nx.left+' left. Try each one before opening the solution.</p><a class="btn" href="'+nx.href+'">Resume</a>';
-  else if(nx.kind==="test")nh='<p class="nx-k">Today</p><h2>'+esc(nx.m.short)+' topic test</h2><p class="nx-p">Mixed questions from the whole topic, then a list of weak spots.</p><a class="btn" href="'+nx.href+'">Take the test</a>';
+  if(nx.kind==="lesson")nh='<p class="nx-k">'+esc(((A.flavour||{}).copy||{}).nextLabel||"Today")+'</p><h2>'+esc(nx.m.name)+", lesson "+nx.no+'</h2><p class="nx-m">'+esc(nx.sec.title)+" · about "+nx.mins+' min <small>(reading at 170 words a minute, plus 2 min per worked example or interactive and 1.5 min per check)</small></p><a class="btn" href="'+nx.href+'">'+(nx.no===1&&!S.read[nx.m.id+":"+nx.sec.id]?"Start":"Resume")+"</a>";
+  else if(nx.kind==="pyqs")nh='<p class="nx-k">'+esc(((A.flavour||{}).copy||{}).nextLabel||"Today")+'</p><h2>Solve the '+esc(nx.m.short)+' PYQs</h2><p class="nx-p">'+nx.left+' left. Try each one before opening the solution.</p><a class="btn" href="'+nx.href+'">Resume</a>';
+  else if(nx.kind==="test")nh='<p class="nx-k">'+esc(((A.flavour||{}).copy||{}).nextLabel||"Today")+'</p><h2>'+esc(nx.m.short)+' topic test</h2><p class="nx-p">Mixed questions from the whole topic, then a list of weak spots.</p><a class="btn" href="'+nx.href+'">Take the test</a>';
   else if(nx.kind==="none")nh='<p class="nx-k">Being built</p><h2>The first topic is on its way</h2><p class="nx-p">'+esc(A.examLabel(ex))+' topics are written one at a time, starting with Flask. Until then the course route below shows what is coming and how many marks each topic carries.</p>';
   else nh='<p class="nx-k">Every built topic done</p><h2>Sit a timed mock</h2><a class="btn" href="#mock">Start a mock</a>';
   var planned=E.status&&E.status!=="ready"&&E.status!=="in-progress";
-  var h='<div class="page home"><header class="home-head"><p class="kicker">'+esc(M.subject)+'</p><h1>'+esc(E.label)+(ex!=="all"?" study guide":"")+'</h1>'
-    +'<p>'+(planned?esc(E.label)+" is "+esc(E.status)+": its past papers are not added yet. The lessons below are shared across exams.":(C.pyqs?C.pyqs+" past questions from "+(C.papers||[]).length+" papers, "+A.fmt(C.marks)+" marks, taught from zero.":(E.expected&&E.expected.pyqs?E.expected.pyqs+" past questions from "+E.expected.papers+" papers ("+A.fmt(E.expected.marks)+" marks) are being written up, one topic at a time.":"Past questions are being added.")))+'</p>'
-    +'<div class="home-ex">'+A.examSelect("home-exam")+"</div></header>"
+  var FL=A.flavour||{},CP=FL.copy||{};
+  var h='<div class="page home"><header class="'+(FL.hero?"hero":"home-head")+'"><div><p class="kicker">'+esc(CP.heroKicker||M.subject)+'</p><h1>'+esc(CP.heroTitle||(E.label+(ex!=="all"?" study guide":"")))+'</h1>'
+    +'<p class="sub">'+(CP.heroTitle?"<b>"+esc(E.label)+"</b>. ":"")+(planned?esc(E.label)+" is "+esc(E.status)+": its past papers are not added yet. The lessons below are shared across exams.":(C.pyqs?C.pyqs+" past questions from "+(C.papers||[]).length+" papers, "+A.fmt(C.marks)+" marks, taught from zero.":(E.expected&&E.expected.pyqs?E.expected.pyqs+" past questions from "+E.expected.papers+" papers ("+A.fmt(E.expected.marks)+" marks) are being written up, one topic at a time.":"Past questions are being added.")))+'</p>'
+    +'<div class="home-ex">'+A.examSelect("home-exam")+"</div></div>"+(FL.hero?FL.hero():"")+"</header>"
     +'<div class="home-grid"><section class="nextup">'+nh+'</section><section class="tally">'+countdown(ex,tot)
     +'<div><b>'+tot.s+'</b><span>of '+tot.p+' PYQs solved</span></div><div><b>'+A.fmt(tot.mk)+'</b><span>of '+A.fmt(tot.m)+' marks secured</span></div><div><b>'+Object.keys(S.read).length+'</b><span>lessons read</span></div></section></div>'
     +'<section class="mapcard"><h2 class="h2">The course route</h2><div class="mapwrap">'+A.routeGraph(T,false,nx.m&&nx.m.id)+A.routeGraph(T,true,nx.m&&nx.m.id)+'</div><ul class="legend"><li><i class="lg visited"></i>Done</li><li><i class="lg frontier"></i>In progress</li><li><i class="lg unvisited"></i>Not started</li><li><i class="lg planned"></i>Planned</li></ul></section>'
@@ -109,6 +110,7 @@ A.pages.home=function(root){
   T.forEach(function(m){
     var st=A.topicStats(m,ex),t=A.topics[m.id],state=A.stateOf(m,st),li=el("li","trow "+state);
     var segs=t&&A.isReady(m)?t.sections.map(function(sec){return '<i class="'+(S.read[m.id+":"+sec.id]?"on":"")+'"></i>'}).join(""):"";
+    if(A.flavour&&A.flavour.topicCard){li.innerHTML='<a href="#topic/'+m.id+'">'+A.flavour.topicCard(m,st,state,t&&A.isReady(m)?t.sections.length:(m.subs||[]).length)+"</a>";cards.appendChild(li);return}
     li.innerHTML='<a href="#topic/'+m.id+'"><span class="tnode">'+esc(m.mark||"")+'</span><span class="tmain"><b>'+esc(m.name)+(A.isReady(m)?"":' <span class="pill">'+esc(m.status)+"</span>")+'</b><span class="twhy">'+esc(m.why)+'</span><span class="segs" aria-label="'+st.read+" of "+st.secs+' lessons read">'+segs+'</span></span><span class="tnums"><span><b>'+st.solved+"/"+st.pyqs+'</b> PYQs</span><span><b>'+A.fmt(st.marks)+"</b> marks</span><span>weeks "+m.weeks.join(", ")+"</span></span></a>";
     cards.appendChild(li);
   });

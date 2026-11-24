@@ -9,6 +9,8 @@
 const http = require("http"), fs = require("fs"), path = require("path"), os = require("os"), { spawn } = require("child_process");
 const ROOT = path.resolve(__dirname, "..");
 const FIXTURE = process.argv.includes("--fixture"), QUICK = process.argv.includes("--quick");
+const ONLY = (process.argv[process.argv.indexOf("--only") + 1] || "").split(",").filter(x => process.argv.includes("--only") && x);
+const pick = r => !ONLY.length || r === "#home" || ONLY.some(o => r.indexOf(o) >= 0);
 const CHROME = process.env.CHROME || ["/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", "/usr/bin/google-chrome", "/usr/bin/chromium", "/usr/bin/chromium-browser"].find(p => fs.existsSync(p));
 const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".woff2": "font/woff2", ".woff": "font/woff", ".ttf": "font/ttf", ".json": "application/json", ".png": "image/png" };
 const problems = [], notFound = [];
@@ -118,11 +120,11 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   for (const ex of exams) {
     await visit("#exam/" + ex);
     const rs = await routes();
-    for (const r of (QUICK ? rs.slice(0, 20) : rs)) { await visit(r); nRoutes++; }
+    for (const r of (QUICK ? rs.slice(0, 20) : rs).filter(pick)) { await visit(r); nRoutes++; }
   }
   /* every PYQ answered with its stored key, marked correct, review highlights the primary key only */
   await visit("#exam/all");
-  const uids = await ev(`(function(){var o=[];Object.keys(APP.packs).forEach(function(e){Object.keys(APP.packs[e]).forEach(function(t){APP.packs[e][t].pyqs.forEach(function(q){o.push(q.uid)})})});return o})()`);
+  const uids = (await ev(`(function(){var o=[];Object.keys(APP.packs).forEach(function(e){Object.keys(APP.packs[e]).forEach(function(t){APP.packs[e][t].pyqs.forEach(function(q){o.push([q.uid,t])})})});return o})()`)).filter(x => pick("#topic/" + x[1])).map(x => x[0]);
   for (const u of uids) {
     await visit("#pyq/" + u);
     const r = await ev(`(function(){var A=APP,q=A.findPyq(${JSON.stringify(u)}),c=document.querySelector("#main .qcard");if(!c)return "no card";
@@ -179,7 +181,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await send("Emulation.setDeviceMetricsOverride", { width: 360, height: 760, deviceScaleFactor: 2, mobile: true });
   await load(qs);
   await ev(`(APP.setTheme(true),true)`);
-  for (const ex of exams) { await visit("#exam/" + ex); const rs = await routes(); for (const r of (QUICK ? rs.slice(0, 20) : rs)) { await visit(r); nRoutes++; } }
+  for (const ex of exams) { await visit("#exam/" + ex); const rs = await routes(); for (const r of (QUICK ? rs.slice(0, 20) : rs).filter(pick)) { await visit(r); nRoutes++; } }
   const dark = await ev(`document.documentElement.getAttribute("data-theme")`);
   if (dark !== "dark") fail("dark mode", "theme is " + dark);
   /* bundled fonts actually loaded (KaTeX included) */
