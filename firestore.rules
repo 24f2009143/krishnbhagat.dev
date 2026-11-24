@@ -2,11 +2,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Signed in, email verified by Google, and an IITM student address.
+    // Signed in with any Google account whose email Google has verified.
     function student() {
       return request.auth != null
-        && request.auth.token.email_verified == true
-        && request.auth.token.email.matches('.*@ds[.]study[.]iitm[.]ac[.]in');
+        && request.auth.token.email_verified == true;
     }
     // The site owner can read everyone's progress (to improve the sites). Nobody else can.
     function owner() {
@@ -29,6 +28,14 @@ service cloud.firestore {
 
     // PDSA site
     match /pdsa/{uid} {
+      allow read: if student() && request.auth.uid == uid;
+      allow read: if owner();
+      allow create, update: if student() && request.auth.uid == uid && validDoc([]);
+      allow delete: if student() && request.auth.uid == uid;
+    }
+
+    // MAD 1 site
+    match /mad1/{uid} {
       allow read: if student() && request.auth.uid == uid;
       allow read: if owner();
       allow create, update: if student() && request.auth.uid == uid && validDoc([]);
