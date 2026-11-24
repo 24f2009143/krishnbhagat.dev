@@ -61,7 +61,7 @@ function walk(o, w, bank) {
   if (o == null) return;
   if (typeof o === "string") return checkText(w, o, bank);
   if (Array.isArray(o)) return o.forEach((x, i) => walk(x, w + "[" + i + "]", bank));
-  if (typeof o === "object") Object.keys(o).forEach(k => { if (k === "svg" || k === "src" || k === "code" || k === "tex") return; walk(o[k], w + "." + k, bank || ((k === "stem" || k === "options" || k === "parent") && w.indexOf(".pyqs[") >= 0 && w.indexOf(".transfer") < 0)) });
+  if (typeof o === "object") Object.keys(o).forEach(k => { if (k === "svg" || k === "src" || k === "code" || k === "tex" || k === "key" || k === "altKey" || k === "accept") return;  /* answers are compared as plain text, not rendered */ walk(o[k], w + "." + k, bank || ((k === "stem" || k === "options" || k === "parent") && w.indexOf(".pyqs[") >= 0 && w.indexOf(".transfer") < 0)) });
 }
 
 /* ---------- questions ---------- */
