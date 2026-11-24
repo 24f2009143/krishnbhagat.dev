@@ -48,8 +48,10 @@
   }
   function mount() {
     chip = document.createElement("button"); chip.type = "button"; chip.id = "sync-chip"; chip.className = "sync-chip";
+    var rail = document.querySelector("#app-top .rail-in");
     chip.onclick = function () { if (!user) return signIn(); if (window.confirm("Sign out? Your progress stays on this device and in your cloud copy.")) fb.au.signOut(fb.auth); };
-    document.body.appendChild(chip); paint();
+    if (rail) { chip.classList.add("in-rail"); rail.appendChild(chip); } else document.body.appendChild(chip);
+    paint();
   }
   window.addEventListener("load", function () {
     if (!navigator.onLine) { if (window.NH_WALL) NH_WALL.hide(); return; }   /* offline: no sync, no wall */

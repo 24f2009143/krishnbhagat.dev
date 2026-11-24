@@ -97,7 +97,7 @@ A.badge=function(){var S=A.load(),n=0;Object.keys(S.ans).forEach(function(k){var
 
 /* ---------- router ---------- */
 A.parseHash=function(h){
-  h=(h||location.hash||"#home").replace(/^#/,"");var p=h.split("/").map(function(x){try{return decodeURIComponent(x)}catch(e){return x}});
+  h=(h||location.hash||"#home").replace(/^#/,"").split("#")[0];var p=h.split("/").map(function(x){try{return decodeURIComponent(x)}catch(e){return x}});
   return {page:p[0]||"home",parts:p.slice(1)};
 };
 A.PHASE_E=["things","traps","coverage","examday"];
@@ -114,7 +114,7 @@ A.route=function(){
   var S=A.load();if(page!=="settings"&&page!=="search"){S.prefs.last=location.hash||"#home";A.save()}
   A.math(root);A.badge();railTopics();updContinue();
   var h1=root.querySelector("h1");document.title=(h1?h1.textContent.trim()+" · ":"")+A.manifest.short+" · nerdhub";
-  if(!A._keepScroll)window.scrollTo(0,0);A._keepScroll=false;
+  if(!A._keepScroll)window.scrollTo({top:0,left:0,behavior:"instant"});A._keepScroll=false;
   if(A._after){var f=A._after;A._after=null;setTimeout(f,40)}
 };
 
