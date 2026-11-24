@@ -19,12 +19,14 @@ def fill(m):
         v = r["stem"]
     elif kind == "OPTIONS":
         v = [o["text"] for o in r["options"]]
+    elif kind == "FIG":
+        v = r["figureNote"]
     else:
         v = r["parent"]
     return json.dumps(v, ensure_ascii=False)
 
 
-out = re.sub(r"__(STEM|OPTIONS|PARENT)_(\d+)__", fill, text)
+out = re.sub(r"__(STEM|OPTIONS|PARENT|FIG)_(\d+)__", fill, text)
 
 
 def meta(m):

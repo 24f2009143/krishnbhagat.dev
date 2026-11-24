@@ -22,7 +22,12 @@ for ex, tops in data["packs"].items():
             if squash(q["stem"]) != squash(r["stem"]):
                 errs.append("%s: stem differs from the bank" % q["id"])
             got = [o if isinstance(o, str) else o.get("text") for o in (q.get("options") or [])]
-            if [squash(x) for x in got] != [squash(o["text"]) for o in r["options"]]:
+            if q.get("optionsReconstructed"):
+                if not (q.get("tag") == "[FLAG]" and q.get("tagNote")):
+                    errs.append("%s: reconstructed options need [FLAG] and a tagNote" % q["id"])
+                if len(got) != len(r["options"]):
+                    errs.append("%s: reconstructed option count differs" % q["id"])
+            elif [squash(x) for x in got] != [squash(o["text"]) for o in r["options"]]:
                 errs.append("%s: options differ from the bank" % q["id"])
             for f, want in (("marks", r["marks"]), ("qno", r["qno"]), ("paper", r["date"])):
                 if (float(q[f]) if f == "marks" else q[f]) != want:
