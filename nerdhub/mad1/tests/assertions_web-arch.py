@@ -86,5 +86,38 @@ def set_cookie_header():
     eq(out_of(COOKIE).split("\n")[2], "lang=ta", "the response header is Set-Cookie")
 
 
+
+# ================= depth upgrade (MLT pattern)
+@check("Tweb-arch-07")
+def url_parts():
+    o = out_of("from urllib.parse import urlsplit\nu = urlsplit('https://example.com:8443/shop/items?id=7&sort=price#reviews')\nprint(u.scheme, u.hostname, u.port, u.path, u.query, u.fragment)\n")
+    eq(o, "https example.com 8443 /shop/items id=7&sort=price reviews", "the six parts of a URL")
+
+
+@check("Tweb-arch-08")
+def cookie_round_trip():
+    src = ("from flask import Flask, request, make_response\napp = Flask(__name__)\n"
+           "@app.route('/set')\ndef set_():\n    r = make_response('set')\n    r.set_cookie('theme', 'dark')\n    return r\n"
+           "@app.route('/read')\ndef read():\n    return request.cookies.get('theme', 'none')\n"
+           "c = app.test_client()\nprint(c.get('/read').get_data(as_text=True))\nr = c.get('/set')\nprint(r.headers['Set-Cookie'].split(';')[0])\nprint(c.get('/read').get_data(as_text=True))\n")
+    eq(out_of(src), "none\ntheme=dark\ndark", "Set-Cookie in the response; the browser sends it back on the next request")
+
+
+@check("Tweb-arch-09")
+def flask_session_needs_secret():
+    base = ("from flask import Flask, session\napp = Flask(__name__)\n%s"
+            "@app.route('/inc')\ndef inc():\n    session['n'] = session.get('n', 0) + 1\n    return str(session['n'])\n"
+            "app.testing = True\nc = app.test_client()\n"
+            "try:\n    print(c.get('/inc').get_data(as_text=True), c.get('/inc').get_data(as_text=True))\nexcept Exception as e:\n    print(type(e).__name__)\n")
+    eq(out_of(base % "app.secret_key = 'dev'\n"), "1 2", "the session survives between requests through a signed cookie")
+    eq(out_of(base % ""), "RuntimeError", "no secret key: the session cannot be signed")
+
+
+@check("Tweb-arch-10")
+def availability_arithmetic():
+    o = out_of("one = 0.99\nboth_down = (1 - one) ** 2\nprint(round(1 - both_down, 6), round((1 - one) * 365 * 24, 1), round(both_down * 365 * 24 * 60, 1))\n")
+    eq(o, "0.9999 87.6 52.6", "two independent 99% servers: 99.99%; downtime hours and minutes per year")
+
+
 if __name__ == "__main__":
     main()

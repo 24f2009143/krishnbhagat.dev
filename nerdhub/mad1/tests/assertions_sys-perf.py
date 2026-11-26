@@ -186,5 +186,17 @@ def units_lesson():
     eq((4 * 1000 * 8, 80 / 20), (32000, 4.0), "quiz")
 
 
+@check("Tsys-perf-23")
+def depth_numbers():
+    eq([bits_for(n) for n in (26, 36, 62, 63, 95)], [5, 6, 6, 6, 7], "letters 5; +digits 6; both cases+digits 6; +space 6; printable ASCII 7")
+    close(10 ** 9 / 10 ** 9, 1, "10^9 operations at 10^9 per second: 1 s")
+    close((10 ** 5) ** 2 / 10 ** 9, 10, "n^2 with n = 10^5: 10 s")
+    close(10 ** 6 * math.log2(10 ** 6) / 10 ** 9 * 1000, 19.93, "n log2 n with n = 10^6: about 20 ms", tol=1e-3)
+    close(60 / 7200 / 2 * 1000, 4.1667, "average rotational delay at 7200 RPM", tol=1e-4)
+    close(8 / 25.6, 0.3125, "8 GB at 25.6 GB/s")
+    close(1e6 * 8 / 100e6 * 1000, 80, "1 MB over 100 Mbps: 80 ms transmission")
+    close(200 * 0.05, 10, "200 requests/s that each take 50 ms: 10 in flight at once")
+
+
 if __name__ == "__main__":
     main()

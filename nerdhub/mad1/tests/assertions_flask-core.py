@@ -1039,5 +1039,85 @@ def tr_endpoint_status():
 def tr_learn_java():
     eq(bodies(flask(CODE["6406532180392"][0], [("GET", "/learn/Java", {}, True)])), ["<h2>Course not available!</h2>"], "body")
 
+
+# ---------------- depth upgrade (MLT pattern): one check per new claim
+@check("Tflask-core-141")
+def auto_methods():
+    r = flask(HEAD + '@app.route("/")\ndef h():\n    return "hi"\n', [("GET", "/"), ("HEAD", "/"), ("OPTIONS", "/"), ("POST", "/")])
+    eq(st(r), [200, 200, 200, 405], "GET, HEAD, OPTIONS allowed; POST 405")
+    eq(r[1]["body"], "", "HEAD has no body")
+
+
+@check("Tflask-core-142")
+def same_rule_and_name():
+    r = flask(HEAD + '@app.route("/a")\ndef x():\n    return "x"\n@app.route("/a")\ndef y():\n    return "y"\n', [("GET", "/a")])
+    eq(bodies(r), ["x"], "the first rule registered wins")
+    o, e, rc = run_py("import flask\nflask.Flask.run=lambda *a,**k: None\n" + HEAD + '@app.route("/a")\ndef x():\n    return "x"\n@app.route("/b")\ndef x():\n    return "y"\n')
+    eq("View function mapping is overwriting an existing endpoint function: x" in e, True, "two functions with one name fail at start-up")
+
+
+@check("Tflask-core-143")
+def converter_edges():
+    r = flask(HEAD + '@app.route("/f/<float:x>")\ndef f(x):\n    return repr(x)\n@app.route("/n/<int:x>")\ndef n(x):\n    return repr(x)\n@app.route("/p/<path:p>")\ndef p(p):\n    return p\n@app.route("/s/<s>")\ndef s(s):\n    return s\n',
+              [("GET", "/f/3"), ("GET", "/f/3.5"), ("GET", "/n/007"), ("GET", "/p/a/b/c"), ("GET", "/s/a/b"), ("GET", "/s/a%20b"), ("GET", "/f/-2.5"), ("GET", "/f/10.0")])
+    eq(st(r), [404, 200, 200, 200, 404, 200, 404, 200], "status (float rejects a minus sign by default)")
+    eq([b for b in bodies(r)][1:4] + [bodies(r)[5]], ["3.5", "7", "a/b/c", "a b"], "values")
+
+
+@check("Tflask-core-144")
+def url_for_edges():
+    app = HEAD + '@app.route("/user/<name>")\ndef user(name):\n    return name\n'
+    eq(ctx(app, ['url_for("user", name="a b")', 'url_for("user", name="x", _external=True)', 'url_for("static", filename="x.css")', 'url_for("user", name="q", tab=1)']),
+       ["/user/a%20b", "http://localhost/user/x", "/static/x.css", "/user/q?tab=1"], "escaping, external, static, extra values")
+
+
+@check("Tflask-core-145")
+def redirect_codes():
+    r = flask(HEAD + '@app.route("/a")\ndef a():\n    return redirect(url_for("b"))\n@app.route("/b")\ndef b():\n    return "B"\n@app.route("/c")\ndef c():\n    return redirect("/b", code=301)\n',
+              [("GET", "/a"), ("GET", "/c"), ("GET", "/a", {}, True)])
+    eq([(x["status"], x["location"]) for x in r[:2]], [(302, "/b"), (301, "/b")], "302 by default, 301 when asked; Location /b")
+    eq((r[2]["status"], r[2]["body"]), (200, "B"), "following it shows B")
+
+
+@check("Tflask-core-146")
+def args_lists_and_types():
+    r = flask("import json\n" + HEAD + '@app.route("/t")\ndef t():\n    return json.dumps([request.args.get("t"), request.args.getlist("t"), request.args.get("n", type=int), request.args.get("n", 5, type=int)])\n',
+              [("GET", "/t?t=a&t=b&n=x"), ("GET", "/t?n=3")])
+    eq([json.loads(b) for b in bodies(r)], [["a", ["a", "b"], None, 5], [None, [], 3, 3]], "get, getlist, type=int")
+
+
+@check("Tflask-core-147")
+def handler_500_and_description():
+    r = flask(HEAD + '@app.errorhandler(500)\ndef e(err):\n    return "bad", 500\n@app.route("/z")\ndef z():\n    return 1/0\n@app.route("/q")\ndef q():\n    abort(403, description="no entry")\n', [("GET", "/z"), ("GET", "/q")])
+    eq((r[0]["status"], r[0]["body"]), (500, "bad"), "a crash goes to the 500 handler")
+    eq((r[1]["status"], "no entry" in r[1]["body"]), (403, True), "abort's description is shown")
+
+
+@check("Tflask-core-148")
+def form_missing_key():
+    r = flask(HEAD + '@app.route("/f", methods=["POST"])\ndef f():\n    return request.form["x"]\n@app.route("/g", methods=["POST"])\ndef g():\n    return request.form.get("x", "none")\n', [("POST", "/f"), ("POST", "/g"), ("POST", "/f", {"data": {"x": "1"}})])
+    eq(st(r), [400, 200, 200], "missing form key with [] is 400")
+    eq(bodies(r)[1:], ["none", "1"], "get gives the default")
+
+
+@check("Tflask-core-149")
+def return_shapes():
+    r = flask(HEAD + '@app.route("/a")\ndef a():\n    return "made", 201\n@app.route("/b")\ndef b():\n    return "h", {"X-A": "1"}\n@app.route("/c")\ndef c():\n    return [1, 2]\n@app.route("/d")\ndef d():\n    return 5\n@app.route("/e")\ndef e():\n    return "t", 202, {"X-B": "2"}\n',
+              [("GET", "/a"), ("GET", "/b"), ("GET", "/c"), ("GET", "/d"), ("GET", "/e")])
+    eq(st(r), [201, 200, 200, 500, 202], "status of each return shape")
+    eq((r[2]["ctype"], json.loads(r[2]["body"])), ("application/json", [1, 2]), "a list becomes JSON")
+
+
+@check("Tflask-core-150")
+def route_decorator_returns_function():
+    r = flask(HEAD + 'def v():\n    return "v"\nr = app.route("/v")(v)\n@app.route("/w")\ndef w():\n    return str(r is v)\n', [("GET", "/w"), ("GET", "/v")])
+    eq(bodies(r), ["True", "v"], "app.route(...) registers the function and hands it back unchanged")
+
+
+@check("Tflask-core-151")
+def python_basics():
+    eq(out_of('name = "MAD"\nd = {"a": 1}\nprint(f"Hello {name}")\nprint(d.get("b"), d.get("b", 0))\ndef f():\n    x = 1\nprint(f())\n'), "Hello MAD\nNone 0\nNone", "f-string, dict.get, a function without return")
+
+
 if __name__ == "__main__":
     main()
