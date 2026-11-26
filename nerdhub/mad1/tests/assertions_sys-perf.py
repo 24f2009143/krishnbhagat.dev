@@ -198,5 +198,14 @@ def depth_numbers():
     close(200 * 0.05, 10, "200 requests/s that each take 50 ms: 10 in flight at once")
 
 
+@check("Tsys-perf-24")
+def depth_numbers_2():
+    eq((1000 * 8) // 5, 1600, "characters in 1 KB (1000 B) at 5 bits each")
+    close(3200e6 * 8 / 1e9, 25.6, "DDR4-3200: 3200 million transfers × 8 bytes")
+    close(4 + 60 / 7200 / 2 * 1000 + 1e6 / 200e6 * 1000, 13.1667, "seek 4 ms + average rotation 4.17 ms + 1 MB at 200 MB/s (5 ms)", tol=1e-4)
+    close(8 / 0.040, 200, "8 cores, 40 ms of CPU per request: 200 requests/s")
+    close((3 * 500e3 * 8) / 10e6 * 1000 + 50, 1250, "three 500 KB images over 10 Mbps plus one 50 ms round trip")
+
+
 if __name__ == "__main__":
     main()
