@@ -326,5 +326,29 @@ def restful_endpoints():
     eq([x[0] for x in r2], [500, 200], "without the default, /r calls get() with no i: 500")
 
 
+
+@check("Trest-api-35")
+def python_json_mapping():
+    o, e, rc = run_py("import json\nprint(json.dumps({'ok': True, 'none': None, 'pair': (1, 2), 'n': 1.5}))\nprint(json.loads('{\"a\": [1, true, null]}'))\nprint(json.dumps({1: 'x'}))\n")
+    eq(o.strip().splitlines(), ['{"ok": true, "none": null, "pair": [1, 2], "n": 1.5}', "{'a': [1, True, None]}", '{"1": "x"}'], "Python ↔ JSON: True/true, None/null, tuple→array, keys become strings")
+
+
+@check("Trest-api-36")
+def request_json_content_type():
+    app = "from flask import Flask, request\napp = Flask(__name__)\n@app.route('/j', methods=['POST'])\ndef j():\n    return {'got': request.json}\n@app.route('/s', methods=['POST'])\ndef s():\n    return {'got': request.get_json(silent=True)}\n"
+    r, _ = call(app, [("POST", "/j", {"json": {"a": 1}}), ("POST", "/j", {"data": '{"a": 1}'}), ("POST", "/s", {"data": '{"a": 1}'})])
+    eq([x[0] for x in r], [200, 415, 200], "JSON without the JSON Content-Type: request.json gives 415")
+    eq((body(r[0]), body(r[2])), ({"got": {"a": 1}}, {"got": None}), "get_json(silent=True) gives None instead")
+
+
+@check("Trest-api-37")
+def crud_resource_walkthrough():
+    app = RP + ('ITEMS = {}\nclass Item(Resource):\n    def get(self, i):\n        return ITEMS.get(i, {"error": "not found"}), (200 if i in ITEMS else 404)\n'
+                '    def put(self, i):\n        ITEMS[i] = {"id": i}\n        return ITEMS[i], 201\n    def delete(self, i):\n        ITEMS.pop(i, None)\n        return "", 204\n'
+                'api.add_resource(Item, "/items/<int:i>")\n')
+    r, _ = call(app, [("GET", "/items/1"), ("PUT", "/items/1"), ("GET", "/items/1"), ("DELETE", "/items/1"), ("GET", "/items/1")])
+    eq([x[0] for x in r], [404, 201, 200, 204, 404], "read missing, create, read, delete, read again")
+
+
 if __name__ == "__main__":
     main()
