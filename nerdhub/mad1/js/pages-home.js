@@ -47,7 +47,7 @@ function layout(T,vert){
   var cols=Object.keys(byCol).map(Number).sort(function(a,b){return a-b});
   if(vert){var y=60;T.slice().sort(function(a,b){return Math.min.apply(null,a.weeks)-Math.min.apply(null,b.weeks)}).forEach(function(m,i){pos[m.id]=[i%2?250:95,y];y+=100});return {pos:pos,W:350,H:y-20}}
   var W=Math.max(640,cols.length*118+80);
-  cols.forEach(function(w,ci){var ids=byCol[w];ids.forEach(function(id,k){pos[id]=[60+ci*((W-120)/Math.max(1,cols.length-1)),ids.length===1?(ci%2?110:200):80+k*130]})});
+  cols.forEach(function(w,ci){var ids=byCol[w];ids.forEach(function(id,k){pos[id]=[90+ci*((W-180)/Math.max(1,cols.length-1)),ids.length===1?(ci%2?110:200):80+k*130]})});
   return {pos:pos,W:W,H:290};
 }
 A.routeGraph=function(T,vert,nextId){
@@ -102,8 +102,52 @@ A.pyqAnalysis=function(ex,T){
     +'<p class="reading"><b>Reading it:</b> the top three topics ('+top.map(function(x){return esc(x.m.short)}).join(", ")+") hold "+A.fmt(topMk)+" of "+A.fmt(marks)+" marks, which is "+pct(topMk,marks)+".</p>"
     +'<h3 class="h3">Question types</h3>'+hbars(ty.map(function(o){return [esc(o[0]),o[1],A.fmt(o[1])+" marks, "+o[2]+" Qs"]}),ty[0][1])
     +(comp?'<p class="sub">'+comp+" of these are sub-questions of a case study (a passage or code shared by two or three questions).</p>":"")
-    +'<h3 class="h3">Marks by paper</h3>'+hbars(byP.map(function(r){return [r[0],r[1],A.fmt(r[1])+" marks, "+r[2]+" Qs"]}),Math.max.apply(null,byP.map(function(r){return r[1]})))
+    +'<h3 class="h3">Marks per paper in this bank</h3>'+hbars(byP.map(function(r){return [r[0],r[1],A.fmt(r[1])+" marks, "+r[2]+" Qs"]}),Math.max.apply(null,byP.map(function(r){return r[1]})))
+    +A.paperTopicTable(ex,T)+A.topIdeas(ex,T,10)
     +"</section>";
+};
+/* which topics appeared in which paper, and the ideas that carried the most marks */
+A.paperTopicTable=function(ex,T){
+  var papers={},live=T.filter(function(m){return A.pyqsOf(m.id,ex).length});
+  live.forEach(function(m){A.pyqsOf(m.id,ex).forEach(function(q){papers[q.paper]=1})});
+  var P=Object.keys(papers).sort(function(a,b){return A.paperTime(a)-A.paperTime(b)});if(!P.length)return "";
+  var rows=live.map(function(m){var q=A.pyqsOf(m.id,ex),cells=P.map(function(p){return q.filter(function(x){return x.paper===p}).reduce(function(a,x){return a+(+x.marks||0)},0)});return {m:m,cells:cells,tot:cells.reduce(function(a,b){return a+b},0)}}).sort(function(a,b){return b.tot-a.tot});
+  var mx=Math.max.apply(null,rows.map(function(r){return Math.max.apply(null,r.cells)}));
+  function short(p){var d=p.match(/^(\d+ )?([A-Za-z]{3})[a-z]* (\d{4})$/);return d?d[2]+" "+d[3]:p}
+  return '<h3 class="h3">Which topics appeared in which paper (marks)</h3><div class="tw heat"><table><thead><tr><th>Topic</th>'+P.map(function(p){return "<th>"+esc(short(p))+"</th>"}).join("")+"<th>Papers</th></tr></thead><tbody>"
+    +rows.map(function(r){return '<tr><td><a href="#topic/'+r.m.id+'">'+esc(r.m.short)+"</a></td>"+r.cells.map(function(c){return '<td style="--h:'+(c?(0.12+0.7*c/mx).toFixed(2):0)+'">'+(c?A.fmt(c):"")+"</td>"}).join("")+"<td>"+r.cells.filter(function(c){return c}).length+"/"+P.length+"</td></tr>"}).join("")
+    +'</tbody></table></div><p class="sub">Darker cell, more marks from that topic in that paper. A topic that shows up in most papers is a safe investment.</p>';
+};
+A.topIdeas=function(ex,T,n){
+  var all=[];T.filter(A.isReady).forEach(function(m){var cm=A.conceptMarks(m.id,ex),t=A.topics[m.id];Object.keys(cm).forEach(function(k){var c=t.concepts[k],sec=t.sections.find(function(s){return (s.concepts||[]).indexOf(k)>=0});all.push({m:m,name:c?c.name:k,mk:cm[k].marks,n:cm[k].n,href:"#topic/"+m.id+(sec?"/lesson/"+sec.id:"")})})});
+  all.sort(function(a,b){return b.mk-a.mk||b.n-a.n});
+  return all.length?'<h3 class="h3">Ten highest-mark ideas</h3><ol class="prose ideas">'+all.slice(0,n||10).map(function(x){return '<li><a href="'+x.href+'">'+esc(x.m.short)+" / "+A.inline(x.name)+"</a> ("+A.fmt(x.mk)+" marks, "+x.n+" Qs)</li>"}).join("")+"</ol>":"";
+};
+A.toolkit=function(){
+  var items=[["plan","Study plan","Pick 1 hour, a day or a week; get an ordered list with times."],["cards","Flashcards","Spaced recall of every idea, command and trap."],["glossary","Glossary","Every term in plain English, from all the lessons."],["cheat","Cheatsheet","Every topic's methods and traps on one page."],["things","Things to remember","Facts, cues and exam moves, all topics."],["mock","Mock exam","A timed paper of past questions that marks itself."]];
+  return '<section class="hsec"><h2 class="h2">Study toolkit</h2><div class="toolkit">'+items.map(function(x){return '<a class="tk" href="#'+x[0]+'">'+A.ico(x[0]==="things"?"things":x[0]==="cheat"?"sheet":x[0])+"<b>"+esc(x[1])+"</b><span>"+esc(x[2])+"</span></a>"}).join("")+'</div><p class="note">Progress is stored in this browser. Sign in from Settings to sync it to your other devices, or <a href="#settings">back it up to a file</a>.</p></section>';
+};
+A.studyGuides=function(ex,T){
+  var byT=T.filter(function(m){return A.pyqsOf(m.id,ex).length}).map(function(m){var q=A.pyqsOf(m.id,ex);return {m:m,mk:q.reduce(function(a,x){return a+(+x.marks||0)},0)}}).sort(function(a,b){return b.mk-a.mk});
+  var tot=byT.reduce(function(a,x){return a+x.mk},0),top=byT.slice(0,3),topMk=top.reduce(function(a,x){return a+x.mk},0);
+  var order=T.filter(A.isReady).map(function(m){return esc(m.short)}).join(", then ");
+  return '<section class="hsec guide"><h2 class="h2">How to study for the first time</h2><p class="sub">Use this if you are meeting MAD 1 for the first time. Plan about 4 to 6 hours per topic, spread over two days.</p><ol class="prose steps">'
+    +"<li><b>Set up (10 min).</b> Open the topic and read its orientation: what you will learn, and how many marks it carried in past papers.</li>"
+    +"<li><b>Prerequisites first (15 min).</b> Do the refresher under \"What comes before\" even if it looks easy. Most Flask and database mistakes come from a shaky picture of one HTTP request.</li>"
+    +"<li><b>One lesson at a time (30 to 45 min each).</b> Read the In short box, then the lesson. Follow every worked example with a pen and say the next step before you reveal it. Then answer the checks; if you miss one, reread that lesson.</li>"
+    +"<li><b>Say it back.</b> After each lesson, close the page and explain the idea in two sentences in the Teach it back box.</li>"
+    +"<li><b>Past questions before solutions (45 to 60 min).</b> Try each one on paper first, mark how sure you are, then read the solution. When you are wrong, note why.</li>"
+    +"<li><b>Revise and test (30 min).</b> Read the Revise tab once, then take the topic test with an honest confidence for each answer.</li>"
+    +"<li><b>Next day, 20 minutes.</b> Redo your Mistakes, then go through the Checklist. Tick a skill only if you can do it without notes.</li>"
+    +"<li><b>Follow the topic order.</b> "+order+". Each topic uses the ones before it.</li></ol>"
+    +'<h2 class="h2">How to study to maximise marks</h2><p class="sub">Use this when time is short or you know the basics. It is built from the analysis above.</p><ol class="prose steps">'
+    +"<li><b>Spend time where the marks are.</b> The three highest-mark topics ("+top.map(function(x){return esc(x.m.short)}).join(", ")+") carry "+(tot?Math.round(1000*topMk/tot)/10:0)+"% of the marks in this bank. Secure them completely before polishing small topics.</li>"
+    +"<li><b>Prefer topics that appear in many papers.</b> Use the paper-by-topic table: a topic present in most papers is more dependable than one that appeared once.</li>"
+    +"<li><b>Learn the fixed patterns.</b> The same question types repeat with new code: each topic's orientation lists the patterns and the first move for each.</li>"
+    +"<li><b>Run the code in your head the same way every time.</b> Write the route table, the model's keys, or the template's variables first; most traps vanish once that is on paper.</li>"
+    +"<li><b>Study your own errors.</b> Open Mistakes and fix the ones where you were sure and wrong first: those cost marks in the exam.</li>"
+    +"<li><b>Exam technique.</b> For multiple-answer questions judge every option on its own; check status codes and exact output text letter by letter; leave a hard question after two minutes and come back.</li>"
+    +'<li><b>Last day.</b> Top topics first, redo mistakes, read each topic\'s Revise tab, then stop.</li></ol><p><a class="btn ghost" href="#cheat">Open the cheatsheet</a></p></section>';
 };
 A.weekMap=function(ex,T){
   var E=A.examInfo(ex),M=A.manifest,all=[];T.forEach(function(m){A.pyqsOf(m.id,ex).forEach(function(q){all.push(q)})});
@@ -156,15 +200,16 @@ A.pages.home=function(root){
     +'<div class="home-grid"><section class="nextup">'+nh+'</section><section class="tally">'+countdown(ex,tot)
     +'<div><b>'+tot.s+'</b><span>of '+tot.p+' PYQs solved</span></div><div><b>'+A.fmt(tot.mk)+'</b><span>of '+A.fmt(tot.m)+' marks secured</span></div><div><b>'+Object.keys(S.read).length+'</b><span>lessons read</span></div></section></div>'
     +'<h2 class="h2">Topics</h2><ol class="tlist" id="home-cards"></ol>'
-    +A.progressBlock(ex,T)+A.pyqAnalysis(ex,T)+A.weekMap(ex,T)
-    +'<section class="mapcard"><h2 class="h2">The course route</h2><div class="mapwrap">'+A.routeGraph(T,false,nx.m&&nx.m.id)+A.routeGraph(T,true,nx.m&&nx.m.id)+'</div><ul class="legend"><li><i class="lg visited"></i>Done</li><li><i class="lg frontier"></i>In progress</li><li><i class="lg unvisited"></i>Not started</li><li><i class="lg planned"></i>Planned</li></ul></section>'
+    +'<section class="mapcard"><h2 class="h2">'+esc(E.label)+' on one page: how the topics connect</h2><p class="sub">Each arrow points from a topic to a topic that uses it. Click any circle to open it.</p><div class="mapwrap">'+A.routeGraph(T,false,nx.m&&nx.m.id)+A.routeGraph(T,true,nx.m&&nx.m.id)+'</div><ul class="legend"><li><i class="lg visited"></i>Done</li><li><i class="lg frontier"></i>In progress</li><li><i class="lg unvisited"></i>Not started</li><li><i class="lg planned"></i>Planned</li></ul></section>'
+    +A.toolkit()+A.progressBlock(ex,T)+A.weekMap(ex,T)+A.pyqAnalysis(ex,T)+A.studyGuides(ex,T)
+
     +(M.flags&&M.flags.length?'<p class="flagline">'+M.flags.map(function(f){return '<span class="tag FLAG">[FLAG]</span> '+esc(f)}).join(" · ")+"</p>":"")
     +"</div>";
   root.innerHTML=h;
   var he=$("#h-exam",root);if(he)he.onchange=function(){var S2=A.load();S2.prefs.examDates=S2.prefs.examDates||{};S2.prefs.examDates[ex]=this.value;A.save();A.route()};
   var cards=$("#home-cards",root);
   T.forEach(function(m){
-    var st=A.topicStats(m,ex),t=A.topics[m.id],state=A.stateOf(m,st),li=el("li","trow "+state);
+    var st=A.topicStats(m,ex),t=A.topics[m.id],state=A.stateOf(m,st),li=el("li","trow "+state);li.style.setProperty("--tc",A.topicColor(m.id));
     var segs=t&&A.isReady(m)?t.sections.map(function(sec){return '<i class="'+(S.read[m.id+":"+sec.id]?"on":"")+'"></i>'}).join(""):"";
     if(A.flavour&&A.flavour.topicCard){li.innerHTML='<a href="#topic/'+m.id+'">'+A.flavour.topicCard(m,st,state,t&&A.isReady(m)?t.sections.length:(m.subs||[]).length)+"</a>";cards.appendChild(li);return}
     li.innerHTML='<a href="#topic/'+m.id+'"><span class="tnode">'+esc(m.mark||"")+'</span><span class="tmain"><b>'+esc(m.name)+(A.isReady(m)?"":' <span class="pill">'+esc(m.status)+"</span>")+'</b><span class="twhy">'+esc(m.why)+'</span><span class="segs" aria-label="'+st.read+" of "+st.secs+' lessons read">'+segs+'</span></span><span class="tnums"><span><b>'+st.solved+"/"+st.pyqs+'</b> PYQs</span><span><b>'+A.fmt(st.marks)+"</b> marks</span><span>weeks "+m.weeks.join(", ")+"</span></span></a>";
