@@ -67,13 +67,20 @@ function lesson(art,t,m,sec,cur,secs){
   art.innerHTML='<p class="kicker">Lesson '+(cur+1)+" of "+secs.length+" · about "+A.sectionMins(sec)+" min"+(sec.patch?' <span class="pill">added for '+esc(A.examLabel(A.exam()))+"</span>":"")+"</p><h2>"+esc(sec.title)+"</h2>"
     +'<p class="lede">'+A.inline(sec.plain)+"</p>"
     +'<p class="lesson-why"><span><b>You will study</b> '+A.inline(sec.studying)+'.</span> <span><b>Why it matters:</b> '+A.inline(sec.why)+".</span></p>";
+  /* fast path: the key points and the new words first, and a switch that hides side material */
+  var quick=!!S.prefs.quick,qs=el("div","quickbar",'<button class="switch" type="button" role="switch" aria-checked="'+quick+'" aria-label="Quick read"><i></i></button><span><b>Quick read</b> hides analogies, side notes and the deep dives, so only the core path is left.</span>');
+  qs.querySelector("button").onclick=function(){var S2=A.load();S2.prefs.quick=!S2.prefs.quick;A.save();document.body.classList.toggle("quick",S2.prefs.quick);this.setAttribute("aria-checked",S2.prefs.quick)};
+  document.body.classList.toggle("quick",quick);art.appendChild(qs);
+  if((sec.remember&&sec.remember.length)||(sec.terms&&sec.terms.length)){var fs=el("div","inshort");
+    fs.innerHTML=(sec.remember&&sec.remember.length?'<div><h3 class="h3">In short</h3><ul>'+sec.remember.map(function(r){return "<li>"+A.inline(r)+"</li>"}).join("")+"</ul></div>":"")
+      +(sec.terms&&sec.terms.length?'<div><h3 class="h3">New words</h3><dl class="terms">'+sec.terms.map(function(x){return "<div><dt>"+A.inline(x[0])+"</dt><dd>"+A.inline(x[1])+"</dd></div>"}).join("")+"</dl></div>":"");
+    art.appendChild(fs)}
   if(sec.diagnostic){var dg=el("details","diag",'<summary>Already know this? Try one question first <small>optional</small></summary><p class="sub">If you get it right and you were sure, you can skip ahead to the check at the end.</p>');
     dg.appendChild(A.qcard(Object.assign({topicId:t.id,tag:"[ADDED]"},sec.diagnostic),{noHints:true,onDone:function(ok){if(ok){var a=el("a","btn sm ghost","Skip ahead to the check");a.href="#";a.onclick=function(e){e.preventDefault();var q=art.querySelector(".checks");if(q)q.scrollIntoView()};dg.appendChild(a)}}}));art.appendChild(dg)}
   art.appendChild(A.blocks(sec.core,ctx));
   if(sec.deep&&sec.deep.length){var d=el("details","deep");d.innerHTML='<summary>Go deeper <small>full working, every line explained</small></summary>';var inner=el("div","deep-in");d.appendChild(inner);var filled=false;
     function fill(){if(!filled){filled=true;inner.appendChild(A.blocks(sec.deep,ctx));A.math(inner)}}
     d.addEventListener("toggle",function(){if(d.open)fill()});if(A.load().prefs.deepOpen){d.open=true;fill()}art.appendChild(d)}
-  if(sec.remember&&sec.remember.length)art.appendChild(el("div","rem","<h4>Remember</h4><ul>"+sec.remember.map(function(r){return "<li>"+A.inline(r)+"</li>"}).join("")+"</ul>"));
   if(sec.teachBack){var tbk=el("div","teach");var key=t.id+":"+sec.id;
     tbk.innerHTML='<h4>Teach it back</h4><p>'+A.inline(sec.teachBack.prompt)+'</p><textarea class="field" rows="2" aria-label="Your one-line explanation">'+esc(A.load().teach[key]||"")+'</textarea><button class="btn sm ghost" type="button">Compare with a model answer</button><div class="teach-model" hidden><b>Model answer:</b> '+A.inline(sec.teachBack.model)+"</div>";
     tbk.querySelector("button").onclick=function(){var S2=A.load();S2.teach[key]=tbk.querySelector("textarea").value;A.save();tbk.querySelector(".teach-model").hidden=false};art.appendChild(tbk)}
@@ -224,6 +231,9 @@ function buildRevise(sr,t,m){
   var r=t.remember||{},S=A.load(),pk=A.packOf(t.id)||{};
   sr.insertAdjacentHTML("beforeend",'<h2 class="pane-h">Revise</h2><p class="sub">The whole topic on one page: about 15 minutes.</p>');
   function sec(title,html){sr.appendChild(el("div","rv",'<h3 class="h3">'+title+"</h3>"+html))}
+  sec("Every lesson in short",'<div class="lshort">'+(t.sections||[]).map(function(x,i){return '<div class="ls"><h4><a href="#topic/'+t.id+"/lesson/"+x.id+'">'+(i+1)+". "+esc(x.title)+"</a></h4><p>"+A.inline(x.plain||"")+"</p>"
+    +(x.remember&&x.remember.length?"<ul>"+x.remember.map(function(r){return "<li>"+A.inline(r)+"</li>"}).join("")+"</ul>":"")
+    +(x.terms&&x.terms.length?'<p class="lsw"><b>Words:</b> '+x.terms.map(function(w){return A.inline(w[0])}).join(", ")+"</p>":"")+"</div>"}).join("")+"</div>");
   if(r.facts&&r.facts.length)sec("Core facts","<div class='rem'><ul>"+r.facts.map(function(x){return "<li>"+A.inline(x)+"</li>"}).join("")+"</ul></div>");
   if(r.formulas&&r.formulas.length)sec("Formulas and rules",A.rawTable(["Formula","Means","When"],r.formulas.map(function(f){return ["$"+esc(f.tex)+"$",A.inline(f.means||""),A.inline(f.when||"")]})));
   if(r.cues&&r.cues.length)sec("Wording → first move",A.tableHTML(["If the question says…","First move"],r.cues));

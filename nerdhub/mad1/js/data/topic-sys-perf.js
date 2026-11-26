@@ -25,7 +25,7 @@ APP.registerTopic("sys-perf",{
   "server-capacity":{name:"Server capacity",sub:"latency-capacity",ease:2,repair:"Each resource gives a limit: the app's pages per second, the link's bits per second ÷ bits per request, and memory ÷ memory per user. The server handles the smallest of these limits. Size memory for the peak load, not the average."}
  },
  sections:[
- {id:"encoding",title:"Bits for a character set",studying:"how many bits a document needs",why:"three PYQs (9 marks)",plain:"Count the different symbols, take the bits that fit them, multiply by the length.",concepts:["bit-encoding"],
+ {id:"encoding",terms:[["bit", "one 0 or 1"], ["character set", "the different symbols a text may use"], ["fixed-length code", "every symbol gets the same number of bits"], ["⌈log₂ k⌉", "the smallest b with 2^b ≥ k"]],title:"Bits for a character set",studying:"how many bits a document needs",why:"three PYQs (9 marks)",plain:"Count the different symbols, take the bits that fit them, multiply by the length.",concepts:["bit-encoding"],
   diagnostic:{id:"sp-diag-e",concept:"bit-encoding",type:"MCQ",stem:"How many bits per symbol for 27 symbols?",options:["5","4","27","6"],key:"A",diff:"easy",hints:["2^5 = 32."],explain:"5."},
   core:[
    {t:"table",title:"Symbols → bits",head:["Distinct symbols k","Bits ⌈log₂ k⌉","Why"],rows:[["2","1","2^1 = 2"],["3 to 4","2","2^2 = 4"],["5 to 8","3","2^3 = 8"],["9 to 16","4","2^4 = 16"],["17 to 32","5","2^5 = 32 (26 letters + space = 27)"],["33 to 64","6","2^6 = 64"]]},
@@ -42,7 +42,7 @@ APP.registerTopic("sys-perf",{
    {id:"sp-e-q2",concept:"bit-encoding",type:"NUM",stem:"\"the five boxing wizards jump quickly\" (36 characters, 27 distinct). Bits?",key:180,diff:"medium",hints:["5 bits each."],explain:"180.",asserts:["Tsys-perf-02"]},
    {id:"sp-e-q3",concept:"bit-encoding",type:"TF",stem:"Doubling the number of distinct symbols from 16 to 32 adds one bit per character.",key:"A",diff:"easy",hints:["4 → 5."],explain:"True.",asserts:["Tsys-perf-04"]}
   ]},
- {id:"complexity",title:"Running time: plug in and scale",studying:"comparing formulas at a real n and predicting new times",why:"two PYQs (7.5 marks)",plain:"Compute at the n you are given; scale by the ratio of the formulas.",concepts:["growth-fit"],
+ {id:"complexity",terms:[["running time", "how long code takes as the input grows"], ["n", "the size of the input, such as the number of records"], ["Big O", "how fast time grows for very large n, ignoring constants"], ["constant", "the fixed multiplier in front, like 500 in 500√n"]],title:"Running time: plug in and scale",studying:"comparing formulas at a real n and predicting new times",why:"two PYQs (7.5 marks)",plain:"Compute at the n you are given; scale by the ratio of the formulas.",concepts:["growth-fit"],
   diagnostic:{id:"sp-diag-c",concept:"growth-fit",type:"MCQ",stem:"An O(n²) job takes 1 s for n = 1000. About how long for n = 2000?",options:["4 s","2 s","1 s","8 s"],key:"A",diff:"easy",hints:["Square the ratio."],explain:"4 s."},
   core:[
    {t:"co",kind:"formula",text:"T(n₂) = T(n₁) × f(n₂) ÷ f(n₁). For f = n²: square the ratio of n. For f = n log₁₀ n from 10^7 to 10^8: × 10 × 8/7. [assert:Tsys-perf-07]"},
@@ -59,7 +59,7 @@ APP.registerTopic("sys-perf",{
    {id:"sp-c-q2",concept:"growth-fit",type:"MCQ",stem:"T_A = 0.001n, T_B = 500√n (ms). At n = 10^4, which is faster?",options:["A","B","equal","cannot tell"],key:"A",diff:"easy",hints:["10 vs 50000."],explain:"A.",asserts:["Tsys-perf-05"]},
    {id:"sp-c-q3",concept:"growth-fit",type:"TF",stem:"The algorithm with the better Big O is always faster.",key:"B",diff:"easy",hints:["Constants."],explain:"False: only beyond the break-even n."}
   ]},
- {id:"hierarchy",title:"Memory hierarchy and disks",studying:"where data lives and how fast a disk delivers it",why:"four PYQs (10 marks)",plain:"Going down the hierarchy: slower, bigger. For disks: RPM ÷ 60, bits per turn.",concepts:["memory-hierarchy","disk-rotation"],
+ {id:"hierarchy",terms:[["latency", "the delay before data starts arriving"], ["throughput", "how much data arrives per second"], ["RPM", "revolutions per minute of a spinning disk"], ["SSD / HDD", "flash storage with no moving parts / a spinning magnetic disk"]],title:"Memory hierarchy and disks",studying:"where data lives and how fast a disk delivers it",why:"four PYQs (10 marks)",plain:"Going down the hierarchy: slower, bigger. For disks: RPM ÷ 60, bits per turn.",concepts:["memory-hierarchy","disk-rotation"],
   diagnostic:{id:"sp-diag-h",concept:"disk-rotation",type:"MCQ",stem:"6000 RPM is how many revolutions per second?",options:["100","6000","360000","10"],key:"A",diff:"easy",hints:["÷ 60."],explain:"100."},
   core:[
    {t:"table",title:"The hierarchy (typical figures)",head:["Level","Latency","Capacity","Notes"],rows:[["Register","< 1 ns","bytes","inside the CPU; lowest density"],["SRAM cache","~1 ns","MB","fast, expensive"],["DRAM","~80 ns","GB","main memory"],["SSD","~100 µs","TB","no moving parts"],["HDD","~10 ms","TB","spinning disk; highest latency, lowest throughput"]]},
@@ -76,7 +76,7 @@ APP.registerTopic("sys-perf",{
    {id:"sp-h-q2",concept:"memory-hierarchy",type:"MCQ",stem:"Lowest throughput:",options:["HDD","SSD","DRAM","SRAM"],key:"A",diff:"easy",hints:["Moving parts."],explain:"HDD.",asserts:["Tsys-perf-14"]},
    {id:"sp-h-q3",concept:"disk-rotation",type:"MCQ",stem:"180 MB/s in Mbit/s:",options:["1440","22.5","180","1800"],key:"A",diff:"easy",hints:["× 8."],explain:"1440.",asserts:["Tsys-perf-08"]}
   ]},
- {id:"dram",title:"DRAM bandwidth",studying:"peak memory bandwidth from bus, clock and mode",why:"three PYQs (12 marks)",plain:"Bytes per transfer × transfers per second × channels.",concepts:["dram-bandwidth"],
+ {id:"dram",terms:[["DRAM", "the main memory (RAM) of a computer"], ["bus width", "how many bits move together in one transfer"], ["clock", "how many cycles per second, in MHz or GHz"], ["DDR", "double data rate: two transfers per clock cycle"], ["channel", "one memory interface; dual channel means two working together"]],title:"DRAM bandwidth",studying:"peak memory bandwidth from bus, clock and mode",why:"three PYQs (12 marks)",plain:"Bytes per transfer × transfers per second × channels.",concepts:["dram-bandwidth"],
   diagnostic:{id:"sp-diag-d",concept:"dram-bandwidth",type:"MCQ",stem:"A 64-bit bus moves how many bytes per transfer?",options:["8","64","16","4"],key:"A",diff:"easy",hints:["÷ 8."],explain:"8."},
   core:[
    {t:"co",kind:"formula",text:"Bandwidth (B/s) = (bus bits ÷ 8) × clock (Hz) × transfers per cycle (DDR = 2) × channels (dual = 2)."},
@@ -93,7 +93,7 @@ APP.registerTopic("sys-perf",{
    {id:"sp-d-q2",concept:"dram-bandwidth",type:"MCQ",stem:"Without DDR, 64-bit at 1 GHz gives:",options:["8 GB/s","16 GB/s","64 GB/s","1 GB/s"],key:"A",diff:"easy",hints:["One transfer per cycle."],explain:"8 GB/s.",asserts:["Tsys-perf-11"]},
    {id:"sp-d-q3",concept:"dram-bandwidth",type:"TF",stem:"Dual channel doubles peak bandwidth.",key:"A",diff:"easy",hints:["Two interfaces."],explain:"True."}
   ]},
- {id:"latency",title:"Propagation and processing delay",studying:"how long a request and its response take to travel",why:"one PYQ (3 marks), and the idea behind CDNs",plain:"Each leg: distance ÷ speed; then add the server's time.",concepts:["propagation-delay"],
+ {id:"latency",terms:[["propagation delay", "the time a signal needs to travel a distance"], ["processing delay", "time the server spends before it answers"], ["round trip", "the request going out plus the response coming back"]],title:"Propagation and processing delay",studying:"how long a request and its response take to travel",why:"one PYQ (3 marks), and the idea behind CDNs",plain:"Each leg: distance ÷ speed; then add the server's time.",concepts:["propagation-delay"],
   diagnostic:{id:"sp-diag-l",concept:"propagation-delay",type:"MCQ",stem:"3000 km by cable at 2 × 10^8 m/s takes:",options:["15 ms","10 ms","1.5 ms","150 ms"],key:"A",diff:"easy",hints:["3 × 10^6 ÷ 2 × 10^8."],explain:"15 ms."},
   core:[
    {t:"co",kind:"formula",text:"Total delay = (request distance ÷ its speed) + processing time + (response distance ÷ its speed). Cable ≈ 2 × 10^8 m/s, air ≈ 3 × 10^8 m/s."},
@@ -109,7 +109,7 @@ APP.registerTopic("sys-perf",{
    {id:"sp-l-q2",concept:"propagation-delay",type:"MCQ",stem:"Request 15 ms, server 30 ms, response 15 ms. Total?",options:["60 ms","45 ms","30 ms","15 ms"],key:"A",diff:"easy",hints:["Add."],explain:"60 ms."},
    {id:"sp-l-q3",concept:"propagation-delay",type:"TF",stem:"A faster medium for the response shortens the total delay.",key:"A",diff:"easy",hints:["One leg is shorter."],explain:"True."}
   ]},
- {id:"capacity",title:"Server capacity",studying:"how many requests or users a server can handle",why:"five PYQs (15 marks)",plain:"Work out every limit; the smallest one is the answer. Size for the peak.",concepts:["server-capacity"],
+ {id:"capacity",terms:[["bandwidth", "how many bits per second a link can carry"], ["bottleneck", "the slowest part, which limits the whole system"], ["peak load", "the busiest moment you must still handle"], ["Mbps vs MB/s", "megabits per second vs megabytes per second (× 8 apart)"]],title:"Server capacity",studying:"how many requests or users a server can handle",why:"five PYQs (15 marks)",plain:"Work out every limit; the smallest one is the answer. Size for the peak.",concepts:["server-capacity"],
   diagnostic:{id:"sp-diag-k",concept:"server-capacity",type:"MCQ",stem:"App: 100 pages/s. Network: 125 requests/s. Maximum?",options:["100","125","225","25"],key:"A",diff:"easy",hints:["Smaller limit."],explain:"100."},
   core:[
    {t:"co",kind:"formula",text:"Network limit = link (bit/s) ÷ (bytes per request × 8). Capacity = min(app limit, network limit, memory ÷ memory per user, …). [assert:Tsys-perf-21]"},

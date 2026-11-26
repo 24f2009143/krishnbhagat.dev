@@ -24,7 +24,7 @@ APP.registerTopic("templating",{
   "template-folder":{name:"Template folders and passing data",sub:"jinja2",ease:2,repair:"`render_template(\"x.html\", key=value)` looks for `x.html` only in the app's template folder (`templates/` by default, or whatever `template_folder=` names), including its subfolders; other folders are ignored, giving `TemplateNotFound`. Keyword arguments become variables in the template, and values often come from URL converters."}
  },
  sections:[
- {id:"stringtemplate",title:"Python's string.Template",studying:"`$name` placeholders and the two ways to fill them",why:"three PYQs: two KeyError questions and one mixed with Jinja2",plain:"`substitute` insists on every value; `safe_substitute` leaves gaps.",concepts:["template-substitute"],
+ {id:"stringtemplate",terms:[["template", "text with blanks to fill"], ["`$name`", "a placeholder in string.Template"], ["`substitute`", "fills every blank; a missing value is a KeyError"], ["`safe_substitute`", "fills what it can and leaves the rest"]],title:"Python's string.Template",studying:"`$name` placeholders and the two ways to fill them",why:"three PYQs: two KeyError questions and one mixed with Jinja2",plain:"`substitute` insists on every value; `safe_substitute` leaves gaps.",concepts:["template-substitute"],
   diagnostic:{id:"tp-diag-st",concept:"template-substitute",type:"MCQ",stem:"`Template(\"Hi $name\").substitute({})` does what?",options:["returns `Hi $name`","returns `Hi `","raises KeyError","returns `Hi None`"],key:"C",diff:"easy",hints:["substitute insists."],explain:"`substitute` needs a value for `$name`, so it raises KeyError.",asserts:["Ttemplating-01"]},
   core:[
    {t:"p",text:"`string.Template` is the simplest template in Python's standard library. Placeholders are written `$name` (or `${name}`). You fill them with a dictionary or keyword arguments."},
@@ -46,7 +46,7 @@ print(t.substitute({"color": "blue", "building": "mall", "place": "Chennai"}))`,
    {id:"tp-st-q2",concept:"template-substitute",type:"SA",stem:"What does `Template(\"$a and $b\").safe_substitute(a=1)` return?",key:"1 and $b",diff:"easy",hints:["Keeps the gap."],explain:"`$b` stays.",asserts:["Ttemplating-04"]},
    {id:"tp-st-q3",concept:"template-substitute",type:"TF",stem:"Passing an extra key that the template does not use makes `substitute` fail.",key:"B",diff:"easy",hints:["Extras."],explain:"False: extra keys are ignored.",asserts:["Ttemplating-01"]}
   ]},
- {id:"pyhtml",title:"PyHTML: HTML from nested Python calls",studying:"how PyHTML function calls map to HTML structure",why:"one 4.5-mark PYQ shows a PyHTML program",plain:"The brackets of the calls are the nesting of the tags.",concepts:["pyhtml-structure"],
+ {id:"pyhtml",terms:[["PyHTML", "a library where Python calls build HTML tags"], ["nesting", "tags inside tags, matching calls inside calls"]],title:"PyHTML: HTML from nested Python calls",studying:"how PyHTML function calls map to HTML structure",why:"one 4.5-mark PYQ shows a PyHTML program",plain:"The brackets of the calls are the nesting of the tags.",concepts:["pyhtml-structure"],
   core:[
    {t:"code",lang:"python",src:String.raw`from pyhtml import *
 page = html(head(title("Quiz")), body(h2("Hi"), p("One")))
@@ -63,7 +63,7 @@ print(page.render())`,lines:[[2,"`title` is an argument of `head`, so it sits in
    {id:"tp-ph-q2",concept:"pyhtml-structure",type:"MCQ",stem:"`div(p(\"a\"), p(\"b\"))` gives:",options:["two p inside one div","a div inside a p","three siblings","an error"],key:"A",diff:"easy",hints:["Arguments are children."],explain:"Both paragraphs are children of the div.",asserts:["Ttemplating-08"]},
    {id:"tp-ph-q3",concept:"pyhtml-structure",type:"TF",stem:"`render()` returns HTML text.",key:"A",diff:"easy",hints:["Printed."],explain:"True.",asserts:["Ttemplating-05"]}
   ]},
- {id:"jinja",title:"Jinja2 expressions, loops and macros",studying:"`{{ }}`, `{% for %}` and macros, and how the browser shows the result",why:"loops and macros appear in Jinja2 PYQs",plain:"`{{ }}` prints, `{% %}` controls, macros are reusable snippets.",concepts:["jinja-loops"],
+ {id:"jinja",terms:[["Jinja2", "Flask's template language"], ["`{{ }}`", "print the value of an expression"], ["`{% %}`", "a statement such as for, if, set"], ["`filter`", "a | step that changes a value, like {{ name|upper }}"], ["macro", "a reusable piece of template, like a function"]],title:"Jinja2 expressions, loops and macros",studying:"`{{ }}`, `{% for %}` and macros, and how the browser shows the result",why:"loops and macros appear in Jinja2 PYQs",plain:"`{{ }}` prints, `{% %}` controls, macros are reusable snippets.",concepts:["jinja-loops"],
   core:[
    {t:"table",title:"Jinja2 syntax",head:["Syntax","Meaning"],rows:[["`{{ x }}`","print a value"],["`{% for i in items %} … {% endfor %}`","repeat for each item"],["`{% if c %} … {% endif %}`","condition"],["`{% macro f(a) %} … {% endmacro %}` then `{{ f(x) }}`","reusable snippet"],["`{# note #}`","comment, not printed"]]},
    {t:"code",lang:"jinja",title:"index.html",src:String.raw`{% macro show(items) %}
@@ -87,7 +87,7 @@ print(page.render())`,lines:[[2,"`title` is an argument of `head`, so it sits in
    {id:"tp-j-q2",concept:"jinja-loops",type:"SA",stem:"What does `{% for i in range(3) %}{{ i }}{% endfor %}` render?",key:"012",diff:"easy",hints:["range(3)."],explain:"0, 1, 2 joined: `012`.",asserts:["Ttemplating-12"]},
    {id:"tp-j-q3",concept:"jinja-loops",type:"TF",stem:"`{# … #}` text is printed in the output.",key:"B",diff:"easy",hints:["Comment."],explain:"False: it is a comment."}
   ]},
- {id:"scope",title:"Macros and {% set %} scope",studying:"what a `{% set %}` inside a loop leaves behind",why:"two recent PYQs (Apr 2026, Aug 2026) test exactly this",plain:"Variables set inside a for loop vanish after it.",concepts:["jinja-scope"],
+ {id:"scope",terms:[["scope", "where a variable can be seen"], ["`{% set %}`", "creates a template variable"], ["`namespace()`", "an object whose values survive the end of a loop"]],title:"Macros and {% set %} scope",studying:"what a `{% set %}` inside a loop leaves behind",why:"two recent PYQs (Apr 2026, Aug 2026) test exactly this",plain:"Variables set inside a for loop vanish after it.",concepts:["jinja-scope"],
   core:[
    {t:"co",kind:"warn",title:"Loop scope",text:"A `{% for %}` loop has its own scope. `{% set x = i %}` inside the loop creates `x` only for that loop. After `{% endfor %}`, `x` is undefined, and an undefined variable renders as an **empty string**."},
    {t:"code",lang:"python",src:String.raw`from jinja2 import Template
@@ -108,7 +108,7 @@ Output is: {{ x }}`,lang:"jinja"},prompt:"What follows \"Output is:\"?",choices:
    {id:"tp-s-q2",concept:"jinja-scope",type:"MCQ",stem:"`{{ missing_var }}` with no such variable renders:",options:["an error","`None`","an empty string","`missing_var`"],key:"C",diff:"easy",hints:["Default Undefined."],explain:"Undefined prints as empty.",asserts:["Ttemplating-16"]},
    {id:"tp-s-q3",concept:"jinja-scope",type:"TF",stem:"In Jinja2, `{% set %}` inside a for loop changes a variable of the same name defined before the loop.",key:"B",diff:"medium",hints:["Separate scope."],explain:"False.",asserts:["Ttemplating-14"]}
   ]},
- {id:"inherit",title:"Template inheritance",studying:"`{% extends %}` and `{% block %}`",why:"one PYQ asks for the correct child template",plain:"A child fills the parent's named blocks.",concepts:["jinja-inherit"],
+ {id:"inherit",terms:[["base template", "the parent page layout"], ["`{% extends %}`", "says which parent a child uses"], ["`{% block %}`", "a named hole the child fills"]],title:"Template inheritance",studying:"`{% extends %}` and `{% block %}`",why:"one PYQ asks for the correct child template",plain:"A child fills the parent's named blocks.",concepts:["jinja-inherit"],
   core:[
    {t:"code",lang:"jinja",title:"base.html and child.html",src:String.raw`{# base.html #}
 <h3>Welcome</h3>
@@ -129,7 +129,7 @@ Output is: {{ x }}`,lang:"jinja"},prompt:"What follows \"Output is:\"?",choices:
    {id:"tp-i-q2",concept:"jinja-inherit",type:"TF",stem:"`{% block %}` without a name is valid Jinja2.",key:"B",diff:"easy",hints:["Names."],explain:"False: it raises a syntax error.",asserts:["Ttemplating-18"]},
    {id:"tp-i-q3",concept:"jinja-inherit",type:"MCQ",stem:"Base: `<h3>W</h3>{% block c %}B{% endblock %}`. Child extends it with `{% block c %}C{% endblock %}`. Output?",options:["`<h3>W</h3>B`","`<h3>W</h3>C`","`C`","`<h3>W</h3>BC`"],key:"B",diff:"medium",hints:["Child replaces the block."],explain:"The child's block replaces the parent's.",asserts:["Ttemplating-20"]}
   ]},
- {id:"folders",title:"Template folders and passing data",studying:"where Flask looks for templates and how data reaches them",why:"two PYQs: TemplateNotFound and URL data into a template",plain:"Flask searches one template folder; keyword arguments become template variables.",concepts:["template-folder"],
+ {id:"folders",terms:[["`templates/`", "the folder Flask searches for templates"], ["`render_template`", "fills a template with values and returns HTML"], ["context", "the variables passed to a template"]],title:"Template folders and passing data",studying:"where Flask looks for templates and how data reaches them",why:"two PYQs: TemplateNotFound and URL data into a template",plain:"Flask searches one template folder; keyword arguments become template variables.",concepts:["template-folder"],
   core:[
    {t:"co",kind:"def",title:"Template folder",text:"`render_template(\"x.html\")` searches only the app's template folder: `templates/` next to the app by default, or the folder given by `Flask(__name__, template_folder=\"...\")`. Paths such as `\"public/home.html\"` are relative to that folder. A file anywhere else raises `TemplateNotFound` (a 500 error)."},
    {t:"code",lang:"python",src:String.raw`app = Flask(__name__, template_folder="my_templates")

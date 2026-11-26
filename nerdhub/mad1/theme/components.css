@@ -545,3 +545,20 @@ mark{background:linear-gradient(transparent 55%,var(--hl) 55%);padding:0 .1em}
 .wmap td small{font-size:.8rem}
 .ideas li{margin:.4em 0}
 @media (max-width:700px){.hbar{grid-template-columns:minmax(0,1fr) auto;gap:4px 10px}.hbar .hb-t{grid-column:1/-1;grid-row:2}.tile{min-width:0;flex:1 1 40%;padding:12px}.wmap{overflow-x:auto}}
+/* ---------- lessons for fast learners: in short, new words, quick read ---------- */
+.quickbar{display:flex;align-items:center;gap:10px;margin:0 0 14px;font:400 .88rem/1.45 var(--sans);color:var(--muted)}
+.quickbar b{color:var(--ink2)}
+.inshort{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px 28px;padding:16px 20px;margin:0 0 28px;border:1px solid var(--rule);border-radius:var(--r);background:var(--card)}
+.inshort .h3{margin:0 0 8px;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.inshort ul{margin:0;padding-left:1.15em;font:400 1rem/1.6 var(--serif)}.inshort li{margin:.2em 0}
+.terms{margin:0;display:grid;gap:7px}.terms div{display:grid;gap:1px}
+.terms dt{font:650 .9rem var(--sans);color:var(--ink)}.terms dd{margin:0;font:400 .9rem/1.45 var(--sans);color:var(--muted)}
+@media (max-width:760px){.inshort{grid-template-columns:1fr}}
+body.quick .lesson .co.analogy,body.quick .lesson .co.extra,body.quick .lesson .co.notice,body.quick .lesson details.deep,body.quick .lesson details.diag,body.quick .lesson .lesson-why{display:none}
+.lshort{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.ls{border:1px solid var(--rule);border-radius:var(--r);background:var(--card);padding:14px 16px}
+.ls h4{margin:0 0 6px;font:650 1rem var(--sans)}.ls h4 a{color:var(--ink);text-decoration:none}
+.ls p{margin:0 0 6px;font:400 .95rem/1.55 var(--serif);color:var(--ink2)}
+.ls ul{margin:0 0 6px;padding-left:1.1em;font:400 .9rem/1.5 var(--sans)}
+.ls .lsw{font:400 .82rem/1.5 var(--sans);color:var(--muted)}
+@media print{.lshort{display:block}.ls{break-inside:avoid;margin:0 0 8px}}
