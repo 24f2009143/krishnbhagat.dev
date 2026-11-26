@@ -80,6 +80,63 @@ A.blockTable=function(ex){
   return '<section class="blocks"><h2 class="h2">Marks per 4-week block</h2><p class="sub">'+esc(A.examLabel(ex))+(E.newWeeks&&E.newWeeks.length?" is cumulative: new weeks "+E.newWeeks[0]+"–"+E.newWeeks[E.newWeeks.length-1]+", but earlier weeks are tested too. ":" ")+"A topic counts in the block of its first week.</p>"
     +keys.map(function(k){var pc=Math.round(100*b[k]/tot);return '<div class="blk"><span>Weeks '+esc(k)+'</span><div class="bar-track"><i style="width:'+pc+'%"></i></div><b>'+A.fmt(b[k])+" marks · "+pc+"%</b></div>"}).join("")+"</section>";
 };
+/* ---------- home sections: PYQ analysis, week and topic map, your progress (all computed from live data) ---------- */
+function tiles(list){return '<div class="tiles">'+list.map(function(x){return '<div class="tile"><b>'+x[0]+"</b><span>"+esc(x[1])+"</span></div>"}).join("")+"</div>"}
+function hbars(rows,max){return '<div class="hbars">'+rows.map(function(r){return '<div class="hbar"><span class="hb-l">'+r[0]+'</span><span class="hb-t"><i style="width:'+Math.max(r[1]>0?2:0,Math.round(100*r[1]/(max||1)))+'%"></i></span><span class="hb-v">'+r[2]+"</span></div>"}).join("")+"</div>"}
+function pct(a,b){return b?A.fmt(Math.round(1000*a/b)/10)+"%":"0%"}
+function subWeek(id){var w=null;A.manifest.topics.forEach(function(m){(m.subs||[]).forEach(function(s){if(s.id===id)w=s.week})});return w}
+A.pyqAnalysis=function(ex,T){
+  var all=[],papers={};T.forEach(function(m){A.pyqsOf(m.id,ex).forEach(function(q){all.push(q);papers[q.paper]=1})});
+  if(!all.length)return "";
+  var marks=all.reduce(function(a,q){return a+(+q.marks||0)},0),np=Object.keys(papers).length,live=T.filter(function(m){return A.pyqsOf(m.id,ex).length});
+  var byT=live.map(function(m){var q=A.pyqsOf(m.id,ex);return {m:m,n:q.length,mk:q.reduce(function(a,x){return a+(+x.marks||0)},0)}}).sort(function(a,b){return b.mk-a.mk});
+  var top=byT.slice(0,3),topMk=top.reduce(function(a,x){return a+x.mk},0);
+  var TY={MCQ:["Single answer (MCQ)",0,0],MSQ:["Multiple answers (MSQ)",0,0],NUM:["Numeric answer",0,0],SA:["Typed answer",0,0]};
+  all.forEach(function(q){var k=q.type==="COMP"?q.childType:q.type;if(k==="TF")k="MCQ";var o=TY[k]||TY.MCQ;o[1]+=+q.marks||0;o[2]++});
+  var ty=Object.keys(TY).map(function(k){return TY[k]}).filter(function(o){return o[2]}).sort(function(a,b){return b[1]-a[1]});
+  var comp=all.filter(function(q){return q.type==="COMP"}).length;
+  var byP=Object.keys(papers).sort(function(a,b){return A.paperTime(a)-A.paperTime(b)}).map(function(p){var q=all.filter(function(x){return x.paper===p});return [esc(p),q.reduce(function(a,x){return a+(+x.marks||0)},0),q.length]});
+  return '<section class="hsec"><h2 class="h2">PYQ analysis</h2><p class="note">Computed from the '+all.length+" past questions on this site ("+A.fmt(marks)+" marks, "+np+" papers). Marks are the marks printed in the papers; sub-questions of a case study are counted separately. This shows what was asked before, not what will be asked.</p>"
+    +tiles([[all.length,"questions"],[A.fmt(marks),"marks"],[np,"papers"],[live.length,"topics"]])
+    +'<h3 class="h3">Marks by topic</h3>'+hbars(byT.map(function(x){return ['<a href="#topic/'+x.m.id+'">'+esc(x.m.name)+"</a>",x.mk,A.fmt(x.mk)+" marks ("+pct(x.mk,marks)+"), "+x.n+" Qs"]}),byT[0].mk)
+    +'<p class="reading"><b>Reading it:</b> the top three topics ('+top.map(function(x){return esc(x.m.short)}).join(", ")+") hold "+A.fmt(topMk)+" of "+A.fmt(marks)+" marks, which is "+pct(topMk,marks)+".</p>"
+    +'<h3 class="h3">Question types</h3>'+hbars(ty.map(function(o){return [esc(o[0]),o[1],A.fmt(o[1])+" marks, "+o[2]+" Qs"]}),ty[0][1])
+    +(comp?'<p class="sub">'+comp+" of these are sub-questions of a case study (a passage or code shared by two or three questions).</p>":"")
+    +'<h3 class="h3">Marks by paper</h3>'+hbars(byP.map(function(r){return [r[0],r[1],A.fmt(r[1])+" marks, "+r[2]+" Qs"]}),Math.max.apply(null,byP.map(function(r){return r[1]})))
+    +"</section>";
+};
+A.weekMap=function(ex,T){
+  var E=A.examInfo(ex),M=A.manifest,all=[];T.forEach(function(m){A.pyqsOf(m.id,ex).forEach(function(q){all.push(q)})});
+  var marks=all.reduce(function(a,q){return a+(+q.marks||0)},0);
+  var weeks=M.weeks.filter(function(w){return E.weeks.indexOf(w.num)>=0}),later=M.weeks.filter(function(w){return E.weeks.indexOf(w.num)<0});
+  var rows=weeks.map(function(w){
+    var q=all.filter(function(x){return subWeek(x.sub)===w.num}),mk=q.reduce(function(a,x){return a+(+x.marks||0)},0);
+    var study=[];T.forEach(function(m){(m.subs||[]).forEach(function(s){if(s.week===w.num)study.push('<a href="#topic/'+m.id+'/sub/'+s.id+'">'+esc(m.short)+": "+A.inline(s.name.replace(/\s*\(.*\)$/,""))+"</a>")})});
+    return ['<a href="#week/'+w.num+'"><b>Week '+w.num+"</b></a><br><small>"+esc(w.title)+(E.newWeeks&&E.newWeeks.indexOf(w.num)>=0?' <span class="pill">new for '+esc(E.label)+"</span>":"")+"</small>",
+      esc((w.lectures||[]).join(", "))+(w.note?'<br><small class="mute">'+esc(w.note)+"</small>":""),
+      study.join("<br>")||'<span class="mute">no PYQs</span>',
+      q.length?"<b>"+A.fmt(mk)+"</b> <small>("+pct(mk,marks)+")</small>":"0",String(q.length)]});
+  var after=later.length?'<p class="sub">Weeks '+later[0].num+"–"+later[later.length-1].num+" ("+later.map(function(w){return esc(w.title)}).join(", ")+") come after "+esc(E.label)+".</p>":"";
+  return '<section class="hsec"><h2 class="h2">Week and topic map</h2><p class="note">Built from the course syllabus ('+esc(E.label)+" covers weeks "+E.weeks[0]+" to "+E.weeks[E.weeks.length-1]+(E.newWeeks&&E.newWeeks.length?", with weeks "+E.newWeeks[0]+" to "+E.newWeeks[E.newWeeks.length-1]+" new":"")+"). Marks are the PYQ marks whose sub-topic falls in that week, counted from the questions on this site. Small notes say where a placement is mine and not stated in the lectures.</p>"
+    +'<div class="wmap">'+A.rawTable(["Week","Covered in the lectures","Study on this site","PYQ marks","Questions"],rows)+"</div>"+after+"</section>";
+};
+A.progressBlock=function(ex,T){
+  var S=A.load(),R=T.filter(A.isReady);if(!R.length)return "";
+  var secs=0,read=0,pq=0,solved=0,tried=0;
+  R.forEach(function(m){var st=A.topicStats(m,ex);secs+=st.secs;read+=st.read;pq+=st.pyqs;solved+=st.solved;A.pyqsOf(m.id,ex).forEach(function(q){if(S.ans[q.uid])tried++})});
+  var review=Object.keys(S.ans).filter(function(k){var a=S.ans[k];return !a.ok||a.conf==="Unsure"||a.conf==="Guess"}).length;
+  var nx=A.nextStep(),nxt="";
+  if(nx.m){var st=A.topicStats(nx.m,ex);nxt='<p class="reading"><b>Next step:</b> <a href="'+nx.href+'">'+esc(nx.m.name)+"</a> ("+(st.secs-st.read)+" lesson"+(st.secs-st.read===1?"":"s")+" unread, "+(st.pyqs-st.solved)+" PYQ"+(st.pyqs-st.solved===1?"":"s")+" left to solve).</p>"}
+  var bars=hbars(R.map(function(m){var st=A.topicStats(m,ex);return ['<a href="#topic/'+m.id+'">'+esc(m.name)+"</a>",st.pct,st.solved+"/"+st.pyqs+" PYQs, "+st.read+"/"+st.secs+" lessons"]}),100);
+  var C={};Object.keys(S.ans).forEach(function(k){var a=S.ans[k];if(!a.concept||!a.topic||!A.topics[a.topic])return;var key=a.topic+"|"+a.concept,o=C[key]=C[key]||{t:a.topic,c:a.concept,n:0,bad:0};o.n++;if(!a.ok)o.bad++});
+  var weak=Object.keys(C).map(function(k){return C[k]}).filter(function(o){return o.bad}).sort(function(a,b){return b.bad-a.bad||b.bad/b.n-a.bad/a.n}).slice(0,5);
+  var ideas=weak.length?'<h3 class="h3">Ideas to work on</h3><ol class="prose ideas">'+weak.map(function(o){var t=A.topics[o.t],cn=(t.concepts[o.c]||{}).name||o.c,sec=t.sections.find(function(s){return (s.concepts||[]).indexOf(o.c)>=0});
+      return '<li><a href="#topic/'+o.t+(sec?"/lesson/"+sec.id:"")+'">'+A.inline(cn)+"</a> ("+esc(A.topicMeta(o.t).short)+": missed "+o.bad+" of "+o.n+" question"+(o.n===1?"":"s")+")</li>"}).join("")+"</ol>"
+    :'<p class="sub">Ideas to work on will appear here once you have answered some questions: the concepts you miss most, each linked to its lesson.</p>';
+  return '<section class="hsec"><h2 class="h2">Your progress</h2>'
+    +tiles([[read+"/"+secs,"lessons read"],[solved+"/"+pq,"PYQs solved"],[tried,"PYQs attempted"],[review,"in mistake review"]])+nxt
+    +bars+ideas+"</section>";
+};
 A.pages.home=function(root){
   var M=A.manifest,S=A.load(),ex=A.exam(),E=A.examInfo(ex),T=A.examTopics(ex),C=A.countsFor(ex),tot={p:0,s:0,mk:0,m:0};
   T.forEach(function(m){var st=A.topicStats(m,ex);tot.p+=st.pyqs;tot.s+=st.solved;tot.m+=st.marks;
@@ -98,10 +155,9 @@ A.pages.home=function(root){
     +'<div class="home-ex">'+A.examSelect("home-exam")+"</div></div>"+(FL.hero?FL.hero():"")+"</header>"
     +'<div class="home-grid"><section class="nextup">'+nh+'</section><section class="tally">'+countdown(ex,tot)
     +'<div><b>'+tot.s+'</b><span>of '+tot.p+' PYQs solved</span></div><div><b>'+A.fmt(tot.mk)+'</b><span>of '+A.fmt(tot.m)+' marks secured</span></div><div><b>'+Object.keys(S.read).length+'</b><span>lessons read</span></div></section></div>'
-    +'<section class="mapcard"><h2 class="h2">The course route</h2><div class="mapwrap">'+A.routeGraph(T,false,nx.m&&nx.m.id)+A.routeGraph(T,true,nx.m&&nx.m.id)+'</div><ul class="legend"><li><i class="lg visited"></i>Done</li><li><i class="lg frontier"></i>In progress</li><li><i class="lg unvisited"></i>Not started</li><li><i class="lg planned"></i>Planned</li></ul></section>'
-    +A.blockTable(ex)
     +'<h2 class="h2">Topics</h2><ol class="tlist" id="home-cards"></ol>'
-    +'<h2 class="h2">Weeks</h2><div class="weeks">'+M.weeks.filter(function(w){return E.weeks.indexOf(w.num)>=0}).map(function(w){return '<a class="wk" href="#week/'+w.num+'"><b>Week '+w.num+(E.newWeeks&&E.newWeeks.indexOf(w.num)>=0?' <span class="pill">new</span>':"")+"</b><span>"+esc(w.title)+"</span></a>"}).join("")+"</div>"
+    +A.progressBlock(ex,T)+A.pyqAnalysis(ex,T)+A.weekMap(ex,T)
+    +'<section class="mapcard"><h2 class="h2">The course route</h2><div class="mapwrap">'+A.routeGraph(T,false,nx.m&&nx.m.id)+A.routeGraph(T,true,nx.m&&nx.m.id)+'</div><ul class="legend"><li><i class="lg visited"></i>Done</li><li><i class="lg frontier"></i>In progress</li><li><i class="lg unvisited"></i>Not started</li><li><i class="lg planned"></i>Planned</li></ul></section>'
     +(M.flags&&M.flags.length?'<p class="flagline">'+M.flags.map(function(f){return '<span class="tag FLAG">[FLAG]</span> '+esc(f)}).join(" · ")+"</p>":"")
     +"</div>";
   root.innerHTML=h;
@@ -119,9 +175,11 @@ A.pages.week=function(root,parts){
   var n=+parts[0],w=A.manifest.weeks.find(function(x){return x.num===n});
   if(!w){A.pages.home(root);return}
   var p=el("div","page");p.innerHTML='<nav class="crumb"><a href="#home">Course</a><span>Week '+n+'</span></nav><h1>Week '+n+": "+esc(w.title)+'</h1><p class="sub">'+esc(w.goal||"")+"</p>"
+    +(w.lectures&&w.lectures.length?'<h2 class="h2">Lectures</h2><ul class="prose">'+w.lectures.map(function(l){return "<li>"+esc(l)+"</li>"}).join("")+"</ul>":"")
+    +(w.note?'<p class="note">'+esc(w.note)+"</p>":"")
     +(w.flag?'<p class="flagbox"><b>[FLAG]</b> '+esc(w.flag)+"</p>":"")
     +(w.outcomes&&w.outcomes.length?'<div class="rem"><h4>By the end of the week you can</h4><ul>'+w.outcomes.map(function(o){return "<li>"+A.inline(o)+"</li>"}).join("")+"</ul></div>":"")
-    +'<h2 class="h2">Topics this week</h2><ol class="tlist">'+w.topicIds.map(function(id){var m=A.topicMeta(id);if(!m)return "";return '<li class="trow '+A.stateOf(m)+'"><a href="#topic/'+id+'"><span class="tnode">'+esc(m.mark||"")+'</span><span class="tmain"><b>'+esc(m.name)+'</b><span class="twhy">'+esc(m.why)+"</span></span></a></li>"}).join("")+"</ol>"
+    +(w.topicIds.length?'<h2 class="h2">Topics this week</h2>':"")+'<ol class="tlist">'+w.topicIds.map(function(id){var m=A.topicMeta(id);if(!m)return "";return '<li class="trow '+A.stateOf(m)+'"><a href="#topic/'+id+'"><span class="tnode">'+esc(m.mark||"")+'</span><span class="tmain"><b>'+esc(m.name)+'</b><span class="twhy">'+esc(m.why)+"</span></span></a></li>"}).join("")+"</ol>"
     +'<nav class="lnav">'+(n>1?'<a class="btn ghost" href="#week/'+(n-1)+'">Week '+(n-1)+"</a>":"<span></span>")+(n<A.manifest.weeks.length?'<a class="btn" href="#week/'+(n+1)+'">Week '+(n+1)+"</a>":"")+"</nav>";
   root.appendChild(p);
 };
