@@ -3,12 +3,6 @@
 "use strict";
 var A=window.APP,esc=A.esc,el=A.el,$=A.$,$$=A.$$;
 function rich(s){return A.renderRich(s)}
-function pathBar(m,on){
-  var S=A.load(),st=A.topicStats(m),stp=S.steps[m.id]||{};
-  var done=[st.secs&&st.read===st.secs,st.pyqs&&st.solved>=st.pyqs*0.8,!!stp.test,!!stp.revise,!!stp.check];
-  var href=["lesson","pyqs","test","revise","test#checklist"];
-  return '<ol class="path" aria-label="Path through this topic">'+["Learn","Practice PYQs","Topic test","Revise","Checklist"].map(function(s,i){return '<li class="'+(done[i]?"done ":"")+(on===i?"on":"")+'"><a href="#topic/'+m.id+(i===0?"":"/"+href[i])+'">'+s+"</a></li>"}).join("")+"</ol>";
-}
 A.conceptMarks=function(id,ex){
   var out={};A.pyqsOf(id,ex).forEach(function(q){var k=q.concept||"(untagged)";var o=out[k]=out[k]||{n:0,marks:0,subs:{}};o.n++;o.marks+=+q.marks||0;o.subs[q.sub]=1});return out;
 };
@@ -39,6 +33,28 @@ function bigPicture(t,m){
   }
   w.appendChild(tb);w.appendChild(body);draw();return w;
 }
+/* ---------- orientation: what, why for this exam, what the questions look like, how it connects ---------- */
+function orientation(t,m){
+  var ex=A.exam(),pyqs=A.pyqsOf(m.id,ex),pk=(A.packs[ex==="all"?"q2":ex]||{})[m.id]||{},w=el("section","orient");
+  var subs={},papers={},kinds={MCQ:0,MSQ:0,num:0};
+  pyqs.forEach(function(q){var s=subs[q.sub]=subs[q.sub]||{n:0,mk:0};s.n++;s.mk+=+q.marks||0;papers[q.paper]=1;var k=q.type==="COMP"?q.childType:q.type;if(k==="MSQ")kinds.MSQ++;else if(k==="NUM"||k==="SA")kinds.num++;else kinds.MCQ++});
+  var marks=pyqs.reduce(function(a,q){return a+(+q.marks||0)},0),np=Object.keys(papers).length;
+  var h='<p class="kicker">Orientation</p><h2>What you will learn and why</h2>'+(t.intro?'<div class="prose">'+rich(t.intro)+"</div>":"");
+  if(t.checklist&&t.checklist.length)h+='<h3 class="h3">By the end you can</h3><ul class="prose can">'+t.checklist.map(function(c){var x=String(c).replace(/^I can /,"");return "<li>"+A.inline(x.charAt(0).toUpperCase()+x.slice(1))+"</li>"}).join("")+"</ul>";
+  if(pyqs.length){
+    h+='<h3 class="h3">Why this topic matters for '+esc(A.examLabel(ex))+"</h3><p class=\"sub\">Counted from the past papers in this course, not a prediction.</p>";
+    h+=A.rawTable(["What the past questions ask","PYQs","Marks"],(m.subs||[]).filter(function(s){return subs[s.id]}).map(function(s){return [A.inline(s.name),String(subs[s.id].n),A.fmt(subs[s.id].mk)]}));
+    h+='<div class="prose"><p>In total <mark><b>'+pyqs.length+" PYQs worth "+A.fmt(marks)+" marks</b></mark> across "+np+" paper"+(np===1?"":"s")+" ("+[kinds.MCQ+" single-answer",kinds.MSQ+" multiple-answer",kinds.num+" numeric or typed"].filter(function(x){return !/^0 /.test(x)}).join(", ")+").</p></div>";
+  }
+  if(pk.patterns&&pk.patterns.length)h+='<h3 class="h3">What the questions look like</h3>'+A.rawTable(["Pattern","PYQs","Your first move"],pk.patterns.slice().sort(function(a,b){return b.count-a.count}).map(function(p){return ["<b>"+esc(p.name)+"</b><br><small>"+A.inline(p.cue)+"</small>",String(p.count),A.inline(p.firstMove)]}));
+  var cues=t.remember&&t.remember.cues;
+  if(cues&&cues.length)h+='<h3 class="h3">Exam wording that points to the method</h3>'+A.rawTable(["When the question says","Think"],cues.map(function(c){return [A.inline(c[0]),A.inline(c[1])]}));
+  var before=(m.uses||[]).map(A.topicMeta).filter(Boolean),after=A.manifest.topics.filter(function(o){return (o.uses||[]).indexOf(m.id)>=0&&!o.fixture});
+  function links(list){return list.map(function(o){return '<a href="#topic/'+o.id+'">'+esc(o.short)+"</a>"}).join(", ")}
+  if(before.length||after.length)h+='<h3 class="h3">How this topic connects</h3><div class="prose"><p>'+(before.length?"It builds on "+links(before)+". ":"")+(after.length?links(after)+" build"+(after.length===1?"s":"")+" on it.":"")+"</p></div>";
+  h+='<div class="howto"><p class="kicker">How to use this page</p><p>Read each lesson top to bottom. In a worked example, say the next step before you reveal it. Answer the checks at the end of the lesson, then try each past question before opening its solution.</p></div>';
+  w.innerHTML=h;return w;
+}
 function refresherCard(r){
   var up=r.upgradesTo&&A.isReady(A.topicMeta(r.upgradesTo));
   return '<a class="rfcard" href="'+(up?"#topic/"+esc(r.upgradesTo):"#refresher/"+esc(r.id))+'"><b>'+esc(r.title)+"</b><small>"+(up?"Now a full topic: open the lesson":esc(r.summary||"Short refresher"))+"</small></a>";
@@ -48,10 +64,10 @@ A.refresherCard=refresherCard;
 function lesson(art,t,m,sec,cur,secs){
   var S=A.load(),base="#topic/"+t.id,ctx={seen:{}};
   S.read[t.id+":"+sec.id]=1;A.save();
-  art.innerHTML='<p class="kicker">Lesson '+(cur+1)+" of "+secs.length+(sec.patch?' <span class="pill">added for '+esc(A.examLabel(A.exam()))+"</span>":"")+"</p><h2>"+esc(sec.title)+"</h2>"
-    +'<dl class="lesson-banner"><div><dt>What you are studying</dt><dd>'+A.inline(sec.studying)+'</dd></div><div><dt>Why it matters</dt><dd>'+A.inline(sec.why)+'</dd></div><div><dt>In plain words</dt><dd>'+A.inline(sec.plain)+"</dd></div></dl>"
-    +'<p class="mins">About '+A.sectionMins(sec)+" min</p>";
-  if(sec.diagnostic){var dg=el("div","diag",'<h3 class="h3">Try this first</h3><p class="sub">If you get it right and you were sure, you can skip ahead to the check at the end.</p>');
+  art.innerHTML='<p class="kicker">Lesson '+(cur+1)+" of "+secs.length+" · about "+A.sectionMins(sec)+" min"+(sec.patch?' <span class="pill">added for '+esc(A.examLabel(A.exam()))+"</span>":"")+"</p><h2>"+esc(sec.title)+"</h2>"
+    +'<p class="lede">'+A.inline(sec.plain)+"</p>"
+    +'<p class="lesson-why"><span><b>You will study</b> '+A.inline(sec.studying)+'.</span> <span><b>Why it matters:</b> '+A.inline(sec.why)+".</span></p>";
+  if(sec.diagnostic){var dg=el("details","diag",'<summary>Already know this? Try one question first <small>optional</small></summary><p class="sub">If you get it right and you were sure, you can skip ahead to the check at the end.</p>');
     dg.appendChild(A.qcard(Object.assign({topicId:t.id,tag:"[ADDED]"},sec.diagnostic),{noHints:true,onDone:function(ok){if(ok){var a=el("a","btn sm ghost","Skip ahead to the check");a.href="#";a.onclick=function(e){e.preventDefault();var q=art.querySelector(".checks");if(q)q.scrollIntoView()};dg.appendChild(a)}}}));art.appendChild(dg)}
   art.appendChild(A.blocks(sec.core,ctx));
   if(sec.deep&&sec.deep.length){var d=el("details","deep");d.innerHTML='<summary>Go deeper <small>full working, every line explained</small></summary>';var inner=el("div","deep-in");d.appendChild(inner);var filled=false;
@@ -87,20 +103,20 @@ A.pages.topic=function(root,parts){
   var tabView=view==="lesson"||view===""?"learn":view==="sub"?"pyqs":view;
   if(view==="test#checklist")tabView="test";
   var st=A.topicStats(m),base="#topic/"+id,pyqs=A.pyqsOf(id,ex);
-  var wrap=el("div","topic"),head=el("header","t-head");
+  var wrap=el("div","topic"+(cur>=0?" at-lesson":"")),head=el("header","t-head");
   var mins=secs.reduce(function(a,s){return a+A.sectionMins(s)},0)+pyqs.reduce(function(a,q){return a+(q.seconds||180)/60},0)+(t.test||[]).length*2;
   var firstUnread=secs.findIndex(function(x){return !S.read[id+":"+x.id]});
   var contHref=firstUnread<0?base+"/pyqs":base+"/lesson/"+secs[firstUnread].id,contLab=firstUnread<0?"Lessons done: practise":firstUnread===0?"Start lesson 1":"Continue lesson "+(firstUnread+1);
   var R=38,C=2*Math.PI*R,state=A.stateOf(m,st);
-  var tabs=[["learn","Lessons",base,secs.length],["pyqs","PYQs",base+"/pyqs",pyqs.length],["test","Topic test",base+"/test",(t.test||[]).length],["revise","Revise",base+"/revise",null]];
+  var onCheck=/#checklist$/.test(location.hash);
+  var tabs=[["learn","Lessons",base,secs.length],["pyqs","Past questions",base+"/pyqs",pyqs.length],["test","Topic test",base+"/test",(t.test||[]).length],["revise","Revise",base+"/revise",null],["check","Checklist",base+"/test#checklist",null]];
   head.innerHTML='<nav class="crumb"><a href="#home">Course</a><span>'+esc(A.examLabel(ex))+"</span><span>Weeks "+m.weeks.join(", ")+"</span></nav>"
     +'<div class="t-top"><div class="t-main"><h1><span class="tmark big">'+esc(m.mark||"")+"</span> "+esc(t.name)+'</h1><p class="tag-line">'+A.inline(t.tagline)+'</p>'
     +'<p class="t-facts"><span><b>'+secs.length+'</b> lessons</span><span><b>'+pyqs.length+'</b> PYQs</span><span><b>'+A.fmt(st.marks)+'</b> marks</span><span title="Lessons at 170 words a minute plus interactives, each PYQ at its time budget (3 min if none), 2 min per test question">about <b>'+(mins>=60?Math.floor(mins/60)+" h ":"")+Math.round(mins%60)+' min</b> <small>(how: reading + PYQ time budgets + test)</small></span></p>'
     +'<div class="t-cta"><a class="btn" href="'+contHref+'">'+contLab+'</a><a class="btn ghost" href="'+base+'/pyqs">Practise '+pyqs.length+' PYQs</a><a class="btn ghost" href="#cards" id="t-cards">Flashcards for this topic</a></div></div>'
     +'<aside class="t-ready '+state+'"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="'+R+'" class="tr"/>'+(st.pct?'<circle cx="50" cy="50" r="'+R+'" class="fg" stroke-dasharray="'+(C*st.pct/100).toFixed(1)+" "+C.toFixed(1)+'" transform="rotate(-90 50 50)"/>':"")+'<text x="50" y="52" text-anchor="middle" class="pc">'+st.pct+'%</text><text x="50" y="68" text-anchor="middle" class="rd">ready</text></svg>'
     +'<dl><div><dt>Lessons read</dt><dd>'+st.read+"/"+st.secs+'</dd></div><div><dt>Checks right</dt><dd>'+st.checksOk+"/"+st.checks+'</dd></div><div><dt>PYQs solved</dt><dd>'+st.solved+"/"+st.pyqs+'</dd></div><div><dt>Topic test</dt><dd>'+(st.test?Math.round(st.test*100)+"%":"not taken")+"</dd></div></dl></aside></div>"
-    +'<nav class="ttabs" aria-label="Topic sections">'+tabs.map(function(x){return '<a href="'+x[2]+'" class="'+(x[0]===tabView?"on":"")+'"'+(x[0]===tabView?' aria-current="page"':"")+">"+x[1]+(x[3]!=null?" <small>"+x[3]+"</small>":"")+"</a>"}).join("")+"</nav>"
-    +pathBar(m,{learn:0,pyqs:1,test:2,revise:3}[tabView]);
+    +'<nav class="ttabs" aria-label="Topic sections">'+tabs.map(function(x){var on=onCheck?x[0]==="check":x[0]===tabView;return '<a href="'+x[2]+'" class="'+(on?"on":"")+'"'+(on?' aria-current="page"':"")+">"+x[1]+(x[3]!=null?" <small>"+x[3]+"</small>":"")+"</a>"}).join("")+"</nav>";
   head.querySelector("#t-cards").onclick=function(){var S2=A.load();S2.prefs.cardTopic=id;A.save()};
   wrap.appendChild(head);
   var body=el("div","t-body "+tabView);wrap.appendChild(body);
@@ -117,7 +133,9 @@ A.pages.topic=function(root,parts){
     body.appendChild(route);
     var art=el("article","lesson");body.appendChild(art);
     if(cur<0){
-      art.innerHTML='<p class="kicker">Overview</p><h2>Before you start</h2>';
+      art.appendChild(orientation(t,m));
+      art.appendChild(el("h2","sec-h","Start here: the big picture"));
+      art.appendChild(el("p","sub","Read this once before the lessons. It answers what this topic is about, why, and how the pieces fit."));
       art.appendChild(bigPicture(t,m));
       var pre=(t.prereqs||[]).map(function(rid){return A.refreshers.find(function(r){return r.id===rid})}).filter(Boolean);
       if(pre.length||(t.prereqCheck&&t.prereqCheck.length)){var pw=el("div","prereq",'<h3 class="h3">What comes before</h3><p class="sub">Uses: '+(m.uses||[]).map(function(u){var um=A.topicMeta(u);return um?'<a href="#topic/'+u+'">'+esc(um.short)+"</a>":esc(u)}).join(", ")+'. Check yourself; if a question is hard, open the refresher.</p><div class="rfs">'+pre.map(refresherCard).join("")+"</div>");

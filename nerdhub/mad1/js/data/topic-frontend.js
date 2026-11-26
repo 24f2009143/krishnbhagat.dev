@@ -2,6 +2,7 @@
  * Browser behaviour is rendered in headless Chrome by tests/assertions_frontend.py. */
 APP.registerTopic("frontend",{
  name:"Frontend Web Technologies (HTML, CSS, JavaScript & DOM)",
+ intro:"This topic is the browser's side of the web: the **HTML** a server sends, the **CSS** that styles it, the **form validation** the browser does before anything is submitted, and the **JavaScript** that changes a page after it loads, including fetching new data with AJAX.\n\nFlask questions assume you can read this side. When a route returns HTML, you need to know what the browser shows; when a form posts, you need to know what it sends and which checks ran first.",
  tagline:"The page Flask sends: its structure (HTML), its look (CSS), its checks (HTML5) and its behaviour (JavaScript).",
  story:"Whatever a Flask view returns ends up in a browser. The browser reads the **HTML** to build the page, applies **CSS** rules to decide how it looks, enforces **HTML5** form rules before anything is sent, and runs **JavaScript** that can change the page through the **DOM**.\n\nThe PYQs ask you to be the browser: which colour wins, which border appears, when a box turns green, what the console prints, whether some text is valid JSON. Each lesson gives you the rule the browser follows, and every claim was checked by rendering it in Chrome.",
  mindmap:{center:"The browser side",branches:[

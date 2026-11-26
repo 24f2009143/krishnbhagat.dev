@@ -2,6 +2,7 @@
  * Every output is checked in tests/assertions_templating.py (Python 3.12.12, Jinja2 3.1.6, Flask 3.1.3, PyHTML 1.3.2). */
 APP.registerTopic("templating",{
  name:"Templating & HTML Generation",
+ intro:"This topic is about building HTML from data instead of writing it by hand. You start with Python's **string.Template** and **PyHTML**, then move to **Jinja2**, the template language Flask uses: variables, **filters**, loops, conditions and template inheritance.\n\nPYQs show a template and some data and ask for the exact output, so the skill is careful tracing: which placeholders are filled, what a filter changes, and what a loop produces.",
  tagline:"Turning data into HTML: Python's `string.Template`, PyHTML, and Jinja2 with Flask.",
  story:"A Flask view rarely writes HTML by hand. It fills a **template**: text with placeholders, completed with data for each request. This topic covers three ways to do it, from the simplest (`string.Template` with `$name`), through building HTML from Python function calls (PyHTML), to Jinja2, the engine behind Flask's `render_template` with `{{ }}`, `{% for %}`, macros and template inheritance.\n\nThe PYQs ask what a template produces, which call raises an error, and which template file Flask can find. All three come down to a handful of exact rules.",
  mindmap:{center:"Templates",branches:[
