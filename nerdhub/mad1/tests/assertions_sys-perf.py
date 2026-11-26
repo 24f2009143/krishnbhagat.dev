@@ -178,5 +178,13 @@ def bits_vs_bytes():
     close(500e6 / 8 / 1e6, 62.5, "500 Mbps = 62.5 MB/s")
 
 
+@check("Tsys-perf-22")
+def units_lesson():
+    close(5e6 * 8 / 10e6, 4, "5 MB on 10 Mbps = 4 s")
+    close(2e6 / (25e3 * 8), 10, "2 Mbps / 25 KB = 10 per second")
+    eq((2 * 8, 3 * 10**6 * 8, 0.5 * 1000, 6000 / 60), (16, 24000000, 500.0, 100.0), "hand-trace conversions")
+    eq((4 * 1000 * 8, 80 / 20), (32000, 4.0), "quiz")
+
+
 if __name__ == "__main__":
     main()
