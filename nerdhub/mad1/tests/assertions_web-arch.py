@@ -119,5 +119,24 @@ def availability_arithmetic():
     eq(o, "0.9999 87.6 52.6", "two independent 99% servers: 99.99%; downtime hours and minutes per year")
 
 
+
+@check("Tweb-arch-11")
+def status_phrases():
+    eq(out_of("from http import HTTPStatus as H\nprint([H(c).phrase for c in (200, 201, 204, 301, 302, 304, 400, 401, 403, 404, 405, 500, 503)])\n"),
+       "['OK', 'Created', 'No Content', 'Moved Permanently', 'Found', 'Not Modified', 'Bad Request', 'Unauthorized', 'Forbidden', 'Not Found', 'Method Not Allowed', 'Internal Server Error', 'Service Unavailable']", "standard reason phrases")
+
+
+@check("Tweb-arch-12")
+def response_headers_flask():
+    src = ("from flask import Flask\napp = Flask(__name__)\n@app.route('/')\ndef h():\n    return 'hi'\n@app.route('/j')\ndef j():\n    return {'a': 1}\n"
+           "c = app.test_client()\nfor u in ('/', '/j'):\n    r = c.get(u)\n    print(r.headers['Content-Type'], r.headers['Content-Length'])\n")
+    eq(out_of(src), "text/html; charset=utf-8 2\napplication/json 8", "Content-Type and Content-Length")
+
+
+@check("Tweb-arch-13")
+def round_robin():
+    eq(out_of("servers = ['A', 'B', 'C']\nprint(''.join(servers[i % 3] for i in range(7)))\n"), "ABCABCA", "round robin hands requests out in turn")
+
+
 if __name__ == "__main__":
     main()
