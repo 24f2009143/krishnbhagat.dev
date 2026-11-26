@@ -4,7 +4,7 @@ window.APP = window.APP || {};
 (function(){
 "use strict";
 var A = window.APP;
-A.ENGINE_VERSION = "mad1-engine-1.0.1";   /* 1.0.1: review fixes (inline code in callouts, solution polish, phone layout) */
+A.ENGINE_VERSION = "mad1-engine-1.1.0";   /* 1.1.0: topic orientation, lessons teach before they test, rail shows the open topic's lessons. 1.0.1: review fixes (inline code in callouts, solution polish, phone layout) */
 /* 1.0.0 frozen at B1-C */   /* stamped at B1-C; after the pilot only bug fixes, each bumping this */
 A.topics = A.topics || {};
 A.packs = A.packs || {};          /* packs[exam][topicId] = {pyqs, patterns, extraNotes, extraTraps, parts} */
@@ -35,7 +35,7 @@ A.patchTopic = function(id,p){
 A.registerPack = function(exam,id,obj){
   var E=A.packs[exam]=A.packs[exam]||{},pk=E[id]=E[id]||{pyqs:[],patterns:[],parts:0};
   (obj.pyqs||[]).forEach(function(q){q.id=String(q.id);q.exam=q.exam||exam;q.uid=q.uid||(exam+":"+q.id);q.topicId=id;q.pyq=true;pk.pyqs.push(q)});
-  if(obj.patterns&&obj.patterns.length)pk.patterns=obj.patterns;
+  if(obj.patterns&&obj.patterns.length)pk.patterns=obj.patterns;   /* the last part file carries the whole topic's list */
   if(obj.extraNotes)pk.extraNotes=obj.extraNotes;
   if(obj.extraTraps)pk.extraTraps=obj.extraTraps;
   pk.parts++;

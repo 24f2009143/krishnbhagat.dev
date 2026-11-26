@@ -39,10 +39,16 @@ document.addEventListener("change",function(e){if(e.target.classList&&e.target.c
 function railTopics(){
   var box=$("#rtopics");if(!box)return;var cur=A.curTopic;
   var T=A.examTopics(A.exam());
-  box.innerHTML=T.map(function(m){var st=A.topicStats(m),state=A.stateOf(m,st);
-    return '<a href="#topic/'+m.id+'" class="'+(m.id===cur&&document.body.dataset.page==="topic"?"on":"")+'" title="'+esc(m.name)+(A.isReady(m)?": "+st.pct+"% ready":": "+m.status)+'">'+ring(st.pct,state)+'<span class="lt"><b>'+esc(m.short)+"</b></span><i>"+(A.isReady(m)?st.pct+"%":"soon")+"</i></a>"}).join("")||'<p class="rempty">No topics in this exam.</p>';
+  var hp=location.hash.replace(/^#/,"").split("/"),onTopic=document.body.dataset.page==="topic",S=A.load();
+  box.innerHTML=T.map(function(m){var st=A.topicStats(m),state=A.stateOf(m,st),open=onTopic&&m.id===cur&&A.isReady(m)&&A.topics[m.id];
+    var a='<a href="#topic/'+m.id+'" class="'+(m.id===cur&&onTopic?"on":"")+'" title="'+esc(m.name)+(A.isReady(m)?": "+st.pct+"% ready":": "+m.status)+'">'+ring(st.pct,state)+'<span class="lt"><b>'+esc(m.short)+"</b></span><i>"+(A.isReady(m)?st.pct+"%":"soon")+"</i></a>";
+    if(!open)return a;
+    var secs=A.topics[m.id].sections,curSec=hp[2]==="lesson"?hp[3]:(hp[2]?"#"+hp[2]:"");
+    var li=[['','Overview',curSec===""]].concat(secs.map(function(x,i){return ["/lesson/"+x.id,(i+1)+". "+x.title,curSec===x.id,!!S.read[m.id+":"+x.id]]}))
+      .concat([["/pyqs","Past questions",curSec==="#pyqs"||curSec==="#sub"],["/test","Topic test",curSec==="#test"||curSec==="#test#checklist"],["/revise","Revise",curSec==="#revise"]]);
+    return a+'<ol class="rsecs" aria-label="'+esc(m.short)+' contents">'+li.map(function(x){return '<li class="'+(x[2]?"on":"")+(x[3]?" read":"")+'"><a href="#topic/'+m.id+x[0]+'"'+(x[2]?' aria-current="true"':"")+">"+esc(x[1])+"</a></li>"}).join("")+"</ol>"}).join("")||'<p class="rempty">No topics in this exam.</p>';
 }
-A.railTopics=railTopics;
+A.railTopics=function(){railTopics();var sc=$("#app-top"),on=sc&&sc.querySelector(".rsecs li.on");if(on){var r=on.getBoundingClientRect(),c=sc.getBoundingClientRect();if(r.top<c.top+40||r.bottom>c.bottom-40)sc.scrollTop+=r.top-c.top-c.height/3}};
 function updContinue(){var nx=A.nextStep();var lab=nx.label;$$(".cont").forEach(function(a){a.href=nx.href;a.title="Continue: "+lab;var t=a.querySelector(".cl");if(t)t.textContent=lab})}
 function sw(id,label,sub){return '<div class="swrow"><span><b>'+label+"</b>"+(sub?"<small>"+sub+"</small>":"")+'</span><button class="switch" id="'+id+'" type="button" role="switch" aria-checked="false" aria-label="'+label+'"><i></i></button></div>'}
 function buildTop(){
@@ -113,7 +119,7 @@ A.route=function(){
     else A.pages.home(root);
   }catch(e){root.innerHTML='<div class="page"><div class="box"><h2>Something went wrong</h2><pre style="white-space:pre-wrap">'+esc(String(e&&e.stack||e))+"</pre></div></div>";console.error(e)}
   var S=A.load();if(page!=="settings"&&page!=="search"){S.prefs.last=location.hash||"#home";A.save()}
-  A.math(root);A.badge();railTopics();updContinue();
+  A.math(root);A.badge();A.railTopics();updContinue();
   var h1=root.querySelector("h1");document.title=(h1?h1.textContent.trim()+" · ":"")+A.manifest.short+" · nerdhub";
   if(!A._keepScroll)window.scrollTo({top:0,left:0,behavior:"instant"});A._keepScroll=false;
   if(A._after){var f=A._after;A._after=null;setTimeout(f,40)}

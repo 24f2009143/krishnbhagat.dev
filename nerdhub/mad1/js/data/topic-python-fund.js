@@ -2,6 +2,7 @@
  * Every output printed here is checked in tests/assertions_python-fund.py (Python 3.12.12). */
 APP.registerTopic("python-fund",{
  name:"Python Fundamentals",
+ intro:"This topic covers the two Python features Flask leans on: **decorators** and **logging**. A decorator is a function that wraps another function, which is exactly what `@app.route` does, so once decorators make sense, Flask's routing stops looking like magic.\n\nLogging questions ask which messages appear for a given level and handler setup. Both kinds of PYQ are output-tracing: read the code line by line and say what prints.",
  tagline:"Decorators and logging: the two Python features the PYQs test, and the reason `@app.route` works.",
  story:"Two kinds of Python question appear in every paper. **Decorator questions** show a function with `@something` above it and ask what is printed. **Logging questions** show `logging.basicConfig(...)` and some `logging.info(...)` calls and ask which lines appear on the terminal.\n\nBoth are tracing questions: the answer is whatever the code really does, line by line. This topic teaches the two rules that decide them. A decorator *replaces* the function, so only the replacement's code runs. A logger prints a message only if its *level* is at least the threshold.",
  mindmap:{center:"Python tools",branches:[

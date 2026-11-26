@@ -56,10 +56,10 @@ window.APP = window.APP || {};
   }
 
   /* topic card: an HTTP message (request line + status, then the body) */
-  var STATUS = { visited: ["s200", "200 Done"], frontier: ["s206", "206 In progress"], unvisited: ["s000", "ready"], planned: ["s000", "planned"] };
+  var STATUS = { visited: ["s200", "Done"], frontier: ["s206", "In progress"], unvisited: ["s000", "Not started"], planned: ["s000", "Planned"] };
   function topicCard(m, st, state, lessons) {
     var s = STATUS[state] || STATUS.unvisited;
-    return '<div class="msg-line"><span><span class="verb">GET</span>/topic/' + esc(m.id) + '</span><span class="msg-status ' + s[0] + '">' + s[1] + "</span></div>" +
+    return '<div class="msg-line"><span class="tmark">' + esc(m.mark || "") + '</span><span class="msg-status ' + s[0] + '">' + s[1] + "</span></div>" +
       '<div class="msg-body"><span class="tmain"><b>' + esc(m.name) + '</b><span class="twhy">' + esc(m.why) + "</span></span>" + ring(st.pct, state, lessons || 8) + "</div>" +
       '<span class="tnums"><span><b>' + st.solved + "/" + st.pyqs + "</b> PYQs</span><span><b>" + (Math.round(st.marks * 10) / 10) + "</b> marks</span><span>weeks " + esc(m.weeks.join(", ")) + "</span></span>";
   }
@@ -86,7 +86,7 @@ window.APP = window.APP || {};
     copy: {
       heroKicker: "MAD 1 · request → response",
       heroTitle: "Every page starts with a request.",
-      nextLabel: "Next request",
+      nextLabel: "Continue here",
       correctStamp: "200 OK"
     }
   };

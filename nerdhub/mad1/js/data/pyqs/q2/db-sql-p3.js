@@ -167,6 +167,10 @@ APP.registerPack("q2","db-sql",{
    transfer:{concept:"aggregates-dates",type:"TF",stem:"In SQLite, `'2024-02-10' - '2024-01-28'` evaluates to 0.",key:"A",diff:"hard",hints:["Text to number stops at the dash."],explain:"True: both become 2024.",asserts:["Tdb-sql-30"]}}}
  ],
  patterns:[
+  {name:"Which relationship is this",count:7,cue:"two models, a foreign key, maybe unique or a third table",firstMove:"Find the key: plain → one-to-many; unique → one-to-one; two keys in a third table → many-to-many."},
+  {name:"Which model code is correct",count:4,cue:"four model definitions",firstMove:"Check table name, primary key, nullable, and that the foreign key is a Column pointing at a lower-case table."},
+  {name:"Objects vs ids in relationships",count:2,cue:"creating a row that belongs to another",firstMove:"Column takes an id; relationship takes an object; ids are None before commit."},
+  {name:"Database families and indexes",count:4,cue:"pick a family; true statements about graphs or indexes",firstMove:"Match the query shape: tables and transactions, one key, documents, or paths."},
   {name:"Trace an update, then print all rows",count:5,cue:"filter_by(...).first(), change, commit, loop",firstMove:"first() changes one row; check that the print line runs."},
   {name:"Which query is correct",count:5,cue:"filter vs filter_by, and/&, func.max",firstMove:"filter takes expressions joined by & / and_ / chaining; filter_by takes keywords; aggregates need .scalar()."},
   {name:"Insert sequence",count:1,cue:"shell steps to add a row",firstMove:"Keywords → session.add → session.commit."},
