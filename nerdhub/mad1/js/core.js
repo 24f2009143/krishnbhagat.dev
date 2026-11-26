@@ -32,6 +32,8 @@ A.patchTopic = function(id,p){
   if(p.flash)t.flash=(t.flash||[]).concat(p.flash);
   A.patchesApplied[id]=(A.patchesApplied[id]||0)+1;
 };
+/* each topic keeps one colour everywhere (ring, card, chapter numbers): its place in the manifest picks --t1..--t8 */
+A.topicColor=function(id){var i=A.manifest.topics.filter(function(m){return !m.fixture}).map(function(m){return m.id}).indexOf(id);return i<0?"var(--accent)":"var(--t"+(i%8+1)+")"};
 A.registerPack = function(exam,id,obj){
   var E=A.packs[exam]=A.packs[exam]||{},pk=E[id]=E[id]||{pyqs:[],patterns:[],parts:0};
   (obj.pyqs||[]).forEach(function(q){q.id=String(q.id);q.exam=q.exam||exam;q.uid=q.uid||(exam+":"+q.id);q.topicId=id;q.pyq=true;pk.pyqs.push(q)});
