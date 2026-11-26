@@ -1,0 +1,51 @@
+/* MAD 1 theme: "The Exchange". Tokens, fonts and base elements. See design-concept.md.
+   Request (what you send) = vermilion; response (what comes back, done) = teal; pending = amber. */
+@font-face{font-family:"Source Serif";src:url(../vendor/fonts/source-serif-4-latin-wght-normal.woff2) format("woff2");font-weight:200 900;font-display:swap}
+@font-face{font-family:"Source Serif";src:url(../vendor/fonts/source-serif-4-latin-wght-italic.woff2) format("woff2");font-weight:200 900;font-style:italic;font-display:swap}
+@font-face{font-family:"Inter";src:url(../vendor/fonts/inter-latin-wght-normal.woff2) format("woff2");font-weight:100 900;font-display:swap}
+@font-face{font-family:"JetBrains Mono";src:url(../vendor/fonts/jetbrains-mono-latin-wght-normal.woff2) format("woff2");font-weight:100 800;font-display:swap}
+
+:root{
+ --paper:#FAFAF8;--card:#FFFFFF;--sunk:#F2F3F0;--ink:#1C2128;--ink2:#38404B;--muted:#5E6673;--rule:#E6E7E3;--rule2:#D2D5CF;
+ --accent:#0B6B66;--accent-soft:#E3F3F0;--accent-ink:#FFFFFF;
+ --req:#B4441F;--req-soft:#F8E6DE;--res:#0B6B66;--res-soft:#E3F3F0;--wait:#8A5C00;--wait-soft:#FBF0D6;
+ --hl:#FCEFB4;--err:#B42318;--err-soft:#FCE9E7;--code:#F3F3F0;--codeink:#1C2128;
+ --serif:"Source Serif",Georgia,"Times New Roman",serif;--sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+ --r:10px;--rail:272px;--read:72ch;
+ /* names the engine's inline SVGs use */
+ --bg:var(--paper);--surface:var(--card);--line:var(--rule);--line2:var(--rule2);--mute:var(--muted);--visited:var(--res);--visited-soft:var(--res-soft);
+ --frontier:var(--wait);--frontier-soft:var(--wait-soft);--unvisited:var(--rule2);--error:var(--err);--error-soft:var(--err-soft);
+ --ok:var(--res);--okbg:var(--res-soft);--bad:var(--err);--badbg:var(--err-soft);--warn:var(--wait);--warnbg:var(--wait-soft);--ac:var(--accent);--acbg:var(--accent-soft);
+}
+:root:not([data-theme="light"]){color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+ --paper:#111316;--card:#181B20;--sunk:#1F2329;--ink:#E9E7E1;--ink2:#CFCCC4;--muted:#9C9A93;--rule:#272B31;--rule2:#373C44;
+ --accent:#5ECFC3;--accent-soft:#16312E;--accent-ink:#0E1513;
+ --req:#FF9070;--req-soft:#3A2019;--res:#5ECFC3;--res-soft:#16312E;--wait:#F2C14E;--wait-soft:#362B12;--hl:rgba(242,193,78,.22);--err:#FF8A80;--err-soft:#3D1E22;--code:#15181C;--codeink:#E9E7E1;color-scheme:dark}}
+:root[data-theme="dark"]{
+ --paper:#111316;--card:#181B20;--sunk:#1F2329;--ink:#E9E7E1;--ink2:#CFCCC4;--muted:#9C9A93;--rule:#272B31;--rule2:#373C44;
+ --accent:#5ECFC3;--accent-soft:#16312E;--accent-ink:#0E1513;
+ --req:#FF9070;--req-soft:#3A2019;--res:#5ECFC3;--res-soft:#16312E;--wait:#F2C14E;--wait-soft:#362B12;--hl:rgba(242,193,78,.22);--err:#FF8A80;--err-soft:#3D1E22;--code:#15181C;--codeink:#E9E7E1;color-scheme:dark}
+
+*{box-sizing:border-box}
+html{font-size:16px;scroll-padding-top:72px;-webkit-text-size-adjust:100%}
+html[data-large=on]{font-size:19px}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 1rem/1.6 var(--sans);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-underline-offset:.18em}
+a:hover{color:var(--ink)}
+h1,h2,h3,h4{margin:0;line-height:1.2;color:var(--ink)}
+h1{font:700 clamp(1.8rem,3.6vw,2.6rem)/1.12 var(--sans);letter-spacing:-.022em;margin:0 0 10px}
+h2{font:700 1.5rem/1.25 var(--sans);letter-spacing:-.015em}
+h3{font:650 1.1rem/1.3 var(--sans)}
+h4{font:650 1rem/1.35 var(--sans)}
+p{margin:0 0 .8em}
+button{font:inherit;color:inherit}
+code,kbd,pre{font-family:var(--mono)}
+kbd{font-size:.78em;padding:1px 5px;border:1px solid var(--rule2);border-bottom-width:2px;border-radius:5px;background:var(--card)}
+mark{background:var(--hl);color:inherit;padding:0 .15em;border-radius:3px}
+hr{border:0;border-top:1px solid var(--rule);margin:20px 0}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:4px}
+.hidden{display:none!important}
+.mute{color:var(--muted)}
+.mono{font-family:var(--mono);font-size:.86rem}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}

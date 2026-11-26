@@ -30,7 +30,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
   var m=await Promise.all([import(base+"firebase-app.js"),import(base+"firebase-auth.js"),import(base+"firebase-firestore.js")]);
   var app=m[0].initializeApp({apiKey:cfg.apiKey,authDomain:cfg.authDomain,projectId:cfg.projectId,appId:cfg.appId});
   var au=m[1],fs=m[2],auth=au.getAuth(app),db=fs.getFirestore(app);
-  $("in").onclick=function(){var p=new au.GoogleAuthProvider();p.setCustomParameters({hd:cfg.allowedDomains[0]});au.signInWithPopup(auth,p).catch(function(){})};
+  $("in").onclick=function(){var p=new au.GoogleAuthProvider();p.setCustomParameters({hd:"ds.study.iitm.ac.in"}); /* hint for the owner account */au.signInWithPopup(auth,p).catch(function(){})};
   au.onAuthStateChanged(auth,async function(u){
     if(!u){$("auth").hidden=false;$("out").innerHTML="";return}
     $("auth").hidden=true;$("out").innerHTML='<p class="mut">Loading as '+esc(u.email)+'…</p>';

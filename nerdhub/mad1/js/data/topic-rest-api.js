@@ -1,0 +1,226 @@
+/* rest-api: APIs, curl, jsonify, Flask-RESTful resources, reqparse, marshal_with, caching. Teaching prose is [ADDED].
+ * Every output is checked in tests/assertions_rest-api.py (Flask 3.1.3, Flask-RESTful 0.3.10). */
+APP.registerTopic("rest-api",{
+ name:"REST APIs & Flask-RESTful",
+ intro:"This topic turns a web server into a data service. An **API** answers with **JSON** instead of HTML, and clients pick an **HTTP method** to say what they want. You learn `jsonify`, **Flask-RESTful** resources, `reqparse` and `marshal_with`, and how to call an API with **curl**.\n\nMost PYQs ask what a curl command returns: which method of the resource runs, whether the URL's arguments fit it, and what JSON and status code come back.",
+ tagline:"Serving data instead of pages: JSON responses, resource classes, curl, and the rules Flask-RESTful follows.",
+ story:"A web page is for people; an **API** is for programs. Instead of HTML, an API endpoint answers with **JSON**, and clients (a phone app, JavaScript, or `curl` in a terminal) choose an **HTTP method** to say what they want: GET to read, POST to create, PUT to update, DELETE to remove.\n\nFlask can return JSON directly, and the **Flask-RESTful** extension groups the methods for one resource into a class. Most PYQs here ask what a curl command returns: which method runs, whether it gets the URL's arguments, and what JSON comes back.",
+ mindmap:{center:"REST API",branches:[
+  {t:"Ideas",kids:["API vs SDK","OpenAPI (OAS)","documentation"]},
+  {t:"HTTP + curl",kids:["-X METHOD","-d data","-H header","--json"]},
+  {t:"JSON in Flask",kids:["jsonify","dict return","application/json"]},
+  {t:"Flask-RESTful",kids:["Resource class","method = HTTP verb","add_resource(urls)"]},
+  {t:"Input/output",kids:["reqparse","marshal_with + fields"]},
+  {t:"Caching",kids:["store responses","GET cacheable","lower latency"]}]},
+ connect:[["route","Resource","add_resource maps URLs to a class instead of a function"],["converters","method arguments","each <placeholder> is passed to the method"],["methods list","405","a verb with no method in the class is not allowed"],["jsonify","marshal_with","both produce JSON; marshal_with also filters and converts fields"]],
+ roadmap:[["APIs, SDKs, OpenAPI","concepts"],["HTTP methods with curl","curl"],["JSON responses","jsonify"],["Resource classes","resource"],["URLs and arguments","urls"],["reqparse and marshal_with","reqparse"],["Caching and status codes","caching"]],
+ prereqs:["rf-http"],
+ concepts:{
+  "api-concepts":{name:"API, SDK, OpenAPI and documentation",sub:"api-concepts-oas-caching",ease:1,repair:"An API is the set of operations a service exposes. An SDK is a kit of tools for building with a product, and it usually contains API libraries, not the other way round. The OpenAPI Specification is a standard format for describing REST APIs, and API documentation (the reference) lists endpoints, parameters and responses."},
+  "curl-methods":{name:"HTTP methods with curl",sub:"api-concepts-oas-caching",ease:1,repair:"`curl URL` sends GET. `-X PUT` (or POST, DELETE) sets the method, `-d \"a=1&b=2\"` sends form-encoded data, `-H \"Content-Type: application/json\" -d '{...}'` sends JSON, and `--json '{...}'` does both and uses POST unless `-X` says otherwise. Lower-case method names are upper-cased by Flask."},
+  "caching":{name:"Caching",sub:"api-concepts-oas-caching",ease:2,repair:"Caching stores responses (in the browser, a proxy or a CDN) so repeated requests do not reach the server. It lowers latency and server load. By default GET responses can be cached; POST responses are not cached by default."},
+  "jsonify":{name:"JSON responses in Flask",sub:"jsonify",ease:1,repair:"`jsonify(x)` and returning a dict (or list) both send JSON with status 200 and mimetype `application/json`. The structure is kept exactly: a list stays a list inside the JSON, so a dict holding a list prints with `[ ]`."},
+  "resource-methods":{name:"Resource classes and method mapping",sub:"flask-restful",ease:2,repair:"In Flask-RESTful each HTTP method calls the class method with the same name (`get`, `post`, `put`, `delete`). Every URL given to `add_resource` accepts every method the class defines; a verb the class lacks gives 405. Whatever arguments the URL supplies are passed to the method, so a method that does not accept them raises TypeError (500)."},
+  "resource-urls":{name:"URLs and arguments for resources",sub:"flask-restful",ease:2,repair:"`add_resource(Cls, \"/a/<int:x>\", \"/b\")` registers several URLs for one class. URL matching follows the normal rules: one non-empty segment per placeholder, converters filter, trailing-slash rules apply, and a query string never fills a placeholder. Check that the method's parameters match what each URL supplies."},
+  "reqparse-marshal":{name:"reqparse and marshal_with",sub:"flask-restful",ease:3,repair:"`reqparse.RequestParser` reads named arguments from the JSON body or form; with `type=int` it converts, and with `required=True` a missing argument gives 400. `@marshal_with(fields)` keeps only the listed fields and converts each to its declared type, so extra keys disappear and `fields.Integer` turns `\"3\"` into `3`."}
+ },
+ sections:[
+ {id:"concepts",title:"APIs, SDKs, OpenAPI and documentation",studying:"what an API is and the words around it",why:"three theory PYQs",plain:"An API is a menu of operations; docs and OpenAPI describe the menu.",concepts:["api-concepts"],
+  diagnostic:{id:"ra-diag-c",concept:"api-concepts",type:"MCQ",stem:"Which usually contains the other?",options:["An API contains an SDK","An SDK contains API libraries","Neither","They are the same"],key:"B",diff:"easy",hints:["A kit of tools."],explain:"An SDK bundles tools, docs and API libraries."},
+  core:[
+   {t:"table",title:"Terms",head:["Term","Meaning"],rows:[["API","the operations a service exposes (for a web API: URLs, methods, request and response formats)"],["SDK","a software development kit: libraries (often wrapping an API), tools, samples, docs"],["OpenAPI Specification (OAS)","a standard, language-agnostic format (YAML/JSON) to describe REST APIs"],["API documentation / reference","the human-readable list of endpoints, parameters and response formats"],["API key / OAuth token","credentials for calling an API, not descriptions of it"]]},
+   {t:"co",kind:"analogy",text:"An API is a restaurant's menu and ordering rules. An SDK is a starter kit that includes the menu plus tools to order easily. OpenAPI is a standard format for writing menus so any tool can read them. The analogy stops at money: API keys are like membership cards, not part of the menu."},
+   {t:"ex",level:"foundation",title:"Two statements about SDKs",problem:"S1: APIs usually contain SDKs, but SDKs do not contain APIs. S2: an SDK is a group of tools that help developers use a product or service.",asked:"Which are correct?",idea:"SDKs contain APIs, not the other way round.",steps:["S1 reverses the relationship: false.","S2 is the definition of an SDK: true."],answer:"S1 false, S2 true",mistake:"Accepting S1 because both words appear."},
+   {t:"ex",level:"exam",title:"What OAS is",problem:"Is OpenAPI a programming language, a way to describe REST API interfaces, a testing tool, or an authentication library?",asked:"The true description.",idea:"OAS is a description format.",steps:["OAS documents describe endpoints, parameters and responses in YAML or JSON.","It is not a language, a tester or an auth library."],answer:"a way to describe interfaces for RESTful APIs",mistake:"Calling it a language because it has its own syntax."}
+  ],
+  deep:[{t:"code",lang:"json",title:"A tiny OpenAPI fragment",src:String.raw`{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/courses": {
+      "get": {"responses": {"200": {"description": "list of courses"}}}
+    }
+  }
+}`,lines:[[3,"Each path lists its methods and their responses."]]}],
+  remember:["API = exposed operations.","SDK contains API libraries and tools.","OAS = standard description format for REST APIs.","API docs list endpoints, parameters, responses."],
+  teachBack:{prompt:"What is the OpenAPI Specification for?",model:"Describing a REST API's endpoints, parameters and responses in a standard format tools can read."},
+  quiz:[
+   {id:"ra-c-q1",concept:"api-concepts",type:"MCQ",stem:"What describes an API's endpoints, parameters and response formats for developers?",options:["API documentation / reference","an API key","the server's source code","an OAuth token"],key:"A",diff:"easy",hints:["Reference."],explain:"The API documentation (reference)."},
+   {id:"ra-c-q2",concept:"api-concepts",type:"MCQ",stem:"OpenAPI documents are usually written in:",options:["Python","YAML or JSON","HTML","SQL"],key:"B",diff:"easy",hints:["Data formats."],explain:"YAML or JSON."},
+   {id:"ra-c-q3",concept:"api-concepts",type:"TF",stem:"An API key describes the API's endpoints.",key:"B",diff:"easy",hints:["Credential."],explain:"False: it is a credential."}
+  ]},
+ {id:"curl",title:"HTTP methods with curl",studying:"how curl chooses the method and sends data",why:"curl commands appear in many PYQs",plain:"`-X` picks the verb, `-d` sends data, `-H` adds headers.",concepts:["curl-methods"],
+  core:[
+   {t:"table",title:"curl flags",head:["Flag","Meaning"],rows:[["(none)","GET"],["`-X PUT`","use method PUT (also POST, DELETE, …)"],["`-d \"a=1&b=2\"`","send form data (`application/x-www-form-urlencoded`); implies POST if no `-X`"],["`-H \"Content-Type: application/json\"`","declare the body as JSON"],["`--json '{...}'`","JSON body with JSON headers; POST unless `-X` overrides"],["`-L`","follow redirects"]]},
+   {t:"code",lang:"bash",src:String.raw`curl -X PUT -d "status=active&role=admin" http://127.0.0.1:5000/u`,lines:[[1,"A PUT request with two form fields; Flask reads them in `request.form`. [assert:Trest-api-19]"]]},
+   {t:"ex",level:"foundation",title:"Reading a curl command",problem:"What does `curl -X PUT -d \"status=active&role=admin\" URL` do?",asked:"Method and data format.",idea:"`-X` sets the method; `-d` sends form-encoded data.",steps:["`-X PUT`: a PUT request.","`-d \"k=v&...\"`: form-encoded data, not JSON."],answer:"a PUT request sending form data",mistake:"Calling it JSON because it carries data.",asserts:["Trest-api-19"]},
+   {t:"ex",level:"exam",title:"Lower-case methods",problem:"`curl URL -X get` against a resource with `get` and `put`. Does it work?",asked:"Status.",idea:"Flask upper-cases the request method.",steps:["curl sends the method `get`.","Werkzeug upper-cases it to `GET`, which the resource supports."],answer:"it works (200)",mistake:"Expecting 405 because of the lower case.",asserts:["Trest-api-04"]}
+  ],
+  deep:[{t:"p",text:"**Shell quoting.** In bash, wrap JSON in single quotes: `-d '{\"a\":1}'`. Windows cmd needs double quotes with escaped inner quotes: `-d \"{\\\"a\\\":1}\"`. Both send the same JSON."}],
+  remember:["No flag = GET.","`-X` sets the method.","`-d` = form data unless a JSON Content-Type header is given.","Methods are upper-cased by Flask."],
+  teachBack:{prompt:"How do you send a JSON body with curl?",model:"Use `-H \"Content-Type: application/json\" -d '{...}'` or `--json '{...}'`."},
+  quiz:[
+   {id:"ra-u-q1",concept:"curl-methods",type:"MCQ",stem:"`curl http://127.0.0.1:5000/items` uses which method?",options:["GET","POST","PUT","HEAD"],key:"A",diff:"easy",hints:["Default."],explain:"GET."},
+   {id:"ra-u-q2",concept:"curl-methods",type:"MCQ",stem:"Which flag sets the HTTP method?",options:["`-d`","`-H`","`-X`","`-L`"],key:"C",diff:"easy",hints:["X for method."],explain:"`-X`.",asserts:["Trest-api-19"]},
+   {id:"ra-u-q3",concept:"curl-methods",type:"TF",stem:"`curl -X get URL` is rejected by Flask because the method is in lower case.",key:"B",diff:"medium",hints:["Upper-casing."],explain:"False: Flask upper-cases it.",asserts:["Trest-api-04"]}
+  ]},
+ {id:"jsonify",title:"JSON responses in Flask",studying:"jsonify and dict returns",why:"two PYQs on JSON response shape and mimetype",plain:"Return a dict or jsonify(...) and Flask sends JSON with status 200.",concepts:["jsonify"],
+  core:[
+   {t:"code",lang:"python",src:String.raw`from flask import Flask, jsonify
+app = Flask(__name__)
+
+@app.route("/api/courses")
+def courses():
+    return jsonify([{"id": "CS1001", "name": "CT"}])
+
+@app.route("/")
+def home():
+    return {"a": 1}`,lines:[[6,"A JSON list; status 200, mimetype `application/json`. [assert:Trest-api-02]"],[10,"A dict return is also JSON with `application/json`. [assert:Trest-api-01]"]]},
+   {t:"compare",title:"Ways to return JSON",cols:["","`jsonify(x)`","`return {...}`"],rows:[["Body","JSON of x","JSON of the dict"],["Status","200","200"],["Mimetype","application/json","application/json"],["Lists","yes","yes (Flask 2.2+)"]]},
+   {t:"ex",level:"foundation",title:"Status and mimetype",problem:"`return jsonify(courses)` for `/api/courses`. Status and mimetype?",asked:"Both.",idea:"jsonify sets JSON with 200.",steps:["The route matches: no 404.","jsonify gives status 200 and mimetype application/json."],answer:"200, application/json",mistake:"Choosing text/javascript.",asserts:["Trest-api-02"]},
+   {t:"ex",level:"exam",title:"A dict holding a list",problem:"`jsonify({\"items\": [ {\"a\": 1}, {\"b\": 2} ]})`. What is the shape?",asked:"The JSON.",idea:"The structure is kept: a list stays a list.",steps:["The outer value is an object with one key.","Its value is an array of two objects, printed with `[ ]`."],answer:"`{\"items\": [{\"a\": 1}, {\"b\": 2}]}`",mistake:"Merging the objects into one.",asserts:["Trest-api-01"]}
+  ],
+  deep:[{t:"p",text:"**Key order.** Flask's JSON provider sorts keys alphabetically by default (`JSON_SORT_KEYS`), which can change the order you see; the content is the same."}],
+  remember:["jsonify and dict returns give JSON, 200.","Mimetype application/json.","Lists stay lists."],
+  teachBack:{prompt:"Why is a dict holding a list printed with square brackets inside?",model:"jsonify keeps the Python structure: the list becomes a JSON array."},
+  quiz:[
+   {id:"ra-j-q1",concept:"jsonify",type:"MCQ",stem:"The mimetype of `return {\"x\": 1}` in Flask 3.1 is:",options:["text/html","application/json","text/plain","text/javascript"],key:"B",diff:"easy",hints:["Dict → JSON."],explain:"application/json.",asserts:["Trest-api-01"]},
+   {id:"ra-j-q2",concept:"jsonify",type:"NUM",stem:"Status code of a successful `jsonify(...)` return?",key:200,diff:"easy",hints:["OK."],explain:"200.",asserts:["Trest-api-02"]},
+   {id:"ra-j-q3",concept:"jsonify",type:"TF",stem:"`jsonify({\"k\": [1, 2]})` turns the list into an object.",key:"B",diff:"easy",hints:["Structure kept."],explain:"False.",asserts:["Trest-api-01"]}
+  ]},
+ {id:"resource",title:"Resource classes and method mapping",studying:"how Flask-RESTful maps HTTP verbs to class methods",why:"7 PYQs on which method runs",plain:"GET runs get(), PUT runs put(); a missing method means 405.",concepts:["resource-methods"],
+  core:[
+   {t:"code",lang:"python",src:String.raw`from flask import Flask
+from flask_restful import Api, Resource
+app = Flask(__name__)
+api = Api(app)
+
+class Greet(Resource):
+    def get(self):
+        return {"greet": "Hello from GET"}
+    def put(self):
+        return {"greet": "Hello from PUT"}
+
+api.add_resource(Greet, "/a", "/b")`,lines:[[6,"A resource is a class; its methods are named after HTTP verbs."],[12,"Both `/a` and `/b` accept GET and PUT; POST on either gives 405. [assert:Trest-api-04]"]]},
+   {t:"flow",caption:"Which method runs?",W:360,H:400,nodes:[{id:"a",text:"request: METHOD URL",x:180,y:30,kind:"start",w:200},{id:"b",text:"URL matches a\nregistered URL?",x:180,y:115,kind:"decision",w:170,h:64},{id:"n",text:"404",x:320,y:115,kind:"end",w:60},{id:"c",text:"class has a method\nnamed METHOD?",x:180,y:220,kind:"decision",w:180,h:64},{id:"m",text:"405",x:320,y:220,kind:"end",w:60},{id:"d",text:"call it with the URL's\nplaceholders as arguments",x:180,y:320,w:220,h:46},{id:"e",text:"wrong arguments →\nTypeError → 500",x:180,y:385,kind:"end",w:200,h:40}],edges:[["a","b"],["b","n","no"],["b","c","yes"],["c","m","no"],["c","d","yes"],["d","e"]]},
+   {t:"yourMove",id:"ra-move-args",title:"Arguments from the URL",state:{code:String.raw`class T(Resource):
+    def get(self):
+        return {"v": 1}
+    def delete(self, val):
+        return {"deleted": val}
+
+api.add_resource(T, "/get_values", "/delete/<val>")`,lang:"python",vars:{"request":"GET /delete/val1"}},prompt:"What happens?",choices:["`{\"deleted\": \"val1\"}`","`{\"v\": 1}`","500: get() receives val but does not accept it","405"],key:"C",why:["GET runs get(), not delete().","get() runs, but it is called with val=\"val1\".","Yes: the URL supplies `val`, and get(self) has no parameter for it, so TypeError gives 500.","The class has a get method, so GET is allowed."]},
+   {t:"ex",level:"foundation",title:"A missing verb",problem:"With `Greet` above, which of `GET /a`, `PUT /b`, `POST /a` fail?",asked:"Failing requests.",idea:"POST has no method in the class.",steps:["GET and PUT exist on every registered URL.","POST does not exist: 405."],answer:"only `POST /a`",mistake:"Thinking `/b` only accepts PUT because of its name.",asserts:["Trest-api-04"]},
+   {t:"ex",level:"exam",title:"Same URL, different verb",problem:"`PUT /delete/val1` for the class in the your-move step, with a `put(self, val)` method added that returns `{\"updated\": val}`.",asked:"The response.",idea:"The URL's name means nothing; the verb picks the method.",steps:["The URL matches `/delete/<val>` with val = val1.","PUT runs `put(self, val)`.","Response: `{\"updated\": \"val1\"}`."],answer:"`{\"updated\": \"val1\"}`",mistake:"Expecting delete() because the URL says delete.",asserts:["Trest-api-18"]}
+  ],
+  deep:[{t:"p",text:"**Status from a tuple.** A resource method may return `(data, status)`, e.g. `return {\"message\": \"created\"}, 201`, exactly like a Flask view."}],
+  remember:["Verb → method of the same name.","Every URL of a resource accepts all its methods.","Missing method → 405.","Arguments must match the URL's placeholders, or 500."],
+  teachBack:{prompt:"Why does GET /delete/val1 give 500 when the class has get(self)?",model:"The URL supplies val, so Flask-RESTful calls get(val=...), and get takes no such parameter: TypeError, 500."},
+  quiz:[
+   {id:"ra-r-q1",concept:"resource-methods",type:"MCQ",stem:"A resource has only `get` and `post`. `DELETE` on its URL gives:",options:["200","404","405","500"],key:"C",diff:"easy",hints:["No method."],explain:"405 Method Not Allowed.",asserts:["Trest-api-04"]},
+   {id:"ra-r-q2",concept:"resource-methods",type:"MCQ",stem:"`add_resource(R, \"/users\", \"/users/<int:id>\")` and `def get(self)`. `GET /users/5`?",options:["works","404","405","500"],key:"D",diff:"medium",hints:["Arguments."],explain:"`id` is passed but get takes none: TypeError, 500.",asserts:["Trest-api-14"]},
+   {id:"ra-r-q3",concept:"resource-methods",type:"TF",stem:"In Flask-RESTful, PUT on a URL called `/delete/<val>` runs the class's `put` method.",key:"A",diff:"medium",hints:["The verb decides."],explain:"True.",asserts:["Trest-api-18"]}
+  ]},
+ {id:"urls",title:"URLs and arguments for resources",studying:"registering several URLs and matching them",why:"5 PYQs ask which URL works",plain:"Normal URL rules apply; then the method must accept the URL's values.",concepts:["resource-urls"],
+  core:[
+   {t:"code",lang:"python",src:String.raw`class Power(Resource):
+    def get(self, x, y):
+        return {"output": x ** y}
+
+api.add_resource(Power, "/<int:x>/<int:y>")`,lines:[[5,"`/6/2` → `{\"output\": 36}`; `/x=6/y=2` and `/6` → 404. [assert:Trest-api-06]"]]},
+   {t:"handTrace",title:"Status for each URL",prompt:"Rule `/api/ver1/<int:tno>` and rule `/api/ver2/` (both GET). Write the status.",cols:["URL","status"],given:[["/api/ver1/12727","?"],["/api/12727","?"],["/api/ver2","?"],["/api/ver2/","?"]],blanks:[[0,1],[1,1],[2,1],[3,1]],key:["200","404","308","200"]},
+   {t:"ex",level:"foundation",title:"Query string versus placeholders",problem:"For `/<int:x>/<int:y>`, which works: `/6/2`, `/x=6/y=2`, `/?x=6&y=2`?",asked:"The working URL.",idea:"Placeholders come from path segments that pass the converter.",steps:["`/6/2`: both ints: works.","`/x=6/y=2`: `x=6` is not an int: 404.","`/?x=6&y=2`: path `/` has no rule here: 404."],answer:"`/6/2`",mistake:"Writing `name=value` in the path.",asserts:["Trest-api-06"]},
+   {t:"ex",level:"exam",title:"Text segments with = in them",problem:"Rule `/api/<string:brand>/<string:model>`. Does `/api/brand=Hundai/model=Creta` match?",asked:"Yes or no, and the values.",idea:"Any text without `/` fills a string placeholder.",steps:["Segment 1: `brand=Hundai`; segment 2: `model=Creta`.","Both are valid strings, so it matches with those exact values."],answer:"yes: brand = `brand=Hundai`, model = `model=Creta`",mistake:"Answering Not Found because of the `=`.",asserts:["Trest-api-10"]}
+  ],
+  deep:[{t:"p",text:"**One class, several URLs.** If one URL supplies an argument and another does not, a single method cannot serve both unless it gives the parameter a default (`def get(self, id=None)`)."}],
+  remember:["One segment per placeholder; converters filter.","`name=value` in a path is just text.","Trailing slash rules still apply (308).","Method parameters must match the URL."],
+  teachBack:{prompt:"Why does `/x=6/y=2` give 404 for `/<int:x>/<int:y>`?",model:"The segments `x=6` and `y=2` are not integers, so the int converters reject them."},
+  quiz:[
+   {id:"ra-l-q1",concept:"resource-urls",type:"MCQ",stem:"Rule `/api/ver2/`. `GET /api/ver2` in a browser:",options:["404","redirects to /api/ver2/ and works","405","500"],key:"B",diff:"medium",hints:["Trailing slash."],explain:"308 to the slashed URL, then 200.",asserts:["Trest-api-09"]},
+   {id:"ra-l-q2",concept:"resource-urls",type:"MCQ",stem:"Rule `/api/<string:a>/<string:b>`. Which gives 404?",options:["`/api/x/y`","`/api/x&y`","`/api/a=1/b=2`","`/api/1/2`"],key:"B",diff:"medium",hints:["How many segments?"],explain:"`/api/x&y` has only one segment.",asserts:["Trest-api-10"]},
+   {id:"ra-l-q3",concept:"resource-urls",type:"TF",stem:"A query string can fill a resource's URL placeholder.",key:"B",diff:"easy",hints:["Path only."],explain:"False."}
+  ]},
+ {id:"reqparse",title:"reqparse and marshal_with",studying:"reading request arguments and shaping responses in Flask-RESTful",why:"4 PYQs, including the biggest Flask-RESTful ones",plain:"reqparse reads and checks input; marshal_with filters and converts output.",concepts:["reqparse-marshal"],
+  core:[
+   {t:"code",lang:"python",src:String.raw`parser = reqparse.RequestParser()
+parser.add_argument("n", type=int, required=True)
+
+class R(Resource):
+    def post(self):
+        return parser.parse_args()`,lines:[[2,"Read `n` from the JSON body or form, convert to int, and require it."],[6,"`curl -X POST -H \"Content-Type: application/json\" -d '{\"n\":3}'` → `{\"n\": 3}`; without `n`: 400. [assert:Trest-api-07] [assert:Trest-api-20]"]]},
+   {t:"code",lang:"python",title:"marshal_with",src:String.raw`out_fields = {"Id": fields.Integer, "name": fields.String}
+
+class MyApi(Resource):
+    @marshal_with(out_fields)
+    def post(self):
+        return parser.parse_args()   # Id, name, email`,lines:[[1,"Only these two fields will be sent, with these types."],[4,"The returned dict is filtered and converted: `email` is dropped; `Id` becomes an integer. [assert:Trest-api-03]"]]},
+   {t:"player",title:"From request to response",frames:[
+    {state:{text:"Body: `{\"Id\": 3, \"name\": \"user_1\", \"email\": \"u@x.com\"}`"},caption:"The client sends three fields."},
+    {state:{text:"`parse_args()` → `{\"Id\": \"3\", \"name\": \"user_1\", \"email\": \"u@x.com\"}`"},caption:"Without a `type`, reqparse gives strings."},
+    {state:{text:"`marshal_with` → `{\"Id\": 3, \"name\": \"user_1\"}`"},caption:"Only listed fields survive; `Id` is converted to an integer."}]},
+   {t:"ex",level:"foundation",title:"A required int",problem:"`add_argument(\"n\", type=int, required=True)`. What do POST `{\"n\": 3}` and POST `{}` give?",asked:"Both responses.",idea:"type converts; required enforces.",steps:["`{\"n\": 3}` → `{\"n\": 3}`.","`{}` → 400 Bad Request (missing required argument)."],answer:"`{\"n\": 3}`, then 400",mistake:"Expecting `{\"n\": null}`.",asserts:["Trest-api-07","Trest-api-20"]},
+   {t:"ex",level:"exam",title:"Filtering output",problem:"With `out_fields` above, what does POST `{\"Id\": 3, \"name\": \"user_1\", \"email\": \"user_1@gmail.com\"}` return?",asked:"The JSON.",idea:"marshal_with keeps only Id and name, as an integer and a string.",steps:["parse_args reads all three.","marshal_with drops email and converts Id to int."],answer:"`{\"Id\": 3, \"name\": \"user_1\"}`",mistake:"Keeping email or quoting the 3.",asserts:["Trest-api-03"]}
+  ],
+  deep:[{t:"p",text:"**Where reqparse looks.** In Flask-RESTful 0.3.10, `add_argument` reads from the JSON body and from form or query values by default. A missing optional argument comes back as `None`."}],
+  remember:["reqparse reads named arguments; type converts; required → 400 if missing.","marshal_with keeps only listed fields and converts types.","Missing optional arguments are None."],
+  teachBack:{prompt:"What two things does marshal_with do?",model:"It drops fields that are not listed and converts the listed ones to their declared types."},
+  quiz:[
+   {id:"ra-q-q1",concept:"reqparse-marshal",type:"MCQ",stem:"`required=True` and the client omits the argument. Response?",options:["200 with null","400 Bad Request","404","500"],key:"B",diff:"easy",hints:["Validation."],explain:"400.",asserts:["Trest-api-20"]},
+   {id:"ra-q-q2",concept:"reqparse-marshal",type:"MCQ",stem:"`fields.Integer` applied to `\"7\"` gives:",options:["`\"7\"`","`7`","error","`null`"],key:"B",diff:"medium",hints:["Converts."],explain:"It converts to the integer 7.",asserts:["Trest-api-21"]},
+   {id:"ra-q-q3",concept:"reqparse-marshal",type:"TF",stem:"Fields not listed in marshal_with's dictionary are still sent.",key:"B",diff:"easy",hints:["Filter."],explain:"False.",asserts:["Trest-api-03"]}
+  ]},
+ {id:"caching",title:"Caching and status codes",studying:"what caching does and which responses are cached",why:"one MSQ on false statements about caching",plain:"Caching keeps copies of responses so the server is asked less.",concepts:["caching"],
+  core:[
+   {t:"co",kind:"def",title:"Caching",text:"A **cache** stores a response (in the browser, a proxy or a CDN) and reuses it for later identical requests, so they do not reach the server. Caching **reduces latency** and **reduces server load**. By default GET (and HEAD) responses are cacheable; POST responses are not cached by default."},
+   {t:"table",title:"Status codes in APIs",head:["Code","Meaning","Typical use"],rows:[["200","OK","GET, PUT success"],["201","Created","POST created a resource"],["204","No Content","success with empty body"],["400","Bad Request","missing or invalid input"],["401","Unauthorized","credentials missing or wrong"],["404","Not Found","no such URL or record"],["405","Method Not Allowed","verb not supported"],["415","Unsupported Media Type","body is not JSON where JSON is expected"]]},
+   {t:"ex",level:"foundation",title:"True or false",problem:"Caching increases latency and server load. True?",asked:"True or false.",idea:"Caching avoids trips to the server.",steps:["Fewer requests reach the server: less load.","Answers come from a nearer copy: lower latency."],answer:"false",mistake:"Thinking caching adds an extra step."},
+   {t:"ex",level:"exam",title:"Which requests are cacheable by default?",problem:"Are all GET and POST requests cacheable by default in browsers?",asked:"True or false.",idea:"POST responses are not cached by default.",steps:["GET responses can be cached by default.","POST responses are cached only with explicit freshness headers, which is rare."],answer:"false",mistake:"Treating every method alike."}
+  ],
+  deep:[{t:"p",text:"**Cache-Control.** Servers steer caches with headers such as `Cache-Control: max-age=60` or `no-store`. Not asked in these PYQs."}],
+  remember:["Caching reduces latency and server load.","GET is cacheable by default; POST is not.","201 Created for a successful POST; 405 for a missing verb; 415 for a non-JSON body."],
+  teachBack:{prompt:"Why does caching lower latency?",model:"Responses are served from a nearer stored copy instead of travelling to the server and back."},
+  quiz:[
+   {id:"ra-k-q1",concept:"caching",type:"MCQ",stem:"Caching mainly:",options:["increases server load","reduces latency","encrypts data","removes the need for APIs"],key:"B",diff:"easy",hints:["Nearer copy."],explain:"Reduces latency."},
+   {id:"ra-k-q2",concept:"caching",type:"TF",stem:"POST responses are cached by default in browsers.",key:"B",diff:"medium",hints:["GET only."],explain:"False."},
+   {id:"ra-k-q3",concept:"caching",type:"NUM",stem:"Which status code means a POST created a new resource?",key:201,diff:"easy",hints:["Created."],explain:"201.",asserts:["Trest-api-22"]}
+  ]}
+ ],
+ practice:[
+  {id:"ra-p1",concept:"curl-methods",type:"MCQ",stem:"`curl -d \"a=1\" URL` (no -X) sends which method?",options:["GET","POST","PUT","DELETE"],key:"B",diff:"medium",hints:["-d implies…"],explain:"Sending data with -d and no -X uses POST.",asserts:["Trest-api-23"]},
+  {id:"ra-p2",concept:"curl-methods",type:"MCQ",stem:"Which sends JSON correctly?",options:["`curl -X POST -d '{\"a\":1}' URL`","`curl -X POST -H \"Content-Type: application/json\" -d '{\"a\":1}' URL`","`curl -X GET URL`","`curl -H \"a:1\" URL`"],key:"B",diff:"medium",hints:["Header."],explain:"The Content-Type header marks the body as JSON."},
+  {id:"ra-p3",concept:"caching",type:"MSQ",stem:"Which are benefits of caching?",options:["lower latency","lower server load","more requests to the server","fewer repeated downloads"],key:["A","B","D"],diff:"easy",hints:["Fewer trips."],explain:"Caching reduces trips, latency and load."},
+  {id:"ra-p4",concept:"caching",type:"MCQ",stem:"Which response is cacheable by default?",options:["a GET response","a POST response","a DELETE response","none"],key:"A",diff:"easy",hints:["Safe method."],explain:"GET."},
+  {id:"ra-p5",concept:"jsonify",type:"MCQ",stem:"`return jsonify({\"x\": [1, 2]})` sends:",options:["`{\"x\": [1, 2]}`","`{\"x\": {1, 2}}`","`[1, 2]`","HTML"],key:"A",diff:"easy",hints:["Structure kept."],explain:"The list stays a list.",asserts:["Trest-api-24"]}
+ ],
+ test:[
+  {id:"ra-t1",concept:"api-concepts",type:"MCQ",stem:"OAS stands for:",options:["Open API Specification","Online App Service","Open Auth System","Object API Schema"],key:"A",diff:"easy",hints:["OpenAPI."],explain:"OpenAPI Specification."},
+  {id:"ra-t2",concept:"curl-methods",type:"MCQ",stem:"`curl -X DELETE URL` calls which resource method?",options:["get","post","delete","put"],key:"C",diff:"easy",hints:["Verb = method."],explain:"delete."},
+  {id:"ra-t3",concept:"jsonify",type:"MCQ",stem:"`jsonify` sets the mimetype to:",options:["text/html","application/json","text/javascript","application/xml"],key:"B",diff:"easy",hints:["JSON."],explain:"application/json.",asserts:["Trest-api-02"]},
+  {id:"ra-t4",concept:"resource-methods",type:"MCQ",stem:"A resource has get and put on `/a`. `POST /a` gives:",options:["200","404","405","500"],key:"C",diff:"easy",hints:["No post."],explain:"405.",asserts:["Trest-api-04"]},
+  {id:"ra-t5",concept:"resource-urls",type:"MCQ",stem:"Rule `/<int:x>/<int:y>` with `get(self, x, y)` returning x**y. `/2/5`?",options:["{\"output\": 32}","404","500","{\"output\": 25}"],key:"A",diff:"easy",hints:["2^5."],explain:"32.",asserts:["Trest-api-25"]},
+  {id:"ra-t6",concept:"reqparse-marshal",type:"MCQ",stem:"marshal_with with fields `{\"a\": fields.String}` on `{\"a\": \"x\", \"b\": 1}` returns:",options:["`{\"a\": \"x\", \"b\": 1}`","`{\"a\": \"x\"}`","`{\"b\": 1}`","error"],key:"B",diff:"medium",hints:["Filter."],explain:"Only `a` is kept.",asserts:["Trest-api-26"]}
+ ],
+ remember:{
+  facts:["API = operations; SDK contains API libraries; OAS describes REST APIs; docs list endpoints, parameters and responses.","curl: no flag GET; -X sets the method; -d form data; JSON needs a Content-Type header or --json.","jsonify / dict → JSON, 200, application/json; structure kept.","Flask-RESTful: verb → same-named method; every URL accepts every method; missing method → 405; wrong arguments → 500.","reqparse: type converts, required → 400; marshal_with filters and converts.","Caching lowers latency and load; GET cacheable, POST not by default."],
+  traps:[{text:"Thinking SDKs live inside APIs.",cause:"reversing the relationship"},{text:"Expecting `delete()` for any request to a `/delete/<val>` URL.",cause:"reading the URL instead of the verb"},{text:"Expecting 405 for a lower-case -X get.",cause:"forgetting Flask upper-cases methods"},{text:"Keeping email after marshal_with.",cause:"forgetting it filters"},{text:"Calling get(self) with a URL that supplies an argument.",cause:"forgetting placeholders are passed"},{text:"Saying caching increases latency.",cause:"thinking it adds a step"}],
+  formulas:[],
+  cues:[["curl with -X","the method named by -X runs"],["`add_resource(Cls, url1, url2)`","each URL accepts every method of Cls"],["`@marshal_with(fields)`","keep listed fields, convert types"],["`required=True`","missing → 400"],["\"false about caching\"","caching lowers latency and load; POST not cached"]],
+  selector:[["method first, then arguments","reading URL names","verb → method; URL → arguments"]],
+  examMoves:[["curl output","URL match → verb → method exists → arguments fit → return value","60–90 s","405 vs 500"],["Which URL works","segments per placeholder, converters, slashes","60 s","query strings ignored"],["marshal/reqparse","parse, then filter and convert","60 s","types"]],
+  hooks:["The verb picks the method; the URL fills the arguments.","marshal_with is a sieve with type labels."]
+ },
+ methodCards:[{qType:"curl output",recipe:"Match URL → find the method named by the verb (405 if none) → check its parameters against the URL (500 if they clash) → return value."},{qType:"Which URL works",recipe:"Segments per placeholder; converters; trailing slash; query strings ignored."},{qType:"marshal_with / reqparse",recipe:"parse_args (types, required → 400) → marshal_with keeps listed fields and converts."},{qType:"Theory",recipe:"API vs SDK, OAS, caching: recall the definition and watch reversed statements."}],
+ flash:[
+  {front:"API vs SDK",back:"SDK contains API libraries and tools.",kind:"trap"},
+  {front:"OpenAPI (OAS)",back:"A standard format to describe REST APIs.",kind:"idea"},
+  {front:"curl with no -X",back:"GET (or POST if -d is given).",kind:"idea"},
+  {front:"`-d \"a=1&b=2\"`",back:"Form-encoded data.",kind:"idea"},
+  {front:"jsonify status and mimetype",back:"200, application/json.",kind:"idea"},
+  {front:"Verb with no method in the resource",back:"405.",kind:"trap"},
+  {front:"get(self) on a URL with <val>",back:"TypeError → 500.",kind:"trap"},
+  {front:"marshal_with",back:"Keeps listed fields; converts types.",kind:"idea"},
+  {front:"reqparse required missing",back:"400 Bad Request.",kind:"idea"},
+  {front:"Caching effect",back:"Lower latency and server load; GET cached by default.",kind:"idea"}
+ ],
+ checklist:["I can say which method a curl command runs and its status.","I can predict jsonify output and mimetype.","I can tell 404, 405 and 500 apart for resources.","I can apply marshal_with and reqparse by hand.","I can judge statements about APIs, OAS and caching."],
+ cheat:{methods:["Verb → method; URL → arguments.","405 = missing method; 500 = wrong arguments.","marshal_with filters + converts.","jsonify → JSON 200."],traps:["SDK ⊃ API, not the reverse.","Lower-case -X is fine.","POST not cached by default."]}
+});

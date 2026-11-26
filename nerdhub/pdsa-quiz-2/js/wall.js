@@ -10,7 +10,7 @@
   d.innerHTML = '<div style="max-width:420px"><h1 style="margin:0 0 8px;font-size:1.8rem">nerdhub</h1>' +
     '<p id="lw-msg" style="color:#9aa0a6;margin:0 0 20px">Checking sign-in…</p>' +
     '<button id="lw-btn" type="button" hidden style="padding:10px 20px;border:0;border-radius:10px;background:#7ee787;color:#0f1115;font:600 15px system-ui,sans-serif;cursor:pointer"></button>' +
-    '<p style="margin-top:24px;font-size:.85rem;color:#9aa0a6">Your study progress is stored under your IITM account and is visible to the site owner. <a href="/nerdhub/privacy.html" style="color:#7ee787">Privacy</a></p></div>';
+    '<p style="margin-top:24px;font-size:.85rem;color:#9aa0a6">Your study progress is stored under your Google account and is visible to the site owner. <a href="/nerdhub/privacy.html" style="color:#7ee787">Privacy</a></p></div>';
   document.body.appendChild(d);
   var msg = d.querySelector("#lw-msg"), btn = d.querySelector("#lw-btn");
   window.NH_WALL = {

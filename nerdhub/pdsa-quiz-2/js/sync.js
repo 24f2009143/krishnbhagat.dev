@@ -1,4 +1,4 @@
-/* Optional cloud sync for the PDSA site: Google sign-in (IITM student accounts only) and one Firestore
+/* Optional cloud sync for the PDSA site: Google sign-in (any verified Google account) and one Firestore
  * document per student at pdsa/{uid}. Does nothing unless js/firebase-config.js has enabled: true.
  * Access control lives in firestore.rules; the client checks below are only for a friendly message.
  */
@@ -14,7 +14,7 @@
     email = (email || "").toLowerCase();
     return !d || !d.length || d.some(function (x) { return email.slice(-(x.length + 1)) === "@" + x.toLowerCase(); });
   }
-  function wallShow() { if (window.NH_WALL) NH_WALL.show(wallMsg || "Sign in with your IITM student Google account to use this site.", "Sign in with Google", signIn); }
+  function wallShow() { if (window.NH_WALL) NH_WALL.show(wallMsg || "Sign in with your Google account to use this site.", "Sign in with Google", signIn); }
   function toast(m) { if (window.PDSA && PDSA.toast) PDSA.toast(m); }
 
   function pick(a, b) { // a = local record, b = remote record: keep the one with more attempts, then the newer
@@ -42,7 +42,7 @@
 
   function paint(msg) {
     if (!chip) return;
-    if (!user) { chip.textContent = "☁ Sign in to sync"; chip.title = "Sign in with your IITM student Google account to sync progress across devices"; return; }
+    if (!user) { chip.textContent = "☁ Sign in to sync"; chip.title = "Sign in with your Google account to sync progress across devices"; return; }
     var t = lastOk ? new Date(lastOk).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
     chip.textContent = "☁ " + user.email.split("@")[0] + (msg ? " · " + msg : t ? " · synced " + t : "");
     chip.title = "Signed in as " + user.email + ". Click to sign out.";
@@ -92,7 +92,7 @@
     fb.au = mods[1]; fb.fs = mods[2]; fb.auth = fb.au.getAuth(app); fb.db = fb.fs.getFirestore(app);
   }
   async function signIn() {
-    if (!window.confirm("Sign in with your IITM student Google account to sync your progress.\n\nYour study progress and quiz answers are stored in a database run by the site owner (Krishn Bhagat) and are visible to him. Nothing else is collected. Continue?")) return;
+    if (!window.confirm("Sign in with your Google account to sync your progress.\n\nYour study progress and quiz answers are stored in a database run by the site owner (Krishn Bhagat) and are visible to him. Nothing else is collected. Continue?")) return;
     var p = new fb.au.GoogleAuthProvider();
     if (cfg.allowedDomains && cfg.allowedDomains.length === 1) p.setCustomParameters({ hd: cfg.allowedDomains[0] }); // hint only; rules enforce it
     try { await fb.au.signInWithPopup(fb.auth, p); } catch (e) { toast("Sign-in was cancelled or failed."); }
