@@ -61,16 +61,16 @@ function refresherCard(r){
 }
 A.refresherCard=refresherCard;
 /* ---------- one lesson ---------- */
-function lesson(art,t,m,sec,cur,secs){
+function lesson(art,t,m,sec,cur,secs,inChapter){
   var S=A.load(),base="#topic/"+t.id,ctx={seen:{}};
-  S.read[t.id+":"+sec.id]=1;A.save();
-  art.innerHTML='<p class="kicker">Lesson '+(cur+1)+" of "+secs.length+" · about "+A.sectionMins(sec)+" min"+(sec.patch?' <span class="pill">added for '+esc(A.examLabel(A.exam()))+"</span>":"")+"</p><h2>"+esc(sec.title)+"</h2>"
+  if(!inChapter){S.read[t.id+":"+sec.id]=1;A.save()}
+  art.innerHTML='<p class="kicker">Lesson '+(cur+1)+" of "+secs.length+" · about "+A.sectionMins(sec)+" min"+(sec.patch?' <span class="pill">added for '+esc(A.examLabel(A.exam()))+"</span>":"")+"</p><h2>"+(inChapter?'<span class="cn">'+(cur+1)+"</span> ":"")+esc(sec.title)+"</h2>"
     +'<p class="lede">'+A.inline(sec.plain)+"</p>"
     +'<p class="lesson-why"><span><b>You will study</b> '+A.inline(sec.studying)+'.</span> <span><b>Why it matters:</b> '+A.inline(sec.why)+".</span></p>";
   /* fast path: the key points and the new words first, and a switch that hides side material */
   var quick=!!S.prefs.quick,qs=el("div","quickbar",'<button class="switch" type="button" role="switch" aria-checked="'+quick+'" aria-label="Quick read"><i></i></button><span><b>Quick read</b> hides analogies, side notes and the deep dives, so only the core path is left.</span>');
   qs.querySelector("button").onclick=function(){var S2=A.load();S2.prefs.quick=!S2.prefs.quick;A.save();document.body.classList.toggle("quick",S2.prefs.quick);this.setAttribute("aria-checked",S2.prefs.quick)};
-  document.body.classList.toggle("quick",quick);art.appendChild(qs);
+  document.body.classList.toggle("quick",quick);if(!inChapter)art.appendChild(qs);
   if((sec.remember&&sec.remember.length)||(sec.terms&&sec.terms.length)){var fs=el("div","inshort");
     fs.innerHTML=(sec.remember&&sec.remember.length?'<div><h3 class="h3">In short</h3><ul>'+sec.remember.map(function(r){return "<li>"+A.inline(r)+"</li>"}).join("")+"</ul></div>":"")
       +(sec.terms&&sec.terms.length?'<div><h3 class="h3">New words</h3><dl class="terms">'+sec.terms.map(function(x){return "<div><dt>"+A.inline(x[0])+"</dt><dd>"+A.inline(x[1])+"</dd></div>"}).join("")+"</dl></div>":"");
@@ -85,9 +85,24 @@ function lesson(art,t,m,sec,cur,secs){
     tbk.innerHTML='<h4>Teach it back</h4><p>'+A.inline(sec.teachBack.prompt)+'</p><textarea class="field" rows="2" aria-label="Your one-line explanation">'+esc(A.load().teach[key]||"")+'</textarea><button class="btn sm ghost" type="button">Compare with a model answer</button><div class="teach-model" hidden><b>Model answer:</b> '+A.inline(sec.teachBack.model)+"</div>";
     tbk.querySelector("button").onclick=function(){var S2=A.load();S2.teach[key]=tbk.querySelector("textarea").value;A.save();tbk.querySelector(".teach-model").hidden=false};art.appendChild(tbk)}
   if(sec.quiz&&sec.quiz.length){var ch=el("div","checks");ch.appendChild(el("h3","h3","Check yourself"));sec.quiz.forEach(function(q){q.topicId=t.id;ch.appendChild(A.qcard(q,{shuffle:true}))});art.appendChild(ch)}
+  if(inChapter){art.appendChild(el("div","sec-end"));return}
   var prev=cur>0?{href:base+"/lesson/"+secs[cur-1].id,label:secs[cur-1].title}:{href:base,label:"Overview"};
   var next=cur<secs.length-1?{href:base+"/lesson/"+secs[cur+1].id,label:"Next: "+secs[cur+1].title}:{href:base+"/pyqs",label:"Next: practise the PYQs"};
   art.appendChild(lessonNav(prev,next));
+}
+/* the chapter follows your scroll: the address and the sidebar show the lesson you are in, and a lesson counts as
+   read once its end has been on screen. Links to another lesson of the same topic scroll instead of re-rendering. */
+function chapterWatch(wrap,t,secs,startId){
+  var base="#topic/"+t.id,cur=startId,obs=[];
+  function mark(id){$$("#app-top .rsecs li").forEach(function(li){var a=li.querySelector("a"),h=a&&a.getAttribute("href")||"";var on=id?h===base+"/lesson/"+id:h===base;li.classList.toggle("on",on);if(on)a.setAttribute("aria-current","true");else a.removeAttribute("aria-current")})}
+  function setCur(id){if(id===cur)return;cur=id;var h=id?base+"/lesson/"+id:base;if(location.hash!==h)history.replaceState(null,"",h);mark(id)}
+  var spy=new IntersectionObserver(function(es){var vis=$$(".chap-sec",wrap).filter(function(s){var r=s.getBoundingClientRect();return r.top<innerHeight*0.35&&r.bottom>innerHeight*0.35});if(vis.length)setCur(vis[0].dataset.sec||null)},{rootMargin:"-30% 0px -60% 0px",threshold:0});
+  $$(".chap-sec",wrap).forEach(function(s){spy.observe(s)});obs.push(spy);
+  var rd=new IntersectionObserver(function(es){es.forEach(function(e){if(!e.isIntersecting)return;var id=e.target.parentNode.dataset.sec;if(!id)return;var S=A.load();if(!S.read[t.id+":"+id]){S.read[t.id+":"+id]=1;A.save();var li=$('#app-top .rsecs a[href="'+base+"/lesson/"+id+'"]');if(li)li.parentNode.classList.add("read")}})});
+  $$(".chap-sec .sec-end",wrap).forEach(function(s){rd.observe(s)});obs.push(rd);
+  A.cleanup=function(){obs.forEach(function(o){o.disconnect()});A.chapter=null};
+  A.chapter={topic:t.id,go:function(id){var el2=id?document.getElementById("s-"+id):document.getElementById("s-overview");if(!el2)return false;cur=id;mark(id);el2.scrollIntoView({block:"start",behavior:"instant"});return true}};
+  if(startId)A._after=function(){var e=document.getElementById("s-"+startId);if(e)e.scrollIntoView({block:"start",behavior:"instant"})};
 }
 function lessonNav(prev,next){var n=el("nav","lnav");n.innerHTML=(prev?'<a class="btn ghost" href="'+prev.href+'"><span class="dir">Previous</span> '+esc(prev.label)+"</a>":"<span></span>")+(next?'<a class="btn" href="'+next.href+'">'+esc(next.label)+"</a>":"");return n}
 /* ---------- planned / stub topic ---------- */
@@ -110,7 +125,7 @@ A.pages.topic=function(root,parts){
   var tabView=view==="lesson"||view===""?"learn":view==="sub"?"pyqs":view;
   if(view==="test#checklist")tabView="test";
   var st=A.topicStats(m),base="#topic/"+id,pyqs=A.pyqsOf(id,ex);
-  var wrap=el("div","topic"+(cur>=0?" at-lesson":"")),head=el("header","t-head");
+  var wrap=el("div","topic"),head=el("header","t-head");wrap.style.setProperty("--tc",A.topicColor(id));
   var mins=secs.reduce(function(a,s){return a+A.sectionMins(s)},0)+pyqs.reduce(function(a,q){return a+(q.seconds||180)/60},0)+(t.test||[]).length*2;
   var firstUnread=secs.findIndex(function(x){return !S.read[id+":"+x.id]});
   var contHref=firstUnread<0?base+"/pyqs":base+"/lesson/"+secs[firstUnread].id,contLab=firstUnread<0?"Lessons done: practise":firstUnread===0?"Start lesson 1":"Continue lesson "+(firstUnread+1);
@@ -138,8 +153,13 @@ A.pages.topic=function(root,parts){
     function setRoute(min){body.classList.toggle("routemin",min);var S2=A.load();S2.prefs.routemin=min;A.save()}
     route.querySelector(".route-hide").onclick=function(){setRoute(true)};route.querySelector(".route-show").onclick=function(){setRoute(false)};
     body.appendChild(route);
-    var art=el("article","lesson");body.appendChild(art);
-    if(cur<0){
+    var art=el("article","lesson chapter");body.appendChild(art);
+    {
+      var ov=el("section","chap-sec");ov.id="s-overview";ov.dataset.sec="";art.appendChild(ov);
+      var Sq=A.load(),quick=!!Sq.prefs.quick,qbar=el("div","quickbar",'<button class="switch" type="button" role="switch" aria-checked="'+quick+'" aria-label="Quick read"><i></i></button><span><b>Quick read</b> hides analogies, side notes and the deep dives in every lesson, so only the core path is left.</span>');
+      qbar.querySelector("button").onclick=function(){var S2=A.load();S2.prefs.quick=!S2.prefs.quick;A.save();document.body.classList.toggle("quick",S2.prefs.quick);this.setAttribute("aria-checked",S2.prefs.quick)};
+      document.body.classList.toggle("quick",quick);
+      art=ov;
       art.appendChild(orientation(t,m));
       art.appendChild(el("h2","sec-h","Start here: the big picture"));
       art.appendChild(el("p","sub","Read this once before the lessons. It answers what this topic is about, why, and how the pieces fit."));
@@ -148,9 +168,12 @@ A.pages.topic=function(root,parts){
       if(pre.length||(t.prereqCheck&&t.prereqCheck.length)){var pw=el("div","prereq",'<h3 class="h3">What comes before</h3><p class="sub">Uses: '+(m.uses||[]).map(function(u){var um=A.topicMeta(u);return um?'<a href="#topic/'+u+'">'+esc(um.short)+"</a>":esc(u)}).join(", ")+'. Check yourself; if a question is hard, open the refresher.</p><div class="rfs">'+pre.map(refresherCard).join("")+"</div>");
         (t.prereqCheck||[]).forEach(function(q){q.topicId=id;pw.appendChild(A.qcard(q,{noHints:true}))});art.appendChild(pw)}
       var ol=el("ol","lesson-index");ol.innerHTML=secs.map(function(x,i){return '<li><a href="'+base+"/lesson/"+x.id+'"><span class="rn">'+(i+1)+"</span><span><b>"+esc(x.title)+"</b><small>"+A.inline(x.plain||"")+" · about "+A.sectionMins(x)+" min</small></span></a></li>"}).join("");
-      art.appendChild(el("h3","h3","The lessons"));art.appendChild(ol);
-      art.appendChild(lessonNav(null,{href:base+"/lesson/"+secs[0].id,label:"Start lesson 1: "+secs[0].title}));
-    } else lesson(art,t,m,secs[cur],cur,secs);
+      art.appendChild(el("h3","h3","In this chapter"));art.appendChild(ol);
+      art=ov.parentNode;art.appendChild(qbar);
+      secs.forEach(function(x,i){var se=el("section","chap-sec");se.id="s-"+x.id;se.dataset.sec=x.id;art.appendChild(se);lesson(se,t,m,x,i,secs,true)});
+      art.appendChild(lessonNav(null,{href:base+"/pyqs",label:"Next: practise the "+pyqs.length+" past questions"}));
+      chapterWatch(wrap,t,secs,cur<0?null:secs[cur].id);
+    }
   } else {
     var pane=el("div","pane");body.appendChild(pane);
     if(tabView==="pyqs")buildPyqs(pane,t,m,subId,parts[2]);
@@ -162,7 +185,6 @@ A.pages.topic=function(root,parts){
     pane.appendChild(nav);
   }
   root.appendChild(wrap);A.math(wrap);
-  if(cur>=0&&window.innerWidth<900)A._after=function(){var a=wrap.querySelector(".lesson");if(a)a.scrollIntoView({block:"start",behavior:"instant"})};
   if(tabView==="test"&&/#checklist$/.test(location.hash))A._after=function(){var c=wrap.querySelector(".checklist");if(c)c.scrollIntoView({block:"start",behavior:"instant"})};
 };
 /* ---------- scope pill (this exam only / all course) ---------- */

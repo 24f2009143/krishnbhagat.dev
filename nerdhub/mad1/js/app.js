@@ -30,6 +30,11 @@ var LOGO=FL.logo||'<svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><rec
 function link(n){return '<a href="#'+n[0]+'" data-n="'+n[0]+'" title="'+esc(n[1]+": "+n[3])+'">'+ico(n[2])+'<span class="lt"><b>'+esc(n[1])+(n[0]==="mistakes"?' <em class="mc"></em>':"")+"</b><small>"+esc(n[3])+"</small></span></a>"}
 function ring(pct,state){var r=8,C=2*Math.PI*r;return '<svg class="mring '+state+'" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="'+r+'" class="tr"/>'+(pct?'<circle cx="11" cy="11" r="'+r+'" class="fg" stroke-dasharray="'+(C*pct/100).toFixed(1)+" "+C.toFixed(1)+'" transform="rotate(-90 11 11)"/>':"")+"</svg>"}
 A.ring=ring;
+function examSeg(){
+  var cur=A.exam();
+  return '<div class="exseg" role="group" aria-label="Exam">'+A.examIds().map(function(k){var e=A.manifest.exams[k];return '<button type="button" data-ex="'+k+'" class="'+(k===cur?"on":"")+'" aria-pressed="'+(k===cur)+'" title="'+esc(e.label+(e.status!=="ready"&&e.status!=="in-progress"?" ("+e.status+")":""))+'">'+esc(e.label.replace("End Term","End-term"))+"</button>"}).join("")+"</div>";
+}
+document.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest(".exseg button");if(!b)return;A.setExam(b.dataset.ex);$$(".exseg button").forEach(function(x){var on=x.dataset.ex===b.dataset.ex;x.classList.toggle("on",on);x.setAttribute("aria-pressed",on)});$$(".exsel").forEach(function(s){s.value=b.dataset.ex});location.hash="#exam/"+b.dataset.ex});
 function examSelect(id){
   var cur=A.exam();
   return '<label class="exsw" for="'+id+'"><span>Exam</span><select id="'+id+'" class="field exsel">'+A.examIds().map(function(k){var e=A.manifest.exams[k];return '<option value="'+k+'"'+(k===cur?" selected":"")+">"+esc(e.label)+(e.status!=="ready"&&e.status!=="in-progress"?" ("+esc(e.status)+")":"")+"</option>"}).join("")+'<option value="all"'+(cur==="all"?" selected":"")+'>Full course</option></select></label>';
@@ -40,8 +45,9 @@ function railTopics(){
   var box=$("#rtopics");if(!box)return;var cur=A.curTopic;
   var T=A.examTopics(A.exam());
   var hp=location.hash.replace(/^#/,"").split("/"),onTopic=document.body.dataset.page==="topic",S=A.load();
-  box.innerHTML=T.map(function(m){var st=A.topicStats(m),state=A.stateOf(m,st),open=onTopic&&m.id===cur&&A.isReady(m)&&A.topics[m.id];
-    var a='<a href="#topic/'+m.id+'" class="'+(m.id===cur&&onTopic?"on":"")+'" title="'+esc(m.name)+(A.isReady(m)?": "+st.pct+"% ready":": "+m.status)+'">'+ring(st.pct,state)+'<span class="lt"><b>'+esc(m.short)+"</b></span><i>"+(A.isReady(m)?st.pct+"%":"soon")+"</i></a>";
+  var hd=$("#rtopics-h");if(hd)hd.textContent=A.examLabel(A.exam())+" topics";
+  box.innerHTML=T.map(function(m,ti){var st=A.topicStats(m),state=A.stateOf(m,st),open=onTopic&&m.id===cur&&A.isReady(m)&&A.topics[m.id];
+    var a='<a href="#topic/'+m.id+'" class="tc'+(m.id===cur&&onTopic?" on":"")+'" style="--tc:'+A.topicColor(m.id)+'" title="'+esc(m.name)+(A.isReady(m)?": "+st.pct+"% ready":": "+m.status)+'">'+ring(st.pct,state)+'<span class="lt"><b>'+(ti+1)+". "+esc(m.name)+"</b></span></a>";
     if(!open)return a;
     var secs=A.topics[m.id].sections,curSec=hp[2]==="lesson"?hp[3]:(hp[2]?"#"+hp[2]:"");
     var li=[['','Overview',curSec===""]].concat(secs.map(function(x,i){return ["/lesson/"+x.id,(i+1)+". "+x.title,curSec===x.id,!!S.read[m.id+":"+x.id]]}))
@@ -55,13 +61,33 @@ function buildTop(){
   var M=A.manifest;
   $("#app-top").innerHTML='<div class="rail-in"><div class="rail-head"><a class="brand" href="#home">'+LOGO+'<span><b>'+esc(M.short||"MAD 1")+'</b><small>'+esc(M.subject)+'</small></span></a><button class="railbtn" id="b-rail" type="button" aria-label="Collapse the menu" aria-expanded="true">'+'<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M9.5 4.5v15M15.5 10l-2 2 2 2"/></svg></button></div>'
    +'<a class="hubback" href="'+esc(M.hubUrl)+'" title="Back to nerdhub">← nerdhub</a>'
-   +'<div class="rail-exam">'+examSelect("rail-exam")+"</div>"
+   +'<div class="rail-exam">'+examSelect("rail-exam")+"</div>"+examSeg()
    +'<a class="cont" href="#home" title="Continue"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10-6.5z"/></svg><span class="lt"><b>Continue</b><small class="cl"></small></span></a>'
    +'<button class="search-btn" id="b-search" type="button" title="Search (/ or Ctrl K)">'+ico("search")+'<span>Search</span><kbd>/</kbd></button>'
    +'<nav class="nav" aria-label="Main">'+A.NAV.map(link).join("")+"</nav>"
-   +'<div class="rgroup"><p class="rh">Topics in this exam</p><nav class="nav rtopics" id="rtopics" aria-label="Topics"></nav></div>'
+   +'<div class="rgroup"><p class="rh" id="rtopics-h">Topics in this exam</p><nav class="nav rtopics" id="rtopics" aria-label="Topics"></nav></div>'
    +'<details class="rgroup more" id="rmore"><summary class="rh">More tools</summary><nav class="nav nav2" aria-label="More tools">'+A.NAV2.map(link).join("")+'<a href="#" id="b-f" data-n="formulas" title="Every formula and command in a side drawer">'+ico("f")+'<span class="lt"><b>Formula drawer</b><small>Every formula and command</small></span></a></nav></details>'
    +'<a class="setlink" href="#settings" data-n="settings" title="Settings">'+ico("gear")+'<span class="lt"><b>Settings</b><small>Theme, text size, exam dates, backup</small></span></a></div>';
+  var tb=el("div","topbar");
+  function menu(label,items){return '<div class="tmenu"><button type="button" class="tm-b" aria-expanded="false">'+label+' <svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3"/></svg></button><div class="tm-p" role="menu">'+items.map(function(n){return '<a role="menuitem" href="#'+n[0]+'" data-n="'+n[0]+'">'+ico(n[2])+'<span class="lt"><b>'+esc(n[1])+(n[0]==="mistakes"?' <em class="mc"></em>':"")+"</b><small>"+esc(n[3])+"</small></span></a>"}).join("")+"</div></div>"}
+  tb.innerHTML='<button class="iconbtn tb-rail" id="b-rail2" type="button" aria-label="Show or hide the topic list"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button><a class="brand" href="#home">'+LOGO+'<span><b>'+esc(M.short||"MAD 1")+'</b></span><span class="tb-sub">Study</span></a>'
+    +'<nav class="tb-nav" aria-label="Main"><a href="#home" data-n="home" class="tb-l">Learn</a>'+menu("Practice",A.NAV.slice(1))+menu("Revise",A.NAV2)+"</nav>"
+    +'<button class="tb-search" id="b-search3" type="button">'+ico("search")+'<span>Search notes, PYQs, terms</span><kbd>⌘ K</kbd></button>'
+    +'<a class="cont tb-cont" href="#home"><span class="lt"><b>Continue</b><small class="cl"></small></span><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>'
+    +'<button class="iconbtn" id="b-theme" type="button" aria-label="Switch dark mode"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></button>'
+    +'<div class="tmenu tm-r"><button type="button" class="iconbtn tm-b" aria-expanded="false" aria-label="More">'+ico("more")+'</button><div class="tm-p" role="menu">'
+    +'<a role="menuitem" href="#" id="b-f2">'+ico("f")+'<span class="lt"><b>Formula drawer</b><small>Every formula and command</small></span></a>'
+    +'<a role="menuitem" href="#settings" data-n="settings">'+ico("gear")+'<span class="lt"><b>Settings</b><small>Text size, source tags, exam dates, backup</small></span></a>'
+    +'<a role="menuitem" href="'+esc(M.hubUrl)+'">'+ico("map")+'<span class="lt"><b>All courses</b><small>Back to nerdhub</small></span></a></div></div>';
+  document.body.insertBefore(tb,$("#app-top"));
+  function closeMenus(){$$(".tmenu.open").forEach(function(x){x.classList.toggle("open",false);x.querySelector(".tm-b").setAttribute("aria-expanded","false")})}
+  $$(".tmenu",tb).forEach(function(mn){var b=mn.querySelector(".tm-b");b.onclick=function(e){e.stopPropagation();var o=!mn.classList.contains("open");closeMenus();mn.classList.toggle("open",o);b.setAttribute("aria-expanded",o)}});
+  document.addEventListener("click",closeMenus);
+  document.addEventListener("keydown",function(e){if(e.key==="Escape")closeMenus()});
+  $("#b-search3").onclick=function(){openSearch()};
+  $("#b-theme").onclick=function(){A.setTheme(document.documentElement.getAttribute("data-theme")!=="dark")};
+  $("#b-f2").onclick=function(e){e.preventDefault();openFormulas()};
+  $("#b-rail2").onclick=function(){setRail(!document.body.classList.contains("railmin"))};
   var mb=el("nav","mbar");mb.setAttribute("aria-label","Main (phone)");
   mb.innerHTML=[["home","Course","map"],["practice","Practice","practice"],["mock","Mock","mock"],["cards","Cards","cards"]].map(function(n){return '<a href="#'+n[0]+'" data-n="'+n[0]+'">'+ico(n[2])+"<span>"+n[1]+"</span></a>"}).join("")+'<a href="#" id="b-more" data-n="more">'+ico("more")+"<span>More</span></a>";
   document.body.appendChild(mb);
@@ -109,6 +135,8 @@ A.parseHash=function(h){
 };
 A.PHASE_E=["things","traps","coverage","examday"];
 A.route=function(){
+  var r0=A.parseHash();
+  if(A.chapter&&r0.page==="topic"&&r0.parts[0]===A.chapter.topic&&(r0.parts.length===1||r0.parts[1]==="lesson")&&A.chapter.go(r0.parts[1]==="lesson"?r0.parts[2]:null))return;
   if(A.cleanup){try{A.cleanup()}catch(e){console.error(e)}A.cleanup=null}
   var r=A.parseHash(),root=$("#main"),page=r.page;root.innerHTML="";
   document.body.classList.remove("railopen");document.body.dataset.page=page;
