@@ -112,7 +112,11 @@ A.pages.cards=function(root){
 A.pages.glossary=function(root){
   var p=wrap(root,"Glossary","Every term in plain words. In lessons, a term is underlined the first time it appears in a section.");
   var f=el("div","filters",'<input type="search" id="gs" class="field" placeholder="Search terms" aria-label="Search terms">');p.appendChild(f);var l=el("div","grid g2");p.appendChild(l);
-  function draw(){var q=$("#gs",f).value.toLowerCase();l.innerHTML="";A.glossary.slice().sort(function(a,b){return a.term.localeCompare(b.term)}).filter(function(g){return !q||(g.term+" "+g.def).toLowerCase().indexOf(q)>=0}).forEach(function(g){var b=el("div","box","<b>"+esc(g.term)+"</b>"+(g.alias&&g.alias.length?' <small class="mute">also: '+esc(g.alias.join(", "))+"</small>":"")+"<div class='prose'>"+A.renderRich(g.def)+"</div>");l.appendChild(b);A.math(b)})}
+  /* the core glossary plus every lesson's New words, each linked to the lesson that teaches it */
+  var all=A.glossary.map(function(g){return {term:g.term,def:g.def,alias:g.alias}}),seen={};all.forEach(function(g){seen[g.term.toLowerCase()]=1});
+  A.examTopics(A.exam()).filter(A.isReady).forEach(function(m){(A.topics[m.id].sections||[]).forEach(function(sec){(sec.terms||[]).forEach(function(w){var k=w[0].replace(/`/g,"").toLowerCase();if(seen[k])return;seen[k]=1;all.push({term:w[0].replace(/`/g,""),code:/`/.test(w[0]),def:w[1],from:{href:"#topic/"+m.id+"/lesson/"+sec.id,label:m.short+": "+sec.title}})})})});
+  p.querySelector(".sub").textContent="Every term in plain words: "+all.length+" terms from the course and its lessons. Each lesson word links to the lesson that teaches it.";
+  function draw(){var q=$("#gs",f).value.toLowerCase();l.innerHTML="";all.slice().sort(function(a,b){return a.term.replace(/^\W+/,"").localeCompare(b.term.replace(/^\W+/,""))}).filter(function(g){return !q||(g.term+" "+g.def).toLowerCase().indexOf(q)>=0}).forEach(function(g){var b=el("div","box",(g.code?"<code class=\"icode\">"+esc(g.term)+"</code>":"<b>"+esc(g.term)+"</b>")+(g.from?' <small class="mute">from <a href="'+g.from.href+'">'+esc(g.from.label)+"</a></small>":"")+(g.alias&&g.alias.length?' <small class="mute">also: '+esc(g.alias.join(", "))+"</small>":"")+"<div class='prose'>"+A.renderRich(g.def)+"</div>");l.appendChild(b);A.math(b)})}
   $("#gs",f).oninput=draw;draw();
   if(A.refreshers.length){p.appendChild(el("h2","h2","Refreshers"));p.appendChild(el("div","rfs",A.refreshers.map(A.refresherCard).join("")))}
 };

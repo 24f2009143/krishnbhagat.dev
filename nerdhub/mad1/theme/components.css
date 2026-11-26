@@ -562,3 +562,68 @@ body.quick .lesson .co.analogy,body.quick .lesson .co.extra,body.quick .lesson .
 .ls ul{margin:0 0 6px;padding-left:1.1em;font:400 .9rem/1.5 var(--sans)}
 .ls .lsw{font:400 .82rem/1.5 var(--sans);color:var(--muted)}
 @media print{.lshort{display:block}.ls{break-inside:avoid;margin:0 0 8px}}
+
+/* ---------- v4 shell: top bar + topic sidebar on wide screens (MLT layout) ---------- */
+.topbar{display:none}
+.exseg{display:flex;gap:2px;padding:3px;margin:2px 4px 8px;border:1px solid var(--rule);border-radius:10px;background:var(--sunk)}
+.exseg button{flex:1;border:0;background:none;padding:6px 4px;border-radius:7px;font:600 .8rem var(--sans);color:var(--muted);cursor:pointer;white-space:nowrap}
+.exseg button.on{background:var(--card);color:var(--ink);box-shadow:inset 0 0 0 1px var(--rule)}
+.rail-exam{display:none}
+#app-top .rtopics a.tc{align-items:flex-start;padding:7px 10px;gap:10px}
+#app-top .rtopics a.tc .lt b{font:550 .88rem/1.35 var(--sans)}
+#app-top .rtopics a.tc .mring .fg{stroke:var(--tc)}
+#app-top .rtopics a.tc .mring .tr{stroke:color-mix(in srgb,var(--tc) 28%,var(--rule))}
+#app-top .rtopics a.tc.on{background:color-mix(in srgb,var(--tc) 12%,transparent)}
+#app-top .rtopics a.tc.on::before{background:var(--tc)}
+@media (min-width:1001px){
+ :root{--top:62px}
+ .topbar{display:flex;align-items:center;gap:14px;position:fixed;inset:0 0 auto 0;height:var(--top);z-index:80;padding:0 22px 0 16px;background:var(--paper);border-bottom:1px solid var(--rule)}
+ .topbar .brand .logo{width:28px;height:28px}
+ .topbar .brand b{font-size:1.02rem}
+ .tb-sub{padding-left:10px;margin-left:2px;border-left:1px solid var(--rule2);font:500 .95rem var(--sans);color:var(--muted)}
+ .tb-nav{display:flex;align-items:center;gap:4px;margin-left:18px}
+ .tb-l,.tm-b{border:0;background:none;padding:8px 12px;border-radius:8px;font:600 .92rem var(--sans);color:var(--muted);text-decoration:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+ .tb-l.on,.tb-l:hover,.tm-b:hover,.tmenu.open>.tm-b{color:var(--ink);background:var(--sunk)}
+ .chev{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:1.6}
+ .tmenu{position:relative}
+ .tm-p{display:none;position:absolute;top:calc(100% + 6px);left:0;min-width:300px;padding:6px;background:var(--card);border:1px solid var(--rule);border-radius:12px;z-index:90}
+ .tm-r .tm-p{left:auto;right:0}
+ .tmenu.open .tm-p{display:block}
+ .tm-p a{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border-radius:8px;text-decoration:none;color:var(--ink2)}
+ .tm-p a:hover,.tm-p a.on{background:var(--sunk);color:var(--ink)}
+ .tm-p .ico{margin-top:2px;color:var(--muted)}
+ .tb-search{margin-left:auto;display:flex;align-items:center;gap:10px;width:min(380px,30vw);padding:8px 12px;border:1px solid var(--rule);border-radius:10px;background:var(--card);color:var(--muted);font:500 .9rem var(--sans);cursor:pointer}
+ .tb-search kbd{margin-left:auto}
+ .tb-cont{margin:0;padding:8px 16px;border-radius:10px;background:var(--ink);color:var(--paper);gap:10px}
+ .tb-cont:hover{background:var(--ink2);color:var(--paper)}
+ .tb-cont .lt small{display:none}
+ .tb-cont .lt b{font-size:.92rem}
+ #app-top{top:var(--top)}
+ #main{padding-top:calc(var(--top) + 30px)}
+ /* the sidebar keeps the exam switcher and the topics; everything else lives in the top bar */
+ #app-top .rail-head,#app-top .hubback,#app-top>.rail-in>.cont,#app-top .search-btn,#app-top>.rail-in>.nav,#app-top #rmore,#app-top .setlink{display:none}
+ body.railmin{--rail:0px}
+ body.railmin #app-top{display:none}
+}
+/* ---------- the topic as one chapter ---------- */
+.chapter .chap-sec{scroll-margin-top:calc(var(--top,0px) + 16px)}
+.chapter .chap-sec+.chap-sec,.chapter .quickbar+.chap-sec{margin-top:64px;padding-top:40px;border-top:1px solid var(--rule)}
+.chapter .quickbar{margin:40px 0 0;padding:12px 16px;border:1px solid var(--rule);border-radius:var(--r);background:var(--sunk)}
+.chapter h2 .cn{display:inline-grid;place-items:center;min-width:1.7em;height:1.7em;margin-right:6px;border-radius:8px;background:color-mix(in srgb,var(--tc) 14%,transparent);color:var(--tc);font:700 .8em var(--sans);vertical-align:.12em}
+.chapter .kicker{color:var(--tc)}
+.t-head .tmark{border-color:var(--tc);color:var(--tc)}
+.t-ready .fg{stroke:var(--tc)}
+.ttabs a.on{border-bottom-color:var(--tc)}
+.trow{border-top:3px solid var(--tc)!important}
+.trow .seg.on{stroke:var(--tc)}
+.trow .msg-line .tmark{color:var(--tc);border-color:var(--tc)}
+/* ---------- home: toolkit, heat map, guides ---------- */
+.toolkit{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin:0 0 16px}
+.tk{display:flex;flex-direction:column;gap:4px;padding:14px 16px;border:1px solid var(--rule);border-radius:var(--r);background:var(--card);text-decoration:none;color:var(--ink)}
+.tk:hover{border-color:var(--accent)}
+.tk .ico{color:var(--accent);margin-bottom:4px}
+.tk b{font:650 .98rem var(--sans)}.tk span{font:400 .86rem/1.45 var(--sans);color:var(--muted)}
+.heat td{text-align:center;font-variant-numeric:tabular-nums;background:color-mix(in srgb,var(--wait) calc(var(--h,0)*100%),transparent)}
+.heat td:first-child{text-align:left;white-space:nowrap}
+.heat td:first-child a{color:var(--ink);text-decoration:none}
+.guide .steps li{margin:.55em 0}
