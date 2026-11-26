@@ -337,5 +337,67 @@ def tr_negative():
     eq(out_of(CODE["640653690117"][0], ["5", "-1"], "log.py"), "CRITICAL - FATAL - Division by zero is not possible", "output")
 
 
+
+# ================= depth upgrade (MLT pattern)
+@check("Tpython-fund-67")
+def wraps_keeps_name():
+    src = ("import functools\ndef plain(f):\n    def wrapper(*a, **k):\n        return f(*a, **k)\n    return wrapper\n"
+           "def kept(f):\n    @functools.wraps(f)\n    def wrapper(*a, **k):\n        return f(*a, **k)\n    return wrapper\n"
+           "@plain\ndef greet():\n    pass\n@kept\ndef hello():\n    pass\nprint(greet.__name__, hello.__name__)\n")
+    eq(out_of(src), "wrapper hello", "without wraps the name is wrapper")
+
+
+@check("Tpython-fund-68")
+def flask_endpoint_clash_without_wraps():
+    src = ("import flask\nflask.Flask.run = lambda *a, **k: None\nfrom flask import Flask\napp = Flask(__name__)\n"
+           "def login_required(f):\n    def wrapper(*a, **k):\n        return f(*a, **k)\n    return wrapper\n"
+           "@app.route('/a')\n@login_required\ndef a():\n    return 'a'\n@app.route('/b')\n@login_required\ndef b():\n    return 'b'\n")
+    o = out_of(src)
+    eq("View function mapping is overwriting an existing endpoint function: wrapper" in o, True, "two wrapped views share the endpoint name wrapper")
+
+
+@check("Tpython-fund-69")
+def decorator_with_arguments():
+    src = ("def repeat(n):\n    def deco(f):\n        def wrapper():\n            for _ in range(n):\n                f()\n        return wrapper\n    return deco\n"
+           "@repeat(3)\ndef hi():\n    print('hi')\nhi()\n")
+    eq(out_of(src), "hi\nhi\nhi", "repeat(3) builds the decorator")
+    o = out_of(src.replace("@repeat(3)", "@repeat").replace("hi()\n", "print(hi.__name__)\ntry:\n    hi()\nexcept TypeError as e:\n    print('TypeError')\n"))
+    eq(o, "deco\nTypeError", "without brackets hi becomes deco, which needs an argument")
+
+
+@check("Tpython-fund-70")
+def decorator_runs_at_definition():
+    src = ("def announce(f):\n    print('decorating', f.__name__)\n    return f\n@announce\ndef a():\n    print('a runs')\nprint('defined')\na()\n")
+    eq(out_of(src), "decorating a\ndefined\na runs", "the decorator body runs when def runs")
+
+
+@check("Tpython-fund-71")
+def counting_calls():
+    src = ("def count(f):\n    def wrapper(*a):\n        wrapper.calls += 1\n        return f(*a)\n    wrapper.calls = 0\n    return wrapper\n"
+           "@count\ndef sq(x):\n    return x * x\nsq(2); sq(3)\nprint(sq.calls, sq(4))\n")
+    eq(out_of(src), "2 16", "state kept on the wrapper")
+
+
+@check("Tpython-fund-72")
+def logging_defaults():
+    eq(out_of("import logging\nlogging.debug('d')\nlogging.info('i')\nlogging.warning('w')\n"), "WARNING:root:w", "default threshold WARNING, default format LEVEL:name:message")
+    eq(out_of("import logging\nlogging.basicConfig(level=logging.INFO)\nlogging.basicConfig(level=logging.DEBUG)\nlogging.debug('d')\nlogging.info('i')\n"), "INFO:root:i", "a second basicConfig is ignored")
+    eq(out_of("import logging\nlogging.basicConfig(format='%(levelname)s - %(message)s')\nlogging.error('e')\n"), "ERROR - e", "format string")
+
+
+@check("Tpython-fund-73")
+def argv_strings():
+    eq(out_of("import sys\nprint(sys.argv[0], sys.argv[1] + sys.argv[2], int(sys.argv[1]) + int(sys.argv[2]))\n", args=("2", "3")), "main.py 23 5", "argv[0] is the script; arguments are strings")
+
+
+@check("Tpython-fund-74")
+def route_must_be_on_top():
+    base = ("import flask\nfrom flask import Flask\napp = Flask(__name__)\n"
+            "def login_required(f):\n    def wrapper(*a, **k):\n        return 'login first'\n    wrapper.__name__ = f.__name__\n    return wrapper\n")
+    top = base + "@app.route('/x')\n@login_required\ndef x():\n    return 'secret'\nprint(app.test_client().get('/x').get_data(as_text=True))\n"
+    under = base + "@login_required\n@app.route('/x')\ndef x():\n    return 'secret'\nprint(app.test_client().get('/x').get_data(as_text=True))\n"
+    eq((out_of(top), out_of(under)), ("login first", "secret"), "route on top registers the wrapped view; route underneath registers the bare one")
+
+
 if __name__ == "__main__":
     main()
