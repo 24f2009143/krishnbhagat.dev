@@ -271,5 +271,60 @@ def resource_none():
     r, _ = call(CODE["640653856983"][0], [("GET", "/api/ver1/99999")])
     eq((r[0][0], r[0][1].strip(), r[0][2]), (200, "null", "application/json"), "Flask-RESTful sends None as JSON null")
 
+
+# ================= depth upgrade (MLT pattern)
+@check("Trest-api-28")
+def resource_status_and_headers():
+    app = RP + 'class R(Resource):\n    def post(self):\n        return {"id": 7}, 201\n    def put(self):\n        return {"ok": True}, 200, {"Cache-Control": "max-age=60"}\napi.add_resource(R, "/r")\n'
+    r, _ = call(app, [("POST", "/r"), ("PUT", "/r"), ("HEAD", "/r"), ("DELETE", "/r")])
+    eq([x[0] for x in r], [201, 200, 405, 405], "201 from a tuple; HEAD needs get; DELETE missing")
+    eq(body(r[0]), {"id": 7}, "JSON body")
+
+
+@check("Trest-api-29")
+def resource_head_options():
+    app = RP + 'class R(Resource):\n    def get(self):\n        return {"a": 1}\napi.add_resource(R, "/r")\n'
+    r, _ = call(app, [("HEAD", "/r"), ("OPTIONS", "/r")])
+    eq([x[0] for x in r], [200, 200], "a get method also answers HEAD and OPTIONS")
+
+
+@check("Trest-api-30")
+def reqparse_more():
+    app = RP + 'parser = reqparse.RequestParser()\nparser.add_argument("n", type=int, default=5, location="args")\nparser.add_argument("c", choices=("red", "blue"), location="args")\nclass R(Resource):\n    def get(self):\n        return parser.parse_args()\napi.add_resource(R, "/r")\n'
+    r, _ = call(app, [("GET", "/r"), ("GET", "/r?n=3&c=red"), ("GET", "/r?c=green"), ("GET", "/r?n=x")])
+    eq([x[0] for x in r], [200, 200, 400, 400], "default, values, a choice not allowed, a bad int")
+    eq((body(r[0]), body(r[1])), ({"n": 5, "c": None}, {"n": 3, "c": "red"}), "parsed values")
+    eq("c" in body(r[2])["message"], True, "the 400 says which argument failed")
+
+
+@check("Trest-api-31")
+def marshal_types():
+    app = RP + 'F = {"id": fields.String, "price": fields.Float, "tags": fields.List(fields.Integer), "missing": fields.String}\nclass R(Resource):\n    @marshal_with(F)\n    def get(self):\n        return {"id": 7, "price": 3, "tags": ["1", 2], "extra": 1}\napi.add_resource(R, "/r")\n'
+    r, _ = call(app, [("GET", "/r")])
+    eq(body(r[0]), {"id": "7", "price": 3.0, "tags": [1, 2], "missing": None}, "converted, listed, missing becomes null, extra dropped")
+
+
+@check("Trest-api-32")
+def restful_abort():
+    app = RP.replace("reqparse, fields", "reqparse, fields, abort") + 'class R(Resource):\n    def get(self, i):\n        if i > 3:\n            abort(404, message="no item {}".format(i))\n        return {"i": i}\napi.add_resource(R, "/r/<int:i>")\n'
+    r, _ = call(app, [("GET", "/r/2"), ("GET", "/r/9")])
+    eq((r[1][0], body(r[1]), r[1][2]), (404, {"message": "no item 9"}, "application/json"), "flask_restful.abort sends a JSON message")
+
+
+@check("Trest-api-33")
+def jsonify_sorts_keys():
+    r, _ = call("from flask import Flask, jsonify\napp = Flask(__name__)\n@app.route('/j')\ndef j():\n    return jsonify({'b': 1, 'a': 2})\n@app.route('/d')\ndef d():\n    return {'b': 1, 'a': 2}\n", [("GET", "/j"), ("GET", "/d")])
+    eq([x[1].strip() for x in r], ['{"a":2,"b":1}', '{"a":2,"b":1}'], "Flask sorts JSON keys by default")
+
+
+@check("Trest-api-34")
+def restful_endpoints():
+    app = RP + 'class R(Resource):\n    def get(self, i=0):\n        return {"i": i}\napi.add_resource(R, "/r", "/r/<int:i>", endpoint="item")\n'
+    r, _ = call(app, [("GET", "/r"), ("GET", "/r/4")])
+    eq([body(x) for x in r], [{"i": 0}, {"i": 4}], "one class, two URLs, a default argument")
+    r2, _ = call(app.replace("def get(self, i=0)", "def get(self, i)"), [("GET", "/r"), ("GET", "/r/4")])
+    eq([x[0] for x in r2], [500, 200], "without the default, /r calls get() with no i: 500")
+
+
 if __name__ == "__main__":
     main()
