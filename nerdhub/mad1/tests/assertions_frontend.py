@@ -300,5 +300,46 @@ def attribute_operators():
     eq(got, [[True, False], [True, False], [True, False], [True, False], [True, False], [True, False]], "each operator matches only the first link")
 
 
+
+def node_out(code):
+    return subprocess.run(["node", "-e", code], capture_output=True, text=True, timeout=30).stdout.strip()
+
+
+@check("Tfrontend-38")
+def event_loop_order():
+    eq(node_out("console.log('A');setTimeout(function(){console.log('B')},0);Promise.resolve().then(function(){console.log('C')});console.log('D');"),
+       "A\nD\nC\nB", "sync code first, then promise callbacks, then timers")
+
+
+@check("Tfrontend-39")
+def box_model():
+    r = render('<div id="a" style="width:100px;padding:10px;border:2px solid;">x</div><div id="b" style="box-sizing:border-box;width:100px;padding:10px;border:2px solid;">y</div>',
+               "[document.getElementById('a').offsetWidth, document.getElementById('b').offsetWidth]")
+    eq(r, [124, 100], "content-box adds padding and border; border-box includes them")
+
+
+@check("Tfrontend-40")
+def prevent_default_submit():
+    html = '<form id="f" action="/elsewhere"><input name="q" value="x"></form><script>window.seen=0;document.getElementById("f").addEventListener("submit",function(e){e.preventDefault();window.seen++})</script>'
+    r = render(html, "(function(){document.getElementById('f').requestSubmit();return [window.seen, location.pathname.indexOf('elsewhere')<0]})()")
+    eq(r, [1, True], "the submit handler ran and preventDefault kept the page")
+
+
+@check("Tfrontend-41")
+def bubbling():
+    html = '<div id="p"><button id="c">go</button></div><script>window.log=[];document.getElementById("p").addEventListener("click",function(){log.push("parent")});document.getElementById("c").addEventListener("click",function(e){log.push("child")})</script>'
+    eq(render(html, "(function(){document.getElementById('c').click();return log})()"), ["child", "parent"], "the click bubbles from child to parent")
+    html2 = html.replace('log.push("child")})', 'log.push("child");e.stopPropagation()})')
+    eq(render(html2, "(function(){document.getElementById('c').click();return log})()"), ["child"], "stopPropagation stops it")
+
+
+@check("Tfrontend-42")
+def start_lesson_page():
+    page = ('<h1 id="t">Hello</h1><button id="b">Change</button><style>h1{color:rgb(255,0,0)}</style>'
+            '<script>document.getElementById("b").addEventListener("click",function(){document.getElementById("t").textContent="Clicked"})</script>')
+    eq(render(page, "(function(){document.getElementById('b').click();var t=document.getElementById('t');return [t.textContent,getComputedStyle(t).color]})()"), ["Clicked", "rgb(255, 0, 0)"], "text changes, the CSS rule still applies")
+    eq(render("<p>a<p>b", "document.querySelectorAll('p').length"), 2, "an unclosed p is closed by the next p")
+
+
 if __name__ == "__main__":
     main()
