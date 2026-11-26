@@ -504,5 +504,35 @@ def query_toolkit():
     eq(r.splitlines(), ["['Shirts', 'Shoes']", "3", "[('A', 2), ('B', 2), ('C', 1)]", "2", "1550 310.0", "Chocolate"], "order_by, limit, in_, group_by, like, sum, avg, first")
 
 
+
+JN = ("create table course(id integer primary key, title text); insert into course values(10,'Web'),(20,'DB'),(30,'AI');"
+      "create table enrollment(id integer primary key, name text, course_id int); insert into enrollment values(1,'Asha',10),(2,'Ravi',10),(3,'Meera',20),(4,'Zoya',NULL);")
+
+
+@check("Tdb-sql-43")
+def joins():
+    eq(sql(JN, "select e.name, c.title from enrollment e join course c on e.course_id = c.id order by e.id"), [("Asha", "Web"), ("Ravi", "Web"), ("Meera", "DB")], "inner join keeps matching pairs only")
+    eq(sql(JN, "select c.title, count(e.id) from course c left join enrollment e on e.course_id = c.id group by c.id order by c.id"), [("Web", 2), ("DB", 1), ("AI", 0)], "left join keeps every course, with 0 for none")
+    eq(sql(JN, "select c.title, count(*) from course c left join enrollment e on e.course_id = c.id group by c.id order by c.id"), [("Web", 2), ("DB", 1), ("AI", 1)], "COUNT(*) counts the NULL row")
+
+
+@check("Tdb-sql-44")
+def orm_join():
+    m = ("class Course(db.Model):\n    id = db.Column(db.Integer, primary_key=True)\n    title = db.Column(db.String)\n"
+         "class Enrollment(db.Model):\n    id = db.Column(db.Integer, primary_key=True)\n    name = db.Column(db.String)\n    course_id = db.Column(db.Integer, db.ForeignKey('course.id'))\n")
+    rows = ['db.session.add_all([Course(id=10, title="Web"), Course(id=20, title="DB"), Enrollment(name="Asha", course_id=10), Enrollment(name="Ravi", course_id=10), Enrollment(name="Meera", course_id=20)])', "db.session.commit()"]
+    eq(orm(m, rows + ['print([e.name for e in Enrollment.query.join(Course).filter(Course.title == "Web").order_by(Enrollment.name).all()])']), "['Asha', 'Ravi']", "join, then filter on the other table")
+
+
+@check("Tdb-sql-45")
+def transaction_all_or_nothing():
+    m = "class A(db.Model):\n    id = db.Column(db.Integer, primary_key=True)\n    bal = db.Column(db.Integer, nullable=False)\n"
+    cmds = ["db.session.add_all([A(id=1, bal=100), A(id=2, bal=50)]); db.session.commit()",
+            "a = db.session.get(A, 1); b = db.session.get(A, 2)", "a.bal -= 30", "b.bal = None",
+            "try:\n    db.session.commit()\nexcept Exception as ex:\n    print(type(ex).__name__)\n    db.session.rollback()",
+            "print(db.session.get(A, 1).bal, db.session.get(A, 2).bal)"]
+    eq(orm(m, cmds), "IntegrityError\n100 50", "one failing change rolls back the whole transfer")
+
+
 if __name__ == "__main__":
     main()
