@@ -627,3 +627,23 @@ body.quick .lesson .co.analogy,body.quick .lesson .co.extra,body.quick .lesson .
 .heat td:first-child{text-align:left;white-space:nowrap}
 .heat td:first-child a{color:var(--ink);text-decoration:none}
 .guide .steps li{margin:.55em 0}
+
+/* ---------- common mistakes and the richer revise page ---------- */
+.mistakes{margin:26px 0}
+.mistakes td{vertical-align:top;font-size:.92rem;line-height:1.5}
+.mistakes td:first-child{color:var(--err)}
+details.qt{display:inline}details.qt>summary{display:inline;cursor:pointer;color:var(--accent);font:600 .8rem var(--sans);margin-left:4px}
+details.qt[open]>summary{margin-right:4px}
+.recall li{margin:.5em 0}.recall details{margin-top:4px}.recall summary{cursor:pointer;color:var(--accent);font:600 .85rem var(--sans)}
+.terms.cold{grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px 22px}
+@media (min-width:1001px){
+ .topbar .brand b,.tb-l,.tm-b{white-space:nowrap}
+ .tb-search span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+ .tb-search kbd{flex:none}
+}
+@media (min-width:1001px) and (max-width:1240px){
+ .tb-sub{display:none}
+ .tb-search{width:auto}
+ .tb-search span,.tb-search kbd{display:none}
+ .tb-nav{margin-left:6px}
+}

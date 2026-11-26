@@ -78,6 +78,9 @@ function lesson(art,t,m,sec,cur,secs,inChapter){
   if(sec.diagnostic){var dg=el("details","diag",'<summary>Already know this? Try one question first <small>optional</small></summary><p class="sub">If you get it right and you were sure, you can skip ahead to the check at the end.</p>');
     dg.appendChild(A.qcard(Object.assign({topicId:t.id,tag:"[ADDED]"},sec.diagnostic),{noHints:true,onDone:function(ok){if(ok){var a=el("a","btn sm ghost","Skip ahead to the check");a.href="#";a.onclick=function(e){e.preventDefault();var q=art.querySelector(".checks");if(q)q.scrollIntoView()};dg.appendChild(a)}}}));art.appendChild(dg)}
   art.appendChild(A.blocks(sec.core,ctx));
+  if(sec.mistakes&&sec.mistakes.length){var mk=el("div","mistakes",'<h3 class="h3">Common mistakes</h3>');
+    mk.innerHTML+=A.rawTable(["Wrong belief","Why it is wrong","Quick test"],sec.mistakes.map(function(r){var q=String(r[2]),k=q.match(/^(.*?)\s*\(([^()]*)\)\.?$/);return [A.inline(r[0]),A.inline(r[1]),k?A.inline(k[1])+' <details class="qt"><summary>answer</summary>'+A.inline(k[2])+"</details>":A.inline(q)]}));
+    art.appendChild(mk)}
   if(sec.deep&&sec.deep.length){var d=el("details","deep");d.innerHTML='<summary>Go deeper <small>full working, every line explained</small></summary>';var inner=el("div","deep-in");d.appendChild(inner);var filled=false;
     function fill(){if(!filled){filled=true;inner.appendChild(A.blocks(sec.deep,ctx));A.math(inner)}}
     d.addEventListener("toggle",function(){if(d.open)fill()});if(A.load().prefs.deepOpen){d.open=true;fill()}art.appendChild(d)}
@@ -253,6 +256,14 @@ function buildRevise(sr,t,m){
   var r=t.remember||{},S=A.load(),pk=A.packOf(t.id)||{};
   sr.insertAdjacentHTML("beforeend",'<h2 class="pane-h">Revise</h2><p class="sub">The whole topic on one page: about 15 minutes.</p>');
   function sec(title,html){sr.appendChild(el("div","rv",'<h3 class="h3">'+title+"</h3>"+html))}
+  var words=[];(t.sections||[]).forEach(function(x){(x.terms||[]).forEach(function(w){words.push(w)})});
+  var cm=A.conceptMarks(t.id),ck=Object.keys(cm).sort(function(a,b){return cm[b].marks-cm[a].marks}),cmt=ck.reduce(function(a,k){return a+cm[k].marks},0);
+  if(ck.length)sec("What the questions test, ranked by marks",A.rawTable(["Idea","PYQs","Marks","Share"],ck.map(function(k){var c=t.concepts&&t.concepts[k];return [A.inline(c?c.name:k),String(cm[k].n),A.fmt(cm[k].marks),Math.round(100*cm[k].marks/(cmt||1))+"%"]})));
+  var tbs=(t.sections||[]).filter(function(x){return x.teachBack});
+  if(tbs.length)sec("Recall questions (answers hidden)",'<ol class="prose recall">'+tbs.map(function(x){return "<li>"+A.inline(x.teachBack.prompt)+'<details><summary>Show the answer</summary>'+A.inline(x.teachBack.model)+"</details></li>"}).join("")+"</ol>");
+  if(words.length)sec("Definitions to know cold",'<dl class="terms cold">'+words.map(function(w){return "<div><dt>"+A.inline(w[0])+"</dt><dd>"+A.inline(w[1])+"</dd></div>"}).join("")+"</dl>");
+  var mks=[];(t.sections||[]).forEach(function(x){(x.mistakes||[]).forEach(function(r){mks.push(r)})});
+  if(mks.length)sec("Common mistakes: wrong belief, why, a quick test",A.rawTable(["Wrong belief","Why it is wrong","Quick test"],mks.map(function(r){return [A.inline(r[0]),A.inline(r[1]),A.inline(r[2])]})));
   sec("Every lesson in short",'<div class="lshort">'+(t.sections||[]).map(function(x,i){return '<div class="ls"><h4><a href="#topic/'+t.id+"/lesson/"+x.id+'">'+(i+1)+". "+esc(x.title)+"</a></h4><p>"+A.inline(x.plain||"")+"</p>"
     +(x.remember&&x.remember.length?"<ul>"+x.remember.map(function(r){return "<li>"+A.inline(r)+"</li>"}).join("")+"</ul>":"")
     +(x.terms&&x.terms.length?'<p class="lsw"><b>Words:</b> '+x.terms.map(function(w){return A.inline(w[0])}).join(", ")+"</p>":"")+"</div>"}).join("")+"</div>");
