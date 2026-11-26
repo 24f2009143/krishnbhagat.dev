@@ -340,5 +340,70 @@ def tr_default_folder():
     eq([x[0] for x in flask(app, FOLDERS, ["/", "/dashboard", "/view", "/page"])], [500, 500, 500, 200], "only /page")
 
 
+
+# ================= depth upgrade (MLT pattern)
+def jx(tpl, **ctx):
+    return out_of("from jinja2 import Environment\nprint(Environment().from_string(%r).render(**%r), end='')\n" % (tpl, ctx))
+
+
+@check("Ttemplating-47")
+def template_dollar_and_braces():
+    eq(out_of("from string import Template\nprint(Template('Cost: $$${amt} for ${item}s').substitute(amt=5, item='pen'))\n"), "Cost: $5 for pens", "$$ is a dollar sign; ${name} lets letters follow")
+
+
+@check("Ttemplating-48")
+def jinja_undefined_and_default():
+    eq(jx("[{{ missing }}]"), "[]", "an undefined variable prints nothing")
+    eq(jx("{{ x|default('none') }} {{ y|default('none') }}", y="set"), "none set", "default filter")
+
+
+@check("Ttemplating-49")
+def jinja_loop_helpers():
+    eq(jx("{% for n in xs %}{{ loop.index }}{{ n }}{% if not loop.last %},{% endif %}{% else %}empty{% endfor %}", xs=["a", "b"]), "1a,2b", "loop.index and loop.last")
+    eq(jx("{% for n in xs %}{{ n }}{% else %}empty{% endfor %}", xs=[]), "empty", "for ... else runs when the list is empty")
+
+
+@check("Ttemplating-50")
+def jinja_filters():
+    eq(jx("{{ name|upper }} {{ xs|length }} {{ xs|join('-') }} {{ t|title }} {{ p|round(1) }}", name="asha", xs=[1, 2, 3], t="web app", p=3.14159), "ASHA 3 1-2-3 Web App 3.1", "common filters")
+
+
+@check("Ttemplating-51")
+def flask_autoescape():
+    r = flask("from flask import Flask, render_template_string\napp = Flask(__name__)\n@app.route('/a')\ndef a():\n    return render_template_string('{{ s }}|{{ s|safe }}', s='<b>hi</b>')\n", {}, ["/a"])
+    eq(r[0][1], "&lt;b&gt;hi&lt;/b&gt;|<b>hi</b>", "Flask escapes HTML in variables; |safe turns it off")
+
+
+@check("Ttemplating-52")
+def jinja_super_and_include():
+    files = {"templates/base.html": "<h1>{% block title %}Site{% endblock %}</h1>{% include 'foot.html' %}", "templates/foot.html": "<p>foot</p>",
+             "templates/page.html": "{% extends 'base.html' %}{% block title %}Page - {{ super() }}{% endblock %}"}
+    r = flask("from flask import Flask, render_template\napp = Flask(__name__)\n@app.route('/')\ndef p():\n    return render_template('page.html')\n", files, ["/"])
+    eq(r[0][1], "<h1>Page - Site</h1><p>foot</p>", "super() keeps the parent's block text; include pastes another file")
+    files["templates/page.html"] = "{% extends 'base.html' %}{% block title %}Page{% endblock %}"
+    r = flask("from flask import Flask, render_template\napp = Flask(__name__)\n@app.route('/')\ndef p():\n    return render_template('page.html')\n@app.route('/m')\ndef m():\n    return render_template('nope.html')\n", files, ["/", "/m"])
+    eq((r[0][1], r[1][0]), ("<h1>Page</h1><p>foot</p>", 500), "without super() the block is replaced; a missing template is a 500")
+
+
+
+@check("Ttemplating-53")
+def by_hand_vs_template():
+    by_hand = out_of("names = ['Asha', 'Ravi']\nhtml = '<ul>' + ''.join('<li>' + n + '</li>' for n in names) + '</ul>'\nprint(html)\n")
+    eq(by_hand, "<ul><li>Asha</li><li>Ravi</li></ul>", "string building by hand")
+    eq(jx("<ul>{% for n in names %}<li>{{ n }}</li>{% endfor %}</ul>", names=["Asha", "Ravi"]), "<ul><li>Asha</li><li>Ravi</li></ul>", "the same with a template")
+
+
+@check("Ttemplating-54")
+def jinja_if_elif_and_macro_args():
+    eq(jx("{% for m in ms %}{% if m >= 90 %}A{% elif m >= 75 %}B{% else %}C{% endif %}{% endfor %}", ms=[95, 80, 40]), "ABC", "if / elif / else")
+    eq(jx("{% macro badge(text, kind='info') %}[{{ kind }}:{{ text }}]{% endmacro %}{{ badge('hi') }}{{ badge('x', 'warn') }}"), "[info:hi][warn:x]", "macro with a default argument")
+
+
+@check("Ttemplating-55")
+def whitespace_control():
+    eq(jx("a\n{% if true %}\nb\n{% endif %}\nc"), "a\n\nb\n\nc", "tags leave their newlines behind")
+    eq(jx("a\n{%- if true %}\nb\n{%- endif %}\nc"), "a\nb\nc", "a minus sign trims the whitespace on that side")
+
+
 if __name__ == "__main__":
     main()

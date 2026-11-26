@@ -256,5 +256,90 @@ def single_quotes():
         ok = False
     eq(ok, False, "single quotes invalid")
 
+
+# ================= depth upgrade (MLT pattern)
+@check("Tfrontend-32")
+def specificity_ladder():
+    css = "p{color:rgb(1,1,1)} .c{color:rgb(2,2,2)} #i{color:rgb(3,3,3)}"
+    eq(color(css, '<p class="c" id="i">x</p>'), "rgb(3, 3, 3)", "id beats class beats tag")
+    eq(color(css, '<p class="c" id="i" style="color:rgb(4,4,4)">x</p>'), "rgb(4, 4, 4)", "inline style beats the id rule")
+    eq(color(css + " p{color:rgb(5,5,5)!important}", '<p class="c" id="i" style="color:rgb(4,4,4)">x</p>'), "rgb(5, 5, 5)", "!important beats inline style")
+
+
+@check("Tfrontend-33")
+def inner_vs_text():
+    r = render("<p>x</p>", "(function(){var a=document.createElement('div');a.innerHTML='<b>x</b>';var b=document.createElement('div');b.textContent='<b>x</b>';return [a.querySelectorAll('b').length,b.querySelectorAll('b').length,b.innerHTML,a.textContent]})()")
+    eq(r, [1, 0, "&lt;b&gt;x&lt;/b&gt;", "x"], "innerHTML parses tags; textContent shows them as text")
+
+
+@check("Tfrontend-34")
+def json_rules():
+    r = render("<p>x</p>", "(function(){var r=[];['{\"a\":1}',\"{'a':1}\",'[1,2,]','{a:1}','\"hi\"','null'].forEach(function(t){try{JSON.parse(t);r.push('ok')}catch(e){r.push('err')}});r.push(JSON.stringify({a:undefined,b:1,c:[1,undefined]}));return r})()")
+    eq(r, ["ok", "err", "err", "err", "ok", "ok", '{"b":1,"c":[1,null]}'], "JSON needs double quotes and no trailing comma; undefined is dropped (null in arrays)")
+
+
+@check("Tfrontend-35")
+def live_vs_static():
+    r = render('<p class="k">a</p>', "(function(){var live=document.getElementsByClassName('k'),stat=document.querySelectorAll('.k');var n=document.createElement('p');n.className='k';document.body.appendChild(n);return [live.length,stat.length]})()")
+    eq(r, [2, 1], "getElementsByClassName is live; querySelectorAll is a snapshot")
+    r = render('<p class="item">1</p><p class="item">2</p><p class="item">3</p>', "(function(){var a=document.getElementsByClassName('item'),b=document.querySelectorAll('.item');for(var i=0;i<2;i++){var n=document.createElement('p');n.className='item';document.body.appendChild(n)}return [a.length,b.length]})()")
+    eq(r, [5, 3], "three, then two more: live 5, snapshot 3")
+
+
+@check("Tfrontend-36")
+def validity_api():
+    html = '<form><input id="e" type="email" value="x"><input id="r" required><input id="p" pattern="[0-9]{3}" value="12a"><input id="ok" type="email" value="a@b.co"></form>'
+    r = render(html, "['e','r','p','ok'].map(function(i){return document.getElementById(i).checkValidity()})")
+    eq(r, [False, False, False, True], "type, required and pattern each make a field invalid")
+
+
+@check("Tfrontend-37")
+def attribute_operators():
+    els = ['<a href="https://iitm.ac.in/x.pdf" type="email" class="btn primary">a</a>', '<a href="http://site.com/page" class="btn-primary">b</a>']
+    got = [matches(sel, els) for sel in ['[type]', '[type="email"]', '[class~="btn"]', '[href^="https"]', '[href$=".pdf"]', '[href*="iitm"]']]
+    eq(got, [[True, False], [True, False], [True, False], [True, False], [True, False], [True, False]], "each operator matches only the first link")
+
+
+
+def node_out(code):
+    return subprocess.run(["node", "-e", code], capture_output=True, text=True, timeout=30).stdout.strip()
+
+
+@check("Tfrontend-38")
+def event_loop_order():
+    eq(node_out("console.log('A');setTimeout(function(){console.log('B')},0);Promise.resolve().then(function(){console.log('C')});console.log('D');"),
+       "A\nD\nC\nB", "sync code first, then promise callbacks, then timers")
+
+
+@check("Tfrontend-39")
+def box_model():
+    r = render('<div id="a" style="width:100px;padding:10px;border:2px solid;">x</div><div id="b" style="box-sizing:border-box;width:100px;padding:10px;border:2px solid;">y</div>',
+               "[document.getElementById('a').offsetWidth, document.getElementById('b').offsetWidth]")
+    eq(r, [124, 100], "content-box adds padding and border; border-box includes them")
+
+
+@check("Tfrontend-40")
+def prevent_default_submit():
+    html = '<form id="f" action="/elsewhere"><input name="q" value="x"></form><script>window.seen=0;document.getElementById("f").addEventListener("submit",function(e){e.preventDefault();window.seen++})</script>'
+    r = render(html, "(function(){document.getElementById('f').requestSubmit();return [window.seen, location.pathname.indexOf('elsewhere')<0]})()")
+    eq(r, [1, True], "the submit handler ran and preventDefault kept the page")
+
+
+@check("Tfrontend-41")
+def bubbling():
+    html = '<div id="p"><button id="c">go</button></div><script>window.log=[];document.getElementById("p").addEventListener("click",function(){log.push("parent")});document.getElementById("c").addEventListener("click",function(e){log.push("child")})</script>'
+    eq(render(html, "(function(){document.getElementById('c').click();return log})()"), ["child", "parent"], "the click bubbles from child to parent")
+    html2 = html.replace('log.push("child")})', 'log.push("child");e.stopPropagation()})')
+    eq(render(html2, "(function(){document.getElementById('c').click();return log})()"), ["child"], "stopPropagation stops it")
+
+
+@check("Tfrontend-42")
+def start_lesson_page():
+    page = ('<h1 id="t">Hello</h1><button id="b">Change</button><style>h1{color:rgb(255,0,0)}</style>'
+            '<script>document.getElementById("b").addEventListener("click",function(){document.getElementById("t").textContent="Clicked"})</script>')
+    eq(render(page, "(function(){document.getElementById('b').click();var t=document.getElementById('t');return [t.textContent,getComputedStyle(t).color]})()"), ["Clicked", "rgb(255, 0, 0)"], "text changes, the CSS rule still applies")
+    eq(render("<p>a<p>b", "document.querySelectorAll('p').length"), 2, "an unclosed p is closed by the next p")
+
+
 if __name__ == "__main__":
     main()

@@ -186,5 +186,26 @@ def units_lesson():
     eq((4 * 1000 * 8, 80 / 20), (32000, 4.0), "quiz")
 
 
+@check("Tsys-perf-23")
+def depth_numbers():
+    eq([bits_for(n) for n in (26, 36, 62, 63, 95)], [5, 6, 6, 6, 7], "letters 5; +digits 6; both cases+digits 6; +space 6; printable ASCII 7")
+    close(10 ** 9 / 10 ** 9, 1, "10^9 operations at 10^9 per second: 1 s")
+    close((10 ** 5) ** 2 / 10 ** 9, 10, "n^2 with n = 10^5: 10 s")
+    close(10 ** 6 * math.log2(10 ** 6) / 10 ** 9 * 1000, 19.93, "n log2 n with n = 10^6: about 20 ms", tol=1e-3)
+    close(60 / 7200 / 2 * 1000, 4.1667, "average rotational delay at 7200 RPM", tol=1e-4)
+    close(8 / 25.6, 0.3125, "8 GB at 25.6 GB/s")
+    close(1e6 * 8 / 100e6 * 1000, 80, "1 MB over 100 Mbps: 80 ms transmission")
+    close(200 * 0.05, 10, "200 requests/s that each take 50 ms: 10 in flight at once")
+
+
+@check("Tsys-perf-24")
+def depth_numbers_2():
+    eq((1000 * 8) // 5, 1600, "characters in 1 KB (1000 B) at 5 bits each")
+    close(3200e6 * 8 / 1e9, 25.6, "DDR4-3200: 3200 million transfers × 8 bytes")
+    close(4 + 60 / 7200 / 2 * 1000 + 1e6 / 200e6 * 1000, 13.1667, "seek 4 ms + average rotation 4.17 ms + 1 MB at 200 MB/s (5 ms)", tol=1e-4)
+    close(8 / 0.040, 200, "8 cores, 40 ms of CPU per request: 200 requests/s")
+    close((3 * 500e3 * 8) / 10e6 * 1000 + 50, 1250, "three 500 KB images over 10 Mbps plus one 50 ms round trip")
+
+
 if __name__ == "__main__":
     main()
