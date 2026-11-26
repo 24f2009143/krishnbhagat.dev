@@ -73,11 +73,11 @@ APP.manifest={
    subs:[{id:"api-concepts-oas-caching",name:"API Concepts, OpenAPI Specification (OAS) & Caching",aliases:["api","openapi","caching"]},
          {id:"jsonify",name:"Flask JSON Responses (`jsonify`)",aliases:["jsonify"]},
          {id:"flask-restful",name:"Flask-RESTful Resources, Routing, `reqparse` & `marshal_with`",aliases:["Resource","reqparse","marshal_with","curl"]}],expected:{q2:{pyqs:23,marks:78.5}},packs:{q2:["rest-api.js"]},patches:[]},
-  {id:"db-sql",name:"Databases, SQL & Flask-SQLAlchemy",short:"Databases",mark:"DB",weeks:[7,8],status:"planned",uses:["flask-core","python-fund","rest-api"],
+  {id:"db-sql",name:"Databases, SQL & Flask-SQLAlchemy",short:"Databases",mark:"DB",weeks:[7,8],status:"ready",uses:["flask-core","python-fund","rest-api"],
    why:"Storing data and querying it from Flask.",
    subs:[{id:"db-concepts",name:"Database Concepts & Storage Models (RDBMS, NoSQL, Graph, Indexing)",aliases:["rdbms","nosql","index"]},
          {id:"sqlite-sql",name:"SQLite & SQL Queries",aliases:["sql","group by","sqlite"]},
          {id:"orm-relationships",name:"SQLAlchemy ORM Models & Relationships",aliases:["relationship","foreign key","backref"]},
-         {id:"crud-querying",name:"Flask-SQLAlchemy CRUD & Querying",aliases:["filter_by","session","commit"]}],expected:{q2:{pyqs:32,marks:101.0}},packs:{},patches:[]}
+         {id:"crud-querying",name:"Flask-SQLAlchemy CRUD & Querying",aliases:["filter_by","session","commit"]}],expected:{q2:{pyqs:32,marks:101.0}},packs:{q2:["db-sql-p2.js","db-sql-p3.js"]},patches:[]}
  ]
 };
