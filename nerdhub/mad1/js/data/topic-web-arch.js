@@ -2,6 +2,7 @@
  * Teaching prose is [ADDED] (bank-only mode). Behaviour that can be run is checked in tests/assertions_web-arch.py. */
 APP.registerTopic("web-arch",{
  name:"Web Architecture, Protocols & Rendering",
+ intro:"This topic is the map of the whole course. You follow one **HTTP request** from the browser to a server and back, and learn the words the exam uses for it: client and server, **stateless**, status codes, where a page is rendered, and how sites **scale** when more people arrive.\n\nEverything later is one stop on this journey. Flask is the program at the server's end, templates build the response, REST APIs send data instead of pages, and the database is what the server remembers between requests.",
  tagline:"What happens between typing a URL and seeing a page, and the words used to describe big web systems.",
  story:"Before Flask, before HTML, there is the trip a request makes: the browser finds the server's address, asks for a page, gets an answer, and draws it. This topic names every step of that trip, explains why the server forgets you between requests (and how cookies fix that), where the HTML is built (server or browser), and the vocabulary for running many servers: cloud service models, scaling up and out, ACID and BASE, redundancy and replication.\n\nThe PYQs here are short theory questions worth 2–3 marks each. They reward exact definitions, so each lesson ends with a comparison table of the pairs that get confused.",
  mindmap:{center:"The web",branches:[

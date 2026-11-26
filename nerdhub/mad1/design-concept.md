@@ -70,3 +70,19 @@ Rings become dimension arcs with tick marks; callouts are sticky pencil notes.
 
 Direction 1 is built because it grows out of the subject itself (requests and responses) and keeps the
 serif reading column you liked in MLT.
+
+## Revision 3: calmer, reads like a chapter (after comparing with MLT again)
+
+The first build of "The Exchange" was busy: vermilion on every button and label, the code font on almost half
+the text, three navigation strips, and lessons that opened with a quiz. Revision 3 keeps the subject idea and
+moves the rest towards what makes MLT pleasant to study from.
+
+- **Colour:** near-white paper `#FAFAF8` (dark `#111316`), slate ink, one accent: response teal `#0B6B66`
+  (dark `#5ECFC3`). Vermilion now appears only in the request/response drawings. Highlighter is soft yellow.
+- **Type:** Inter for headings and interface, Source Serif at 18px for reading, JetBrains Mono only for code.
+- **One map:** the rail lists the open topic's lessons under it (current one highlighted, read ones darker);
+  the separate lesson column is gone on wide screens and the duplicate chip row is gone everywhere.
+- **Teach, then test:** a topic opens with an orientation (what you will learn and why, the PYQ table by
+  sub-topic, the question patterns with a first move, exam wording that points to the method, how it connects,
+  how to use the page). A lesson opens with one plain sentence; the warm-up question is folded away.
+- **Kept:** the arrows mark, the browser–server hero, segmented rings, the "200 OK" stamp, the reading bar.

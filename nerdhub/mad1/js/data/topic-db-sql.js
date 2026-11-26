@@ -3,6 +3,7 @@
  * Flask-SQLAlchemy 3.1.1, SQLAlchemy 2.1.9). */
 APP.registerTopic("db-sql",{
  name:"Databases, SQL & Flask-SQLAlchemy",
+ intro:"This topic is where a web app keeps its data. You learn which kind of **database** fits which job, how to ask questions in **SQL** with GROUP BY and HAVING, and how **Flask-SQLAlchemy** describes tables as Python **models**, links them with **relationships**, and saves changes through the **session**.\n\nThe PYQs come in three kinds: read two models and name the relationship, trace an update and say what prints, or pick the query that really does what the SQL says. Several printed questions contain small bugs, and the lessons show how to spot them.",
  tagline:"Where a web app keeps its data: choosing a database, asking it questions in SQL, and doing the same from Python with models.",
  story:"A Flask view forgets everything once it returns; the **database** remembers. Most course apps use a **relational** database (SQLite): data sits in **tables**, rows are linked by **foreign keys**, and you ask questions in **SQL**.\n\nFlask-SQLAlchemy lets you skip most SQL. A **model** class describes a table, a **relationship** links two models, and the **session** collects your changes until you **commit**. Nearly every PYQ here is one of three things: read a model and name the relationship, trace an update and say what prints, or pick the query that really does what the SQL says.",
  mindmap:{center:"Data in a web app",branches:[

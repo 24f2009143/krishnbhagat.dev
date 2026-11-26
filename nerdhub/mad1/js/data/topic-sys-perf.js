@@ -2,6 +2,7 @@
  * Teaching prose is [ADDED]. Every number is recomputed in tests/assertions_sys-perf.py. */
 APP.registerTopic("sys-perf",{
  name:"System Performance, Hardware & Encoding",
+ intro:"This topic is the arithmetic behind a web app: how many **bits** a piece of text needs, how **running time** grows with input, how fast **disks and memory** move data, how long a signal takes to cross the world, and how many requests a **server** can take.\n\nEvery PYQ here is a short calculation with one formula. The marks are lost in the same three places each time: bits versus bytes, a missing × 60 or × 2, and choosing a limit that is not the real **bottleneck**. Each lesson gives the formula and walks through those traps.",
  tagline:"The arithmetic behind a web app: how many bits text needs, how running time grows, how fast disks and memory move data, and how many users a server can take.",
  story:"Every request costs something: **bits** on the wire, **time** in the code, **bytes per second** from memory and disk, and **milliseconds** travelling across the world. This topic is the back-of-the-envelope maths for those costs.\n\nThe PYQs are short calculations. Almost all of them go wrong in the same three places: mixing **bits and bytes**, forgetting a **× 60** or a **× 2**, and missing which limit is the real **bottleneck**. Each lesson gives one formula and the traps around it.",
  mindmap:{center:"Performance arithmetic",branches:[

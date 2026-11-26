@@ -2,6 +2,7 @@
  * Every output and status code printed here is checked in tests/assertions_flask-core.py (Flask 3.1.3, Werkzeug 3.1.9, Python 3.12.12). */
 APP.registerTopic("flask-core",{
  name:"Flask Web Framework",
+ intro:"This is the largest topic in the exam. You learn how **Flask** turns a URL into a function call: matching **routes** and their converters, reading **query strings** and form data, building URLs with **url_for**, **redirects**, and what happens when something goes wrong with **abort** and error handlers.\n\nNearly every Flask PYQ is one question in disguise: for this exact URL and method, which function runs, what does it return, and with which status code? The lessons build that skill one piece at a time.",
  tagline:"How a URL becomes a Python function call, and what comes back to the browser.",
  story:"A browser only ever sends **requests** and receives **responses**. Flask is the small Python program in the middle. It reads the URL of each request, finds the one function you wrote for that URL, runs it, and sends back whatever that function returns.\n\nEvery Flask PYQ is a version of one question: *for this exact URL and this exact method, which function runs, what does it return, and with which status code?* If you can answer that step by step, you can answer all 39 Flask PYQs. This topic builds that skill one piece at a time: routes, the parts of a URL, building URLs, redirects, reading data, errors, forms, and return values.",
  mindmap:{center:"Flask",branches:[

@@ -2,6 +2,7 @@
  * Every output is checked in tests/assertions_rest-api.py (Flask 3.1.3, Flask-RESTful 0.3.10). */
 APP.registerTopic("rest-api",{
  name:"REST APIs & Flask-RESTful",
+ intro:"This topic turns a web server into a data service. An **API** answers with **JSON** instead of HTML, and clients pick an **HTTP method** to say what they want. You learn `jsonify`, **Flask-RESTful** resources, `reqparse` and `marshal_with`, and how to call an API with **curl**.\n\nMost PYQs ask what a curl command returns: which method of the resource runs, whether the URL's arguments fit it, and what JSON and status code come back.",
  tagline:"Serving data instead of pages: JSON responses, resource classes, curl, and the rules Flask-RESTful follows.",
  story:"A web page is for people; an **API** is for programs. Instead of HTML, an API endpoint answers with **JSON**, and clients (a phone app, JavaScript, or `curl` in a terminal) choose an **HTTP method** to say what they want: GET to read, POST to create, PUT to update, DELETE to remove.\n\nFlask can return JSON directly, and the **Flask-RESTful** extension groups the methods for one resource into a class. Most PYQs here ask what a curl command returns: which method runs, whether it gets the URL's arguments, and what JSON comes back.",
  mindmap:{center:"REST API",branches:[

@@ -165,11 +165,5 @@ APP.registerPack("q2","db-sql",{
    other:"one practical method",verify:"Ran each option: B and C give `vid1.channel = 1`, `vid1.playlist = <Channel 1>`, `ch1.videos = [<Video 1>]`; A raises ProgrammingError; D raises AttributeError.",asserts:["Tdb-sql-15"],
    trap:"Option A: the column is named after the channel, but it still holds an integer.",rule:"Column = value, relationship = object.",
    transfer:{concept:"relationship-attrs",type:"MCQ",stem:"After `vid1 = Video(name=\"x\", playlist=ch1)` and a commit, what is `vid1.channel`?",options:["1","<Channel 1>","None","\"ch1\""],key:"A",diff:"medium",hints:["The column."],explain:"1: the relationship fills the key column.",asserts:["Tdb-sql-15"]}}}
- ],
- patterns:[
-  {name:"Which relationship is this",count:7,cue:"two models, a foreign key, maybe unique or a third table",firstMove:"Find the key: plain → one-to-many; unique → one-to-one; two keys in a third table → many-to-many."},
-  {name:"Which model code is correct",count:4,cue:"four model definitions",firstMove:"Check table name, primary key, nullable, and that the foreign key is a Column pointing at a lower-case table."},
-  {name:"Objects vs ids in relationships",count:2,cue:"creating a row that belongs to another",firstMove:"Column takes an id; relationship takes an object; ids are None before commit."},
-  {name:"Database families and indexes",count:4,cue:"pick a family; true statements about graphs or indexes",firstMove:"Match the query shape: tables and transactions, one key, documents, or paths."}
  ]
 });
