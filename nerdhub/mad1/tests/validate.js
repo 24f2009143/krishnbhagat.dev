@@ -223,7 +223,7 @@ Object.keys(APP.topics).forEach(id => {
 /* ---------- counts are generated, never typed ---------- */
 if (!FIX) { const live = JSON.stringify(APP.liveCounts()); const fileTxt = fs.readFileSync(path.join(ROOT, "js/counts.js"), "utf8"); if (fileTxt.indexOf(live) < 0) E("counts.js", "stale: run node tests/gen_counts.js") }
 /* ---------- expected totals per exam (when every topic of the exam is ready) ---------- */
-Object.entries(M.exams).forEach(([k, e]) => { const C = APP.liveCounts().exams[k]; const allReady = M.topics.filter(m => m.weeks.some(x => e.weeks.includes(x)) && !m.fixture).every(m => m.status === "ready"); if (allReady && e.expected && e.expected.pyqs && C && (C.pyqs !== e.expected.pyqs || Math.abs(C.marks - e.expected.marks) > 1e-9)) E("exam " + k, "PYQs " + C.pyqs + "/" + C.marks + " marks, expected " + e.expected.pyqs + "/" + e.expected.marks) });
+Object.entries(M.exams).forEach(([k, e]) => { const C0 = APP.liveCounts().exams[k]; const fx = M.topics.filter(m => m.fixture).map(m => m.id); const C = C0 && { pyqs: C0.pyqs - fx.reduce((a, t) => a + ((C0.topics[t] || {}).pyqs || 0), 0), marks: C0.marks - fx.reduce((a, t) => a + ((C0.topics[t] || {}).marks || 0), 0) }; /* fixture topics are not part of the exam */ const allReady = M.topics.filter(m => m.weeks.some(x => e.weeks.includes(x)) && !m.fixture).every(m => m.status === "ready"); if (allReady && e.expected && e.expected.pyqs && C && (C.pyqs !== e.expected.pyqs || Math.abs(C.marks - e.expected.marks) > 1e-9)) E("exam " + k, "PYQs " + C.pyqs + "/" + C.marks + " marks, expected " + e.expected.pyqs + "/" + e.expected.marks) });
 
 warns.slice(0, 30).forEach(x => console.log("warn  " + x));
 errs.slice(0, 200).forEach(x => console.log("ERROR " + x));
