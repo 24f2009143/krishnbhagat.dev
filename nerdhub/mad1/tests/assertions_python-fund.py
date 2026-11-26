@@ -399,5 +399,26 @@ def route_must_be_on_top():
     eq((out_of(top), out_of(under)), ("login first", "secret"), "route on top registers the wrapped view; route underneath registers the bare one")
 
 
+
+@check("Tpython-fund-75")
+def closures_remember():
+    eq(out_of("def make_adder(n):\n    def add(x):\n        return x + n\n    return add\nadd5 = make_adder(5)\nadd9 = make_adder(9)\nprint(add5(1), add9(1), add5.__name__)\n"), "6 10 add", "each inner function remembers its own n")
+    eq(out_of("fs = [lambda: i for i in range(3)]\nprint([f() for f in fs])\n"), "[2, 2, 2]", "closures see the variable, not its value at creation")
+
+
+@check("Tpython-fund-76")
+def args_kwargs():
+    eq(out_of("def show(*args, **kwargs):\n    print(args, kwargs)\nshow(1, 2, a=3)\nshow()\nshow(*[4, 5], **{'b': 6})\n"), "(1, 2) {'a': 3}\n() {}\n(4, 5) {'b': 6}", "args is a tuple, kwargs a dict; * and ** unpack")
+    eq(out_of("def deco(f):\n    def wrapper():\n        return f()\n    return wrapper\n@deco\ndef add(a, b):\n    return a + b\ntry:\n    add(2, 3)\nexcept TypeError:\n    print('TypeError')\n"), "TypeError", "a wrapper without *args cannot pass arguments on")
+
+
+@check("Tpython-fund-77")
+def named_logger_and_handlers():
+    src = ("import logging, sys\nlog = logging.getLogger('shop')\nlog.setLevel(logging.DEBUG)\n"
+           "h1 = logging.StreamHandler(sys.stdout)\nh1.setLevel(logging.WARNING)\nh1.setFormatter(logging.Formatter('OUT %(name)s %(levelname)s %(message)s'))\nlog.addHandler(h1)\n"
+           "log.info('stock checked')\nlog.warning('low stock')\nprint(log.getEffectiveLevel(), logging.getLogger().level)\n")
+    eq(out_of(src), "OUT shop WARNING low stock\n10 30", "the handler's level filters too; the root logger stays at WARNING (30)")
+
+
 if __name__ == "__main__":
     main()
