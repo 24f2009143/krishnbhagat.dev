@@ -408,5 +408,101 @@ def python_and_on_conditions():
     eq(orm(OR, ['c = (Order.status == "PAID") and (Order.amount > 500)', "print(c)"]), "orders.status = :status_1", "`and` returns one of the two conditions")
 
 
+
+# ================= depth upgrade (MLT pattern)
+P7 = ("create table p(m, prod, q, cost);"
+      "insert into p values('A','Biscuits',3,100),('B','Shoes',2,500),('A','Chocolate',10,200),('C','Pen',20,50),('B','Shirts',5,700),('D','Beverages',30,150),('C','Notebook',40,250);")
+
+
+@check("Tdb-sql-35")
+def index_query_plan():
+    o, e, rc = run_py("import sqlite3\nc=sqlite3.connect(':memory:')\nc.executescript(\"create table u(id integer primary key, email text);\")\n"
+                      "c.executemany('insert into u(email) values (?)', [('u%d@x' % i,) for i in range(2000)])\n"
+                      "q=\"explain query plan select * from u where email='u5@x'\"\nprint(c.execute(q).fetchall()[0][-1])\nc.execute('create index ix on u(email)')\nprint(c.execute(q).fetchall()[0][-1])\n")
+    eq(o.strip().splitlines(), ["SCAN u", "SEARCH u USING COVERING INDEX ix (email=?)"], "without an index SQLite scans; with one it searches (covering: the index holds every column needed)")
+
+
+@check("Tdb-sql-36")
+def sql_more():
+    eq(sql(P7, "select m, prod from p order by m desc, q asc"), [("D", "Beverages"), ("C", "Pen"), ("C", "Notebook"), ("B", "Shoes"), ("B", "Shirts"), ("A", "Biscuits"), ("A", "Chocolate")], "two sort keys")
+    eq(sql(P7, "select count(distinct m), count(*) from p"), [(4, 7)], "COUNT(DISTINCT)")
+    eq(sql(P7, "select prod from p where m='A' or m='B' and q>4"), [("Biscuits",), ("Chocolate",), ("Shirts",)], "AND binds tighter than OR")
+    eq(sql(P7, "select prod from p where (m='A' or m='B') and q>4"), [("Chocolate",), ("Shirts",)], "brackets change it")
+    eq(sql(P7, "select prod from p order by cost desc limit 2"), [("Shirts",), ("Shoes",)], "ORDER BY then LIMIT")
+
+
+@check("Tdb-sql-37")
+def sqlite_types_and_null():
+    eq(sql("", "select '10' < '9', 10 < 9"), [(1, 0)], "text compares letter by letter")
+    eq(sql("", "select NULL = NULL, NULL IS NULL"), [(None, 1)], "NULL = NULL is unknown")
+    eq(sql("create table n(x); insert into n values(1),(NULL),(3);", "select (select count(*) from n where x = NULL), (select count(*) from n where x is null)"), [(0, 1)], "use IS NULL")
+    eq(sql("create table ti(v integer); insert into ti values('5'),('abc');", "select v, typeof(v) from ti"), [(5, "integer"), ("abc", "text")], "type affinity")
+
+
+@check("Tdb-sql-38")
+def string_length_not_enforced():
+    m = "class T(db.Model):\n    id = db.Column(db.Integer, primary_key=True)\n    s = db.Column(db.String(5))\n"
+    eq(orm(m, ['db.session.add(T(s="much longer than five"))', "db.session.commit()", "print(T.query.first().s)"]), "much longer than five", "SQLite does not enforce String(5)")
+
+
+M2M = """enroll = db.Table("enroll", db.Column("student_id", db.Integer, db.ForeignKey("student.id")), db.Column("course_id", db.Integer, db.ForeignKey("course.id")))
+class Student(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String)
+    courses = db.relationship("Course", secondary=enroll, backref="students")
+class Course(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String)
+"""
+
+
+@check("Tdb-sql-39")
+def many_to_many_secondary():
+    r = orm(M2M, ['a = Student(name="A"); b = Student(name="B"); w = Course(title="Web"); d = Course(title="DB")', "a.courses = [w, d]; b.courses = [w]", "db.session.add_all([a, b]); db.session.commit()",
+                  'print(sorted(c.title for c in a.courses), sorted(s.name for s in w.students), db.session.execute(db.text("select count(*) from enroll")).scalar())'])
+    eq(r, "['DB', 'Web'] ['A', 'B'] 3", "secondary= fills the association table (list order is not guaranteed without order_by)")
+
+
+CV2 = """class Channel(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String)
+    videos = db.relationship("Video", backref="playlist")
+class Video(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String)
+    channel = db.Column(db.Integer, db.ForeignKey("channel.id"))
+"""
+
+
+@check("Tdb-sql-40")
+def append_and_delete_parent():
+    eq(orm(CV2, ['ch = Channel(name="c"); v = Video(name="v")', "ch.videos.append(v)", "db.session.add(ch); db.session.commit()", "print(v.channel, v.playlist.name)"]), "1 c", "append fills the key; adding the parent adds the child")
+    eq(orm(CV2, ['ch = Channel(name="c"); v = Video(name="v", playlist=ch)', "db.session.add(ch); db.session.commit()", "db.session.delete(ch); db.session.commit()", "print(Video.query.count(), Video.query.first().channel)"]), "1 None", "deleting the parent leaves the child with a NULL key")
+
+
+U1 = "class U(db.Model):\n    id = db.Column(db.Integer, primary_key=True)\n    e = db.Column(db.String, unique=True)\n"
+
+
+@check("Tdb-sql-41")
+def rollback_after_error():
+    r = orm(U1, ['db.session.add(U(e="a")); db.session.commit()', 'db.session.add(U(e="a"))',
+                 "try:\n    db.session.commit()\nexcept Exception as ex:\n    print(type(ex).__name__)",
+                 "try:\n    print(U.query.count())\nexcept Exception as ex:\n    print(type(ex).__name__)",
+                 "db.session.rollback()", "print(U.query.count())", "print(db.session.get(U, 1).e, db.session.get(U, 9))"])
+    eq(r.splitlines(), ["IntegrityError", "PendingRollbackError", "1", "a None"], "after a failed commit, roll back before the next query")
+
+
+PQ = "class P(db.Model):\n    id = db.Column(db.Integer, primary_key=True)\n    name = db.Column(db.String)\n    cost = db.Column(db.Integer)\n    m = db.Column(db.String)\n"
+PQ_ROWS = ['db.session.add_all([P(name=n, cost=c, m=m) for n, c, m in [("Biscuits", 100, "A"), ("Shoes", 500, "B"), ("Chocolate", 200, "A"), ("Pen", 50, "C"), ("Shirts", 700, "B")]]); db.session.commit()']
+
+
+@check("Tdb-sql-42")
+def query_toolkit():
+    r = orm(PQ, PQ_ROWS + ["print([p.name for p in P.query.order_by(P.cost.desc()).limit(2).all()])", 'print(P.query.filter(P.m.in_(["A", "C"])).count())',
+                           "print(db.session.query(P.m, func.count(P.id)).group_by(P.m).order_by(P.m).all())", 'print(P.query.filter(P.name.like("s%")).count())',
+                           "print(db.session.query(func.sum(P.cost)).scalar(), db.session.query(func.avg(P.cost)).scalar())", "print(P.query.filter(P.cost > 150).order_by(P.name).first().name)"])
+    eq(r.splitlines(), ["['Shirts', 'Shoes']", "3", "[('A', 2), ('B', 2), ('C', 1)]", "2", "1550 310.0", "Chocolate"], "order_by, limit, in_, group_by, like, sum, avg, first")
+
+
 if __name__ == "__main__":
     main()
