@@ -385,5 +385,25 @@ def jinja_super_and_include():
     eq((r[0][1], r[1][0]), ("<h1>Page</h1><p>foot</p>", 500), "without super() the block is replaced; a missing template is a 500")
 
 
+
+@check("Ttemplating-53")
+def by_hand_vs_template():
+    by_hand = out_of("names = ['Asha', 'Ravi']\nhtml = '<ul>' + ''.join('<li>' + n + '</li>' for n in names) + '</ul>'\nprint(html)\n")
+    eq(by_hand, "<ul><li>Asha</li><li>Ravi</li></ul>", "string building by hand")
+    eq(jx("<ul>{% for n in names %}<li>{{ n }}</li>{% endfor %}</ul>", names=["Asha", "Ravi"]), "<ul><li>Asha</li><li>Ravi</li></ul>", "the same with a template")
+
+
+@check("Ttemplating-54")
+def jinja_if_elif_and_macro_args():
+    eq(jx("{% for m in ms %}{% if m >= 90 %}A{% elif m >= 75 %}B{% else %}C{% endif %}{% endfor %}", ms=[95, 80, 40]), "ABC", "if / elif / else")
+    eq(jx("{% macro badge(text, kind='info') %}[{{ kind }}:{{ text }}]{% endmacro %}{{ badge('hi') }}{{ badge('x', 'warn') }}"), "[info:hi][warn:x]", "macro with a default argument")
+
+
+@check("Ttemplating-55")
+def whitespace_control():
+    eq(jx("a\n{% if true %}\nb\n{% endif %}\nc"), "a\n\nb\n\nc", "tags leave their newlines behind")
+    eq(jx("a\n{%- if true %}\nb\n{%- endif %}\nc"), "a\nb\nc", "a minus sign trims the whitespace on that side")
+
+
 if __name__ == "__main__":
     main()
