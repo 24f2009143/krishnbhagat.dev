@@ -1,6 +1,6 @@
 {
   "_readme": "The Lab's contents. Add a specimen: give it the next KB number, a shelf, and a drawing ('art' names a drawing in build-home.py, or leave it out for a note). Then run: python3 tools/build-home.py. Only write what is true and can be pointed at.",
-  "catalogued": "2026-11-23",
+  "catalogued": "2026-11-27",
   "repo": "https://github.com/krishnbhagat01/krishnbhagat.dev",
   "shelves": [
     {
@@ -33,7 +33,7 @@
       "hook": "a world of study sites",
       "body": [
         "Study sites I built for my own courses. Each one turns a course's past papers into a place to read, practise and revise: notes, past questions, mock tests, flashcards, a mistakes list and a study plan.",
-        "Two sites live there now. PDSA Quiz 2 treats the course as a graph: every topic is marked visited, frontier or unvisited. The MLT platform reads like handwritten notes in pen-blue ink, with a formula drawer and search across every note and question."
+        "Three sites live there now. PDSA Quiz 2 treats the course as a graph: every topic is marked visited, frontier or unvisited. The MLT platform reads like handwritten notes in pen-blue ink, with a formula drawer and search across every note and question. MAD 1 draws the whole course as one conversation: a request goes out, a response comes back."
       ],
       "facts": [
         [
@@ -42,11 +42,15 @@
         ],
         [
           "MLT",
-          "13 topics · 35 pages of Quiz 1 notes · practice next, mock test, cheatsheet, glossary, formula drawer"
+          "8 topics · Quiz 2 notes and solved PYQs · practice next, mock test, cheatsheet, glossary, formula drawer"
+        ],
+        [
+          "MAD 1",
+          "8 topics · 160 past questions from 10 papers · being built, one topic at a time"
         ],
         [
           "Sync",
-          "progress follows a student across devices, limited to IITM accounts by Firestore rules"
+          "optional: sign in with any Google account and progress follows you across devices, kept to your own record by Firestore rules"
         ]
       ],
       "doors": [
@@ -62,9 +66,13 @@
         [
           "/nerdhub/mlt/",
           "MLT"
+        ],
+        [
+          "/nerdhub/mad1/",
+          "MAD 1"
         ]
       ],
-      "fine": "The study sites ask for an IITM student sign-in.",
+      "fine": "The study sites work without signing in. Sign-in only syncs your progress.",
       "figure": "anatomy",
       "decisions": [
         [
@@ -666,25 +674,26 @@
       "no": "KB-008",
       "shelf": "notes",
       "title": "[FLAG]",
-      "quote": "[FLAG] key 100; derived 50",
-      "hook": "where the answer key was wrong, and the working",
+      "quote": "[FLAG] = my calculation and the bank disagree",
+      "hook": "where the key was missing or wrong, and the working",
       "body": [
-        "The MLT Quiz 1 notes tag every claim with where it came from, in the voice I wrote them in:",
-        "Across the 35 pages that comes to roughly 376 [SRC], 447 [ADDED] and 116 [FLAG] tags. Each [FLAG] is a place where the source or its answer key disagreed with the working, shown next to it."
+        "The MLT notes tag every claim with where it came from. In the notes' own words:",
+        "Across MLT's 8 topic files, 82 past questions had no key in the bank, so the answer is worked out and tagged [DERIVED]. 3 are [FLAG]: the working and the bank disagree, or the bank's text is cut off, and both are shown."
       ],
-      "legend": "[SRC] = mere PYQ file se · [ADDED] = explanation / example / naya question · [FLAG] = source ya answer-key error, proof ke saath · [?] = unreadable / missing in source.",
+      "legend": "[SRC] from your files, [DERIVED] answer I worked out because the bank gives no key, [ADDED] my own example, [FLAG] disagreement between my calculation and a key.",
       "facts": [
         [
           "Read",
-          "nerdhub/mlt/q1/"
+          "nerdhub/mlt/topics/"
         ]
       ],
       "related": [
         [
           "KB-001",
-          "these notes are the MLT site's Quiz 1 pages"
+          "the tags run through every MLT topic"
         ]
-      ]
+      ],
+      "legend_lang": "en"
     },
     {
       "no": "KB-009",
@@ -777,6 +786,14 @@
     [
       "2026-11-23",
       "Made three specimens explorable."
+    ],
+    [
+      "2026-11-24",
+      "MAD 1 study site. Sign-in made optional, any Google account."
+    ],
+    [
+      "2026-11-27",
+      "Took MLT Quiz 1 down, to rebuild it the way Quiz 2 was built."
     ]
   ]
 }
