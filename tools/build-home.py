@@ -621,7 +621,7 @@ def fig_anatomy():
         return f'<line class="ln dim" x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" marker-end="url(#anat-arrow)"/>'
     b = ['<defs><marker id="anat-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 1L9 5L0 9" class="ln"/></marker></defs><g class="c-frag">']
     for x, title, data, eng, pages in [(20, "PDSA Quiz 2", "5 topic data files", ("one engine", "core · blocks · pages · widgets"), "map · practice · mock · cards"),
-                                       (330, "MLT", "13 topic files · 35 Quiz 1 pages", ("one engine", "nothing in it is topic specific"), "practice next · mock · cheatsheet")]:
+                                       (330, "MLT", "8 topic files · Quiz 2 notes", ("one engine", "nothing in it is topic specific"), "practice next · mock · cheatsheet")]:
         b.append(f'<text class="nt" x="{x + 125}" y="14" font-size="11" text-anchor="middle">{title}</text>')
         b.append(box(x, 24, 250, 34, ["topics, as plain data", data]))
         b.append(arrow(x + 125, 58, x + 125, 76))
@@ -656,7 +656,7 @@ def specimen(sp):
     for i, para in enumerate(body):
         sheet.append(f"<p>{esc(para)}</p>")
         if i == 0 and sp.get("legend"):
-            sheet.append(f'<blockquote class="specimen__legend" lang="hi-Latn">{esc(sp["legend"])}</blockquote>')
+            sheet.append(f'<blockquote class="specimen__legend" lang="{esc(sp.get("legend_lang", "hi-Latn"))}">{esc(sp["legend"])}</blockquote>')
     if sp.get("figure"):
         sheet.append(FIGURES[sp["figure"]]())
     if sp.get("decisions"):
