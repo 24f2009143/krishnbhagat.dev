@@ -241,7 +241,7 @@
       let n = 0;
       const bar = el('div', { class: 'wk-bar' });
       const next = el('button', { class: 'btn small' }, 'Show first step');
-      const all = el('button', { class: 'btn small sec' }, 'Show all');
+      const all = el('button', { class: 'btn small sec wk-all' }, 'Show all');
       const reset = el('button', { class: 'btn small sec' }, 'Hide steps');
       const info = el('span', {}, '0 / ' + steps.length);
       function paint() {
@@ -330,6 +330,8 @@
     }
     submit.addEventListener('click', () => { if (!submit.disabled) { const ok = check(); reveal(ok ? 'correct' : 'wrong', ok); } });
     give.addEventListener('click', () => reveal('shown', false));
+    /* Expand all: open the card and show the solution without recording an attempt; answering later still works */
+    card._peek = () => { if (done || card._peeked) return; card._peeked = true; body.hidden = false; out.innerHTML = '<div class="verdict mid">Shown by Expand all. Not counted as an attempt.</div>'; out.appendChild(buildSolution(topic, p)); renderMath(out); };
     host.appendChild(card);
     renderMath(card);
     return card;
@@ -696,13 +698,28 @@
     else if (window.Study && window.Study.handles(h)) window.Study.view(h);
     else viewHome();
   }
+  /* Expand all: opens every collapsed block, worked example, PYQ solution and hidden answer, and keeps doing it as new content appears */
+  let xpObs = null, xpT = 0;
+  function expandAll(root) {
+    root = root || $('#main'); if (!root) return;
+    $$('details:not([open])', root).forEach(d => { d.open = true; });
+    $$('.worked .wk-all', root).forEach(b => { if (b.dataset.xp) return; b.dataset.xp = '1'; b.click(); });
+    $$('.wk-reveal[hidden]', root).forEach(a => { a.hidden = false; renderMath(a); });
+    $$('.pyq', root).forEach(c => { if (c._peek) c._peek(); });
+  }
+  function applyExpand() {
+    const on = !!Store.s.expand, b = $('#btn-xp'); if (b) b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    if (xpObs) { xpObs.disconnect(); xpObs = null; }
+    if (on && $('#main')) { xpObs = new MutationObserver(() => { clearTimeout(xpT); xpT = setTimeout(expandAll, 60); }); xpObs.observe($('#main'), { childList: true, subtree: true }); expandAll(); }
+  }
   function applyPrefs() {
     document.documentElement.setAttribute('data-theme', Store.s.theme === 'dark' ? 'dark' : 'light');
     document.documentElement.setAttribute('data-large', Store.s.large ? 'true' : 'false');
     $('#btn-large').setAttribute('aria-pressed', Store.s.large ? 'true' : 'false');
   }
   function init() {
-    applyPrefs(); updateMistakeBadge();
+    applyPrefs(); applyExpand(); updateMistakeBadge();
+    if ($('#btn-xp')) $('#btn-xp').addEventListener('click', () => { Store.s.expand = !Store.s.expand; Store.save(); applyExpand(); });
     if (!Store.persistent) $('#storage-note').hidden = false;
     $('#btn-theme').addEventListener('click', () => { Store.s.theme = Store.s.theme === 'dark' ? 'light' : 'dark'; Store.save(); applyPrefs(); });
     $('#btn-large').addEventListener('click', () => { Store.s.large = !Store.s.large; Store.save(); applyPrefs(); });
