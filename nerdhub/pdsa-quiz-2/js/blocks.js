@@ -210,6 +210,8 @@ P.qcard=function(q,opt){
   };
   card._keys={done:function(){return done||card.classList.contains("ok")||card.classList.contains("bad")},pick:function(i){if(!optEls[i]||optEls[i].classList.contains("locked"))return false;optEls[i].click();return true},submit:function(){return false}};
   if(opt.mock){card.querySelector(".qh .status").textContent="";return card}
+  /* Expand all: show the solution without grading or recording an attempt; answering later still works */
+  card.peek=function(){if(done||card._peeked)return;card._peeked=true;res.insertAdjacentHTML("beforeend",'<div class="verdict skip">Shown by Expand all. Not counted as an attempt. The answer is '+esc(P.keyText(q))+".</div>");if(q.sol)showSolution("peek",false);else if(q.explain)showSimple();P.math(res)};
   var sub=el("button","btn","Submit");sub.type="button";
   sub.onclick=function(){if(!card.hasResp()){P.toast(isnum?"Type a number first":"Pick an answer first");return}card.grade()};
   qa.appendChild(sub);
