@@ -870,7 +870,7 @@ def nerdhub_page():
         <p class="world__fig">fig. — the topic list, in the site's own pen-blue ink</p>
         <h2 class="world__name" id="w-mlt">MLT</h2>
         <p class="world__line">Machine Learning Techniques, written like handwritten notes, with every claim tagged by where it came from.</p>
-        <p class="world__facts">13 topics · 35 pages of Quiz 1 notes</p>
+        <p class="world__facts">8 topics · Quiz 2 notes and solved PYQs</p>
         <ul class="world__tools" aria-label="In the site">{li(mlt_feat)}</ul>
         <a class="nh-btn nh-btn--primary world__go" href="/nerdhub/mlt/">Open MLT →</a>
       </article>
