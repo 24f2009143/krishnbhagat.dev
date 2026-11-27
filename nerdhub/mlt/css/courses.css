@@ -9,8 +9,6 @@
 .cbadge{align-self:flex-start;font:700 11px var(--sans);letter-spacing:.08em;text-transform:uppercase;background:var(--accent);color:var(--accent-ink);padding:2px 9px;border-radius:999px}.cbadge.soon{background:var(--line);color:var(--muted)}
 .hh{font:700 13px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:22px 0 6px}
 .qa{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 16px}
-.q1bar{display:flex;gap:8px;align-items:center;margin:6px 0 10px}
-.q1nav{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:10px 0 40px}.q1nav a{text-decoration:none}
 @media print{.ctabs,.q1bar,.q1nav{display:none!important}.q1{background:#fff!important;color:#000!important}}
 
 .pathbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0 20px;padding:10px 12px;border:1px solid var(--line,#ddd);border-radius:12px;background:var(--card,transparent)}
