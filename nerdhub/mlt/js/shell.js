@@ -91,7 +91,7 @@
   let pal = null, palItems = [], palSel = 0;
   function sourceItems() {
     const a = A(), out = [];
-    [['#hub', 'Courses', 'Page'], ['#home', 'Quiz 2 home', 'Page'], ['#q1', 'Quiz 1', 'Page'], ['#endterm', 'End-term', 'Page']].concat(MENUS.practice.items.concat(MENUS.revise.items).map(i => [i[0], i[1], 'Tool'])).forEach(x => out.push({ t: x[1], k: x[2], href: x[0] }));
+    [['#hub', 'Courses', 'Page'], ['#home', 'Quiz 2 home', 'Page'], ['#endterm', 'End-term', 'Page']].concat(MENUS.practice.items.concat(MENUS.revise.items).map(i => [i[0], i[1], 'Tool'])).forEach(x => out.push({ t: x[1], k: x[2], href: x[0] }));
     if (a) a.M().topics.filter(t => t.status === 'ready').forEach(t => out.push({ t: t.title, k: t.course === 'q1' ? 'Quiz 1 topic' : 'Quiz 2 topic', href: '#t-' + t.id, sub: t.blurb }));
     Object.keys(window.TOPICS || {}).forEach(id => { const tp = window.TOPICS[id]; (tp.sections || []).forEach(s => out.push({ t: s.title.replace(/<[^>]+>/g, ''), k: 'Section', sub: tp.title, go: [id, 'sec-' + s.id] })); });
     ((window.STUDY || {}).glossary || []).forEach(g => out.push({ t: g.t, k: 'Term', href: '#glossary-' + g.k }));

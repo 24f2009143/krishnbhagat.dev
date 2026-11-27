@@ -257,5 +257,35 @@
     draw();
   }
 
-  window.Q1W = Object.assign(window.Q1W || {}, { lsq, shrink, kreg, knn, entropy, gnb, folds, logit });
+  function gdIter(L,eta,w0,T){ const tr=[w0]; let w=w0; for(let t=0;t<T;t++){ w=w-eta*L*w; tr.push(w); } return tr; }
+
+  function gd1d(el){
+    const L=+(el.dataset.L||4), w0=+(el.dataset.w0||1); let eta=+(el.dataset.eta||0.25); let k=eta*L;
+    const f=(v,d)=>{ if(typeof v!=='number'||isNaN(v)) return '—'; if(!isFinite(v)) return '∞'; return (+v.toFixed(d===undefined?4:d)).toString(); };
+    el.innerHTML='<div class="grid2" style="align-items:start"><div><svg data-s viewBox="0 0 360 230" style="width:100%;max-width:460px;display:block;background:#18202B;border:1px solid #2A3442;border-radius:8px" role="img" aria-label="Parabola with the successive gradient descent iterates marked"></svg>'+
+      '<p class="note" style="margin:6px 0 0">━ f(w) = ½Lw² &nbsp; ● iterates w₀…w₈ (lal = pehla, neela baaki)</p></div>'+
+      '<div><label style="display:flex;gap:8px;align-items:center;font-size:13px;margin:3px 0"><span class="mono" style="min-width:48px">η·L</span><input type="range" min="0.05" max="2.4" step="0.05" value="'+k+'" data-k aria-label="eta times L" style="flex:1"><span class="mono" data-kv style="min-width:40px;text-align:right"></span></label>'+
+      '<div class="tbl-wrap"><table><tbody data-out></tbody></table></div><p class="note" data-msg style="margin:6px 0 0"></p></div></div>';
+    const svg=el.querySelector('[data-s]'), out=el.querySelector('[data-out]'), msg=el.querySelector('[data-msg]'), sl=el.querySelector('[data-k]'), kv=el.querySelector('[data-kv]');
+    function draw(){
+      const eta2=k/L, tr=gdIter(L,eta2,w0,8), W=Math.max(Math.abs(w0)*1.15,0.5), L0=16,R0=344, B=206, T=16;
+      const X=w=>L0+(R0-L0)*(w+W)/(2*W), fmax=0.5*L*W*W, Y=v=>B-(B-T)*Math.min(v,fmax)/fmax;
+      let s='<line x1="'+L0+'" x2="'+R0+'" y1="'+B+'" y2="'+B+'" stroke="#3A4555"/><line x1="'+X(0)+'" x2="'+X(0)+'" y1="'+T+'" y2="'+B+'" stroke="#2A3442" stroke-dasharray="3 3"/>';
+      let d=''; for(let i=0;i<=80;i++){ const w=-W+2*W*i/80; d+=(i?'L':'M')+X(w).toFixed(1)+','+Y(0.5*L*w*w).toFixed(1); }
+      s+='<path d="'+d+'" fill="none" stroke="#34D399" stroke-width="2.2"/>';
+      let path=''; tr.forEach((w,i)=>{ if(Math.abs(w)<=W*1.0){ path+=(path?'L':'M')+X(w).toFixed(1)+','+Y(0.5*L*w*w).toFixed(1); } });
+      if(path) s+='<path d="'+path+'" fill="none" stroke="#8a8a8a" stroke-width="1" stroke-dasharray="3 3"/>';
+      tr.forEach((w,i)=>{ if(Math.abs(w)<=W){ s+='<circle cx="'+X(w).toFixed(1)+'" cy="'+Y(0.5*L*w*w).toFixed(1)+'" r="'+(i===0?5:3.6)+'" fill="'+(i===0?'#F87171':'#60A5FA')+'"/>'; } });
+      for(let i=0;i<=4;i++){ const w=-W+2*W*i/4; s+='<text x="'+X(w).toFixed(1)+'" y="222" text-anchor="middle" font-size="10" fill="#a3a3a3">'+f(w,2)+'</text>'; }
+      svg.innerHTML=s; kv.textContent=f(k,2);
+      const R=(u,v)=>'<tr><td>'+u+'</td><td class="num mono">'+v+'</td></tr>';
+      out.innerHTML=R('L (curvature)',f(L,2))+R('η = (η·L)/L',f(eta2,4))+R('2/L (seema)',f(2/L,4))+R('error factor (1 − ηL)',f(1-k,2))+tr.slice(0,6).map((w,i)=>R('w_'+i,f(w,4))).join('');
+      const kk=Math.round(k*1000)/1000;
+      msg.textContent = kk<1 ? 'η < 1/L: the error shrinks monotonically from one side.' : kk===1 ? 'η = 1/L: reaches the minimum in one step (in this 1-D case).' : kk<2 ? '1/L < η < 2/L: it converges while zigzagging.' : kk===2 ? 'η = 2/L: w_t = ±w₀ (oscillation): it does not converge.' : 'η > 2/L: har step bada, diverge.';
+    }
+    sl.addEventListener('input',()=>{ k=+sl.value; draw(); });
+    draw();
+  }
+
+  window.Q1W = Object.assign(window.Q1W || {}, { lsq, shrink, kreg, knn, entropy, gnb, folds, logit, gd1d });
 })();

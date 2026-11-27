@@ -501,8 +501,6 @@
         if (steps.length < 3) return;
         const bar = el('div', { class: 'pathbar' }, '<span class="pb-l">Path:</span>');
         steps.forEach((st, k) => { const b = el('button', { class: 'btn small sec' }, (k + 1) + '. ' + st[0]); b.addEventListener('click', () => scrollToId('sec-' + st[1])); bar.appendChild(b); });
-        const links = []; const rx = /href="(#q1-[a-z0-9]+)">([^<]+)</g; let mm; const seen = {}; (topic.sections[0].html || '').replace(rx, (_, h, t) => { if (!seen[h]) { seen[h] = 1; links.push([h, t]); } return ''; });
-        if (links.length) { const d = el('details', { class: 'pb-q1' }, '<summary>Quiz 1 original notes and interactive explorers</summary>' + links.map(l => '<a href="' + l[0] + '">' + l[1] + '</a>').join(' &middot; ')); bar.appendChild(d); }
         col.appendChild(bar);
       })();
       topic.sections.forEach((s, i) => {
@@ -538,7 +536,7 @@
       if (col.querySelector('[data-widget]')) {
         const runW = () => { const Wd = window.Q1W || {}; col.querySelectorAll('[data-widget]').forEach(w => { const f = Wd[w.getAttribute('data-widget')]; if (f && !w.__done) { w.__done = 1; try { f(w); } catch (er) { w.textContent = 'Explorer failed to load: ' + er.message; } } }); renderMath(col); };
         const ld = (src, ok, next) => { if (ok()) return next(); const s = document.createElement('script'); s.src = src; s.onload = next; s.onerror = next; document.head.appendChild(s); };
-        ld('js/q1-widgets.js', () => window.Q1W && window.Q1W.kmstep, () => ld('js/q2-widgets.js', () => window.Q1W && window.Q1W.lsq, runW));
+        ld('js/q2-widgets.js', () => window.Q1W && window.Q1W.lsq, runW);
       }
       watch(topic);
       updateBar(topic);
