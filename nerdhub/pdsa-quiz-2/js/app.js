@@ -38,7 +38,7 @@ function buildTop(){
    +'<div class="rgroup"><p class="rh">Topics</p><nav class="nav rtopics" id="rtopics" aria-label="Topics"></nav></div>'
    +'<details class="rgroup more" id="rmore"><summary class="rh">More tools</summary><nav class="nav nav2" aria-label="More tools">'+NAV2.map(function(n){return link(n)}).join("")+'<a href="#" id="b-f" data-n="formulas" title="All formulas">'+ico("f")+'<span class="lt"><b>All formulas</b><small>Every formula in a side drawer</small></span></a></nav></details>'
    +'<div class="setwrap"><button class="setbtn" id="b-set" type="button" aria-expanded="false" title="Settings"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="lt"><b>Settings</b></span></button>'
-   +'<div class="setpop" id="setpop" hidden>'+sw("b-theme","Dark mode")+sw("b-large","Larger text")+sw("b-tags","Show source tags","DERIVED, FLAG and SRC labels on questions")
+   +'<div class="setpop" id="setpop" hidden>'+sw("b-theme","Dark mode")+sw("b-large","Larger text")+sw("b-tags","Show source tags","DERIVED, FLAG and SRC labels on questions")+sw("b-xp","Expand all","Open every solution, worked step and trace. Not counted as an attempt.")
    +'<div class="swrow"><span><b>Exam date</b><small>Shows a countdown and a daily target</small></span><input type="date" id="b-exam" class="field" aria-label="Exam date"></div>'
    +'<div class="swrow keys"><span><b>Keyboard</b><small><kbd>Ctrl K</kbd> search, <kbd>A</kbd>–<kbd>E</kbd> pick an option, <kbd>Enter</kbd> submit</small></span></div>'
    +'<button class="linkbtn danger" id="b-reset2" type="button">Reset all progress</button></div></div></div>';
@@ -56,6 +56,7 @@ function buildTop(){
   $("#b-theme").onclick=function(){setTheme(document.documentElement.getAttribute("data-theme")!=="dark")};
   $("#b-large").onclick=function(){setLarge(document.documentElement.getAttribute("data-large")!=="on")};
   $("#b-tags").onclick=function(){setTags(!document.body.classList.contains("showtags"))};
+  $("#b-xp").onclick=function(){setExpand(!P.load().prefs.expandAll)};
   var S0=P.load();$("#b-exam").value=S0.prefs.exam||"";$("#b-exam").onchange=function(){var S=P.load();S.prefs.exam=this.value;P.save();if(document.body.dataset.page==="home")P.route()};
   $("#b-reset2").onclick=function(){if(this.dataset.s){try{localStorage.removeItem("pdsa-q2-v1")}catch(e){}location.hash="#home";(window.PDSA_SYNC?PDSA_SYNC.wipe():Promise.resolve()).then(function(){location.reload()})}else{this.dataset.s=1;this.textContent="Click again to erase everything"}};
   $("#rmore").open=!!S0.prefs.moreOpen;$("#rmore").ontoggle=function(){var S=P.load();S.prefs.moreOpen=this.open;P.save()};
@@ -87,6 +88,18 @@ function keys(e){
 function setTheme(d){document.documentElement.setAttribute("data-theme",d?"dark":"light");$("#b-theme").setAttribute("aria-checked",d);P.load().prefs.dark=d;P.save()}
 function setLarge(on){document.documentElement.setAttribute("data-large",on?"on":"off");$("#b-large").setAttribute("aria-checked",on);P.load().prefs.large=on;P.save()}
 function setRail(min){document.body.classList.toggle("railmin",min);var b=$("#b-rail");if(b){b.setAttribute("aria-expanded",!min);b.setAttribute("aria-label",min?"Expand the menu":"Collapse the menu")}var S=P.load();S.prefs.railmin=min;P.save()}
+/* Expand all: opens every collapsed block, trace and question solution in the page, and keeps doing it as new content appears */
+var xpObs=null,xpT=0;
+P.expandAll=function(root){root=root||$("#main");if(!root)return;
+  $$("details:not([open])",root).forEach(function(d){d.open=true});
+  $$(".stepper .all",root).forEach(function(b){if(b.dataset.xp)return;b.dataset.xp=1;b.click()});
+  $$(".qcard",root).forEach(function(c){if(c.peek)c.peek()});
+};
+function setExpand(on){var S=P.load();S.prefs.expandAll=on;P.save();var b=$("#b-xp");if(b)b.setAttribute("aria-checked",on);
+  if(xpObs){xpObs.disconnect();xpObs=null}
+  if(on&&$("#main")){xpObs=new MutationObserver(function(){clearTimeout(xpT);xpT=setTimeout(function(){P.expandAll()},60)});xpObs.observe($("#main"),{childList:true,subtree:true});P.expandAll()}
+}
+P.setExpand=setExpand;
 function setTags(on){document.body.classList.toggle("showtags",on);$("#b-tags").setAttribute("aria-checked",on);P.load().prefs.tags=on;P.save()}
 function badge(){var S=P.load(),n=0;Object.keys(S.ans).forEach(function(k){var a=S.ans[k];if(!a.ok||a.conf==="Unsure"||a.conf==="Guess")n++});$$(".mc").forEach(function(m){m.textContent=n?String(n):""})}
 P.badge=badge;
@@ -160,7 +173,7 @@ document.addEventListener("mouseout",function(e){if(e.target.closest&&e.target.c
 P.boot=function(){
   var S=P.load();if(S.prefs.railmin)document.body.classList.add("railmin");P.manifest.topics.forEach(function(m){m.accent='#1D6B5F';if(P.topics[m.id])P.topics[m.id].accent='#1D6B5F'});
   P.buildGlossary();P.buildIndex();buildTop();
-  setTheme(!!S.prefs.dark);setLarge(!!S.prefs.large);setTags(!!S.prefs.tags);
+  setTheme(!!S.prefs.dark);setLarge(!!S.prefs.large);setTags(!!S.prefs.tags);setExpand(!!S.prefs.expandAll);
   if(!P.storeOK)$("#main").insertAdjacentHTML("beforebegin",'<div style="background:var(--warnbg);color:var(--warn);text-align:center;padding:6px;font-size:.86rem">Browser storage is blocked here, so your progress lasts only for this session. Use Export on the home page.</div>');
   window.addEventListener("hashchange",P.route);P.route();
 };

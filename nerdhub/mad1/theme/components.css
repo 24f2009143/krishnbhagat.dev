@@ -647,3 +647,8 @@ details.qt[open]>summary{margin-right:4px}
  .tb-search span,.tb-search kbd{display:none}
  .tb-nav{margin-left:6px}
 }
+
+/* Expand all state pill in the more menu */
+.xp-st{font-style:normal;font-weight:600;font-size:.72rem;margin-left:6px;padding:1px 7px;border-radius:999px;background:var(--sunk);color:var(--ink3,var(--ink2))}
+[aria-checked=true] .xp-st{background:var(--res);color:#fff}
+.peek{margin-top:10px}

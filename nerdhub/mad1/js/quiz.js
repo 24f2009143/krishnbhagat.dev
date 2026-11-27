@@ -191,6 +191,8 @@ A.qcard=function(q,opt){
   card.reveal=function(){if(done)return;finish(null,true)};
   card._keys={done:function(){return done},pick:function(pos){if(!optEls[pos]||done)return false;optEls[pos].click();return true},submit:function(){return false}};
   if(opt.mock){return card}
+  /* Expand all: show the solution without grading or recording an attempt; answering later still works */
+  card.peek=function(){if(done||card._peeked)return;card._peeked=true;var d=el("div","peek");d.innerHTML='<div class="verdict skip">Shown by Expand all. Not counted as an attempt. The answer is '+esc(A.keyText(q))+".</div>";d.appendChild(q.sol?solutionPYQ():solutionQ());res.appendChild(d);A.math(d)};
 
   var sub=el("button","btn","Submit");sub.type="button";
   sub.onclick=function(){
