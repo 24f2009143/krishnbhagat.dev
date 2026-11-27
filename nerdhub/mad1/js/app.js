@@ -77,6 +77,7 @@ function buildTop(){
     +'<button class="iconbtn" id="b-theme" type="button" aria-label="Switch dark mode"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></button>'
     +'<div class="tmenu tm-r"><button type="button" class="iconbtn tm-b" aria-expanded="false" aria-label="More">'+ico("more")+'</button><div class="tm-p" role="menu">'
     +'<a role="menuitem" href="#" id="b-f2">'+ico("f")+'<span class="lt"><b>Formula drawer</b><small>Every formula and command</small></span></a>'
+    +'<a role="menuitemcheckbox" href="#" id="b-xp" aria-checked="false">'+ico("cards")+'<span class="lt"><b>Expand all <em class="xp-st">Off</em></b><small>Open every solution, step and answer</small></span></a>'
     +'<a role="menuitem" href="#settings" data-n="settings">'+ico("gear")+'<span class="lt"><b>Settings</b><small>Text size, source tags, exam dates, backup</small></span></a>'
     +'<a role="menuitem" href="'+esc(M.hubUrl)+'">'+ico("map")+'<span class="lt"><b>All courses</b><small>Back to nerdhub</small></span></a></div></div>';
   document.body.insertBefore(tb,$("#app-top"));
@@ -87,6 +88,7 @@ function buildTop(){
   $("#b-search3").onclick=function(){openSearch()};
   $("#b-theme").onclick=function(){A.setTheme(document.documentElement.getAttribute("data-theme")!=="dark")};
   $("#b-f2").onclick=function(e){e.preventDefault();openFormulas()};
+  $("#b-xp").onclick=function(e){e.preventDefault();e.stopPropagation();A.setExpand(!A.load().prefs.expandAll)};
   $("#b-rail2").onclick=function(){setRail(!document.body.classList.contains("railmin"))};
   var mb=el("nav","mbar");mb.setAttribute("aria-label","Main (phone)");
   mb.innerHTML=[["home","Course","map"],["practice","Practice","practice"],["mock","Mock","mock"],["cards","Cards","cards"]].map(function(n){return '<a href="#'+n[0]+'" data-n="'+n[0]+'">'+ico(n[2])+"<span>"+n[1]+"</span></a>"}).join("")+'<a href="#" id="b-more" data-n="more">'+ico("more")+"<span>More</span></a>";
@@ -124,6 +126,20 @@ function keys(e){
 }
 A.setTheme=function(d){document.documentElement.setAttribute("data-theme",d?"dark":"light");var S=A.load();S.prefs.dark=d;A.save()};
 A.setLarge=function(on){document.documentElement.setAttribute("data-large",on?"on":"off");var S=A.load();S.prefs.large=on;A.save()};
+/* Expand all: opens every collapsed block, step list, trace and question solution in the page, and keeps doing it as new content appears */
+var xpObs=null,xpT=0;
+A.expandAll=function(root){root=root||$("#main");if(!root)return;
+  $$("details:not([open])",root).forEach(function(d){d.open=true});
+  $$(".sr-steps",root).forEach(function(w){if(w.dataset.xp||!w.showAll)return;w.dataset.xp=1;w.showAll()});
+  $$(".stepper .all",root).forEach(function(b){if(b.dataset.xp)return;b.dataset.xp=1;b.click()});
+  $$(".ht [data-a=show]",root).forEach(function(b){if(b.dataset.xp)return;b.dataset.xp=1;b.click()});
+  $$(".qcard",root).forEach(function(c){if(c.peek)c.peek()});
+};
+A.setExpand=function(on){var S=A.load();S.prefs.expandAll=on;A.save();
+  $$("#b-xp,#s-xp").forEach(function(b){b.setAttribute("aria-checked",on)});$$(".xp-st").forEach(function(x){x.textContent=on?"On":"Off"});
+  if(xpObs){xpObs.disconnect();xpObs=null}
+  if(on&&$("#main")){xpObs=new MutationObserver(function(){clearTimeout(xpT);xpT=setTimeout(function(){A.expandAll()},60)});xpObs.observe($("#main"),{childList:true,subtree:true});A.expandAll()}
+};
 A.setTags=function(on){document.body.classList.toggle("showtags",on);var S=A.load();S.prefs.tags=on;A.save()};
 function setRail(min){document.body.classList.toggle("railmin",min);var b=$("#b-rail");if(b){b.setAttribute("aria-expanded",!min);b.setAttribute("aria-label",min?"Expand the menu":"Collapse the menu")}var S=A.load();S.prefs.railmin=min;A.save()}
 A.badge=function(){var S=A.load(),n=0;Object.keys(S.ans).forEach(function(k){var a=S.ans[k];if(!a.ok||a.conf==="Unsure"||a.conf==="Guess")n++});$$(".mc").forEach(function(m){m.textContent=n?String(n):""})};
@@ -218,7 +234,7 @@ A.boot=function(){
       A.buildGlossary();A.buildIndex();buildTop();
       var sysDark=!!(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches);
       document.documentElement.setAttribute("data-theme",(S.prefs.dark!=null?S.prefs.dark:sysDark)?"dark":"light");
-      A.setLarge(!!S.prefs.large);A.setTags(!!S.prefs.tags);
+      A.setLarge(!!S.prefs.large);A.setTags(!!S.prefs.tags);A.setExpand(!!S.prefs.expandAll);
       if(!A.storeOK)$("#main").insertAdjacentHTML("beforebegin",'<div class="storewarn" role="status">This browser blocks storage, so progress lasts only for this visit. Use Settings → Export to keep it.</div>');
       if(S.migratedFrom){A.toast("Progress carried over from an older version");delete S.migratedFrom;A.save()}
       window.addEventListener("hashchange",A.route);A.route();

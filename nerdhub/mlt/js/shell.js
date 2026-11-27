@@ -57,10 +57,10 @@
     const more = mk('div', 'hm hmore');
     const mb = mk('button', 'hm-b icon-only', ICON.dots, { 'aria-label': 'More settings', 'aria-haspopup': 'true', 'aria-expanded': 'false', type: 'button' });
     const mp = mk('div', 'hm-p right', null, { role: 'menu' });
-    [['btn-formulas', 'Formula drawer'], ['btn-large', 'Larger text'], ['btn-tags', 'Show source tags'], ['btn-sync', 'Sign in to sync'], ['btn-reset', 'Reset progress']].forEach(x => {
+    [['btn-formulas', 'Formula drawer'], ['btn-large', 'Larger text'], ['btn-tags', 'Show source tags'], ['btn-xp', 'Expand all'], ['btn-sync', 'Sign in to sync'], ['btn-reset', 'Reset progress']].forEach(x => {
       const n = document.getElementById(x[0]); if (!n) return;
-      n.className = 'hm-i row'; n.innerHTML = '<b>' + x[1] + '</b>' + (x[0] === 'btn-large' || x[0] === 'btn-tags' ? '<span class="sw" aria-hidden="true"></span>' : '');
-      n.addEventListener('click', () => { if (x[0] !== 'btn-large' && x[0] !== 'btn-tags') closeMenus(); });
+      n.className = 'hm-i row'; n.innerHTML = '<b>' + x[1] + '</b>' + (x[0] === 'btn-large' || x[0] === 'btn-tags' || x[0] === 'btn-xp' ? '<span class="sw" aria-hidden="true"></span>' : '');
+      n.addEventListener('click', () => { if (x[0] !== 'btn-large' && x[0] !== 'btn-tags' && x[0] !== 'btn-xp') closeMenus(); });
       mp.appendChild(n);
     });
     mb.addEventListener('click', e => { e.stopPropagation(); const open = !more.classList.contains('open'); closeMenus(more); more.classList.toggle('open', open); mb.setAttribute('aria-expanded', String(open)); });
