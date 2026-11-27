@@ -1,0 +1,7 @@
+# krishnbhagat.dev — everything public may be crawled.
+# Owner-only pages carry their own noindex meta tag instead of being hidden here,
+# so crawlers can read it.
+User-agent: *
+Allow: /
+
+Sitemap: https://krishnbhagat.dev/sitemap.xml
