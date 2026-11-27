@@ -73,7 +73,8 @@ Then open http://localhost:8000.
 
 1. Build the study site in `nerdhub/<subject>/`.
 2. Add its plate to `nerdhub_page()` in `tools/build-home.py`.
-3. Run `python3 tools/build-home.py` and commit what changed.
+3. Add its address to `sitemap.xml`, so search engines find it.
+4. Run `python3 tools/build-home.py` and commit what changed.
 
 ### Add something to the Lab
 
